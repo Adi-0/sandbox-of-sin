@@ -1,0 +1,83 @@
+<p>Everything so far has been a model. This part is about what happens when you etch it into a wafer, and about the one design decision that makes the whole exercise worthwhile: <strong>the weights must never move.</strong></p>
+
+<p>Recall the bill from Part 1. Multiplying is cheap; fetching the operand from main memory costs 170 times more. A neural network is mostly weights, and a conventional accelerator's day consists of dragging those weights past an arithmetic unit. If you could arrange for the multiplication to happen <em>inside the memory</em>, the postage bill would vanish. That arrangement has a name — <span class="term">in-memory computing</span> — and the standard way to build it is a crossbar.</p>
+
+<div data-fig="crossbar"></div>
+
+<p>Figure 13 is the trick in one drawing. Rows are inputs, columns are outputs, and at every intersection sits a device whose electrical conductance you can program and which then holds that value without power. Drive a row with a voltage and Ohm's law — current equals voltage times conductance — performs a multiplication. Every cell on a column dumps its current onto the same wire, and Kirchhoff's law performs the addition.</p>
+
+<p>A 4×4 crossbar does sixteen multiplications and four additions in the time it takes current to settle, which is nanoseconds, and it does not fetch anything, because the weights are the wires. Scale it to 512×512 and you have a quarter of a million multiply-accumulates happening simultaneously, in one shot, in a device the size of a full stop.</p>
+
+<p>The devices themselves go by several names — <span class="term">memristor</span> is the common one, and phase-change memory and resistive RAM are the two technologies closest to production. What they share is the property that matters: they remember a conductance with the power off.</p>
+
+<div class="aside">
+  Analogue crossbars are the most oversold idea in this field, so here is the counterweight. The devices drift with temperature and time. Cell-to-cell variation is large. Writing a precise conductance is slow and wears the device out. Reading is analogue, so noise sets a hard ceiling on precision, and 6–8 usable bits is a good result. Converting between the analogue column current and digital logic requires ADCs, which are big and hungry and routinely eat the energy the crossbar just saved. Every one of these is an active research problem, and none of them is solved.
+</div>
+
+<h3>Where the saving actually comes from</h3>
+
+<p>Crossbars are one half. The other half is refusing to do work, and it is the half you can put a number on without arguing about device physics.</p>
+
+<p>Take a network of 1,000 neurons, each connected to 128 others. A conventional accelerator running this as a dense layer evaluates all 128,000 weights on every timestep. At a thousand timesteps a second, that is 128 million weight evaluations per second, forever, regardless of what the network is doing.</p>
+
+<p>An event-driven chip touches a synapse only when a spike arrives at it. If the average neuron fires 5 times a second, the total is 1,000 × 5 × 128 = 640,000 synapse touches per second. Figure 14 lets you slide the firing rate and watch the two bars separate.</p>
+
+<div data-fig="sparsity"></div>
+
+<div class="stat">
+  <span class="stat__num">200 ×</span>
+  <span class="stat__txt">fewer synapse touches at a 5&nbsp;Hz average firing rate. The ratio is not mysterious — it is exactly <b>timestep rate ÷ firing rate</b>, 1000 ÷ 5. Every other claim about neuromorphic efficiency is downstream of this one division.</span>
+</div>
+
+<p>Now push the slider to the right and watch the advantage evaporate. At 1,000&nbsp;Hz the two bars are equal, because a neuron firing on every timestep is doing exactly as much work as a dense evaluation — with extra bookkeeping. No biological neuron fires at 1&nbsp;kHz sustained, and that is precisely why the trade works in the brain. It also explains the most common way to ruin a spiking network: train one without any pressure toward sparsity, watch it settle on a high-firing-rate solution, and discover you have built an unusually awkward dense accelerator.</p>
+
+<div class="check" data-check data-answer="0">
+  <div class="check__q">Your spiking network hits the accuracy target but the average firing rate came out at 300&nbsp;Hz. What have you built?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">A dense accelerator with extra steps — only about 3× better than the conventional baseline</button>
+    <button class="check__opt" type="button">A fine result; accuracy is what matters</button>
+    <button class="check__opt" type="button">Something impossible — neurons cannot fire that fast</button>
+  </div>
+  <div class="check__a">
+    A dense accelerator with extra steps. 1000 ÷ 300 is a factor of 3, and you have paid for event routing, timestamps and address decoding to get it. This is why every serious training recipe for spiking networks includes an explicit <b>spike-count penalty</b> in the loss: sparsity is not something you get for using spikes, it is something you have to optimise for on purpose.
+  </div>
+</div>
+
+<h3>How events get from one chip to another</h3>
+
+<p>A spike is a single event with no payload. The only thing a receiver needs to know is <em>which neuron</em> fired and <em>when</em>. So the wire protocol writes itself: when neuron 4,721 spikes, put the number 4,721 on a shared bus. The time is implicit — it is now.</p>
+
+<p>That convention is called <span class="term">address-event representation</span>, and it is what makes neuromorphic hardware composable. Thousands of neurons share a handful of wires, because they are almost never all talking at once. It is packet switching, with the sparsity of neural activity as the reason the bus does not saturate.</p>
+
+<p>The most successful commercial application of the whole field is a sensor built on exactly this idea. In an <span class="term">event camera</span>, each pixel independently watches its own brightness and emits an address event when it changes by more than a set fraction. There are no frames. There is no exposure time. A pixel looking at a static wall says nothing, forever.</p>
+
+<div data-fig="frames-vs-events"></div>
+
+<p>Figure 15 is a space–time diagram: pixels across, time downward. The grey dots are what a 30&nbsp;fps camera transmits — every pixel, every frame, whether or not anything happened. The magenta dots are events, and they fall only along the moving edge.</p>
+
+<p>Drag the speed up. The frame grid never changes; it cannot. The event stream tilts, and the number of events stays the same per sweep, because the edge still crosses each pixel exactly once. Past about 1,900&nbsp;px/s the edge crosses the entire sensor between two frames and the frame camera never sees it at all — while the event stream is completely unbothered.</p>
+
+<p>This is the honest reason event cameras have found real customers where general-purpose neuromorphic processors have not. Microsecond latency, over 120&nbsp;dB of dynamic range because each pixel sets its own operating point, no motion blur, and a data rate that scales with how much is happening rather than with resolution times frame rate. Sony and Prophesee ship sensors on this principle today.</p>
+
+<h3>The chips themselves</h3>
+
+<p>Four families, with the honest state of each:</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>System</th><th>Approach</th><th class="num">Scale per chip</th><th>What it is good for</th></tr></thead>
+  <tbody>
+    <tr><td><b>IBM TrueNorth</b> (2014)</td><td>Digital, fixed neuron model, no on-chip learning</td><td class="num">1 M neurons<br>256 M synapses</td><td>The proof that a million-neuron chip could run on tens of milliwatts. Rigid, and now historical.</td></tr>
+    <tr><td><b>Intel Loihi 2</b> (2021)</td><td>Digital, programmable neuron models, on-chip plasticity</td><td class="num">1 M neurons<br>120 M synapses</td><td>The main research platform. Graded spikes, flexible learning rules, a real software stack in Lava.</td></tr>
+    <tr><td><b>SpiNNaker 2</b></td><td>Many small ARM cores simulating neurons in software</td><td class="num">152 cores<br>flexible models</td><td>Any neuron model you can write in C. Slower per neuron, unmatched in flexibility.</td></tr>
+    <tr><td><b>BrainScaleS-2</b></td><td>Analogue neurons in silicon, physically emulated</td><td class="num">512 neurons</td><td>Runs about 1,000× faster than biology. Small, fast, and analogue — good for studying learning, not for deployment.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Two axes explain the whole table. <strong>Digital versus analogue</strong> is a trade of energy against precision: analogue neurons are far cheaper and far less repeatable. <strong>Fixed versus programmable</strong> is a trade of density against usefulness: TrueNorth fit a million neurons on a die by making them all identical and unteachable, and that is a large part of why nobody uses it now.</p>
+
+<div class="stamp">
+  <p>Neuromorphic hardware wins by keeping weights where they are used — crossbars let Ohm's and Kirchhoff's laws do the arithmetic — and by touching a synapse only when a spike arrives.</p>
+  <p>The size of the second win is exactly <strong>timestep rate divided by firing rate</strong>. Let the firing rate climb and the advantage disappears; there is no other magic in the number.</p>
+</div>

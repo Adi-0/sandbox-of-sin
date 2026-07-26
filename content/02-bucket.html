@@ -1,0 +1,102 @@
+<p>Here is the whole model, before any vocabulary.</p>
+
+<p><strong>Picture a bucket with a small hole in the bottom.</strong> Water trickles in from a pipe. Water dribbles out of the hole. If the trickle is faster than the dribble, the level rises. If it is slower, the level falls back toward empty. And if the level ever reaches a mark near the rim, the bucket tips, dumps everything, and rights itself — empty, ready to start again.</p>
+
+<p>That is a neuron. Not a metaphor for a neuron; that is the model, and it is the one running underneath every figure in this guide. The rest of Part 2 is putting units on the parts.</p>
+
+<div data-fig="anatomy"></div>
+
+<p>Figure 3 draws the bucket and the cell side by side with the colours matched. Learn these four colours now, because they mean the same thing in every remaining figure:</p>
+
+<ul>
+  <li><strong style="color:var(--v)">Amber is the level in the bucket</strong> — in a neuron, the <span class="term">membrane potential</span>, the voltage across the cell's skin. Call it V<sub>m</sub>. This is the only thing a neuron remembers.</li>
+  <li><strong style="color:var(--exc)">Teal is water going in</strong> — <span class="term">excitation</span>, input that pushes the level up.</li>
+  <li><strong style="color:var(--inh)">Indigo is water going out</strong> — <span class="term">inhibition</span>, input that pulls the level down. Yes, a neuron can have inputs that actively subtract. It matters enormously in Part 4.</li>
+  <li><strong style="color:var(--spike)">Magenta is the tip</strong> — the <span class="term">spike</span>. When the level crosses the mark, the cell emits one sharp electrical pulse down its output wire and resets to empty.</li>
+</ul>
+
+<h3>The single most important thing about a spike</h3>
+
+<p>Every spike is the same size. Always. A neuron that is barely over its threshold fires exactly the same pulse as one that is drowning in input. The bucket tips the same way whether it filled slowly or fast.</p>
+
+<p>This sounds like a design flaw and is in fact the entire point. A signal that can only be <em>present</em> or <em>absent</em> cannot be corrupted a little bit by noise on a long wire — the same reason digital logic beat analogue for computing. But unlike a digital bit, a spike also carries the moment it arrived, for free. So a spike is a one-bit message with a timestamp attached, and the timestamp costs nothing to send. Part 3 is about what you can do with that.</p>
+
+<h3>Four numbers, used for the rest of the guide</h3>
+
+<p>Give the bucket sizes. These exact values appear in every figure from here on, so it is worth thirty seconds to fix them in your head:</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Part of the bucket</th><th>Name</th><th class="num">Value here</th><th>What it decides</th></tr></thead>
+  <tbody>
+    <tr><td>How fast it leaks</td><td>time constant, τ</td><td class="num">20 ms</td><td>How long the neuron remembers an input</td></tr>
+    <tr><td>The overflow mark</td><td>threshold, V<sub>th</sub></td><td class="num">20 mV</td><td>How much it takes to fire</td></tr>
+    <tr><td>Width of the inlet</td><td>input resistance, R</td><td class="num">100 MΩ</td><td>How much voltage a given current buys</td></tr>
+    <tr><td>Time to right itself</td><td>refractory period</td><td class="num">2 ms</td><td>The fastest it can possibly fire</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The name for this model is the <span class="term">leaky integrate-and-fire</span> neuron, usually shortened to LIF, and the name is a description: it <em>leaks</em>, it <em>integrates</em> what arrives, and it <em>fires</em>. Written out, its behaviour between spikes is one line:</p>
+
+<div class="eq">
+  <div class="eq__math">τ · dV/dt  =  −V  +  R · I</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> The −V term is the hole: whatever level you have, you are losing some of it, and the more you have the faster it drains. The R·I term is the pipe: current I coming in, times the resistance R, is the level it would eventually settle at if you left it running. τ on the left sets how quickly it gets there. That is the entire equation — a race between a pipe and a hole. When V reaches 20 mV, the bucket tips: emit a spike, set V to zero, wait 2 ms.
+  </div>
+</div>
+
+<h3>Why the hole matters more than you would think</h3>
+
+<p>A bucket without a hole is a counter — it adds up everything it has ever received, no matter how long ago. The hole is what makes a neuron interesting, because the hole gives it a <strong>sense of recency</strong>. Input from 100&nbsp;ms ago has almost entirely drained away. Input from 2&nbsp;ms ago is still nearly all there.</p>
+
+<p>Figure 4 makes this concrete in the most direct way available: the input never changes, and the neuron's behaviour changes completely.</p>
+
+<div data-fig="leak"></div>
+
+<p>Every teal tick along the bottom is an incoming drop worth 6&nbsp;mV, arriving 150 times a second. That train is identical at every slider position — drag the slider and watch the ticks; they do not move. All that changes is the size of the hole.</p>
+
+<p>At τ = 40&nbsp;ms the drops pile up faster than they drain, the level climbs to threshold, and the cell fires at about 30&nbsp;Hz. Slide down to τ = 10&nbsp;ms and each drop has mostly leaked away before the next one lands. The level bobs around 12&nbsp;mV and never gets close. <strong>The neuron has gone silent while its input carried on exactly as before.</strong></p>
+
+<p>The changeover is at about 19&nbsp;ms, which puts our standard 20&nbsp;ms neuron right on the edge of it — firing, but barely. That is not a coincidence either. Neurons that sit near their own tipping point are the ones whose behaviour a small change can still alter, and a neuron that cannot be altered is not much use to anybody.</p>
+
+<div class="check" data-check data-answer="1">
+  <div class="check__q">In Figure 4, at τ = 10&nbsp;ms the neuron is silent. If you left it running for an hour with the same input, what would happen?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">It would eventually fire — the input keeps adding up</button>
+    <button class="check__opt" type="button">Nothing. It would still be sitting at about 12 mV</button>
+    <button class="check__opt" type="button">It would slowly drift down to zero</button>
+  </div>
+  <div class="check__a">
+    Nothing, forever. The level settles where the inflow exactly balances the leak, and if that balance point sits below threshold, no amount of patience changes it. <b>A leaky neuron is not a counter waiting to be filled — it is a running average with a deadline.</b> This is the single most useful intuition in the guide, and Part 3 turns it into a computation.
+  </div>
+</div>
+
+<h3>The point of no return</h3>
+
+<p>That balance point has a name. Feed a neuron a steady current instead of drops and it climbs toward a level set by R·I — with R = 100&nbsp;MΩ, every nanoamp buys 100&nbsp;mV of eventual level. Threshold is 20&nbsp;mV. So the current that <em>just barely</em> gets there is 20 ÷ 100 = <strong>0.2&nbsp;nA</strong>. Below it, silence forever. Above it, the neuron fires at a rate that depends on how far above.</p>
+
+<p>That current is the <span class="term">rheobase</span>, and Figure 5 lets you walk across it. The left panel is the voltage doing its thing; the right panel is the resulting rate, plotted against current.</p>
+
+<div data-fig="fi-curve"></div>
+
+<p>Two things to notice, both of which come back later. First, the dead zone: below 0.2&nbsp;nA the right-hand curve is flat on the floor. A neuron is not a wire that passes on a fraction of what it receives; it ignores everything below a threshold and then responds. Second, the bend: the curve rises steeply and then flattens. Doubling the current does not double the rate, because every spike costs a fixed 2&nbsp;ms of refractory time that no amount of extra current can buy back.</p>
+
+<p>Learn these three points on that curve; they are the recurring cast of numbers for the rest of the guide:</p>
+
+<div class="chain">
+  <div class="card"><h4>0.2 nA</h4>silence, no matter how long you wait</div>
+  <div class="card"><h4>0.4 nA</h4>63 spikes per second</div>
+  <div class="card"><h4>0.6 nA</h4>99 spikes per second — call it a hundred</div>
+</div>
+
+<p>Half the current for two-thirds of the rate. That bend is why a neuron cannot be replaced by a multiplier, and it is the whole reason a network of them does something a matrix does not.</p>
+
+<div class="aside">
+  Real neurons are considerably richer than this. They have branching dendrites that perform their own local computations before anything reaches the cell body, a dozen species of ion channel with their own dynamics, and firing patterns — bursting, adapting, resonating — that a single leaky bucket cannot produce. Every neuromorphic chip in Part 6 nevertheless implements something very close to the bucket above, because it is the smallest model that still gets the interesting behaviour, and because you can fit a hundred thousand of them on a die.
+</div>
+
+<div class="stamp">
+  <p>A neuron is a leaky bucket: input raises the level, the leak lowers it, and crossing 20&nbsp;mV emits one identical spike and empties the bucket.</p>
+  <p>The leak is not a defect — it is a 20&nbsp;ms memory. <strong>Input that arrives faster than the neuron forgets accumulates; input that arrives slower never gets anywhere.</strong></p>
+</div>

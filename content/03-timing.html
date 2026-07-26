@@ -1,0 +1,76 @@
+<p>A neuron has exactly one way to say anything: emit a spike. The spikes are all identical, so it cannot vary the message. It cannot make one louder. It cannot attach a number to it.</p>
+
+<p>All it can vary is <strong>when</strong>.</p>
+
+<p>This looks like a crippling restriction and turns out to be a generous one, because "when" is a continuous quantity that costs nothing to transmit. The question this part answers is: given a stream of identical events, what can a receiver actually extract — and how fast?</p>
+
+<h3>Two ways to read a spike train</h3>
+
+<p>There are two answers, and the difference between them decides what kind of machine you end up building.</p>
+
+<p>The first is <span class="term">rate coding</span>: the message is the number of spikes in a window. Fast firing means a big number, slow firing means a small one. It is robust — a lost spike barely changes a count — and it is the assumption underneath most of what people call a spiking neural network.</p>
+
+<p>The second is <span class="term">latency coding</span>: the message is <em>how soon</em> the first spike arrives. Strong stimulus, early spike. Weak stimulus, late spike. Nothing else needs to be transmitted at all.</p>
+
+<p>Figure 6 puts both readers on the same spike train so you can watch them disagree about how long they need.</p>
+
+<div data-fig="two-readers"></div>
+
+<p>Reader A, the counter, has to wait for the shaded window to close before it can report anything. That window is 100&nbsp;ms — chosen because that is roughly the shortest window in which a rate estimate is worth having. Reader B, the stopwatch, is finished as soon as the first spike lands, which at 0.4&nbsp;nA is 13.9&nbsp;ms in.</p>
+
+<div class="stat">
+  <span class="stat__num">7 ×</span>
+  <span class="stat__txt">sooner, at the default setting, and the gap <b>widens as the stimulus gets stronger</b> — exactly the situation where being quick matters. Drag the slider right and watch the latency readout collapse toward 5&nbsp;ms while the counter's 100&nbsp;ms never budges.</span>
+</div>
+
+<p>This is not an academic distinction. It is why you flinch. The pathway from your retina to a startle response does not have time to average anything; the first spikes to arrive <em>are</em> the message. Rate coding is what you use when you have time. Latency coding is what you use when you do not.</p>
+
+<div class="aside">
+  Real cortex almost certainly uses both, mixed, along with codes based on which neurons fire together and on spikes locked to ongoing rhythms. The strict either-or above is a teaching simplification. What is not a simplification is the timing arithmetic: a rate estimate genuinely needs a window, and a first-spike latency genuinely does not.
+</div>
+
+<h3>The consequence: a neuron is a coincidence detector</h3>
+
+<p>Now put the leak from Part 2 together with timing, and something falls out that neither idea has on its own.</p>
+
+<p>Give a neuron two inputs, each worth 12&nbsp;mV. Threshold is 20&nbsp;mV. Neither input can fire the cell alone — 12 is not 20. Together they easily could: 24 clears it. But "together" has to mean something precise, and the leak is what defines it. The first input's 12&nbsp;mV starts draining the instant it lands. By the time the second arrives, the first is worth 12·e<sup>−Δt/20ms</sup>, and the sum either clears threshold or it does not.</p>
+
+<p>Drag Figure 7 and find the edge.</p>
+
+<div data-fig="coincidence"></div>
+
+<p>The edge sits at 8.1&nbsp;ms. Inside it, the neuron fires. Outside it, nothing happens at all — not a weaker output, <em>nothing</em>, because spikes are all-or-none. You have built a logic gate whose truth table depends on time, using one neuron and no clock:</p>
+
+<div class="eq">
+  <div class="eq__math">Δt<sub>window</sub>  =  τ · ln( w / (V<sub>th</sub> − w) )  =  20 ms · ln(12/8)  =  8.1 ms</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> You need the first input to still be worth at least V<sub>th</sub> − w = 8&nbsp;mV when the second lands. It started at w = 12&nbsp;mV and decays exponentially, so you are asking how long 12 takes to fall to 8 — a ratio of 1.5, and the logarithm of a ratio is what an exponential decay charges you in time. The only free parameter is τ. <b>The leak is the clock.</b>
+  </div>
+</div>
+
+<p>This is the load-bearing idea of the whole guide. A leaky neuron with a high threshold is a device that asks one question — <em>did enough of my inputs arrive close together in time?</em> — and answers it with a single event, using no clock, no comparator, no arithmetic, and no energy when the answer is no.</p>
+
+<div class="check" data-check data-answer="0">
+  <div class="check__q">You want to build a detector with a <em>wider</em> tolerance — one that says yes even when the two inputs are 30&nbsp;ms apart. Which change gets you there?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">Increase τ — make the neuron leak more slowly</button>
+    <button class="check__opt" type="button">Increase the threshold</button>
+    <button class="check__opt" type="button">Decrease the weight of each input</button>
+  </div>
+  <div class="check__a">
+    Increase τ. The window is proportional to τ, so a neuron that forgets more slowly tolerates a bigger gap. Raising the threshold or shrinking the weights does the opposite — it demands the two inputs arrive even closer together, and past a point makes the detector impossible to trigger at all. <b>In a neuromorphic chip, τ is the knob you tune to set the timescale a circuit cares about</b>, and it is why programmable time constants are a headline feature on every chip in Part 6.
+  </div>
+</div>
+
+<h3>Why this is worth building hardware for</h3>
+
+<p>Count the work in that detector. Two events arrived. One event left. In between, a capacitor discharged, which is something a capacitor does for free whether you ask it to or not.</p>
+
+<p>To do the same job on a conventional processor you would sample both inputs on a clock, timestamp them, subtract the timestamps, compare against a constant, and branch — several instructions, each fetching operands, running at least a thousand times a second whether or not anything arrived. The neuron does it with a leak.</p>
+
+<p>That is the trade being made across this entire field: <strong>replace explicit computation with physics that happens anyway.</strong> A leak is not simulated in a neuromorphic chip. It is a real current draining a real capacitor, and it costs nothing because it is what capacitors do.</p>
+
+<div class="stamp">
+  <p>Spikes are identical, so all information lives in their timing. Counting them is robust but slow; timing the first one is fast and nearly free.</p>
+  <p>A leaky neuron with a high threshold is a <strong>coincidence detector whose tolerance window is set by τ</strong> — it fires only when enough input arrives within about one time constant, and does no work at all otherwise.</p>
+</div>

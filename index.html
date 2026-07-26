@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spikes — an interactive field guide to neuromorphic computing</title>
+<meta name="description" content="Learn neuromorphic computing from first principles: leaky neurons, spike timing, synapses, STDP, and the silicon that runs them — with live simulations you can turn the knobs on.">
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f6f8f7'/><path d='M3 24 L11 24 L13 8 L15 24 L17 20 L19 24 L29 24' fill='none' stroke='%23bd2a61' stroke-width='2.4'/></svg>">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="app">
+  <header class="masthead">
+    <button class="iconbtn railtoggle" id="rail-toggle" aria-expanded="false" aria-controls="rail">Contents</button>
+    <a class="masthead__mark" href="#/" style="text-decoration:none"><b>Spikes</b><span class="masthead__sub"> &nbsp;/&nbsp; a field guide</span></a>
+    <span class="masthead__spacer"></span>
+    <div class="progress" title="Parts you have marked complete">
+      <span id="progress-label">0 / 8</span>
+      <span class="progress__track"><span class="progress__fill" id="progress-fill"></span></span>
+    </div>
+    <button class="iconbtn" id="theme-toggle" aria-label="Switch colour theme">Theme</button>
+  </header>
+
+  <nav class="rail" id="rail" aria-label="Contents">
+    <div class="rail__head">Index of parts</div>
+    <ul class="rail__list" id="rail-list"></ul>
+    <div class="rail__foot">
+      <div>Arrow keys ← → move between parts.</div>
+      <div style="margin-top:.5rem"><button id="reset-progress" type="button">Reset progress</button></div>
+    </div>
+  </nav>
+
+  <main class="main" id="main" tabindex="-1">
+    <div id="view" class="reader"></div>
+  </main>
+</div>
+
+<noscript>
+  <div class="noscript">
+    <strong>This guide needs JavaScript for its figures.</strong>
+    The prose is written to stand on its own, but it is assembled by a small
+    script, so with JavaScript disabled the page will stay empty. The text of
+    every part is in the <code>content/</code> folder as plain HTML if you would
+    rather read it there.
+  </div>
+</noscript>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<p>Ask an engineer what a computer spends its energy on and the honest answer is embarrassing: <strong>postage</strong>. Not the arithmetic. The arithmetic is nearly free. What costs is fetching the numbers to do the arithmetic on, and then putting the answer back.</p>
+
+<p>This is not a minor inefficiency to be tuned away. It is the shape of the machine. In 1945 the design that won laid out a processor over here and a memory over there, with a bus between them, and every computer you have ever touched still has that bus. Everything the processor wants, it has to send for. The name for the traffic jam this creates is the <span class="term">von Neumann bottleneck</span>, and by now the bottleneck is not really about speed at all. It is about the energy it takes to drag a number down a wire.</p>
+
+<h3>What a multiplication actually costs</h3>
+
+<p>Figure 1 puts numbers on it. The green bar is the whole job — multiplying two 32-bit numbers. The grey bars are what it costs to go and get one of them, depending on where it happens to be sitting.</p>
+
+<div data-fig="data-tax"></div>
+
+<p>Click through the three buttons. If the number is already in a register, right next to the arithmetic unit, fetching it is a rounding error. Pull it from cache and the fetch already costs more than the multiply. Pull it from main memory and the arithmetic disappears into the noise.</p>
+
+<div class="stat">
+  <span class="stat__num">99.4 %</span>
+  <span class="stat__txt">of the energy in a multiply-from-main-memory goes into <b>moving the number</b>, not multiplying it. The multiply is the 0.6 %.</span>
+</div>
+
+<p>Every trick in modern computer architecture is a response to that number. Caches exist to keep operands close. Deep pipelines exist to hide the wait. The reason a graphics card is good at neural networks is not that it multiplies well — it is that it can arrange for thousands of multiplies to share one expensive trip to memory. The whole industry is engaged in an elaborate campaign to avoid paying postage.</p>
+
+<div class="aside">
+  These figures come from Mark Horowitz's ISSCC 2014 survey, measured on a 45&nbsp;nm process. Newer chips are cheaper across the board. But shrinking a transistor makes arithmetic much cheaper and a long wire only slightly cheaper, so the <em>ratio</em> in Figure 1 has grown worse since 2014, not better. Treat the bars as order-of-magnitude truth, not a spec sheet.
+</div>
+
+<h3>The second bill: paying attention to nothing</h3>
+
+<p>There is a second tax, and it is stranger. A conventional computer is <span class="term">clocked</span>: a crystal ticks, and on every tick the machine wakes up, evaluates everything it is responsible for, and goes back to sleep. It does this whether or not anything has changed.</p>
+
+<p>For a spreadsheet this is fine. For anything watching the physical world it is absurd, because the physical world is mostly not doing anything. A doorbell camera stares at an empty porch for hours. A microphone listening for a wake word hears silence, silence, silence, a truck, silence. A vibration sensor on a pump reports "still fine" ten thousand times before it reports the one thing you installed it for.</p>
+
+<p>Figure 2 makes the bill visible. The top row is a clocked machine sampling a thousand times a second. The bottom row is a machine that only does work when the world changes. Drag the slider to see what happens as the world gets quieter.</p>
+
+<div data-fig="idle-tax"></div>
+
+<p>At 1&nbsp;% activity — a generous estimate for a porch — the clocked machine burns about a hundred times more energy than it needs to, and it does this continuously, forever. The energy did not go into a bad algorithm. It went into confirming that nothing happened.</p>
+
+<div class="check" data-check data-answer="2">
+  <div class="check__q">Drag Figure 2 all the way to the right, so the world is changing 100&nbsp;% of the time. What happens to the event-driven machine's advantage?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">It gets even bigger</button>
+    <button class="check__opt" type="button">It stays about the same</button>
+    <button class="check__opt" type="button">It disappears — it becomes slightly worse</button>
+  </div>
+  <div class="check__a">
+    Slightly worse. An event-driven machine still has to keep the lights on, and if an event arrives every time the clock would have ticked anyway, it has taken on all the bookkeeping of events with none of the savings. <b>Sparsity is not a free lunch; it is a bet that the world is quiet.</b> Hold on to that — it comes back in Part 6 as the single number that decides whether a neuromorphic chip wins or loses.
+  </div>
+</div>
+
+<h3>The existence proof</h3>
+
+<p>Both taxes have the same root cause: <strong>separating the memory from the arithmetic, and running on a clock instead of on events.</strong> We know that a different arrangement is possible, because one is sitting inside your skull.</p>
+
+<div class="stat">
+  <span class="stat__num">20 W</span>
+  <span class="stat__txt">is the entire power budget of a human brain — about the same as a bright light bulb — for <b>86 billion neurons</b> and something like a hundred trillion connections. A single high-end AI accelerator draws thirty times that.</span>
+</div>
+
+<p>Take that comparison with the salt it deserves: a brain and a GPU are not doing the same job, and nobody can price the brain's task in the units a datasheet uses. What the comparison does establish is an existence proof. Whatever the brain is doing, it is not paying the postage bill, and it is not waking up a thousand times a second to check on an empty porch.</p>
+
+<p>It manages this with two structural choices. First, the memory <em>is</em> the processor — a synapse holds a value and applies it in the same place, so nothing is ever fetched. Second, nothing is clocked. A neuron sits inert until enough input arrives, and then it emits a single event. No input, no event, no energy.</p>
+
+<p><span class="term">Neuromorphic computing</span> is the attempt to build machines on those two choices. Not to simulate a brain — that is a different and much harder project — but to steal the two architectural decisions that make the brain's energy budget possible, and to find the problems where they pay off.</p>
+
+<p>Which means the first thing we need is the object that makes event-driven behaviour possible in the first place. That is Part 2, and it is a bucket.</p>
+
+<div class="stamp">
+  <p>Conventional computers spend almost all of their energy moving numbers between a separate memory and a separate processor, and they spend it on a fixed clock whether or not anything is happening.</p>
+  <p>Neuromorphic computing attacks exactly those two costs: <strong>put the memory where the arithmetic is, and do work only when an event arrives.</strong></p>
+</div>

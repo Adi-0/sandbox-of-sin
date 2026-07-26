@@ -1,0 +1,120 @@
+/* ============================================================
+   TOKENS — "the chart recorder"
+   Cool plotter paper, hairline grid, instrument title blocks.
+   Every colour used anywhere (CSS *and* inside every SVG)
+   resolves through these variables, so dark mode is one override.
+   ============================================================ */
+
+:root {
+  /* --- surfaces & ink ------------------------------------- */
+  --paper:      #f6f8f7;   /* page */
+  --paper-2:    #eef1f0;   /* panel wells, cards */
+  --paper-3:    #e3e8e6;   /* recessed */
+  --grid:       #dbe2e0;   /* fine graticule inside panels */
+  --grid-major: #c6d0cd;   /* major graticule */
+  --rule:       #c2cdc9;   /* hairline borders */
+  --ink:        #16201d;   /* body text */
+  --ink-2:      #4a5b56;   /* muted text, axis labels */
+  --ink-3:      #7f918b;   /* faint text, ticks */
+
+  /* --- the four semantic quantities ------------------------
+     These mean the same thing in every figure, every readout,
+     and every mention in the prose. Colour is vocabulary.      */
+  --v:    #b0700c;   /* membrane voltage  — amber  */
+  --spike:#bd2a61;   /* a spike (an event) — magenta */
+  --exc:  #0d7a68;   /* excitation, positive weight — teal */
+  --inh:  #4a49bf;   /* inhibition, negative weight — indigo */
+
+  /* tinted washes of the same four, for fills */
+  --v-wash:     rgba(176, 112, 12, 0.13);
+  --spike-wash: rgba(189, 42, 97, 0.13);
+  --exc-wash:   rgba(13, 122, 104, 0.13);
+  --inh-wash:   rgba(74, 73, 191, 0.13);
+
+  --ok:   #0d7a68;
+  --warn: #b0700c;
+
+  /* --- type roles ------------------------------------------
+     display  : serif, for part titles only — a little gravity
+     body     : system sans, for long-form reading
+     mono     : all data, labels, readouts, figure annotation   */
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino,
+                  "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+                  "DejaVu Sans Mono", "Liberation Mono", monospace;
+
+  /* --- measure & rhythm ----------------------------------- */
+  --measure: 68ch;
+  --rail: 268px;
+  --step: 1.5rem;
+  --radius: 3px;
+
+  --shadow: 0 1px 2px rgba(22, 32, 29, 0.06),
+            0 8px 24px -18px rgba(22, 32, 29, 0.35);
+
+  color-scheme: light;
+}
+
+/* ---- dark: same tokens, different values ------------------ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:      #0e1413;
+    --paper-2:    #151d1b;
+    --paper-3:    #1c2624;
+    --grid:       #223029;
+    --grid-major: #2c3d38;
+    --rule:       #31433e;
+    --ink:        #dde6e3;
+    --ink-2:      #97a8a3;
+    --ink-3:      #6a7b76;
+
+    --v:    #eaa53f;
+    --spike:#ff6f9d;
+    --exc:  #35cbaf;
+    --inh:  #9694ff;
+
+    --v-wash:     rgba(234, 165, 63, 0.16);
+    --spike-wash: rgba(255, 111, 157, 0.16);
+    --exc-wash:   rgba(53, 203, 175, 0.16);
+    --inh-wash:   rgba(150, 148, 255, 0.16);
+
+    --ok:   #35cbaf;
+    --warn: #eaa53f;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5),
+              0 8px 24px -18px rgba(0, 0, 0, 0.9);
+    color-scheme: dark;
+  }
+}
+
+/* ---- explicit manual override (the toggle in the header) --- */
+:root[data-theme="dark"] {
+  --paper:      #0e1413;
+  --paper-2:    #151d1b;
+  --paper-3:    #1c2624;
+  --grid:       #223029;
+  --grid-major: #2c3d38;
+  --rule:       #31433e;
+  --ink:        #dde6e3;
+  --ink-2:      #97a8a3;
+  --ink-3:      #6a7b76;
+
+  --v:    #eaa53f;
+  --spike:#ff6f9d;
+  --exc:  #35cbaf;
+  --inh:  #9694ff;
+
+  --v-wash:     rgba(234, 165, 63, 0.16);
+  --spike-wash: rgba(255, 111, 157, 0.16);
+  --exc-wash:   rgba(53, 203, 175, 0.16);
+  --inh-wash:   rgba(150, 148, 255, 0.16);
+
+  --ok:   #35cbaf;
+  --warn: #eaa53f;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5),
+            0 8px 24px -18px rgba(0, 0, 0, 0.9);
+  color-scheme: dark;
+}
