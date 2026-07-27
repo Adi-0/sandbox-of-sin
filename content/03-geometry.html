@@ -1,0 +1,230 @@
+<p class="eyebrow">
+  <span>Part 3</span>
+  <span class="spec">NCEES 1.D</span>
+  <span>17 minute read</span>
+</p>
+
+<h1>Analytic Geometry</h1>
+
+<p class="lede">Descartes' one idea: a shape and an equation are the same object.
+Once you accept that, geometry becomes algebra, and algebra you can do under
+time pressure.</p>
+
+<h2>3.1 Lines, and the two numbers that fix one</h2>
+
+<p>A line is fixed by a direction and a point it passes through. The direction is
+the <span class="term">slope</span> — how much vertical you get per unit of
+horizontal:</p>
+
+<f-plate no="3.1" title="The line" stamp="handbook"
+  caption="Three forms of one object. <b>Point-slope is the one to reach for on
+  the exam</b>: it is the only form you can write down immediately from what a
+  problem usually gives you, which is a point and a direction.">
+  <f-row tex="m = \frac{\qy{y_2 - y_1}}{\qx{x_2 - x_1}}" name="slope"
+         gloss="Rise over run. Vertical change divided by horizontal change, in that order — inverting this is the single most common slip in the topic."></f-row>
+  <f-row tex="y - y_1 = m(x - x_1)" name="point-slope"
+         gloss="Read it aloud: from a known point, go across by <span class='math'>(x − x₁)</span> and up by <span class='math'>m</span> times that."></f-row>
+  <f-row tex="y = mx + b \qquad Ax + By + C = 0" name="slope-intercept, general"
+         gloss="In the general form the slope is <span class='math'>−A/B</span>. Worth knowing, because that is the form a problem hands you when it wants to hide the slope."></f-row>
+  <f-row tex="d = \sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}" name="distance"
+         gloss="Pythagoras again, with the legs written as coordinate differences. It is the same theorem every time."></f-row>
+</f-plate>
+
+<p>Two relationships between lines come up constantly, and only one of them is
+worth memorising:</p>
+
+<ul>
+  <li><b>Parallel</b> lines have equal slopes. Obvious enough not to need a note.</li>
+  <li><b>Perpendicular</b> lines have slopes whose product is
+      <span data-tex="-1">−1</span> — each is the negative reciprocal of the
+      other. <span class="stamp-inline know">Know cold</span>. A slope of
+      <span data-tex="4/3">4/3</span> is perpendicular to a slope of
+      <span data-tex="-3/4">−3/4</span>, and those two numbers are about to
+      reappear.</li>
+</ul>
+
+<h2>3.2 The circle, and the trick the exam is really testing</h2>
+
+<p>A circle is every point at a fixed distance from a centre. Write that
+sentence with the distance formula and you have the equation, no derivation
+needed:</p>
+
+<f-plate no="3.2" title="The circle" stamp="handbook"
+  caption="The general form is the standard form multiplied out. Going backwards
+  — general to standard — is <b>completing the square</b>, and it is what almost
+  every circle question on this exam is actually testing.">
+  <f-row tex="(x - h)^2 + (y - k)^2 = r^2" name="standard"
+         gloss="Centre <span class='math'>(h, k)</span>, radius <span class='math'>r</span>. Note the <em>minus</em> signs: a centre at (−2, −4) appears as <span class='math'>(x+2)² + (y+4)²</span>."></f-row>
+  <f-row tex="x^2 + y^2 + Dx + Ey + F = 0" name="general"
+         gloss="A circle in disguise. The coefficients of <span class='math'>x²</span> and <span class='math'>y²</span> must be equal — if they are not, it is not a circle."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>completing the square, the FE way</em></h4>
+  <div class="worked-body">
+    <p>Find the centre of the circle
+    <span data-tex="x^2 + 4x + y^2 + 8y = 0">x² + 4x + y² + 8y = 0</span>.</p>
+    <ol class="steps">
+      <li>Take the <span data-tex="x">x</span> terms alone:
+        <span data-tex="x^2 + 4x">x² + 4x</span>. Halve the coefficient of
+        <span data-tex="x">x</span> — that gives 2 — and you know the square is
+        <span data-tex="(x + 2)^2">(x+2)²</span>, which is
+        <span data-tex="x^2 + 4x + 4">x² + 4x + 4</span>. You added 4, so
+        subtract it back.</li>
+      <li>Same for <span data-tex="y">y</span>: half of 8 is 4, so
+        <span data-tex="(y+4)^2 = y^2 + 8y + 16">(y+4)² = y² + 8y + 16</span>.
+        Subtract 16.</li>
+      <li>Reassemble:
+        <span data-tex="(x+2)^2 - 4 + (y+4)^2 - 16 = 0 \;\Rightarrow\; (x+2)^2 + (y+4)^2 = 20" data-display>(x+2)² + (y+4)² = 20</span>
+        <b>Centre <span data-tex="(-2, -4)">(−2, −4)</span></b>, radius
+        <span data-tex="\sqrt{20} \approx 4.47">√20 ≈ 4.47</span>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">The shortcut, once you
+    trust it: the centre is always
+    <span data-tex="(-D/2,\; -E/2)">(−D/2, −E/2)</span>. Halve each linear
+    coefficient and flip the sign. Ten seconds, no algebra — but do the long
+    version at least once so you know why it works.</p>
+  </div>
+</div>
+
+<h2>3.3 The cast, as a circle</h2>
+
+<p>Take <span data-tex="r = 5">r = 5</span> centred at the origin:
+<span data-tex="x^2 + y^2 = 25">x² + y² = 25</span>. The point
+<span data-tex="(3, 4)">(3, 4)</span> lies on it, which we already knew from
+Part 1 — the radius to that point is the hypotenuse of the 3-4-5 triangle.</p>
+
+<p>Now the useful part. The radius to <span data-tex="(3,4)">(3,4)</span> has
+slope <span data-tex="4/3">4/3</span>. A tangent line touches the circle without
+crossing it, and a tangent is always <em>perpendicular</em> to the radius at the
+point of contact. So the tangent's slope must be
+<span data-tex="-3/4">−3/4</span>, by the negative-reciprocal rule two sections
+back — and now you have the tangent line with no calculus at all:</p>
+
+<p class="math" data-tex="y - 4 = -\tfrac{3}{4}(x - 3)" data-display>y − 4 = −(3/4)(x − 3)</p>
+
+<p>Drag the point around Plate 9 and watch the two slopes multiply to
+<span data-tex="-1">−1</span> at every position.</p>
+
+<div data-figure="circleTangent"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Where this is going</span>
+  <p style="margin-bottom:0">In Part 6 we will differentiate
+  <span class="math" data-tex="x^2 + y^2 = 25">x² + y² = 25</span> implicitly and
+  get <span class="math" data-tex="dy/dx = -x/y">dy/dx = −x/y</span>, which at
+  <span class="math" data-tex="(3,4)">(3,4)</span> is
+  <span class="math" data-tex="-3/4">−3/4</span>. <b>The same number, by a
+  completely different route.</b> When two methods that share no machinery agree,
+  you have understood something rather than remembered it.</p>
+</div>
+
+<h2>3.4 The conic sections are one family</h2>
+
+<p>Circles, ellipses, parabolas and hyperbolas look like four separate topics
+with four separate formula sets. They are one shape with one dial.</p>
+
+<p>Fix a point (the <span class="term">focus</span>) and a line (the
+<span class="term">directrix</span>). Now trace every point whose distance to the
+focus is <span data-tex="e">e</span> times its distance to the directrix. That
+single number <span data-tex="e">e</span> — the
+<span class="term">eccentricity</span> — decides which conic you get.</p>
+
+<div data-figure="conics"></div>
+
+<f-plate no="3.3" title="The conic sections" stamp="handbook"
+  caption="Eccentricity is the only thing distinguishing these. <b>Everything at
+  <span class='math' data-tex='e < 1'>e&lt;1</span> is a closed curve; everything
+  at <span class='math' data-tex='e \ge 1'>e≥1</span> escapes to infinity.</b>
+  That is the whole taxonomy.">
+  <f-row tex="\frac{(x-h)^2}{a^2} + \frac{(y-k)^2}{b^2} = 1" name="ellipse · 0 < e < 1"
+         gloss="Two <b>plus</b> signs, unequal denominators. Semi-axes <span class='math'>a</span> and <span class='math'>b</span>; a circle is the case <span class='math'>a = b</span>."></f-row>
+  <f-row tex="\frac{(x-h)^2}{a^2} - \frac{(y-k)^2}{b^2} = 1" name="hyperbola · e > 1"
+         gloss="A <b>minus</b> sign. That one character is the entire difference from an ellipse, and it is what the exam checks."></f-row>
+  <f-row tex="(y - k)^2 = 4p(x - h)" name="parabola · e = 1"
+         gloss="Only <em>one</em> variable is squared. Focus at distance <span class='math'>p</span> from the vertex, inside the curve."></f-row>
+  <f-row tex="e = \frac{c}{a}, \qquad c^2 = a^2 \pm b^2"
+         gloss="<span class='math'>c</span> is the focus distance from centre: use <b>−</b> for the ellipse, <b>+</b> for the hyperbola."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · reading the equation at a glance</span>
+  <p style="margin-bottom:0">Before computing anything, look at the squared terms.
+  <b>Both squared and added, equal coefficients</b> → circle.
+  <b>Both squared and added, unequal coefficients</b> → ellipse.
+  <b>Both squared but subtracted</b> → hyperbola.
+  <b>Only one squared</b> → parabola. That classification takes two seconds and
+  eliminates two of the four options on most questions in this topic.</p>
+</div>
+
+<h2>3.5 Polar and parametric, briefly</h2>
+
+<p>Two alternative ways to name a point, both of which you have already met.</p>
+
+<p><span class="term">Polar coordinates</span> give a point as
+<span data-tex="(r, \theta)">(r, θ)</span> instead of
+<span data-tex="(x, y)">(x, y)</span> — which is precisely the polar form of a
+complex number from Part 2, with the same conversions:
+<span data-tex="x = r\cos\theta">x = r cos θ</span>,
+<span data-tex="y = r\sin\theta">y = r sin θ</span>,
+<span data-tex="r^2 = x^2 + y^2">r² = x² + y²</span>. Nothing new to learn.</p>
+
+<p><span class="term">Parametric equations</span> give
+<span data-tex="x">x</span> and <span data-tex="y">y</span> each as a function of
+a third variable, usually time. To find the path, eliminate the parameter. The
+FE exam asks this in almost exactly one form:</p>
+
+<div class="worked">
+  <h4>Worked · <em>eliminating the parameter</em></h4>
+  <div class="worked-body">
+    <p>A particle has <span data-tex="x = 8\sin t">x = 8 sin t</span> and
+    <span data-tex="y = 6\cos t">y = 6 cos t</span>. What path does it trace?</p>
+    <ol class="steps">
+      <li>Isolate the trig functions:
+        <span data-tex="\sin t = x/8">sin t = x/8</span> and
+        <span data-tex="\cos t = y/6">cos t = y/6</span>.</li>
+      <li>The Pythagorean identity from Part 1 is what kills the parameter,
+        because it is true for every <span data-tex="t">t</span>:
+        <span data-tex="\left(\frac{x}{8}\right)^2 + \left(\frac{y}{6}\right)^2 = 1" data-display>(x/8)² + (y/6)² = 1</span></li>
+      <li>That is an <b>ellipse</b> with semi-axes 8 and 6. Multiply through by
+        <span data-tex="64 \cdot 36 = 2304">2304</span> if the answer options are
+        in general form:
+        <span data-tex="36x^2 + 64y^2 = 2304">36x² + 64y² = 2304</span>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Whenever a parametric
+    problem contains a sine and a cosine of the same argument, the Pythagorean
+    identity is the elimination. That pattern covers nearly every version of this
+    question you will see.</p>
+  </div>
+</div>
+
+<h2>3.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Slope is <span data-tex="\Delta y / \Delta x">Δy/Δx</span>, and
+        perpendicular slopes multiply to <span data-tex="-1">−1</span>.</li>
+    <li>Point-slope form. It is faster to write than to look up.</li>
+    <li>A circle's centre from general form: <span data-tex="(-D/2, -E/2)">(−D/2, −E/2)</span>.</li>
+    <li>The four-way classification: added and equal → circle, added and unequal →
+        ellipse, subtracted → hyperbola, one square → parabola.</li>
+    <li>A tangent is perpendicular to the radius at the point of contact.</li>
+    <li>Sine and cosine of the same argument in a parametric pair means the
+        Pythagorean identity eliminates the parameter.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Every shape in this part is the distance formula in disguise, which is
+  Pythagoras, which is the triangle from Part 1.</p>
+  <p>The four conic sections are one family separated by one number. And the
+  tangent to a circle is perpendicular to its radius — a fact that gives you
+  tangent lines with no calculus, and that Part 6 will confirm with calculus.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"geometry","title":"Part 3 · Analytic geometry","topics":["line-through","circle-center","conic-id","tangent-slope","parametric-path"],"count":6}'></div>
+
+<div data-reflex='{"only":["geometry","complex"],"count":6,"title":"Handbook Reflex · Parts 2–3"}'></div>

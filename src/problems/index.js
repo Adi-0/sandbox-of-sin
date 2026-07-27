@@ -2,3 +2,4 @@
 
 import "./algebra.js";
 import "./complex.js";
+import "./geometry.js";
