@@ -1,53 +1,68 @@
 <!doctype html>
-<html lang="en" data-theme="">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spikes — an interactive field guide to neuromorphic computing</title>
-<meta name="description" content="Learn neuromorphic computing from first principles: leaky neurons, spike timing, synapses, STDP, and the silicon that runs them — with live simulations you can turn the knobs on.">
+<title>The Bench — FE Electrical and Computer: Mathematics</title>
+<meta name="description" content="An interactive educator for the Mathematics portion of the NCEES FE Electrical and Computer exam. Built from first principles, with live figures and generated practice problems.">
+<meta name="color-scheme" content="light dark">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap">
+
 <link rel="stylesheet" href="styles/tokens.css">
 <link rel="stylesheet" href="styles/base.css">
-<link rel="stylesheet" href="styles/components.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f6f8f7'/><path d='M3 24 L11 24 L13 8 L15 24 L17 20 L19 24 L29 24' fill='none' stroke='%23bd2a61' stroke-width='2.4'/></svg>">
+<link rel="stylesheet" href="styles/plate.css">
+<link rel="stylesheet" href="styles/math.css">
+<link rel="stylesheet" href="styles/bench.css">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%2316222b'/><path d='M6 22 L14 10 L18 16 L26 6' fill='none' stroke='%2345b6a6' stroke-width='2.5'/></svg>">
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+
+<a class="skip-link" href="#reading">Skip to the reading</a>
 
 <div class="app">
-  <header class="masthead">
-    <button class="iconbtn railtoggle" id="rail-toggle" aria-expanded="false" aria-controls="rail">Contents</button>
-    <a class="masthead__mark" href="#/" style="text-decoration:none"><b>Spikes</b><span class="masthead__sub"> &nbsp;/&nbsp; a field guide</span></a>
-    <span class="masthead__spacer"></span>
-    <div class="progress" title="Parts you have marked complete">
-      <span id="progress-label">0 / 8</span>
-      <span class="progress__track"><span class="progress__fill" id="progress-fill"></span></span>
-    </div>
-    <button class="iconbtn" id="theme-toggle" aria-label="Switch colour theme">Theme</button>
-  </header>
 
-  <nav class="rail" id="rail" aria-label="Contents">
-    <div class="rail__head">Index of parts</div>
-    <ul class="rail__list" id="rail-list"></ul>
-    <div class="rail__foot">
-      <div>Arrow keys ← → move between parts.</div>
-      <div style="margin-top:.5rem"><button id="reset-progress" type="button">Reset progress</button></div>
+  <nav class="rail" aria-label="Contents">
+    <a class="rail-mark" href="#/orientation">
+      The Bench
+      <span>FE Electrical &amp; Computer · Mathematics</span>
+    </a>
+
+    <div class="rail-progress">
+      <span id="progress-text">0/10 parts</span>
+      <span class="bar"><i id="progress-bar" style="width:0%"></i></span>
+    </div>
+
+    <ol class="toc" id="toc"></ol>
+
+    <div class="rail-tools">
+      <button class="btn small" id="theme-btn" type="button">Theme: auto</button>
+      <button class="btn small" id="reset-btn" type="button">Reset progress</button>
     </div>
   </nav>
 
-  <main class="main" id="main" tabindex="-1">
-    <div id="view" class="reader"></div>
+  <main class="reading" id="reading" tabindex="-1">
+    <noscript>
+      <article class="part">
+        <p class="eyebrow">The Bench</p>
+        <h1>FE Electrical and Computer — Mathematics</h1>
+        <div class="noscript-note">
+          <p><b>This tool needs JavaScript.</b> Its figures are live drawings you turn
+          knobs on, and its practice problems are generated fresh each time rather than
+          stored, so there is nothing meaningful to show without it.</p>
+          <p style="margin-bottom:0">The written chapters are plain HTML and can be read
+          directly from the <code>content/</code> folder if you would rather not enable it.
+          Every figure in them is described in the surrounding prose, on purpose — the
+          argument never depends on a drawing rendering.</p>
+        </div>
+      </article>
+    </noscript>
   </main>
-</div>
 
-<noscript>
-  <div class="noscript">
-    <strong>This guide needs JavaScript for its figures.</strong>
-    The prose is written to stand on its own, but it is assembled by a small
-    script, so with JavaScript disabled the page will stay empty. The text of
-    every part is in the <code>content/</code> folder as plain HTML if you would
-    rather read it there.
-  </div>
-</noscript>
+</div>
 
 <script type="module" src="src/app.js"></script>
 </body>

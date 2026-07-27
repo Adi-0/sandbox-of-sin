@@ -1,0 +1,350 @@
+<p class="eyebrow">
+  <span>Part 1</span>
+  <span class="spec">NCEES 1.A</span>
+  <span>26 minute read</span>
+</p>
+
+<h1>Algebra and Trigonometry</h1>
+
+<p class="lede">Two tools. One compresses enormous ranges into readable numbers.
+The other converts an angle into a ratio. Almost everything else in this guide
+is built on them.</p>
+
+<p>Engineering algebra is not the algebra of school, where the point was to
+solve for <span data-tex="x">x</span>. Here the point is that certain
+<em>shapes</em> of expression recur so often that recognising them is most of the
+work. This part covers the four shapes the FE exam returns to again and again —
+the exponential, the quadratic, the progression, and the triangle — and it
+introduces the object that will follow us through all eight subtopics.</p>
+
+<h2>1.1 Why logarithms exist</h2>
+
+<p>A pin dropping and a jet engine at takeoff differ in acoustic power by a
+factor of about <span data-tex="10^{12}">10¹²</span>. A copper wire and window
+glass differ in resistivity by a factor of about
+<span data-tex="10^{22}">10²²</span>. No axis, no table, and no human intuition
+handles numbers like that side by side.</p>
+
+<p>So engineers stopped writing the numbers and started writing their
+<em>exponents</em>. A <span class="term">logarithm</span> is the exponent you
+would have had to write. <span data-tex="\log_{10} 1000 = 3">log₁₀ 1000 = 3</span>
+says nothing more than "1000 is 10 raised to the 3."</p>
+
+<p>That single move turns the pin-drop-to-jet-engine ratio from
+<span data-tex="10^{12}">10¹²</span> into the number <b>120</b> — which is
+exactly why sound is measured in decibels, why Bode plots in Part 12 of the exam
+have logarithmic axes, and why gain in Electronics is quoted in dB. The whole
+audible range of human hearing fits in two digits.</p>
+
+<div class="note payoff">
+  <span class="note-tag">The killer number</span>
+  <p style="margin-bottom:0">Amplifier A has a power gain of 1000. Amplifier B
+  has a gain of 100. Chain them and the gain is 100 000 — you multiplied. In
+  decibels they are 30 dB and 20 dB, and the chain is <b>50 dB</b> — you added.
+  Every logarithm rule below is a restatement of that one trade: <b>multiplication
+  becomes addition</b>.</p>
+</div>
+
+<p>Plate 2 is that trade, made physical. Drag the slider and watch two lengths
+add up while two numbers multiply.</p>
+
+<div data-figure="logRuler"></div>
+
+<p>Because a logarithm is an exponent, every logarithm rule is an exponent rule
+read backwards. You do not have two lists to learn. You have one list, seen from
+two sides.</p>
+
+<f-plate no="1.1" title="Exponents and logarithms" stamp="handbook"
+  caption="Read each row left to right and you have an exponent law; read it
+  right to left and you have the matching logarithm law. <b>The third row is the
+  one the exam actually asks about</b> — it is how you get a log of any base out
+  of a calculator that only has base 10 and base e.">
+  <f-row tex="a^m \cdot a^n = a^{m+n} \qquad \log(xy) = \log x + \log y"
+         gloss="Multiplying repeats the factor <b>m + n</b> times. So on the log side, multiplying adds."></f-row>
+  <f-row tex="\frac{a^m}{a^n} = a^{m-n} \qquad \log\frac{x}{y} = \log x - \log y"
+         gloss="Dividing cancels factors, so exponents subtract."></f-row>
+  <f-row tex="(a^m)^n = a^{mn} \qquad \log x^n = n \log x"
+         gloss="A power of a power multiplies the counts. This is the row that turns a stubborn exponent into a coefficient you can solve for."></f-row>
+  <f-row tex="\log_b x = \frac{\log_{10} x}{\log_{10} b} = \frac{\ln x}{\ln b}"
+         name="change of base"
+         gloss="Your calculator has <b>log</b> and <b>ln</b> and nothing else. Every other base goes through this."></f-row>
+  <f-row tex="a^0 = 1 \qquad a^{-n} = \frac{1}{a^n} \qquad a^{1/n} = \sqrt[n]{a}"
+         gloss="Zero, negative and fractional exponents are not special cases — they are what you must define for the first row to keep working."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>a real FE-shaped log question</em></h4>
+  <div class="worked-body">
+    <p>Evaluate <span data-tex="\log_3 \frac{3}{2} + \log_3 12 - \log_3 2">log₃(3/2) + log₃12 − log₃2</span>.</p>
+    <ol class="steps">
+      <li>Two of the three rules from Form 1.1 collapse this into one logarithm:
+        addition means multiply, subtraction means divide.
+        <span data-tex="\log_3 \frac{(3/2)(12)}{2}" data-display>log₃ of ((3/2)(12)/2)</span></li>
+      <li>The inside is <span data-tex="\frac{18}{2} = 9">18/2 = 9</span>. So we
+        want <span data-tex="\log_3 9">log₃9</span>.</li>
+      <li>Read it as the question it is: <em>3 to what power is 9?</em> Two.
+        <b>The answer is 2.00.</b></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Notice you never
+    touched a calculator. That is the design of these questions — they look like
+    arithmetic and they are actually about recognising that three log terms with
+    the same base always want to become one.</p>
+  </div>
+</div>
+
+<h2>1.2 The quadratic, and the number that tells you the answer's shape</h2>
+
+<p>A <span class="term">quadratic</span> is any equation of the form
+<span data-tex="ax^2 + bx + c = 0">ax² + bx + c = 0</span>. You know the formula.
+What matters on this exam is the piece under the radical.</p>
+
+<f-plate no="1.2" title="Quadratic formula and discriminant" stamp="handbook"
+  caption="The discriminant <span class='math' data-tex='b^2 - 4ac'>b²−4ac</span>
+  answers <b>what kind of roots</b> before you compute <b>which</b> roots — and
+  in Part 7 that same sign will tell you whether a circuit rings, crawls, or sits
+  right on the boundary.">
+  <f-row tex="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" name="roots"
+         gloss="Two roots, symmetric about <span class='math'>−b/2a</span> — which is therefore always the vertex."></f-row>
+  <f-row tex="b^2 - 4ac > 0 \;\Rightarrow\; \text{two real roots}" gloss=""></f-row>
+  <f-row tex="b^2 - 4ac = 0 \;\Rightarrow\; \text{one repeated real root}" gloss=""></f-row>
+  <f-row tex="b^2 - 4ac < 0 \;\Rightarrow\; \text{a complex conjugate pair}"
+         gloss="The case that looks like failure at school and turns out, in Part 2, to be the useful one."></f-row>
+</f-plate>
+
+<p>Also worth carrying, because it is faster than the formula when it applies:
+the roots of <span data-tex="ax^2+bx+c">ax²+bx+c</span> satisfy
+<span data-tex="x_1 + x_2 = -b/a">x₁+x₂ = −b/a</span> and
+<span data-tex="x_1 x_2 = c/a">x₁x₂ = c/a</span>. If a multiple-choice question
+offers you four root-pairs, adding them is often quicker than solving.</p>
+
+<h2>1.3 Progressions</h2>
+
+<p>The FE exam asks about sequences more often than its syllabus suggests,
+because they are quick to write and quick to mark. There are two, and they differ
+in one word: an <span class="term">arithmetic progression</span> <em>adds</em> a
+constant each step; a <span class="term">geometric progression</span>
+<em>multiplies</em> by one.</p>
+
+<f-plate no="1.3" title="Arithmetic and geometric progressions" stamp="handbook"
+  caption="The geometric sum has a limit when <span class='math'
+  data-tex='|r| < 1'>|r|&lt;1</span> because you are adding ever-smaller pieces —
+  the same fact that makes an <span class='math'>RC</span> circuit settle instead
+  of running away.">
+  <f-row tex="a_n = a_1 + (n-1)d \qquad S_n = \frac{n}{2}(a_1 + a_n)"
+         name="arithmetic"
+         gloss="The sum is <b>the average term times how many there are</b>. That is all the second formula says."></f-row>
+  <f-row tex="a_n = a_1 r^{\,n-1} \qquad S_n = \frac{a_1(1 - r^n)}{1 - r}"
+         name="geometric"
+         gloss="Each term is the first one multiplied by the ratio <span class='math'>r</span>, once per step taken."></f-row>
+  <f-row tex="S_\infty = \frac{a_1}{1-r}, \quad |r| < 1" name="infinite sum"
+         gloss="Only converges when each step is smaller than the last."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the off-by-one</span>
+  <p style="margin-bottom:0">It is <span class="math" data-tex="r^{\,n-1}">rⁿ⁻¹</span>,
+  not <span class="math" data-tex="r^n">rⁿ</span>. The first term has taken
+  <em>zero</em> steps. Every wrong answer offered on a progression question is
+  built from exactly this slip, so if your result matches a listed option
+  exactly, that is not proof you were right.</p>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>finding a first term backwards</em></h4>
+  <div class="worked-body">
+    <p>The 2nd and 6th terms of a geometric progression are
+    <span data-tex="3/10">3/10</span> and <span data-tex="243/160">243/160</span>.
+    What is the first term?</p>
+    <ol class="steps">
+      <li>Going from term 2 to term 6 is <b>four</b> steps, so the ratio is
+        applied four times:
+        <span data-tex="\frac{a_6}{a_2} = r^4 = \frac{243/160}{3/10} = \frac{243}{160}\cdot\frac{10}{3} = \frac{81}{16}" data-display>a6/a2 = r⁴ = 81/16</span></li>
+      <li><span data-tex="r = \sqrt[4]{81/16} = 3/2">r = 3/2</span>, since
+        <span data-tex="3^4 = 81">3⁴=81</span> and
+        <span data-tex="2^4 = 16">2⁴=16</span>. Recognising fourth powers of
+        small integers is worth more on this exam than it sounds.</li>
+      <li>Step back one from the second term:
+        <span data-tex="a_1 = \frac{a_2}{r} = \frac{3/10}{3/2} = \frac{1}{5}" data-display>a1 = 1/5</span>
+        <b>The first term is 1/5.</b></li>
+    </ol>
+  </div>
+</div>
+
+<h2>1.4 Trigonometry is one picture</h2>
+
+<p>Everything in trigonometry is a single diagram: a point walking around a
+circle of radius 1.</p>
+
+<p>Put the point at angle <span data-tex="\theta">θ</span> from the positive
+horizontal axis. Its horizontal position is defined to be
+<span data-tex="\cos\theta">cos θ</span> and its vertical position is defined to
+be <span data-tex="\sin\theta">sin θ</span>. That is not a consequence of
+anything — it is the definition, and every identity you will ever use falls out
+of the picture.</p>
+
+<p>Turn the knob in Plate 3 and watch the two coloured lengths. The horizontal
+one is cosine. The vertical one is sine. They are the same length measured in
+two directions, which is why swapping them just shifts the angle by 90°.</p>
+
+<div data-figure="unitCircle"></div>
+
+<p>Two consequences are free from the drawing, and they are the two you use
+most:</p>
+
+<ul>
+  <li>The point is always distance 1 from the centre. By Pythagoras, its
+      coordinates satisfy
+      <span data-tex="\cos^2\theta + \sin^2\theta = 1">cos²θ + sin²θ = 1</span>.
+      Memorise this one — it is the most-used identity in engineering and you
+      should never spend a second looking it up.</li>
+  <li>Sine and cosine can never leave <span data-tex="[-1, 1]">[−1, 1]</span>,
+      because a coordinate of a point on the unit circle cannot. If an answer
+      claims <span data-tex="\sin\theta = 1.4">sin θ = 1.4</span>, it is wrong,
+      and you knew that without checking.</li>
+</ul>
+
+<h2>1.5 Meet the cast: the 3-4-5 triangle</h2>
+
+<p>The unit circle is honest but inconvenient — its side lengths are irrational
+almost everywhere. There is one famous escape, and it is the object that will
+follow us for the rest of this guide.</p>
+
+<p>Scale the circle to radius 5, and the point at coordinates
+<span data-tex="(3, 4)">(3, 4)</span> sits exactly on it, because
+<span data-tex="3^2 + 4^2 = 5^2">3² + 4² = 5²</span>. That gives a right triangle
+with whole-number sides and, therefore, clean ratios.</p>
+
+<div data-figure="triangle345"></div>
+
+<p>Learn these four numbers and a surprising amount of this exam becomes mental
+arithmetic:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Quantity</th><th class="num">Exact</th><th class="num">Decimal</th></tr></thead>
+  <tbody>
+    <tr><td><span data-tex="\sin\theta">sin θ</span> (opposite over hypotenuse)</td><td class="num">4/5</td><td class="num">0.800</td></tr>
+    <tr><td><span data-tex="\cos\theta">cos θ</span> (adjacent over hypotenuse)</td><td class="num">3/5</td><td class="num">0.600</td></tr>
+    <tr><td><span data-tex="\tan\theta">tan θ</span> (opposite over adjacent)</td><td class="num">4/3</td><td class="num">1.333</td></tr>
+    <tr><td><span data-tex="\theta">θ</span></td><td class="num">—</td><td class="num">53.13°</td></tr>
+    <tr><td>the other acute angle</td><td class="num">—</td><td class="num">36.87°</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">Which angle is which</span>
+  <p style="margin-bottom:0">36.87° and 53.13° both belong to this triangle; they
+  are the two acute angles and they add to 90°. Throughout this guide
+  <span class="math" data-tex="\theta = 36.87^\circ">θ = 36.87°</span> — the angle
+  at the origin when the point is at <span class="math" data-tex="(3,4)">(3,4)</span>
+  measured from the horizontal, so
+  <span class="math" data-tex="\tan\theta = 4/3">tan θ = 4/3</span>. Keep that
+  fixed and the cast stays consistent all the way to Part 7.</p>
+</div>
+
+<h2>1.6 The identities worth carrying</h2>
+
+<p>The handbook lists perhaps forty trigonometric identities. Four of them do
+almost all the work on this exam.</p>
+
+<f-plate no="1.4" title="The four identities that earn their keep" stamp="know"
+  caption="The double-angle forms are the ones that turn up in power
+  calculations: instantaneous power in an AC circuit contains
+  <span class='math' data-tex='\sin^2'>sin²</span>, and the third row is how that
+  becomes a constant plus a wave at twice the frequency — which is why a
+  single-phase supply delivers power that pulses at 120 Hz, not 60.">
+  <f-row tex="\sin^2\theta + \cos^2\theta = 1" name="Pythagorean"
+         gloss="The unit circle, written down. Everything else is derived from it."></f-row>
+  <f-row tex="\sin 2\theta = 2\sin\theta\cos\theta" name="double angle"
+         gloss="Doubling the angle is <b>not</b> doubling the sine — the single most common wrong answer in this topic."></f-row>
+  <f-row tex="\cos 2\theta = \cos^2\theta - \sin^2\theta = 1 - 2\sin^2\theta" name="double angle"
+         gloss="Rearranged, <span class='math'>sin²θ = (1 − cos 2θ)/2</span>: a squared wave is a constant plus a wave at double the frequency."></f-row>
+  <f-row tex="\tan\theta = \frac{\sin\theta}{\cos\theta}" name="definition"
+         gloss="Which is why tangent blows up at 90°: the cosine underneath has gone to zero."></f-row>
+</f-plate>
+
+<p>Check the second one against the cast. With
+<span data-tex="\theta = 36.87^\circ">θ = 36.87°</span>,
+<span data-tex="\sin 2\theta = 2(0.6)(0.8) = 0.96">sin 2θ = 2(0.6)(0.8) = 0.96</span>,
+and <span data-tex="2\theta = 73.74^\circ">2θ = 73.74°</span>. Sure enough
+<span data-tex="\sin 73.74^\circ = 0.96">sin 73.74° = 0.96</span>, not
+<span data-tex="2 \times 0.6 = 1.2">1.2</span> — which would have been impossible
+anyway, as we established one section ago.</p>
+
+<h2>1.7 Triangles that are not right triangles</h2>
+
+<p>Right triangles are solved by ratios. Any other triangle needs one of two
+laws, and the entire skill is picking the correct one in about three seconds.</p>
+
+<f-plate no="1.5" title="Law of sines and law of cosines" stamp="handbook"
+  caption="The law of cosines is the Pythagorean theorem with a correction term.
+  Set <span class='math' data-tex='C = 90^\circ'>C = 90°</span>, the cosine
+  vanishes, and it collapses to <span class='math'
+  data-tex='c^2 = a^2 + b^2'>c² = a² + b²</span>. It is not a second theorem;
+  it is the same one, off-square.">
+  <f-row tex="\frac{a}{\sin A} = \frac{b}{\sin B} = \frac{c}{\sin C}" name="law of sines"
+         gloss="Use when your known pieces <b>pair up</b>: a side with the angle opposite it."></f-row>
+  <f-row tex="c^2 = a^2 + b^2 - 2ab\cos C" name="law of cosines"
+         gloss="Use when nothing pairs: two sides and the angle <b>between</b> them, or all three sides."></f-row>
+</f-plate>
+
+<p>Plate 5 makes the choice for you once and then you will not need it again.
+Press each scenario button and read which law survives.</p>
+
+<div data-figure="triangleLaws"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · degrees and radians</span>
+  <p>This costs more marks on the FE exam than any other single mistake in
+  mathematics, and it is invisible — you get a plausible number, not an error.</p>
+  <p style="margin-bottom:0"><b>The rule:</b> geometry is in degrees, calculus is
+  in radians. If an angle appears inside a derivative, an integral, a series, or
+  an exponential, it must be in radians, because
+  <span class="math" data-tex="\frac{d}{dx}\sin x = \cos x">d/dx sin x = cos x</span>
+  is only true in radians. Convert with
+  <span class="math" data-tex="\pi \text{ rad} = 180^\circ">π rad = 180°</span>,
+  and check your calculator's mode before the exam starts, not during it.</p>
+</div>
+
+<h2>1.8 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="\sin^2\theta + \cos^2\theta = 1">sin²θ + cos²θ = 1</span>
+        — and that sine and cosine live in <span data-tex="[-1,1]">[−1,1]</span>.</li>
+    <li>The 3-4-5 triangle: <span data-tex="0.6, \; 0.8, \; 4/3, \; 36.87^\circ">0.6, 0.8, 4/3, 36.87°</span>.</li>
+    <li><span data-tex="\log(xy) = \log x + \log y">log(xy) = log x + log y</span>
+        and <span data-tex="\log x^n = n\log x">log xⁿ = n log x</span>. You will
+        use these faster than you can search for them.</li>
+    <li>Change of base: <span data-tex="\log_b x = \ln x / \ln b">log_b x = ln x / ln b</span>.</li>
+    <li><span data-tex="\pi \text{ rad} = 180^\circ">π rad = 180°</span>, and that
+        calculus always means radians.</li>
+    <li>The discriminant's three cases. Not the quadratic formula itself — that
+        one is in the handbook and you have time to look it up.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A logarithm is an exponent, so every log rule is an exponent rule read
+  backwards, and its whole purpose is to turn multiplying into adding.</p>
+  <p>Trigonometry is one point walking around a circle: cosine is where it is
+  horizontally, sine is where it is vertically, and
+  <span data-tex="\sin^2 + \cos^2 = 1">sin² + cos² = 1</span> is just Pythagoras
+  applied to that point. The 3-4-5 triangle is the case where all of it is
+  whole numbers, and we are going to keep using it.</p>
+</div>
+
+<h2>Bench</h2>
+
+<p>Six problems at exam difficulty and exam pace. Press <b>New numbers</b> at any
+time for a fresh set — they are generated, not stored, so the second run is
+genuinely new.</p>
+
+<div data-bench='{"id":"algebra-trig","title":"Part 1 · Algebra and trigonometry","topics":["log-collapse","exponent-solve","geometric-progression","right-triangle","law-choice","identity-eval"],"count":6}'></div>
+
+<p>And the classification drill — no arithmetic, fifteen seconds a stem, just
+name the tool.</p>
+
+<div data-reflex='{"only":["algebra-trig"],"count":6,"title":"Handbook Reflex · Part 1"}'></div>

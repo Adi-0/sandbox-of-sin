@@ -1,224 +1,217 @@
-/* App shell: routing, content loading, figure mounting, progress. */
+/* ==========================================================================
+   app.js — the shell.
 
-import { PARTS, byId, indexOfId } from './parts.js';
-import { progress, theme } from './state.js';
-import { FIGURES } from './figures/index.js';
-import { clearLoops } from './lib/anim.js';
-import { h, $, $$ } from './lib/dom.js';
+   Routes on the hash, loads one part at a time, then hands the fragment to
+   the renderers: formulas first, then figures, then benches. Each mount is
+   guarded so one broken plate cannot take the page down with it.
+   ========================================================================== */
 
-theme.apply();
+import { PARTS, byId, indexOfPart, TOTAL_MINUTES } from "./outline.js";
+import { state, onStateChange } from "./state.js";
+import { el, clear, $ } from "./lib/dom.js";
+import { renderMathIn } from "./lib/tex.js";
+import { mountFigures, mountFormulas } from "./lib/figure.js";
+import { bench, reflexDrill } from "./lib/bench.js";
 
-const view = $('#view');
-const railList = $('#rail-list');
+/* Registering the figure and problem modules is the only reason to import
+   them; each one calls register()/defineProblem() at module scope. */
+import "./figures/index.js";
+import "./problems/index.js";
 
-/* ---------------- rail ---------------- */
+const reading = $("#reading");
+const tocEl = $("#toc");
+let teardowns = [];
 
-function renderRail() {
-  railList.innerHTML = '';
-  const current = route().id;
-  for (const p of PARTS) {
-    const li = h('li', {
-      class: 'rail__item',
-      'data-active': String(p.id === current),
-      'data-done': String(progress.has(p.id)),
-    },
-      h('a', { href: `#/${p.id}` },
-        h('span', { class: 'rail__num', text: String(p.n).padStart(2, '0') }),
-        h('span', { class: 'rail__title', text: p.title })
-      )
+/* ==========================================================================
+   Contents rail
+   ========================================================================== */
+
+function buildToc() {
+  clear(tocEl);
+  PARTS.forEach((p) => {
+    const a = el("a", { href: `#/${p.id}` },
+      el("span.num", { text: p.n === 0 ? "00" : String(p.n).padStart(2, "0") }),
+      el("span.label", { text: p.title }),
+      el("span.meta", { text: `${p.spec ? p.spec + " · " : ""}${p.minutes} min` })
     );
-    railList.appendChild(li);
-  }
-}
-
-function renderProgress() {
-  const n = PARTS.filter((p) => progress.has(p.id)).length;
-  $('#progress-label').textContent = `${n} / ${PARTS.length}`;
-  $('#progress-fill').style.width = `${(n / PARTS.length) * 100}%`;
-}
-
-/* ---------------- routing ---------------- */
-
-function route() {
-  const raw = location.hash.replace(/^#\/?/, '').trim();
-  return { id: raw || null };
-}
-
-async function render() {
-  clearLoops();
-  const { id } = route();
-  view.innerHTML = '';
-  view.classList.toggle('reader--wide', id === 'bench');
-
-  try {
-    if (!id) await renderCover();
-    else {
-      const part = byId(id);
-      if (!part) { location.hash = '#/'; return; }
-      await renderPart(part);
-    }
-  } catch (err) {
-    renderError(err);
-  }
-
-  renderRail();
-  renderProgress();
-  $('#rail').removeAttribute('data-open');
-  $('#rail-toggle').setAttribute('aria-expanded', 'false');
-  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-}
-
-function renderError(err) {
-  const isFile = location.protocol === 'file:';
-  view.appendChild(h('div', { class: 'aside', style: 'border-color:var(--spike)' },
-    h('p', { html: isFile
-      ? 'This guide loads its chapters as separate files, which browsers block when a page is opened directly from disk. Start the tiny bundled server instead — <code>python3 serve.py</code> — then open <code>http://localhost:8000</code>.'
-      : `Could not load that part: <code>${String(err && err.message || err)}</code>` })
-  ));
-}
-
-/* ---------------- cover ---------------- */
-
-async function renderCover() {
-  const html = await fetchText('content/00-cover.html');
-  const wrap = h('div', { class: 'cover', html });
-  view.appendChild(wrap);
-
-  const mount = $('#index-mount', wrap);
-  if (mount) {
-    for (const p of PARTS) {
-      mount.appendChild(h('a', {
-        class: 'index__row', href: `#/${p.id}`, 'data-done': String(progress.has(p.id)),
-      },
-        h('span', { class: 'index__n', text: `PART ${String(p.n).padStart(2, '0')}` }),
-        h('span', { class: 'index__t' }, p.title, h('small', { text: p.blurb })),
-        h('span', { class: 'index__f', text: `${p.mins} min` })
-      ));
-    }
-  }
-  hydrate(wrap);
-}
-
-/* ---------------- a part ---------------- */
-
-async function renderPart(part) {
-  const html = await fetchText(part.file);
-  const article = h('article', { 'data-part': part.id },
-    h('div', { class: 'eyebrow', text: `Part ${String(part.n).padStart(2, '0')} · ${part.mins} min` }),
-    h('h1', { class: 'part-title', text: part.title }),
-    h('p', { class: 'lede', text: part.lede })
-  );
-  const bodyEl = h('div', { html });
-  article.appendChild(bodyEl);
-  view.appendChild(article);
-
-  hydrate(bodyEl);
-
-  // "mark complete" affordance
-  const doneBtn = h('button', {
-    type: 'button', class: 'btn',
-    onclick: () => {
-      progress.mark(part.id, !progress.has(part.id));
-      syncDone();
-    },
+    tocEl.appendChild(el("li", null, a));
   });
-  const syncDone = () => {
-    const on = progress.has(part.id);
-    doneBtn.textContent = on ? '✓ Marked complete' : 'Mark this part complete';
-    doneBtn.classList.toggle('is-on', on);
-    renderRail(); renderProgress();
-  };
-  syncDone();
-  article.appendChild(h('div', { class: 'done' },
-    h('span', { text: `End of Part ${part.n}` }), doneBtn
-  ));
-
-  // pager
-  const i = indexOfId(part.id);
-  const prev = i > 0 ? PARTS[i - 1] : null;
-  const next = i < PARTS.length - 1 ? PARTS[i + 1] : null;
-  article.appendChild(h('nav', { class: 'pager', 'aria-label': 'Part navigation' },
-    h('a', { class: 'is-prev' + (prev ? '' : ' is-disabled'), href: prev ? `#/${prev.id}` : '#/' },
-      h('span', { class: 'pager__dir', text: '← Previous' }),
-      h('span', { class: 'pager__name', text: prev ? prev.title : 'Cover' })
-    ),
-    h('a', { class: 'is-next' + (next ? '' : ' is-disabled'), href: next ? `#/${next.id}` : '#/' },
-      h('span', { class: 'pager__dir', text: 'Next →' }),
-      h('span', { class: 'pager__name', text: next ? next.title : '—' })
-    )
-  ));
+  paintToc();
 }
 
-/* ---------------- hydration ---------------- */
+function paintToc() {
+  const cur = currentId();
+  tocEl.querySelectorAll("a").forEach((a, i) => {
+    const p = PARTS[i];
+    a.toggleAttribute("aria-current", p.id === cur);
+    if (p.id === cur) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    a.dataset.done = state.isRead(p.id) ? "1" : "0";
+  });
+  const done = PARTS.filter((p) => state.isRead(p.id)).length;
+  const bar = $("#progress-bar");
+  const txt = $("#progress-text");
+  if (bar) bar.style.width = `${(done / PARTS.length) * 100}%`;
+  if (txt) txt.textContent = `${done}/${PARTS.length} parts`;
+}
 
-/** Replace <div data-fig="name"> placeholders and wire checkpoints. */
-function hydrate(root) {
-  for (const slot of $$('[data-fig]', root)) {
-    const name = slot.dataset.fig;
-    const make = FIGURES[name];
-    if (!make) {
-      slot.replaceWith(h('div', { class: 'aside', text: `Figure "${name}" is not registered.` }));
-      continue;
-    }
+/* ==========================================================================
+   Routing
+   ========================================================================== */
+
+const currentId = () => {
+  const id = location.hash.replace(/^#\/?/, "").split("/")[0];
+  return byId(id) ? id : PARTS[0].id;
+};
+
+async function route() {
+  const id = currentId();
+  const part = byId(id);
+
+  teardowns.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
+  teardowns = [];
+
+  clear(reading);
+  reading.appendChild(el("p.mono", {
+    text: "Loading…", style: { color: "var(--faint)", fontSize: "var(--t-small)" },
+  }));
+
+  let html;
+  try {
+    const res = await fetch(`content/${String(part.n).padStart(2, "0")}-${part.id}.html`, { cache: "no-cache" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    html = await res.text();
+  } catch (err) {
+    clear(reading);
+    reading.appendChild(el("div.noscript-note", {
+      html: `<b>Could not load this part.</b> This tool loads its chapters as separate files, ` +
+            `which browsers block when a page is opened straight off disk. Serve the folder ` +
+            `instead — <code>python3 serve.py</code> — then open ` +
+            `<code>http://localhost:8000</code>.<br><br>Reported: ${err.message}`,
+    }));
+    return;
+  }
+
+  clear(reading);
+  const article = el("article.part", { html });
+  reading.appendChild(article);
+
+  try { mountFormulas(article); } catch (err) { console.error("formula mount failed", err); }
+  try { renderMathIn(article); } catch (err) { console.error("math render failed", err); }
+  try { mountFigures(article, teardowns); } catch (err) { console.error("figure mount failed", err); }
+  try { mountBenches(article); } catch (err) { console.error("bench mount failed", err); }
+
+  article.appendChild(partNav(id));
+  document.title = `${part.n === 0 ? "" : `Part ${part.n} · `}${part.title} — The Bench`;
+  paintToc();
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  reading.focus({ preventScroll: true });
+  watchForRead(part.id, article);
+}
+
+function mountBenches(root) {
+  root.querySelectorAll("[data-bench]").forEach((slot) => {
     try {
-      slot.replaceWith(make());
+      slot.replaceWith(bench(JSON.parse(slot.getAttribute("data-bench"))));
     } catch (err) {
-      // one broken figure must never take the rest of the page with it
-      console.error(`figure "${name}" failed`, err);
-      slot.replaceWith(h('div', { class: 'aside', text: `Figure "${name}" failed to draw. The prose above stands on its own.` }));
+      console.error("bench config is not valid JSON", err);
+      slot.remove();
     }
-  }
+  });
+  root.querySelectorAll("[data-reflex]").forEach((slot) => {
+    try {
+      slot.replaceWith(reflexDrill(JSON.parse(slot.getAttribute("data-reflex") || "{}")));
+    } catch (err) {
+      console.error("reflex config is not valid JSON", err);
+      slot.remove();
+    }
+  });
+}
 
-  for (const check of $$('[data-check]', root)) {
-    const answer = Number(check.dataset.answer);
-    $$('.check__opt', check).forEach((btn, idx) => {
-      btn.addEventListener('click', () => {
-        if (check.dataset.answered === 'true') return;
-        check.dataset.answered = 'true';
-        $$('.check__opt', check).forEach((b, j) => {
-          if (j === answer) b.dataset.state = 'right';
-          else if (j === idx) b.dataset.state = 'wrong';
-        });
-      });
-    });
+function partNav(id) {
+  const i = indexOfPart(id);
+  const prev = PARTS[i - 1], next = PARTS[i + 1];
+  const nav = el("nav.partnav", { "aria-label": "Between parts" });
+  if (prev) nav.appendChild(el("a.prev", { href: `#/${prev.id}` },
+    el("span", { text: "← Previous" }), prev.title));
+  if (next) nav.appendChild(el("a.next", { href: `#/${next.id}` },
+    el("span", { text: "Next →" }), next.title));
+  return nav;
+}
+
+/** A part counts as read once its last screen has been reached. */
+function watchForRead(id, article) {
+  if (state.isRead(id)) return;
+  const sentinel = el("div", { style: { height: "1px" } });
+  article.appendChild(sentinel);
+  if (!("IntersectionObserver" in window)) { state.markRead(id); return; }
+  const io = new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) { state.markRead(id); io.disconnect(); }
+  }, { rootMargin: "0px 0px -20% 0px" });
+  io.observe(sentinel);
+  teardowns.push(() => io.disconnect());
+}
+
+/* ==========================================================================
+   Theme
+   ========================================================================== */
+
+const THEMES = ["system", "light", "dark"];
+function applyTheme() {
+  const t = state.theme;
+  if (t === "system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  const btn = $("#theme-btn");
+  if (btn) {
+    btn.textContent = t === "system" ? "Theme: auto" : t === "light" ? "Theme: light" : "Theme: dark";
+    btn.setAttribute("aria-label", `Colour theme: ${t}. Click to change.`);
   }
 }
 
-async function fetchText(path) {
-  const res = await fetch(path, { cache: 'no-cache' });
-  if (!res.ok) throw new Error(`${res.status} ${path}`);
-  return res.text();
+/* ==========================================================================
+   Keyboard
+   ========================================================================== */
+
+function keys(ev) {
+  const tag = ev.target.tagName;
+  if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || ev.target.isContentEditable) return;
+  const i = indexOfPart(currentId());
+  if (ev.key === "ArrowRight" || ev.key === "]") {
+    if (PARTS[i + 1]) { location.hash = `#/${PARTS[i + 1].id}`; ev.preventDefault(); }
+  } else if (ev.key === "ArrowLeft" || ev.key === "[") {
+    if (PARTS[i - 1]) { location.hash = `#/${PARTS[i - 1].id}`; ev.preventDefault(); }
+  }
 }
 
-/* ---------------- chrome ---------------- */
+/* ==========================================================================
+   Boot
+   ========================================================================== */
 
-$('#theme-toggle').addEventListener('click', (e) => {
-  const mode = theme.cycle();
-  e.currentTarget.textContent = mode === 'system' ? 'Theme' : mode;
-});
+function boot() {
+  const total = $("#total-time");
+  if (total) total.textContent = `${Math.round(TOTAL_MINUTES / 60 * 10) / 10} hours end to end`;
 
-$('#reset-progress').addEventListener('click', () => {
-  progress.reset();
-  renderRail(); renderProgress();
-  $$('.index__row').forEach((r) => r.setAttribute('data-done', 'false'));
-  $$('.done .btn').forEach((b) => { b.textContent = 'Mark this part complete'; b.classList.remove('is-on'); });
-});
+  buildToc();
+  applyTheme();
 
-$('#rail-toggle').addEventListener('click', (e) => {
-  const rail = $('#rail');
-  const open = rail.getAttribute('data-open') === 'true';
-  rail.setAttribute('data-open', String(!open));
-  e.currentTarget.setAttribute('aria-expanded', String(!open));
-});
+  $("#theme-btn")?.addEventListener("click", () => {
+    state.theme = THEMES[(THEMES.indexOf(state.theme) + 1) % THEMES.length];
+    applyTheme();
+  });
+  $("#reset-btn")?.addEventListener("click", () => {
+    if (confirm("Clear reading progress and practice scores stored in this browser?")) {
+      state.reset();
+      paintToc();
+    }
+  });
 
-document.addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
-  const tag = document.activeElement && document.activeElement.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-  const i = indexOfId(route().id);
-  if (e.key === 'ArrowRight' && i < PARTS.length - 1) location.hash = `#/${PARTS[i + 1].id}`;
-  if (e.key === 'ArrowLeft') location.hash = i > 0 ? `#/${PARTS[i - 1].id}` : '#/';
-});
+  onStateChange(paintToc);
+  window.addEventListener("hashchange", route);
+  document.addEventListener("keydown", keys);
 
-window.addEventListener('hashchange', render);
-render();
+  if (!location.hash) location.replace("#/orientation");
+  route();
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+else boot();

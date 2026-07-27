@@ -1,48 +1,83 @@
-/* Progress + theme persistence. Deliberately tiny and forgiving:
-   if localStorage is unavailable (private windows, file://), the guide
-   still works, it just forgets you between visits. */
+/* ==========================================================================
+   state.js — what the tool remembers.
 
-const KEY = 'spikes.progress.v1';
-const THEME = 'spikes.theme.v1';
+   Progress and results live in localStorage and nowhere else. Nothing is
+   sent anywhere. If storage is unavailable (private browsing, a locked-down
+   profile) everything still works; it just forgets.
+   ========================================================================== */
 
-function read(key, fallback) {
+const KEY = "fe-math-bench/v1";
+
+const BLANK = {
+  read: {},        // partId -> true once the part has been scrolled through
+  theme: "system", // system | light | dark
+  bench: {},       // topicId -> { seen, right, streak, last }
+  seeds: {},       // benchId -> last seed, so a set can be resumed
+};
+
+let cache = null;
+
+function load() {
+  if (cache) return cache;
   try {
-    const raw = localStorage.getItem(key);
-    return raw === null ? fallback : JSON.parse(raw);
-  } catch { return fallback; }
-}
-function write(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
+    cache = { ...BLANK, ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+  } catch {
+    cache = { ...BLANK };
+  }
+  return cache;
 }
 
-let done = new Set(read(KEY, []));
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(cache)); } catch { /* fine */ }
+}
+
+export const state = {
+  get all() { return load(); },
+
+  markRead(partId) {
+    const s = load();
+    if (!s.read[partId]) { s.read[partId] = true; save(); listeners.forEach((f) => f(s)); }
+  },
+  isRead: (partId) => !!load().read[partId],
+  readCount: () => Object.keys(load().read).length,
+
+  get theme() { return load().theme; },
+  set theme(v) { load().theme = v; save(); },
+
+  /** Record one answered problem against its topic. */
+  score(topicId, right) {
+    const s = load();
+    const t = (s.bench[topicId] ||= { seen: 0, right: 0, streak: 0 });
+    t.seen++;
+    if (right) { t.right++; t.streak++; } else { t.streak = 0; }
+    t.last = Date.now();
+    save();
+    listeners.forEach((f) => f(s));
+  },
+  topic: (topicId) => load().bench[topicId] || { seen: 0, right: 0, streak: 0 },
+
+  /** Topics answered wrong more often than right — what to review next. */
+  weakest(limit = 5) {
+    const s = load();
+    return Object.entries(s.bench)
+      .filter(([, t]) => t.seen >= 2)
+      .map(([id, t]) => ({ id, ...t, rate: t.right / t.seen }))
+      .sort((a, b) => a.rate - b.rate)
+      .slice(0, limit);
+  },
+
+  seed(benchId, value) {
+    const s = load();
+    if (value != null) { s.seeds[benchId] = value; save(); }
+    return s.seeds[benchId];
+  },
+
+  reset() {
+    cache = { ...BLANK, read: {}, bench: {}, seeds: {} };
+    save();
+    listeners.forEach((f) => f(cache));
+  },
+};
+
 const listeners = new Set();
-
-export const progress = {
-  has: (id) => done.has(id),
-  get size() { return done.size; },
-  all: () => Array.from(done),
-  mark(id, value = true) {
-    if (value) done.add(id); else done.delete(id);
-    write(KEY, Array.from(done));
-    listeners.forEach((f) => f());
-  },
-  reset() { done = new Set(); write(KEY, []); listeners.forEach((f) => f()); },
-  onChange(f) { listeners.add(f); return () => listeners.delete(f); },
-};
-
-export const theme = {
-  get() { return read(THEME, ''); },
-  apply() {
-    const t = this.get();
-    document.documentElement.setAttribute('data-theme', t);
-  },
-  /** Cycle: system -> light -> dark -> system */
-  cycle() {
-    const order = ['', 'light', 'dark'];
-    const next = order[(order.indexOf(this.get()) + 1) % order.length];
-    write(THEME, next);
-    this.apply();
-    return next || 'system';
-  },
-};
+export function onStateChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }

@@ -1,0 +1,155 @@
+<p class="eyebrow">
+  <span>The Bench</span>
+  <span>Part 0</span>
+  <span id="total-time">6 minute read</span>
+</p>
+
+<h1 class="cover-title">The Mathematics of the FE&nbsp;Electrical and Computer Exam</h1>
+
+<p class="promise">By the end of these ten parts you will be able to look at any
+Mathematics question on the FE exam, name the tool it wants inside fifteen
+seconds, and execute it inside three minutes — because you understand where the
+tool came from, not because you memorised it.</p>
+
+<h2>What this is, and what it assumes</h2>
+
+<p>This is not a formula sheet. Formula sheets are what you get on exam day,
+free, and they do not help you, because a formula you cannot recognise the need
+for is a formula you do not have.</p>
+
+<p>Instead we build the eight mathematics subtopics in the NCEES specification
+in an order that makes each one follow from the last. Part 1 establishes the
+right triangle and the logarithm. Part 2 lets that triangle rotate, which turns
+out to be what a complex number is. Part 3 gives equations shapes. Parts 4 and 5
+handle many quantities at once — first as arrows, then as tables of numbers.
+Part 6 asks how those shapes change and how much they accumulate. Part 7 turns
+that into equations about change itself, and there the complex numbers from
+Part 2 come back and decide whether a circuit rings or dies quietly. Part 8
+covers the counting, logic, and graphs that the computer half of this exam is
+built on. Part 9 shows how few ideas were really doing the work.</p>
+
+<p>No background is assumed beyond high-school algebra: you can solve
+<span data-tex="2x + 3 = 11">2x + 3 = 11</span>, and you know what a right
+triangle is. Logarithms, complex numbers, vectors, matrices, derivatives,
+integrals, and differential equations are all built here from the ground up.
+Nothing is used before it is defined.</p>
+
+<h2>The exam, in numbers</h2>
+
+<p>110 questions. Six hours. That six hours includes an eight-minute tutorial
+and an optional twenty-five-minute break, so the working time is about five
+hours twenty — <b>roughly two minutes fifty per question</b>, including reading
+the stem. It is multiple choice, four options, no partial credit, and the
+answers are usually phrased "most nearly," which is a hint: they expect
+rounding, and they expect you to be quick.</p>
+
+<p>Mathematics is <b>11 to 17 questions</b>. That ties it with Circuit Analysis
+as the largest single block on the exam. Plate 1 shows the whole blueprint.</p>
+
+<div data-figure="blueprint"></div>
+
+<p>Two things follow from that chart. First, mathematics and circuit analysis
+together can be a third of your exam, and mathematics is the one that also shows
+up <em>inside</em> the other sixteen areas — the phasor in Power Systems is a
+complex number, the Bode plot in Control Systems is a logarithm, the transfer
+function in Linear Systems is a differential equation wearing a disguise. Time
+spent here is spent twice.</p>
+
+<p>Second, no single area is worth cramming to perfection at the expense of the
+rest. Quality over quantity applies to your studying too.</p>
+
+<h2>The one distinction that saves you a month</h2>
+
+<p>The FE exam is closed book <em>with an electronic reference</em>. During the
+exam you have the <span class="term">NCEES FE Reference Handbook</span> open in a
+second window: a few hundred pages of formulas, tables, and constants, fully
+searchable.</p>
+
+<p>Almost every formula in these ten parts is in it.</p>
+
+<p>Which means the standard approach — flashcard the formulas, drill until they
+stick — is spending your most expensive resource on the one thing the exam gives
+away for free. What the handbook cannot give you is the knowledge that a
+particular formula is the one you need, and the fluency to run it without
+fumbling. That is the entire game.</p>
+
+<p>So every formula in this guide carries a stamp:</p>
+
+<div class="table-scroll">
+<table>
+  <thead>
+    <tr><th>Stamp</th><th>Means</th><th>What to do about it</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="stamp-inline handbook">Handbook</span></td>
+      <td>It is in the reference on exam day.</td>
+      <td>Know that it exists, what it is called, and what shape of problem
+          calls for it. Do not memorise the algebra.</td>
+    </tr>
+    <tr>
+      <td><span class="stamp-inline know">Know cold</span></td>
+      <td>It is not in the handbook, or finding it costs more than the question
+          is worth.</td>
+      <td>Memorise it. This list is much shorter than you fear — about
+          twenty-five items across all of mathematics.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note payoff">
+  <span class="note-tag">Why this is the whole trick</span>
+  <p style="margin-bottom:0">A student who memorises 200 formulas and cannot
+  classify a problem scores worse than a student who memorises 25 and can. The
+  first spends the exam recalling; the second spends it searching, which is
+  faster, because the search box does not get tired.</p>
+</div>
+
+<h2>One object, followed all the way through</h2>
+
+<p>Mathematics goes badly when every topic arrives as a stranger. So one object
+runs through all eight subtopics here, and you will meet it in Part 1 as
+something you already know: <b>the 3-4-5 right triangle</b>.</p>
+
+<p>It becomes the complex number <span data-tex="3 + 4j">3 + 4j</span> in Part 2.
+It becomes the point <span data-tex="(3, 4)">(3, 4)</span> on the circle
+<span data-tex="x^2 + y^2 = 25">x² + y² = 25</span> in Part 3, and the vector
+<span data-tex="3\hat{i} + 4\hat{j} + 12\hat{k}">3i + 4j + 12k</span> in Part 4.
+It becomes a matrix whose eigenvalues are <span data-tex="\pm 5">±5</span> in
+Part 5. In Part 6 calculus hands back the same tangent line you drew in Part 3.
+And in Part 7 the numbers <span data-tex="-3 \pm 4j">−3 ± 4j</span> turn up as
+the roots that decide how a circuit behaves.</p>
+
+<p>None of that is a coincidence arranged for effect — it is the same structure
+seen from eight sides, which is what mathematics mostly is. Recognising the
+object on its sixth appearance is what retention feels like from the inside.</p>
+
+<h2>How to use this</h2>
+
+<ul>
+  <li><b>Read in order.</b> Each part uses the last one. The order here is not
+      the order NCEES prints its subtopics in, because that order is
+      alphabetical, not pedagogical.</li>
+  <li><b>Turn the knobs.</b> Every plate marked
+      <span class="stamp-inline handbook">Interactive</span> has exactly one
+      control and one lesson. Ten seconds of play should be enough. If it is
+      not, the plate has failed, not you.</li>
+  <li><b>Work the bench at the end of each part.</b> The problems are generated
+      fresh from a seed, so "New numbers" gives you a genuinely new set at the
+      same difficulty rather than the same six questions again.</li>
+  <li><b>Run the Handbook Reflex drill.</b> It gives you a stem and fifteen
+      seconds to name the tool, with no arithmetic at all. It is the cheapest
+      skill on this exam to improve and almost nobody practises it.</li>
+</ul>
+
+<p>Arrow keys move between parts. Progress lives in this browser and nowhere
+else.</p>
+
+<div class="keyidea">
+  <p>Mathematics is 11–17 of the 110 questions, and it hides inside most of the
+  other areas too. The exam hands you the formulas; it does not hand you the
+  ability to pick one. Train classification and execution, memorise only what
+  is stamped <span class="stamp-inline know">Know cold</span>, and let the
+  handbook carry the rest.</p>
+</div>

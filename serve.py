@@ -1,49 +1,60 @@
 #!/usr/bin/env python3
-"""
-Serve the field guide locally.
+"""Serve this folder on http://localhost:8000.
 
-    python3 serve.py            # http://localhost:8000
-    python3 serve.py 9000       # a different port
-
-The guide loads its chapters as separate files, which browsers refuse to
-do over file:// — hence this. It is 30 lines of standard library and it
-starts instantly. There is no build step and nothing to install.
+The guide loads its chapters as separate files, which browsers block over
+file://. That is the only reason this exists. Any static server works just
+as well: `npx serve`, `php -S localhost:8000`, whatever you already have.
 """
 
+import argparse
 import http.server
 import socketserver
-import sys
 import webbrowser
+from functools import partial
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+ROOT = Path(__file__).parent.resolve()
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(ROOT), **kwargs)
+    extensions_map = {
+        **http.server.SimpleHTTPRequestHandler.extensions_map,
+        ".js": "text/javascript",
+        ".mjs": "text/javascript",
+        ".css": "text/css",
+        ".svg": "image/svg+xml",
+    }
 
     def end_headers(self):
-        # never serve a stale module while you are editing one
+        # Editing a figure and hitting reload should show the new figure.
         self.send_header("Cache-Control", "no-store")
         super().end_headers()
 
     def log_message(self, fmt, *args):
-        if "304" not in (args[1] if len(args) > 1 else ""):
-            sys.stderr.write("  %s\n" % (fmt % args))
+        if "404" in (fmt % args):
+            super().log_message(fmt, *args)
 
 
-if __name__ == "__main__":
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("-p", "--port", type=int, default=8000)
+    ap.add_argument("-n", "--no-browser", action="store_true")
+    args = ap.parse_args()
+
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        url = f"http://localhost:{PORT}/"
-        print(f"\n  Spikes — an interactive field guide\n  {url}\n  Ctrl-C to stop\n")
-        try:
-            webbrowser.open(url)
-        except Exception:
-            pass
+    with socketserver.TCPServer(("", args.port), partial(Handler, directory=str(ROOT))) as httpd:
+        url = f"http://localhost:{args.port}"
+        print(f"The Bench is at {url}   (ctrl-c to stop)")
+        if not args.no_browser:
+            try:
+                webbrowser.open(url)
+            except Exception:
+                pass
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
-            print("\n  stopped\n")
+            print("\nstopped")
+
+
+if __name__ == "__main__":
+    main()

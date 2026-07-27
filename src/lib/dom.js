@@ -1,177 +1,227 @@
-/* Tiny DOM/SVG helpers. No framework, no build step. */
+/* ==========================================================================
+   dom.js — element construction.
 
-const SVGNS = 'http://www.w3.org/2000/svg';
+   The one thing worth knowing: SVG presentation *attributes* do not accept
+   `var(--token)`, but CSS *properties* do. So `svg()` routes stroke, fill
+   and friends through element.style, which is what makes every figure in
+   this document theme itself for free.
+   ========================================================================== */
 
-/** Create an SVG element: s('circle', {cx:1, cy:2, r:3}) */
-export function s(tag, attrs = {}, ...kids) {
-  const el = document.createElementNS(SVGNS, tag);
-  for (const k in attrs) {
-    const v = attrs[k];
-    if (v === null || v === undefined || v === false) continue;
-    if (k === 'text') el.textContent = v;
-    else el.setAttribute(k, v);
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/* Paint-ish keys go to .style so they can carry var(--…). */
+const STYLE_KEYS = new Set([
+  "fill", "stroke", "strokeWidth", "strokeDasharray", "strokeLinecap",
+  "strokeLinejoin", "opacity", "fillOpacity", "strokeOpacity", "fontSize",
+  "fontWeight", "fontStyle", "fontFamily", "letterSpacing", "textAnchor",
+  "dominantBaseline", "transformOrigin", "mixBlendMode", "pointerEvents",
+]);
+
+/* SVG has a handful of genuinely camelCase *attributes*. Kebab-casing these
+   silently produces `view-box` and `marker-width`, which the renderer ignores —
+   the figure then draws at 1:1 with no arrowheads and no clue why. */
+const SVG_CAMEL = new Set([
+  "viewBox", "preserveAspectRatio", "markerWidth", "markerHeight", "markerUnits",
+  "refX", "refY", "patternUnits", "patternContentUnits", "patternTransform",
+  "gradientUnits", "gradientTransform", "spreadMethod", "startOffset",
+  "clipPathUnits", "maskUnits", "maskContentUnits", "primitiveUnits",
+  "filterUnits", "baseFrequency", "numOctaves", "stdDeviation", "tableValues",
+  "pathLength", "textLength", "lengthAdjust", "attributeName", "repeatCount",
+  "keyTimes", "keySplines", "calcMode",
+]);
+
+const kebab = (s) => s.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+const attrName = (s) => (SVG_CAMEL.has(s) ? s : kebab(s));
+
+function applyProps(node, props, isSvg) {
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class" || k === "className") node.setAttribute("class", v);
+    else if (k === "style" && typeof v === "object") Object.assign(node.style, v);
+    else if (k === "style") node.setAttribute("style", v);
+    else if (k === "html") node.innerHTML = v;
+    else if (k === "text") node.textContent = v;
+    else if (k === "dataset") Object.assign(node.dataset, v);
+    else if (k.startsWith("on") && typeof v === "function") {
+      node.addEventListener(k.slice(2).toLowerCase(), v);
+    } else if (isSvg && STYLE_KEYS.has(k)) node.style.setProperty(kebab(k), v);
+    else if (!isSvg && k in node && k !== "list" && typeof v !== "object") node[k] = v;
+    else node.setAttribute(isSvg ? attrName(k) : kebab(k), v);
   }
-  for (const kid of kids.flat()) if (kid) el.appendChild(kid);
-  return el;
 }
 
-/** Create an HTML element: h('div', {class:'x'}, 'hello') */
-export function h(tag, attrs = {}, ...kids) {
-  const el = document.createElement(tag);
-  for (const k in attrs) {
-    const v = attrs[k];
-    if (v === null || v === undefined || v === false) continue;
-    if (k === 'html') el.innerHTML = v;
-    else if (k === 'text') el.textContent = v;
-    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v);
+function appendKids(node, kids) {
+  for (const c of kids.flat(4)) {
+    if (c == null || c === false) continue;
+    node.appendChild(typeof c === "object" ? c : document.createTextNode(String(c)));
   }
-  for (const kid of kids.flat()) {
-    if (kid === null || kid === undefined || kid === false) continue;
-    el.appendChild(typeof kid === 'string' ? document.createTextNode(kid) : kid);
-  }
-  return el;
 }
+
+/** el("div.card", {…}, child, child) — tag supports .class and #id shorthand. */
+export function el(spec, props, ...kids) {
+  const m = /^([a-zA-Z0-9-]+)?(#[\w-]+)?((?:\.[\w-]+)*)$/.exec(spec) || [];
+  const node = document.createElement(m[1] || "div");
+  if (m[2]) node.id = m[2].slice(1);
+  if (m[3]) node.className = m[3].slice(1).split(".").join(" ");
+  applyProps(node, props, false);
+  appendKids(node, kids);
+  return node;
+}
+
+/** svg("circle", {…}) — same shorthand, SVG namespace, style-routed paint. */
+export function svg(spec, props, ...kids) {
+  const m = /^([a-zA-Z0-9-]+)?((?:\.[\w-]+)*)$/.exec(spec) || [];
+  const node = document.createElementNS(SVG_NS, m[1] || "g");
+  if (m[2]) node.setAttribute("class", m[2].slice(1).split(".").join(" "));
+  applyProps(node, props, true);
+  appendKids(node, kids);
+  return node;
+}
+
+export const frag = (...kids) => {
+  const f = document.createDocumentFragment();
+  appendKids(f, kids);
+  return f;
+};
+
+export const clear = (node) => { while (node.firstChild) node.removeChild(node.firstChild); return node; };
 
 export const $  = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-/** Round for display. Never leak a floating-point tail to the reader. */
-export function fmt(x, digits = 1) {
-  if (!isFinite(x)) return '—';
-  const r = Number(x.toFixed(digits));
-  return digits === 0 ? String(Math.round(x)) : r.toFixed(digits);
-}
+/* ==========================================================================
+   Controls
+   ========================================================================== */
 
-/** Compact engineering-ish formatting for wide-ranging magnitudes. */
-export function eng(x, digits = 1) {
-  const a = Math.abs(x);
-  if (a >= 1e12) return fmt(x / 1e12, digits) + ' T';
-  if (a >= 1e9)  return fmt(x / 1e9,  digits) + ' G';
-  if (a >= 1e6)  return fmt(x / 1e6,  digits) + ' M';
-  if (a >= 1e3)  return fmt(x / 1e3,  digits) + ' k';
-  return fmt(x, digits) + ' ';
-}
-
-export const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
-export const lerp  = (a, b, t) => a + (b - a) * t;
-
-/** Deterministic RNG so every figure looks the same on every load. */
-export function rng(seed = 20) {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+let uid = 0;
+export const nextId = (p = "u") => `${p}-${++uid}`;
 
 /**
- * Build a labelled slider control.
- * The knob rule: one primary input, immediate consequence, real units.
+ * A labelled slider — the knob. Exactly one primary input per figure.
+ * `format(v)` renders the live value shown beside the label.
+ * Returns { root, input, set(v), value() }.
  */
-export function knob({ id, label, min, max, step, value, format, oninput }) {
-  const out = h('output', { for: id, text: format(value) });
-  const input = h('input', {
-    type: 'range', id, min, max, step, value,
-    'aria-label': label,
-    oninput: (e) => {
-      const v = Number(e.target.value);
-      out.textContent = format(v);
-      oninput(v);
+export function knob({ label, min, max, step = 1, value, format = (v) => v, onInput }) {
+  const id = nextId("knob");
+  const val = el("span.val", { text: format(value) });
+  const input = el("input", {
+    type: "range", id, min, max, step, value,
+    oninput: () => {
+      const v = Number(input.value);
+      val.textContent = format(v);
+      onInput?.(v);
     },
   });
+  const root = el("div.knob", null, el("label", { htmlFor: id }, el("span", { text: label }), val), input);
   return {
-    el: h('div', { class: 'knob' }, h('label', { for: id, text: label }), input, out),
-    input, out,
-    set(v) { input.value = v; out.textContent = format(Number(v)); },
-    get value() { return Number(input.value); },
-  };
-}
-
-/** A row of scenario buttons. Exactly one is pressed at a time. */
-export function scenarios({ options, value, onchange }) {
-  const btns = options.map((o) =>
-    h('button', {
-      type: 'button', class: 'btn', 'data-val': o.value,
-      'aria-pressed': String(o.value === value),
-      text: o.label,
-      onclick: () => { select(o.value); onchange(o.value); },
-    })
-  );
-  function select(v) {
-    btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.val === String(v))));
-  }
-  return { el: h('div', { class: 'scenarios' }, btns), select };
-}
-
-/** A readout chip: key, value, optional semantic colour. */
-export function readout(key, initial = '—', quantity = null) {
-  const v = h('span', { class: 'ro__v', text: initial, 'data-q': quantity });
-  return {
-    el: h('div', { class: 'ro' }, h('span', { class: 'ro__k', text: key }), v),
-    set(text) { v.textContent = text; },
+    root, input,
+    value: () => Number(input.value),
+    set(v, fire = true) {
+      input.value = v;
+      val.textContent = format(Number(input.value));
+      if (fire) onInput?.(Number(input.value));
+    },
   };
 }
 
 /**
- * Assemble a figure: numbered head, instrument panel with corner title
- * block, optional controls / readouts strip, and a caption.
+ * A small set of scenario buttons — the other legal knob shape.
+ * options: [{ id, label }]. Returns { root, set(id), value() }.
  */
-export function figure({ n, title, tag = 'interactive', block, sweep, caption, aria }) {
-  const blockEl = h('div', { class: 'panel__block' },
-    h('b', { text: `FIG ${String(n).padStart(2, '0')}` }),
-    h('span', { class: 'sep', text: '·' }),
-    h('span', { text: block }),
-    sweep ? h('span', { class: 'right', text: sweep }) : null
+export function scenarios({ label, options, value, onChange }) {
+  let cur = value ?? options[0].id;
+  const buttons = options.map((o) =>
+    el("button", {
+      type: "button", text: o.label, title: o.title || "",
+      "aria-pressed": String(o.id === cur),
+      onclick: () => api.set(o.id),
+    })
   );
-  const body = h('div', { class: 'panel__body' });
-  const panel = h('div', { class: 'panel' }, blockEl, body);
-  const root = h('figure', { class: 'figure', id: `fig-${n}` },
-    h('div', { class: 'figure__head' },
-      h('span', { class: 'figure__num', text: `Figure ${n}` }),
-      h('span', { class: 'figure__title', text: title }),
-      h('span', { class: 'figure__tag', 'data-tag': tag, text: tag })
-    ),
-    panel,
-    h('figcaption', { class: 'figure__caption', html: caption })
-  );
+  const group = el("div.scenarios", { role: "group", "aria-label": label || "Scenario" }, buttons);
+  const root = label
+    ? el("div.knob", null, el("label", null, el("span", { text: label })), group)
+    : group;
+  const api = {
+    root, value: () => cur,
+    set(id, fire = true) {
+      cur = id;
+      buttons.forEach((b, i) => b.setAttribute("aria-pressed", String(options[i].id === id)));
+      if (fire) onChange?.(id);
+    },
+  };
+  return api;
+}
+
+/** A readout well. `tone` is one of x | y | r | bad and must match the figure. */
+export function readout({ key, value = "—", tone = "", sub = "" }) {
+  const v = el("span.v", { html: value + (sub ? `<small>${sub}</small>` : "") });
+  const root = el(`div.readout${tone ? "." + tone : ""}`, null, el("span.k", { text: key }), v);
   return {
-    root, panel, body, blockEl,
-    /** Mount an SVG with its accessibility label. */
-    svg(viewBox) {
-      const el = s('svg', { viewBox, role: 'img', 'aria-label': aria || title,
-        preserveAspectRatio: 'xMidYMid meet' });
-      body.appendChild(el);
-      return el;
-    },
-    controls(...kids) {
-      const el = h('div', { class: 'controls' }, ...kids);
-      panel.appendChild(el);
-      return el;
-    },
-    readouts(...kids) {
-      const el = h('div', { class: 'readouts' }, ...kids);
-      panel.appendChild(el);
-      return el;
-    },
-    setSweep(text) {
-      let r = blockEl.querySelector('.right');
-      if (!r) { r = h('span', { class: 'right' }); blockEl.appendChild(r); }
-      r.textContent = text;
+    root,
+    set(text, subText) {
+      v.innerHTML = String(text) + (subText ?? sub ? `<small>${subText ?? sub}</small>` : "");
     },
   };
 }
 
-/** Colour key strip — used once per part, not per figure. */
-export function colorKey(items) {
-  return h('div', { class: 'key' },
-    items.map(([c, label]) =>
-      h('span', { class: 'key__i' },
-        h('span', { class: 'key__sw', style: `background:var(--${c})` }),
-        label
-      )
-    )
-  );
+export const readouts = (...items) => el("div.readouts", null, items.map((i) => i.root ?? i));
+
+/** Pause / play for anything that moves. Never auto-plays under reduced motion. */
+export function motionToggle({ playing = true, onToggle }) {
+  const btn = el("button.btn.small", {
+    type: "button",
+    text: playing ? "Pause" : "Play",
+    "aria-pressed": String(playing),
+    onclick: () => api.set(!api.playing),
+  });
+  const api = {
+    playing,
+    root: el("div.motion", null, btn),
+    set(p) {
+      api.playing = p;
+      btn.textContent = p ? "Pause" : "Play";
+      btn.setAttribute("aria-pressed", String(p));
+      onToggle?.(p);
+    },
+  };
+  return api;
+}
+
+/** True when the reader has asked for less movement. */
+export const reducedMotion = () =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+/** Pointer/touch dragging on an SVG, reported in user (viewBox) coordinates. */
+export function draggable(svgEl, onMove, { onStart, onEnd } = {}) {
+  let active = false;
+  const pt = (ev) => {
+    const r = svgEl.getBoundingClientRect();
+    const vb = svgEl.viewBox.baseVal;
+    const sx = vb && vb.width ? vb.width / r.width : 1;
+    const sy = vb && vb.height ? vb.height / r.height : 1;
+    return {
+      x: (ev.clientX - r.left) * sx + (vb ? vb.x : 0),
+      y: (ev.clientY - r.top) * sy + (vb ? vb.y : 0),
+    };
+  };
+  const down = (ev) => {
+    active = true;
+    svgEl.setPointerCapture?.(ev.pointerId);
+    onStart?.(pt(ev));
+    onMove(pt(ev));
+    ev.preventDefault();
+  };
+  const move = (ev) => { if (active) { onMove(pt(ev)); ev.preventDefault(); } };
+  const up = (ev) => { if (active) { active = false; onEnd?.(pt(ev)); } };
+  svgEl.addEventListener("pointerdown", down);
+  svgEl.addEventListener("pointermove", move);
+  svgEl.addEventListener("pointerup", up);
+  svgEl.addEventListener("pointercancel", up);
+  svgEl.style.touchAction = "none";
+  return () => {
+    svgEl.removeEventListener("pointerdown", down);
+    svgEl.removeEventListener("pointermove", move);
+    svgEl.removeEventListener("pointerup", up);
+    svgEl.removeEventListener("pointercancel", up);
+  };
 }

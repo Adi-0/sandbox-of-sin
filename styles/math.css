@@ -1,0 +1,197 @@
+/* ==========================================================================
+   math.css — presentation for the output of src/lib/tex.js.
+
+   There is no external maths library here. tex.js parses a small TeX subset
+   and emits the spans styled below, so formulas inherit the document's
+   colours and dark mode for free, render identically in every browser, and
+   work offline.
+   ========================================================================== */
+
+.math {
+  font-family: var(--face-body);
+  font-variant-numeric: lining-nums proportional-nums;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-block;
+  /* Baseline, so simple inline maths sits on the text's own baseline. Tall
+     constructs inside centre themselves on the maths axis instead — see .frac. */
+  vertical-align: baseline;
+}
+
+.math.display {
+  display: block;
+  white-space: normal;
+  text-align: center;
+  font-size: 1.3125rem;
+  margin: var(--s4) auto;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;   /* room for the scrollbar without clipping descenders */
+}
+.math.display > .mrow { white-space: nowrap; }
+
+.plate.formula .math.display { margin: 0; font-size: 1.4375rem; }
+
+/* --- atoms ---------------------------------------------------------------- */
+
+.math i        { font-style: italic; padding-right: 0.04em; }   /* variable   */
+.math .n       { font-style: normal; }                          /* number     */
+.math .fn      { font-style: normal; padding: 0 0.12em 0 0.02em; } /* sin, ln  */
+.math .op      { padding: 0 0.22em; font-style: normal; }       /* + − = ≤    */
+.math .op.un   { padding: 0 0.03em 0 0; }                       /* unary −x   */
+.math .tight   { padding: 0 0.06em; }                           /* · ×        */
+.math .txt     {
+  font-style: normal; font-family: var(--face-body);
+  padding: 0 0.25em; font-size: 0.9em;
+}
+.math .up      { font-style: normal; }                          /* \mathrm    */
+.math .sp      { display: inline-block; width: 0.28em; }
+.math .qd      { display: inline-block; width: 1em; }
+
+/* --- scripts -------------------------------------------------------------- */
+
+.math sup, .math sub {
+  font-size: 0.72em; line-height: 0;
+  position: relative; vertical-align: baseline;
+}
+.math sup { top: -0.52em; }
+.math sub { top:  0.22em; }
+.math .subsup {
+  display: inline-grid; vertical-align: -0.42em;
+  font-size: 0.72em; line-height: 1.05; text-align: left;
+}
+
+/* --- fraction ------------------------------------------------------------- */
+
+/* `vertical-align: middle` puts the box's centre half an x-height above the
+   baseline — which is, to within a hair, where TeX puts the maths axis. It is
+   the one keyword that centres a fraction correctly at any size. */
+.math .frac {
+  display: inline-grid;
+  grid-template-rows: 1fr 1fr;
+  vertical-align: middle;
+  text-align: center;
+  margin: 0 0.16em;
+  font-size: 0.94em;
+}
+.math .frac > .fnum { padding: 0 0.3em 0.14em; }
+.math .frac > .fden { padding: 0.16em 0.3em 0; border-top: 1px solid currentColor; }
+
+/* --- radical -------------------------------------------------------------- */
+
+.math .sqrt { display: inline-block; margin: 0 0.06em; white-space: nowrap; }
+.math .sqrt > .surd {
+  display: inline-block; transform: scaleY(1.12); transform-origin: bottom;
+  padding-right: 0.05em;
+}
+.math .sqrt > .rad {
+  display: inline-block;
+  border-top: 1px solid currentColor;
+  padding: 0.14em 0.16em 0 0.1em;
+}
+/* The index sits at the radical's upper left and reserves its own width, so
+   it never collides with the surd for large indices. */
+.math .sqrt > .idx {
+  display: inline-block; font-size: 0.6em;
+  transform: translateY(-0.7em); min-width: 0.5em; text-align: right;
+  margin-right: -0.18em;
+}
+
+/* --- big operators with limits ------------------------------------------- */
+
+.math .bigop {
+  display: inline-grid; grid-auto-flow: column; align-items: center;
+  vertical-align: middle; margin: 0 0.12em;
+}
+.math .bigop > .sym { font-size: 1.5em; font-style: normal; line-height: 0.9; }
+.math .bigop > .sym.tall { font-size: 1.75em; }
+.math .bigop > .lims {
+  display: inline-grid; font-size: 0.62em; line-height: 1.15;
+  text-align: left; padding-left: 0.12em;
+}
+.math .bigop > .lims > .hi { align-self: start; }
+.math .bigop > .lims > .lo { align-self: end; }
+/* \lim and friends stack their subscript underneath, not beside. */
+.math .under {
+  display: inline-grid; justify-items: center; vertical-align: middle;
+  margin: 0 0.14em;
+}
+.math .under > .sub { font-size: 0.65em; line-height: 1.1; }
+
+/* --- delimiters ----------------------------------------------------------- */
+
+.math .delim {
+  display: inline-block; font-style: normal;
+  transform-origin: center;
+}
+.math .delim.d2 { transform: scaleY(1.9) scaleX(0.92); padding: 0 0.14em; }
+.math .delim.d3 { transform: scaleY(2.7) scaleX(0.88); padding: 0 0.2em; }
+
+/* --- accents -------------------------------------------------------------- */
+
+.math .acc { display: inline-grid; justify-items: center; }
+.math .acc > .mark { font-size: 0.8em; line-height: 0.5; height: 0.42em; }
+.math .bar { border-top: 1px solid currentColor; padding-top: 0.08em; }
+
+/* --- matrices ------------------------------------------------------------- */
+
+.math .matrix {
+  display: inline-grid; align-items: center; vertical-align: middle;
+  grid-auto-flow: column; margin: 0 0.1em;
+}
+.math .matrix > .cells {
+  display: inline-grid; gap: 0.18em 0.7em; justify-items: center;
+  padding: 0.15em 0.32em;
+}
+.math .matrix > .br {
+  align-self: stretch; width: 0.34em;
+  border-top: 1px solid currentColor; border-bottom: 1px solid currentColor;
+}
+.math .matrix > .br.l { border-left: 1px solid currentColor; }
+.math .matrix > .br.r { border-right: 1px solid currentColor; }
+/* pmatrix: round, drawn with glyphs instead of rules */
+.math .matrix.pmatrix > .br { border: 0; width: auto; display: grid; align-items: center; }
+.math .matrix.pmatrix > .br::before {
+  content: "("; font-size: 1em; transform: scaleY(2.2); font-style: normal;
+}
+.math .matrix.pmatrix > .br.r::before { content: ")"; }
+/* vmatrix: determinant bars */
+.math .matrix.vmatrix > .br { border-top: 0; border-bottom: 0; width: 0.2em; }
+.math .matrix.vmatrix > .br.l { border-left: 1px solid currentColor; }
+.math .matrix.vmatrix > .br.r { border-right: 1px solid currentColor; }
+/* cases: one brace on the left, rows left-aligned */
+.math .matrix.cases > .cells { justify-items: start; gap: 0.3em 0.6em; }
+.math .matrix.cases > .br.r { display: none; }
+.math .matrix.cases > .br.l {
+  border: 0; width: auto; display: grid; align-items: center;
+}
+.math .matrix.cases > .br.l::before {
+  content: "{"; transform: scaleY(2.2); font-style: normal;
+}
+
+/* --- colour inside formulas: only the four quantity tokens ---------------- */
+
+.math .qx { color: var(--q-x); }
+.math .qy { color: var(--q-y); }
+.math .qr { color: var(--q-r); }
+.math .qb { color: var(--q-bad); }
+
+/* --- a formula given a name in the margin -------------------------------- */
+
+.named {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center; gap: var(--s4); width: 100%;
+}
+.named > .tag {
+  font-family: var(--face-mono); font-size: var(--t-micro);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint);
+  white-space: nowrap;
+}
+
+/* Formulas inside SVG figure labels. */
+svg .lbl {
+  font-family: var(--face-mono); font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+svg .lbl-it { font-family: var(--face-body); font-style: italic; font-size: 13px; }

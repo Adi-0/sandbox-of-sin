@@ -1,6 +1,4 @@
-node_modules/
 .DS_Store
+node_modules/
+dist/
 __pycache__/
-*.pyc
-test-results/
-screenshots/

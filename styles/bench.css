@@ -1,0 +1,191 @@
+/* ==========================================================================
+   bench.css — the problem bench.
+
+   Every part ends at a bench: freshly generated problems at exam difficulty,
+   an exam-pace clock, and a solution that unfolds a step at a time. The
+   look is deliberately closer to the CBT exam screen than to the rest of
+   the document — sitting down at the bench should feel like a mode change.
+   ========================================================================== */
+
+.bench {
+  margin: var(--s7) 0 var(--s6);
+  border: 1px solid var(--ink);
+  background: var(--plate);
+  box-shadow: var(--shadow);
+}
+
+/* --- header strip: title, clock, counter ---------------------------------- */
+
+.bench-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  background: var(--ink-strong); color: var(--plate);
+  font-family: var(--face-mono); font-size: var(--t-micro);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.bench-head .title { font-weight: 500; }
+.bench-head .spacer { flex: 1; }
+.bench-head .count { opacity: 0.72; letter-spacing: 0.06em; }
+
+.clock {
+  font-variant-numeric: tabular-nums; letter-spacing: 0.06em;
+  padding: 2px 7px; border: 1px solid currentColor; border-radius: var(--radius);
+}
+.clock[data-state="over"] { color: var(--plate); background: var(--q-bad); border-color: var(--q-bad); }
+.clock[data-state="warn"] { border-color: var(--q-y); color: var(--q-y); }
+
+/* --- the question --------------------------------------------------------- */
+
+.bench-body { padding: var(--s5) var(--s4) var(--s4); }
+
+.q-topic {
+  font-family: var(--face-mono); font-size: var(--t-micro);
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: var(--s2);
+}
+.q-stem {
+  font-size: 1.0625rem; line-height: 1.6; margin: 0 0 var(--s4);
+  max-width: 40rem;
+}
+.q-stem .math { font-size: 1.05em; }
+.q-figure { margin: var(--s3) 0 var(--s4); max-width: 22rem; }
+.q-figure svg { display: block; width: 100%; height: auto; }
+
+/* --- choices -------------------------------------------------------------- */
+
+.choices { display: grid; gap: var(--s2); margin: 0 0 var(--s4); max-width: 40rem; }
+
+.choice {
+  display: grid; grid-template-columns: 1.75rem minmax(0, 1fr);
+  align-items: center; gap: var(--s3);
+  padding: var(--s3);
+  border: var(--hair); border-radius: var(--radius);
+  background: var(--plate); cursor: pointer;
+  text-align: left; font-family: var(--face-body); font-size: 1rem;
+  color: var(--ink); line-height: 1.4;
+}
+.choice:hover:not(:disabled) { border-color: var(--muted); background: var(--sunk); }
+.choice:disabled { cursor: default; }
+.choice .k {
+  font-family: var(--face-mono); font-size: var(--t-small);
+  color: var(--muted); justify-self: center;
+  width: 1.5rem; height: 1.5rem; line-height: 1.45rem; text-align: center;
+  border: 1px solid var(--rule); border-radius: 50%;
+}
+.choice[data-state="chosen"] { border-color: var(--ink); }
+.choice[data-state="right"] {
+  border-color: var(--ok); background: var(--ok-soft);
+}
+.choice[data-state="right"] .k { border-color: var(--ok); color: var(--ok); }
+.choice[data-state="wrong"] {
+  border-color: var(--q-bad); background: var(--q-bad-soft);
+}
+.choice[data-state="wrong"] .k { border-color: var(--q-bad); color: var(--q-bad); }
+
+/* --- verdict + solution --------------------------------------------------- */
+
+.verdict {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s3);
+  font-family: var(--face-mono); font-size: var(--t-ui);
+  letter-spacing: 0.04em; margin: 0 0 var(--s3);
+}
+.verdict .mark { font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.verdict[data-ok="1"] .mark { color: var(--ok); }
+.verdict[data-ok="0"] .mark { color: var(--q-bad); }
+.verdict .why {
+  font-family: var(--face-body); font-size: 1rem; letter-spacing: 0;
+  color: var(--muted); flex: 1 1 16rem;
+}
+
+.solution {
+  border-top: var(--hair); margin-top: var(--s4); padding-top: var(--s4);
+}
+.solution h5 {
+  margin: 0 0 var(--s3);
+  font-family: var(--face-mono); font-size: var(--t-micro); font-weight: 400;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+.solution .steps > li { animation: stepIn 220ms ease both; }
+@keyframes stepIn { from { opacity: 0; transform: translateY(3px); } }
+
+/* Where in the handbook this problem's tool lives. */
+.lookup {
+  display: flex; gap: var(--s2); align-items: baseline; flex-wrap: wrap;
+  margin: var(--s3) 0 0; padding: var(--s2) var(--s3);
+  background: var(--sunk); border-left: 2px solid var(--muted);
+  font-size: var(--t-small); color: var(--muted);
+}
+.lookup .k {
+  font-family: var(--face-mono); font-size: var(--t-micro);
+  letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap;
+}
+.lookup .v { color: var(--ink-strong); }
+
+/* --- footer bar ----------------------------------------------------------- */
+
+.bench-foot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3);
+  padding: var(--s3) var(--s4);
+  border-top: var(--hair); background: var(--sunk);
+}
+.bench-foot .spacer { flex: 1; }
+.bench-foot .tally {
+  font-family: var(--face-mono); font-size: var(--t-micro);
+  letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase;
+}
+.bench-foot .tally b { color: var(--ink-strong); font-weight: 500; }
+
+/* --- score card shown when a set finishes --------------------------------- */
+
+.scorecard { padding: var(--s5) var(--s4); }
+.scorecard .big {
+  font-family: var(--face-display); font-size: 3rem; line-height: 1;
+  color: var(--ink-strong); font-variant-numeric: lining-nums tabular-nums;
+}
+.scorecard .big small {
+  font-size: 1.125rem; color: var(--muted); margin-left: var(--s2);
+}
+.scorecard p { max-width: 34rem; }
+.weak { display: grid; gap: var(--s1); margin: var(--s4) 0; }
+.weak .row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s3); align-items: center;
+  font-size: var(--t-ui); font-family: var(--face-display);
+  padding: var(--s2) 0; border-bottom: 1px dotted var(--rule);
+}
+.weak .row .bar {
+  width: 7rem; height: 4px; background: var(--sunk); position: relative;
+}
+.weak .row .bar i { position: absolute; inset: 0 auto 0 0; background: var(--q-r); }
+.weak .row .bar i[data-low="1"] { background: var(--q-bad); }
+
+/* ==========================================================================
+   The Handbook Reflex drill — classification under time pressure.
+   No arithmetic: name the tool, move on.
+   ========================================================================== */
+
+.reflex { margin: var(--s6) 0; border: 1px solid var(--ink); background: var(--plate); }
+.reflex .bench-head { background: var(--q-x); }
+.reflex-stem {
+  padding: var(--s6) var(--s4); text-align: center;
+  font-size: 1.1875rem; line-height: 1.5; min-height: 8rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.reflex-choices {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--s2); padding: 0 var(--s4) var(--s4);
+}
+.reflex-choices .choice { grid-template-columns: minmax(0, 1fr); text-align: center; }
+.reflex-timer {
+  height: 3px; background: var(--sunk); position: relative; overflow: hidden;
+}
+.reflex-timer i {
+  position: absolute; inset: 0 auto 0 0; background: var(--q-y);
+  transition: width 100ms linear;
+}
+
+@media (max-width: 34rem) {
+  .bench-body { padding: var(--s4) var(--s3) var(--s3); }
+  .bench-head, .bench-foot { padding: var(--s3); }
+  .choice { grid-template-columns: 1.5rem minmax(0, 1fr); gap: var(--s2); }
+}

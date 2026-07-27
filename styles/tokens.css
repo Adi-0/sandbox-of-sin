@@ -1,120 +1,108 @@
-/* ============================================================
-   TOKENS — "the chart recorder"
-   Cool plotter paper, hairline grid, instrument title blocks.
-   Every colour used anywhere (CSS *and* inside every SVG)
-   resolves through these variables, so dark mode is one override.
-   ============================================================ */
+/* ==========================================================================
+   tokens.css — every colour and type decision in the document, named once.
+
+   Nothing anywhere else may hardcode a colour. SVG figures set their
+   strokes and fills through inline `style` properties that reference these
+   variables, so dark mode costs the figures nothing.
+
+   Each colour is declared twice on purpose: a plain light value first, then
+   the light-dark() pair. A browser without light-dark() keeps the first
+   declaration and renders a correct light theme instead of nothing.
+   ========================================================================== */
+
+:root                    { color-scheme: light dark; }
+:root[data-theme="light"]{ color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 :root {
-  /* --- surfaces & ink ------------------------------------- */
-  --paper:      #f6f8f7;   /* page */
-  --paper-2:    #eef1f0;   /* panel wells, cards */
-  --paper-3:    #e3e8e6;   /* recessed */
-  --grid:       #dbe2e0;   /* fine graticule inside panels */
-  --grid-major: #c6d0cd;   /* major graticule */
-  --rule:       #c2cdc9;   /* hairline borders */
-  --ink:        #16201d;   /* body text */
-  --ink-2:      #4a5b56;   /* muted text, axis labels */
-  --ink-3:      #7f918b;   /* faint text, ticks */
+  /* --- surface and ink -------------------------------------------------- */
+  --paper: #f2f5f4;        /* the page: quadrille grey-green, barely there  */
+  --paper: light-dark(#f2f5f4, #101619);
+  --plate: #fbfcfc;        /* the drawing plate, floating above the page    */
+  --plate: light-dark(#fbfcfc, #171f24);
+  --sunk: #e8ecea;         /* recessed wells: readouts, table stripes       */
+  --sunk: light-dark(#e8ecea, #1e272c);
+  --ink: #16222b;          /* body text                                     */
+  --ink: light-dark(#16222b, #d6dfe3);
+  --ink-strong: #08111a;   /* headings                                      */
+  --ink-strong: light-dark(#08111a, #f1f6f7);
+  --muted: #57666f;        /* captions, labels, secondary prose             */
+  --muted: light-dark(#57666f, #93a2a9);
+  --faint: #85929a;        /* tick labels, disabled controls                */
+  --faint: light-dark(#85929a, #6b7a83);
+  --rule: #ccd6d3;         /* hairlines and borders                         */
+  --rule: light-dark(#ccd6d3, #2b3941);
+  --grid: #dde5e2;         /* the graph-paper ruling inside plates          */
+  --grid: light-dark(#dde5e2, #1f2b31);
+  --grid-major: #c8d4d0;
+  --grid-major: light-dark(#c8d4d0, #27353c);
 
-  /* --- the four semantic quantities ------------------------
-     These mean the same thing in every figure, every readout,
-     and every mention in the prose. Colour is vocabulary.      */
-  --v:    #b0700c;   /* membrane voltage  — amber  */
-  --spike:#bd2a61;   /* a spike (an event) — magenta */
-  --exc:  #0d7a68;   /* excitation, positive weight — teal */
-  --inh:  #4a49bf;   /* inhibition, negative weight — indigo */
+  /* --- semantic quantity colours ----------------------------------------
+     These mean the SAME THING in every figure of every part:
+       q-x    input · horizontal · real part · first basis direction
+       q-y    output · vertical · imaginary part · second basis direction
+       q-r    magnitude · result · accumulated area
+       q-bad  error · trap · discontinuity
+     ---------------------------------------------------------------------- */
+  /* Both sets clear all six checks of the palette validator — lightness band,
+     chroma floor, adjacent CVD separation (deutan/protan/tritan), normal-vision
+     separation, and 3:1 contrast against the plate — at the *lowest* chroma
+     that passes, which is what keeps them looking like drafting ink rather
+     than highlighter. Do not nudge these by eye; re-run the validator. */
+  --q-x: #2e70a4;
+  --q-x: light-dark(#2e70a4, #4e8fc4);
+  --q-y: #8e6112;
+  --q-y: light-dark(#8e6112, #ae7f38);
+  --q-r: #009690;
+  --q-r: light-dark(#009690, #169d97);
+  --q-bad: #9f5148;
+  --q-bad: light-dark(#9f5148, #c06f65);
 
-  /* tinted washes of the same four, for fills */
-  --v-wash:     rgba(176, 112, 12, 0.13);
-  --spike-wash: rgba(189, 42, 97, 0.13);
-  --exc-wash:   rgba(13, 122, 104, 0.13);
-  --inh-wash:   rgba(74, 73, 191, 0.13);
+  --q-x-soft: #2e70a422;
+  --q-x-soft: light-dark(#2e70a422, #4e8fc42b);
+  --q-y-soft: #8e611222;
+  --q-y-soft: light-dark(#8e611222, #ae7f382b);
+  --q-r-soft: #00969026;
+  --q-r-soft: light-dark(#00969026, #169d972e);
+  --q-bad-soft: #9f51481f;
+  --q-bad-soft: light-dark(#9f51481f, #c06f6528);
 
-  --ok:   #0d7a68;
-  --warn: #b0700c;
+  /* --- feedback ---------------------------------------------------------- */
+  --ok: #226b44;
+  --ok: light-dark(#226b44, #5fb98b);
+  --ok-soft: #226b4416;
+  --ok-soft: light-dark(#226b4416, #5fb98b22);
 
-  /* --- type roles ------------------------------------------
-     display  : serif, for part titles only — a little gravity
-     body     : system sans, for long-form reading
-     mono     : all data, labels, readouts, figure annotation   */
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino,
-                  "Book Antiqua", Georgia, "Times New Roman", serif;
-  --font-body:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-                  "DejaVu Sans Mono", "Liberation Mono", monospace;
+  /* --- type -------------------------------------------------------------- */
+  --face-display: "IBM Plex Sans Condensed", "Avenir Next Condensed",
+                  "Roboto Condensed", "Helvetica Neue", system-ui, sans-serif;
+  --face-body:    "Spectral", "Iowan Old Style", Charter, "Source Serif 4",
+                  "Times New Roman", serif;
+  --face-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", "Cascadia Mono",
+                  Menlo, Consolas, monospace;
 
-  /* --- measure & rhythm ----------------------------------- */
-  --measure: 68ch;
-  --rail: 268px;
-  --step: 1.5rem;
-  --radius: 3px;
+  --t-micro: 0.6875rem;   /* title-block text, stamps    */
+  --t-small: 0.8125rem;   /* captions, tick labels       */
+  --t-ui:    0.875rem;    /* controls, table cells       */
+  --t-body:  1.0625rem;   /* the reading size            */
+  --t-lead:  1.1875rem;   /* part ledes                  */
+  --t-h3:    1.1875rem;
+  --t-h2:    1.625rem;
+  --t-h1:    2.375rem;
 
-  --shadow: 0 1px 2px rgba(22, 32, 29, 0.06),
-            0 8px 24px -18px rgba(22, 32, 29, 0.35);
+  --measure: 34rem;       /* ~68 characters at the reading size */
 
-  color-scheme: light;
-}
+  /* --- space and shape ---------------------------------------------------- */
+  --s1: 0.25rem;  --s2: 0.5rem;  --s3: 0.75rem;  --s4: 1rem;
+  --s5: 1.5rem;   --s6: 2rem;    --s7: 3rem;     --s8: 4.5rem;
 
-/* ---- dark: same tokens, different values ------------------ */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper:      #0e1413;
-    --paper-2:    #151d1b;
-    --paper-3:    #1c2624;
-    --grid:       #223029;
-    --grid-major: #2c3d38;
-    --rule:       #31433e;
-    --ink:        #dde6e3;
-    --ink-2:      #97a8a3;
-    --ink-3:      #6a7b76;
-
-    --v:    #eaa53f;
-    --spike:#ff6f9d;
-    --exc:  #35cbaf;
-    --inh:  #9694ff;
-
-    --v-wash:     rgba(234, 165, 63, 0.16);
-    --spike-wash: rgba(255, 111, 157, 0.16);
-    --exc-wash:   rgba(53, 203, 175, 0.16);
-    --inh-wash:   rgba(150, 148, 255, 0.16);
-
-    --ok:   #35cbaf;
-    --warn: #eaa53f;
-
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5),
-              0 8px 24px -18px rgba(0, 0, 0, 0.9);
-    color-scheme: dark;
-  }
-}
-
-/* ---- explicit manual override (the toggle in the header) --- */
-:root[data-theme="dark"] {
-  --paper:      #0e1413;
-  --paper-2:    #151d1b;
-  --paper-3:    #1c2624;
-  --grid:       #223029;
-  --grid-major: #2c3d38;
-  --rule:       #31433e;
-  --ink:        #dde6e3;
-  --ink-2:      #97a8a3;
-  --ink-3:      #6a7b76;
-
-  --v:    #eaa53f;
-  --spike:#ff6f9d;
-  --exc:  #35cbaf;
-  --inh:  #9694ff;
-
-  --v-wash:     rgba(234, 165, 63, 0.16);
-  --spike-wash: rgba(255, 111, 157, 0.16);
-  --exc-wash:   rgba(53, 203, 175, 0.16);
-  --inh-wash:   rgba(150, 148, 255, 0.16);
-
-  --ok:   #35cbaf;
-  --warn: #eaa53f;
-
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5),
-            0 8px 24px -18px rgba(0, 0, 0, 0.9);
-  color-scheme: dark;
+  --radius: 2px;          /* engineering paperwork is not rounded */
+  --hair: 1px solid var(--rule);
+  /* light-dark() takes exactly two arguments, so the shadow is composed
+     from a colour token rather than swapping the whole shadow list. */
+  --shadow-near: #08101614;
+  --shadow-near: light-dark(#08101614, #00000047);
+  --shadow-far: #0810160d;
+  --shadow-far: light-dark(#0810160d, #00000033);
+  --shadow: 0 1px 1px var(--shadow-near), 0 8px 24px var(--shadow-far);
 }
