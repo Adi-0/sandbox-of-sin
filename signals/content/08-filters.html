@@ -1,0 +1,59 @@
+<p>Everything so far has been about describing systems you were handed. This part is the short one where you stop describing and start choosing — because once you can read the map, placing the points yourself is not a new skill.</p>
+
+<p>A <span class="term">filter</span> is a system built on purpose to keep some frequencies and reject others. Not a special kind of object: the same H(s), with its poles put somewhere deliberate.</p>
+
+<div data-fig="four-filters"></div>
+
+<p>Figure 24 has the four filters you will meet everywhere, and the striking thing is how little the poles move between them. All four keep their poles in the same neighbourhood, at a distance of about 1000 rad/s from the origin. <strong>What changes is where the zeros go.</strong></p>
+
+<ul>
+  <li><strong>Lowpass</strong> — no zeros at all. Everything slow passes; the poles roll off everything fast. This is our room, with a second pole added.</li>
+  <li><strong>Highpass</strong> — zeros stacked at the origin. A zero at s = 0 means "multiply DC by nothing", so the slow stuff is removed and the fast stuff sails through. Every audio system has one, to stop a wandering DC level from pushing the loudspeaker cone off-centre.</li>
+  <li><strong>Bandpass</strong> — one zero at the origin, poles near ±j1000. Kills DC, rolls off the high end, leaves a neighbourhood in the middle. This is a radio tuner.</li>
+  <li><strong>Notch</strong> — zeros placed <em>exactly on the vertical axis</em> at ±j1000, with poles just behind them. A zero sitting on the axis is a frequency multiplied by precisely nothing, so 1000 rad/s vanishes completely while its neighbours pass almost untouched. This is what removes 50 or 60 Hz mains hum from an ECG.</li>
+</ul>
+
+<p>That is the whole of filter design as a concept: <strong>poles are where you want a bump, zeros are where you want a hole.</strong> Everything else — Butterworth, Chebyshev, elliptic, and the rest of the names in the tables — is a recipe for exactly where to put them, and each recipe is a different answer to one question.</p>
+
+<h2>The question every filter recipe is answering</h2>
+
+<p>You would like a filter that passes everything below the corner untouched and removes everything above it completely. You cannot have one, and Part 5 already told you why.</p>
+
+<div data-fig="order"></div>
+
+<p>Figure 25 has one slider — the number of poles — and two panels that move in opposite directions.</p>
+
+<p>On the left, more poles means a steeper cliff. The <span class="term">order</span> of a filter is how many poles it has, and each pole adds another 20 dB per decade to the rolloff. A first-order filter is 20 dB down at ten times the corner; an eighth-order filter is 160 dB down, a factor of a hundred million.</p>
+
+<div class="chain">
+  <div class="card"><h4>1 pole</h4>−20 dB at 10× out. A resistor and a capacitor.</div>
+  <div class="card"><h4>4 poles</h4>−80 dB. Overshoots 11%.</div>
+  <div class="card"><h4>8 poles</h4>−160 dB. Overshoots 16% and rings for four times as long.</div>
+</div>
+
+<p>On the right, that steepness is being paid for. The eighth-order step response overshoots, rings, and takes far longer to settle. Push the slider back and forth and watch the two panels argue with each other.</p>
+
+<p>This is Figure 16's seesaw, in the form you will actually meet it. <strong>Sharp in frequency means long in time.</strong> A filter with a near-vertical edge in its frequency response must have a long, ringing impulse response, because a short impulse response cannot produce a sharp edge — that was settled in Part 5 and no amount of design cleverness revisits it.</p>
+
+<p>Which is why the answer to "what order should I use?" is never a mathematical one. If you are removing an interfering tone close to the signal you care about, you need the sharp edge and you accept the ringing. If you are smoothing a control signal that must not overshoot, you take the gentle slope. Listen to the square wave through a first-order and an eighth-order filter in Figure 25 — they sound remarkably similar, because the ear is far more forgiving about ringing at 400 Hz than an oscilloscope is.</p>
+
+<div class="check" data-check data-answer="2">
+  <div class="check__q">A digital photograph is resized down and comes out with faint ripples beside every sharp edge. What was done to it?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">The image was compressed too aggressively</button>
+    <button class="check__opt" type="button">The sensor was overexposed at the edges</button>
+    <button class="check__opt" type="button">It was filtered with something very sharp in frequency, so its impulse response rings</button>
+  </div>
+  <div class="check__a">
+    A sharp filter was used, and its impulse response rings. Resizing needs a lowpass filter first — Part 9 explains why — and a filter with a sharp cutoff has a long, oscillating impulse response, which convolution smears beside every edge. It is the <b>Gibbs phenomenon</b> from Figure 13 arriving in a photograph. Image libraries let you pick the filter for exactly this reason: sharper resampling, more ringing.
+  </div>
+</div>
+
+<div class="aside">
+  Filters in the real world are also built out of components with tolerances. A pole you specify at 1000 rad/s arrives at 950 or 1080, because the capacitor is 5% out. High-order sharp filters are the ones most sensitive to this — a design whose poles must sit in precise formation is a design that a cheap component can ruin — which is a practical reason to use the lowest order that does the job, quite separate from the ringing.
+</div>
+
+<div class="stamp">
+  <p>A <strong>filter</strong> is a system with its poles and zeros placed on purpose. <strong>Poles make bumps, zeros make holes</strong>, and a zero exactly on the vertical axis removes one frequency completely.</p>
+  <p>Each pole buys another 20 dB per decade of rejection, and each pole is paid for in overshoot and ringing. <strong>Sharp in frequency is long in time</strong>, always, and choosing where to sit on that trade is the actual work.</p>
+</div>

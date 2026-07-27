@@ -1,0 +1,30 @@
+<p>Every figure in the eleven parts had one control and one lesson. This has all of them, because at this point the lesson is that it was one instrument the whole time.</p>
+
+<p>Drag a cross or a circle on the map. Four views move together: where the points are, what the system does to every frequency, how it answers a clap and a step, and what happens to the guide's 100 Hz square wave. Nothing is precomputed and nothing is a lookup — it is the same simulation running four ways, so if you can make one view lie you have found a bug.</p>
+
+<p>If you would rather not drag, click a point to select it and use the two sliders. The presets give you the systems from Parts 6 to 8 as starting positions.</p>
+
+<div data-fig="bench"></div>
+
+<h2>Things worth trying</h2>
+
+<div class="chain">
+  <div class="card"><h4>Walk a pole left</h4>Start from <b>The room</b> and drag the cross further from the origin. The corner in the gain plot moves right and the impulse response gets shorter, together, because they are the same number.</div>
+  <div class="card"><h4>Lift it off the axis</h4>Drag the same pole upwards. It becomes a pair, a bump appears in the gain plot at its height, and the step response starts to overshoot. That bump <b>is</b> the ring.</div>
+  <div class="card"><h4>Approach the line</h4>Slide the pair towards σ = 0. Q climbs, the bump sharpens, the ringing lengthens. Part 5's seesaw, from the other end.</div>
+  <div class="card"><h4>Cross it</h4>Push past σ = 0 and the readout turns red. The square-wave panel is autoscaled, so watch the numbers rather than the shape — this is a system eating itself.</div>
+  <div class="card"><h4>Put a zero on the axis</h4>Load <b>Notch</b> and drag the circle up and down. Whatever frequency it sits at vanishes from the gain plot completely.</div>
+  <div class="card"><h4>Add an integrator</h4>Drag a pole onto σ = 0 exactly. The DC gain reads ∞ and the step response ramps instead of settling — the missing term from Part 10's cruise control.</div>
+</div>
+
+<h2>What the bench is doing</h2>
+
+<p>Your poles and zeros are expanded into conjugate pairs, multiplied out into a numerator and a denominator, and turned into a differential equation which is then integrated. The gain plot evaluates the same polynomials along the imaginary axis. The sound is the same integration, run at 44.1 kHz.</p>
+
+<p>So the four panels are not four models kept in agreement by careful bookkeeping. They are one model, asked four questions.</p>
+
+<div class="aside">
+  Two honest simplifications. The gain plot is normalised to its own peak, so you are always looking at the <b>shape</b> rather than the absolute level — otherwise dragging a pole would slide the whole curve off the panel. The time-domain panels are scaled to fit for the same reason. And an unstable system genuinely has no steady state: what you see there is a snapshot of the first 40 ms of something on its way to infinity.
+</div>
+
+<p style="margin-top:2rem">That is the guide. <a href="#/close"><b>Part 11 counts up how few ideas were involved →</b></a></p>

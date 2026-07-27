@@ -1,0 +1,76 @@
+<p>Everything so far has assumed you can see the signal at every instant. No computer can. A computer looks at a voltage, writes down a number, waits, and looks again — a thousand times a second, or forty-four thousand, but always with gaps.</p>
+
+<p>So: what is lost in the gaps?</p>
+
+<p>The honest first guess is "a little detail, and more of it if you look less often". That guess is wrong in a way that matters, and the way it is wrong is the subject of this part.</p>
+
+<div data-fig="sampling"></div>
+
+<p>Figure 26 samples a tone a thousand times a second — one dot every millisecond — and reconstructs a signal from those dots alone. Start at 100 Hz and slide up.</p>
+
+<p>Below 500 Hz the reconstruction sits on top of the original. Push past 500 and something alarming happens: the orange curve is a <em>different, lower</em> tone, and it passes through every single sample exactly. Nothing has gone wrong with the arithmetic. The samples are simply consistent with more than one answer, and there is no way — from the dots alone — to know which one you meant.</p>
+
+<p>Set the slider to 900 Hz and read the ghost's frequency. It is <strong>100 Hz</strong>: the fundamental of the square wave you have been looking at since Part 1. A tone from the top of the range comes back wearing the costume of a tone from the bottom.</p>
+
+<p>This is <span class="term">aliasing</span>, and press the sweep button to hear it properly. The tone rises, reaches a wall, and comes back down again while the thing generating it is still going up. That descending sound does not exist anywhere in the signal. It is manufactured entirely by the act of measuring.</p>
+
+<h2>Where the wall comes from</h2>
+
+<p>Part 6 said: whenever something looks complicated in time, go and look at it in frequency. Do that.</p>
+
+<div data-fig="copies"></div>
+
+<p>Figure 27 is the sampling theorem in one picture, and it is not the picture most people expect. <strong>Sampling does not blur a spectrum or wear its detail away. It duplicates it</strong>, endlessly, at every multiple of the sample rate.</p>
+
+<p>If the copies stay clear of one another, nothing is lost. You throw the extras away with a lowpass filter and the original is back, exactly. If the copies overlap, the shaded region belongs to two of them at once, and no filter in the world can separate a sum back into its parts. The damage is permanent at the moment of sampling.</p>
+
+<p>Which gives the condition. The copies are
+ f<sub>s</sub> apart and each reaches out B either side of its centre, so they stay clear when f<sub>s</sub> − B > B:</p>
+
+<div class="eq">
+  <div class="eq__math">f<sub>s</sub>  &gt;  2 B</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> Sample at more than twice the highest frequency present and the copies never touch. That is the <b>Nyquist–Shannon sampling theorem</b>, and the surprise is not the inequality — it is the word "exactly". Meet this condition and the samples contain <em>everything</em>. Not enough to make a good guess: the original signal, in full, recoverable without error. Half of f<sub>s</sub> is called the <b>Nyquist frequency</b>, and it is the wall in Figure 26.
+  </div>
+</div>
+
+<p>This is why a CD samples at 44,100 Hz. Human hearing stops around 20 kHz; twice that is 40 kHz; the extra 4 kHz is room for the filter that removes everything above 20 kHz to do its job, since Part 8 established that no filter has a vertical edge. The reason a CD sounds identical to the master tape is not that 44,100 is a lot of samples. <strong>It is a theorem.</strong></p>
+
+<p>And the reason that filter exists at all is Figure 26: anything above 22,050 Hz reaching the converter would not be inaudible — it would be folded down into the middle of the music and become permanently audible. The filter is not there to improve fidelity. It is there to prevent a fabrication.</p>
+
+<h2>You have already seen this happen</h2>
+
+<div data-fig="wagon-wheel"></div>
+
+<p>Figure 28 is aliasing you have watched in a film. A wheel turning 24 times a second, filmed at 25 frames a second, is caught one twenty-fifth of a turn short each time — so the spokes appear to creep <em>backwards</em>, once a second.</p>
+
+<p>Every frame is correct. Every photograph is a truthful record of where the wheel was. The story they tell in sequence is a fiction, and it is precisely the fiction that the orange curve told in Figure 26. Slide the frame rate above 48 — twice the wheel's rate — and the illusion breaks; the wheel turns the right way at the right speed, because you have satisfied Nyquist.</p>
+
+<div class="check" data-check data-answer="0">
+  <div class="check__q">You are sampling at 1 kHz and there is unwanted 1200 Hz noise on the wire. Where should the filter go?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">Before the sampler — in hardware, on the analogue signal</button>
+    <button class="check__opt" type="button">After the sampler, in software, where filters are cheaper</button>
+    <button class="check__opt" type="button">Either — the noise is at 1200 Hz wherever you remove it</button>
+  </div>
+  <div class="check__a">
+    Before. After sampling, that 1200 Hz noise is no longer at 1200 Hz — it is at 200 Hz, sitting in the middle of your signal and indistinguishable from it. This is why every data acquisition card has an <b>anti-alias filter</b> soldered in front of its converter, and why "I'll clean it up in software later" is the one thing you cannot do about aliasing.
+  </div>
+</div>
+
+<h2>Putting it back together</h2>
+
+<p>One loose end. Given the dots, how do you actually draw the curve?</p>
+
+<p>Not by joining them with straight lines, which would add corners — and corners, by Part 5, mean high harmonics that were never in the original. The correct answer follows from Figure 27: to keep one copy and discard the rest you need an ideal lowpass filter, and an ideal lowpass filter's impulse response is a sinc — the same wobbly curve that was the spectrum of a rectangle in Figure 16, arriving here with time and frequency swapped.</p>
+
+<p>So: put a sinc at every sample, scaled by that sample's height, and add them up. Each sinc is 1 at its own sample and exactly 0 at every other one, so the sum passes through all the dots — and between them it does the one thing that adds no new frequencies. That is the reconstruction drawn in orange in Figure 26, and it is not an interpolation scheme chosen for looking nice. It is the exact inverse of sampling.</p>
+
+<div class="aside">
+  Exact, and unbuildable: a sinc extends infinitely in both directions, so a perfect reconstructor would need every future sample before it could emit the first output. Real converters use a truncated approximation and accept a small error, which is why datasheets quote a passband ripple. The theorem is exact; the hardware is close, and knowing the difference is the difference between a specification and a sales brochure.
+</div>
+
+<div class="stamp">
+  <p>Sampling does not blur a signal — it <strong>copies its spectrum</strong> to every multiple of the sample rate. Keep the copies apart and nothing at all is lost; let them overlap and the damage cannot be undone afterwards.</p>
+  <p><strong>Sample faster than twice the highest frequency present</strong> and the samples contain the original exactly. Below that, high tones come back as low ones — <strong>aliasing</strong> — which is why the filter goes <em>before</em> the converter, never after.</p>
+</div>

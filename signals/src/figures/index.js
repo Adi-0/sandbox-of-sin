@@ -13,6 +13,11 @@ import { impulseResponseFig, twoClaps, convolutionSlider, squareThroughRoom } fr
 import { eigenFig, shadowFig, complexFig } from './arrow.js';
 import { buildSquare, spectrumFig, seriesToTransform, uncertaintyFig } from './stack.js';
 import { sweepFig, bodeFig, multiplyFig } from './response.js';
+import { growingToneFig, poleRingFig, blockDiagramFig, feedbackFig } from './poles.js';
+import { fourFiltersFig, orderFig } from './filters.js';
+import { samplingFig, copiesFig, wagonWheelFig } from './sampling.js';
+import { radioFig, cruiseFig } from './world.js';
+import { bench } from './bench.js';
 
 export const FIGURES = {
   /* Part 1 — Everything That Varies */
@@ -45,4 +50,26 @@ export const FIGURES = {
   'sweep': sweepFig,
   'bode': bodeFig,
   'multiply': multiplyFig,
+
+  /* Part 7 — Poles */
+  'growing-tone': growingToneFig,
+  'pole-ring': poleRingFig,
+  'block-diagram': blockDiagramFig,
+  'feedback': feedbackFig,
+
+  /* Part 8 — Rooms Built on Purpose */
+  'four-filters': fourFiltersFig,
+  'order': orderFig,
+
+  /* Part 9 — Photographs of a Signal */
+  'sampling': samplingFig,
+  'copies': copiesFig,
+  'wagon-wheel': wagonWheelFig,
+
+  /* Part 10 — Out in the World */
+  'radio': radioFig,
+  'cruise': cruiseFig,
+
+  /* The Bench */
+  'bench': bench,
 };

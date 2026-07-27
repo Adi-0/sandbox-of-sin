@@ -171,11 +171,18 @@ export function figure({ n, title, tag = 'interactive', domains = ['t'], strip, 
   return {
     root, panel, body,
     /** Mount an SVG with its accessibility label. */
-    svg(viewBox, label) {
+    svg(viewBox, label, parent) {
       const el = s('svg', {
         viewBox, role: 'img', 'aria-label': label || aria || title,
         preserveAspectRatio: 'xMidYMid meet',
       });
+      (parent || body).appendChild(el);
+      return el;
+    },
+    /** A container for two drawings that belong side by side — a map and
+        the thing it is a map of. Stacks on a narrow screen. */
+    row() {
+      const el = h('div', { class: 'panel__row' });
       body.appendChild(el);
       return el;
     },

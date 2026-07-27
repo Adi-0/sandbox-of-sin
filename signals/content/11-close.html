@@ -1,0 +1,73 @@
+<p>Count the ideas. There are five.</p>
+
+<p><strong>One.</strong> Two promises — linearity and time invariance — make a system knowable, and rule out most of the world in exchange.</p>
+
+<p><strong>Two.</strong> For a system that keeps them, one clap is a complete description, and every other answer is that clap added up on a slide: convolution.</p>
+
+<p><strong>Three.</strong> A sinusoid is a spinning arrow, and a system with no calendar cannot reshape one. Only two numbers change.</p>
+
+<p><strong>Four.</strong> Every signal is a stack of those sinusoids — so a system is fully described by two numbers per frequency, and convolution becomes multiplication.</p>
+
+<p><strong>Five.</strong> Let the test tone fade as well as spin, and the whole description collapses to a handful of points on a map, where left means fast, up means ringy, and the right half-plane is fatal.</p>
+
+<p>That is it. Filters are idea five, used deliberately. Sampling is idea four, applied to the act of measuring. Radio is idea four with the spectrum moved sideways. Feedback is idea five with the points pushed around. There was no sixth idea, and no part of this guide required anything the previous part had not already established.</p>
+
+<p>The thing worth taking away is not any single formula. It is the habit: <strong>when something is impossible to see in one room, go and look at it in the other.</strong> A square wave's fate under convolution is unreadable in time and obvious in frequency. A filter's ringing is invisible in frequency and unmistakable in time. Aliasing is a mystery in time and a diagram in frequency. The subject is a door, and knowing which side to stand on is most of the skill.</p>
+
+<h2>The cheat sheet</h2>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Idea</th><th>Written</th><th class="num">In our cast</th><th>Part</th></tr></thead>
+  <tbody>
+    <tr><td>Time shift</td><td>x(t − t₀) arrives later</td><td class="num">—</td><td>1</td></tr>
+    <tr><td>Exponential decay</td><td>e<sup>−t/τ</sup>, over by 5τ</td><td class="num">τ = 1 ms → 5 ms</td><td>1</td></tr>
+    <tr><td>Linearity</td><td>A+B in → p+q out</td><td class="num">—</td><td>2</td></tr>
+    <tr><td>Time invariance</td><td>x(t−t₀) in → y(t−t₀) out</td><td class="num">—</td><td>2</td></tr>
+    <tr><td>Impulse response</td><td>h(t), the answer to one clap</td><td class="num">(1/τ)e<sup>−t/τ</sup></td><td>3</td></tr>
+    <tr><td>Convolution</td><td>y = x ∗ h — flip, slide, multiply, add</td><td class="num">1.9 × 10⁹ mults/s of audio</td><td>3</td></tr>
+    <tr><td>Euler</td><td>e<sup>jωt</sup> = cos ωt + j sin ωt</td><td class="num">—</td><td>4</td></tr>
+    <tr><td>Eigenfunction</td><td>sine in → sine out, gain and phase only</td><td class="num">×0.847, −32° at 100 Hz</td><td>4</td></tr>
+    <tr><td>Fourier series</td><td>square = 4/π · (sin ωt + ⅓sin 3ωt + …)</td><td class="num">100, 300, 500 Hz…</td><td>5</td></tr>
+    <tr><td>Gibbs</td><td>overshoot ≈ 9% of the jump, forever</td><td class="num">9%</td><td>5</td></tr>
+    <tr><td>Fourier transform</td><td>X(ω) = ∫x(t)e<sup>−jωt</sup>dt</td><td class="num">—</td><td>5</td></tr>
+    <tr><td>Time–bandwidth</td><td>width × bandwidth ≈ 1</td><td class="num">1 ms ↔ 1 kHz</td><td>5</td></tr>
+    <tr><td>Frequency response</td><td>H(jω), gain and phase per frequency</td><td class="num">1/(1 + jωτ)</td><td>6</td></tr>
+    <tr><td>Corner frequency</td><td>ω = 1/τ, gain 0.707, phase −45°</td><td class="num">1000 rad/s = 159 Hz</td><td>6</td></tr>
+    <tr><td>One pole rolls off at</td><td>−20 dB per decade</td><td class="num">×10 freq → ÷10 size</td><td>6</td></tr>
+    <tr><td>Convolution theorem</td><td>x ∗ h  ⟷  X · H</td><td class="num">1.9 × 10⁹ → 1.4 × 10⁷</td><td>6</td></tr>
+    <tr><td>Laplace variable</td><td>s = σ + jω — fade rate, spin rate</td><td class="num">—</td><td>7</td></tr>
+    <tr><td>Pole meaning</td><td>rings at ω, fades at σ</td><td class="num">−200 ± j980</td><td>7</td></tr>
+    <tr><td>Stability</td><td>every pole strictly left of the axis</td><td class="num">—</td><td>7</td></tr>
+    <tr><td>Damping</td><td>ζ, overshoot = e<sup>−πζ/√(1−ζ²)</sup></td><td class="num">ζ = 0.2 → 53%</td><td>7</td></tr>
+    <tr><td>Settling time</td><td>≈ 4/(ζω<sub>n</sub>)</td><td class="num">20 ms</td><td>7</td></tr>
+    <tr><td>Feedback</td><td>KP/(1+KP), error 1/(1+K)</td><td class="num">K = 10 → 9.1%</td><td>7</td></tr>
+    <tr><td>Filter order</td><td>n poles → −20n dB per decade</td><td class="num">8 poles → −160 dB</td><td>8</td></tr>
+    <tr><td>Sampling theorem</td><td>f<sub>s</sub> &gt; 2 × highest frequency</td><td class="num">1 kHz → 500 Hz limit</td><td>9</td></tr>
+    <tr><td>Aliasing</td><td>f comes back at |f − k·f<sub>s</sub>|</td><td class="num">900 Hz → 100 Hz</td><td>9</td></tr>
+    <tr><td>Reconstruction</td><td>a sinc at every sample, summed</td><td class="num">—</td><td>9</td></tr>
+    <tr><td>Modulation</td><td>× cos(2πf<sub>c</sub>t) moves the spectrum to ±f<sub>c</sub></td><td class="num">5 kHz voice → 10 kHz channel</td><td>10</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Where to go next</h2>
+
+<p>Five directions, each of which starts exactly where a part of this guide stopped.</p>
+
+<p><strong>Discrete-time signals and the z-transform.</strong> Part 9 sampled a signal and then immediately reconstructed it. Stay in the sampled world instead and every idea here reappears with the s-plane replaced by the z-plane, where the stability boundary is a circle rather than a line and "inside the circle" means what "left half-plane" meant in Part 7. This is where nearly all real filtering happens now, and Part 8's pole placement carries over directly.</p>
+
+<p><strong>The FFT, properly.</strong> Part 6 quoted a factor of 140 and moved on. The fast Fourier transform is a genuinely beautiful algorithm — it works by noticing that a transform of length N contains two of length N/2 — and it is worth an afternoon. The guide's own reverb button runs on it.</p>
+
+<p><strong>Random signals.</strong> Everything here was a signal you could write down. Noise is not, and the tools change shape: instead of a spectrum you get a <em>power</em> spectrum, and instead of convolution you get correlation. This is the road to matched filters, Wiener filtering, and the Kalman filter, and it starts from Part 6's frequency response applied to a signal you can only describe statistically.</p>
+
+<p><strong>Control design.</strong> Part 7 pushed a gain slider until the system howled, and Part 10 noted that a proportional controller must keep an error. Both are cured by the same next step: PID, phase margin, and root locus, which is Figure 23's faint grey tracks used as a design tool rather than a demonstration.</p>
+
+<p><strong>Communications.</strong> Part 10 moved a spectrum with a cosine and stopped. Next come the ways of putting information on a carrier that beat AM — FM, then digital modulation — and with them the question this guide never asked: how much information can a channel carry at all? That is Shannon, and the answer depends on exactly the bandwidth from Part 5 and the noise from the paragraph above.</p>
+
+<p>All five are the same five ideas, pointed somewhere new. You are not starting any of them from scratch.</p>
+
+<div class="stamp">
+  <p>Five ideas: <strong>two promises</strong>, <strong>one clap</strong>, <strong>the spinning arrow</strong>, <strong>the stack of tones</strong>, and <strong>the map of poles</strong>. Everything else in this guide was one of those five, pointed at something.</p>
+  <p>And the habit worth keeping: <strong>when a thing is impossible to see in one room, go and look at it in the other.</strong></p>
+</div>

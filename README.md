@@ -1,3 +1,16 @@
+# sandbox-of-sin
+
+Interactive field guides. Each one teaches a subject from first principles
+with live, purpose-built figures, and each has its own design system and its
+own simulation engine.
+
+| Guide | Subject | Covers |
+|---|---|---|
+| [**Echo**](signals/) | signals and systems | convolution, Fourier, Laplace, filters, sampling, feedback |
+| **Spikes** (at the repository root, below) | neuromorphic computing | leaky neurons, spike timing, STDP, silicon |
+
+---
+
 # Spikes — an interactive field guide to neuromorphic computing
 
 An interactive teaching tool that builds neuromorphic computing from first

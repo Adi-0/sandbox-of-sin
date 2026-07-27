@@ -1,0 +1,68 @@
+<p>Two industries, no new mathematics. Everything in this part is a rearrangement of things you already have.</p>
+
+<h2>Why a radio station has a frequency</h2>
+
+<p>A voice occupies roughly 0 to 5 kHz. Two people speaking into two microphones produce two signals in the same band, and adding them together gives a mess that no filter can separate — the same permanent overlap as Figure 27.</p>
+
+<p>So the problem is: how do a thousand stations share one sky?</p>
+
+<p>The answer is one line of trigonometry that you can also read straight off Figure 12. Multiplying a signal by a cosine at frequency f<sub>c</sub> takes its whole spectrum and sets it down at ±f<sub>c</sub>. Nothing is distorted, nothing is lost. The spectrum is simply <em>moved</em>.</p>
+
+<div class="eq">
+  <div class="eq__math">x(t) · cos(2π f<sub>c</sub> t)   ⟷   ½X(f − f<sub>c</sub>)  +  ½X(f + f<sub>c</sub>)</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> A cosine is two arrows spinning in opposite directions at f<sub>c</sub>. Multiplying by a spinning arrow adds its rate to everything in the signal — angles add, from Figure 12 — so one copy of the spectrum slides up by f<sub>c</sub> and the other slides down. This is <b>modulation</b>, and it is the entire reason wireless communication is possible.
+  </div>
+</div>
+
+<div data-fig="radio"></div>
+
+<p>Figure 29 shows the AM band with four fixed stations and one you can move. Every hump is the same voice spectrum from the left-hand edge, relocated. Slide yours onto a neighbour and the readout turns red — that is a collision, and it is a real one: the two signals become inseparable in exactly the way Part 9's overlapping copies did.</p>
+
+<p>Give each station a 10 kHz channel and the licensed AM band from 530 to 1700 kHz holds <strong>117 of them</strong> simultaneously, with the same aerial, in the same air, at the same instant. The receiver's job is then just Part 8: a bandpass filter tuned to one carrier, and everything else falls away. The tuning knob on an old radio was moving a pole.</p>
+
+<p>Press the listen button for the shape of it. You hear a plain 300 Hz tone, then the same tone riding on a carrier — the pitch you hear is the carrier, and the message is the wobble in its loudness. A real AM station uses a carrier a thousand times higher and utterly inaudible; the demo brings it down into the audio band so the shape is hearable, which is a distortion of scale and not of principle.</p>
+
+<div class="check" data-check data-answer="1">
+  <div class="check__q">Why does an AM station occupy 10 kHz of band when the voice only reaches 5 kHz?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">For a safety margin between stations</button>
+    <button class="check__opt" type="button">Because the spectrum lands on both sides of the carrier — 5 kHz above and 5 kHz below</button>
+    <button class="check__opt" type="button">Because AM needs twice the bandwidth to carry the carrier itself</button>
+  </div>
+  <div class="check__a">
+    Both sidebands. The equation above puts a copy at f<sub>c</sub> + f and another at f<sub>c</sub> − f, so a 5 kHz message occupies 5 kHz either side. The two carry identical information, which is wasteful — and noticing that gives you <b>single-sideband</b>, which throws one away and fits twice as many stations in the same sky. Amateur and marine radio have used it for decades.
+  </div>
+</div>
+
+<h2>Why your car holds its speed on a hill</h2>
+
+<p>Now the other half, and it is Figure 23 wearing different clothes.</p>
+
+<p>A car with cruise control is three lags in series. The engine takes about ten seconds to deliver a change in torque. The car's mass takes a second or so to respond to that torque. The speed sensor and its filtering lag by another half second. Three lags — the exact plant from Part 7, with names on it.</p>
+
+<div data-fig="cruise"></div>
+
+<p>Figure 30 sets the target at 100 km/h and puts a hill at sixty seconds. One slider: how hard the controller reacts to being wrong.</p>
+
+<p>At K = 1 the car cruises at 50 km/h — half the target — and sags badly on the hill. At K = 10 it manages 91 km/h and holds most of its speed on the climb. At K = 30 it is within 3 km/h but visibly wallows, hunting up and down for half a minute after every disturbance. Past about K = 35 the poles cross the line, and the car surges violently between speeds forever. Exactly Figure 23, exactly the same cliff, at exactly the same gain — because it is the same three poles.</p>
+
+<p>Now look at what the car never does: reach 100. A controller that acts only on the present error must <em>keep</em> an error in order to keep pushing. Zero error would mean zero throttle, and zero throttle on a level road means slowing down.</p>
+
+<div class="chain">
+  <div class="card"><h4>K = 1</h4>50% error. Placid, useless.</div>
+  <div class="card"><h4>K = 10</h4>9% error. Sensible.</div>
+  <div class="card"><h4>K = 30</h4>3% error. Wallowing.</div>
+  <div class="card"><h4>K = 40</h4>0% error, briefly, on the way past.</div>
+</div>
+
+<p>The cure is to add a term that accumulates the error over time, so that any persistent shortfall keeps building throttle until it is gone. That is the <strong>I</strong> in a PID controller, and a real cruise control has one. Adding an integrator is adding a pole at s = 0 — which you can do on the Bench in one drag, and watch the steady-state error vanish while the stability margin gets worse. Nothing here is a special case; it is all the same map.</p>
+
+<div class="aside">
+  Both examples are simplified in the same honest direction: they assume linearity over the whole operating range. A real engine's torque is nowhere near proportional to throttle at the extremes, and a real transmitter clips. Both designs work anyway because they are kept in the region where Part 2's first promise holds — and both fail in exactly the way Part 2 predicted when they are not. An overdriven transmitter splatters energy into its neighbours' channels, which regulators fine people for.
+</div>
+
+<div class="stamp">
+  <p>Multiplying by a cosine moves a spectrum to the carrier and nowhere else. That is <strong>modulation</strong>, and it is the whole reason a thousand stations fit in one sky — with a Part 8 bandpass filter at the far end to pick one out.</p>
+  <p>Feedback is Part 7's map with a purpose: more gain means less error and less margin. <strong>A proportional controller must keep an error to keep pushing</strong>, and curing that means adding another pole.</p>
+</div>

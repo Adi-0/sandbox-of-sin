@@ -28,8 +28,8 @@ body::before {
   background-image:
     linear-gradient(to right, var(--grid) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: 0.5;
+  background-size: 32px 32px;
+  opacity: 0.38;   /* texture, not decoration — the domain tab is the loud thing */
 }
 
 .app { position: relative; z-index: 1; }

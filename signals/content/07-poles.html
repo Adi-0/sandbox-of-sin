@@ -1,0 +1,97 @@
+<p>Part 6 gave you a curve that describes a system completely. It has a weakness: it is a picture, and pictures are hard to do arithmetic with. If you wire two systems together you would like to combine their descriptions, and "multiply these two curves point by point" is not an answer you can hold in your head.</p>
+
+<p>There is a shorter description. It has three or four numbers in it, it tells you the shape of the curve <em>and</em> how the system rings <em>and</em> whether it will destroy itself, and it fits on a postcard. Getting to it takes one small change to the test signal.</p>
+
+<h2>Let the test tone fade</h2>
+
+<p>Every test in Part 4 used a tone that goes on forever at constant size. That is a strange thing to test a fading system with. Real systems settle; let the test signal settle too.</p>
+
+<div data-fig="growing-tone"></div>
+
+<p>Figure 20 has a sine wave inside an exponential envelope, and one slider for the envelope's rate, σ. Negative σ fades away, zero σ is Part 4's eternal tone, positive σ runs off the top of the screen.</p>
+
+<p>So a test signal now needs two numbers: how fast it turns (ω) and how fast it fades (σ). Glue them into one complex number, exactly as in Part 4:</p>
+
+<div class="eq">
+  <div class="eq__math">s  =  σ  +  jω</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> The real part is the fade rate, the imaginary part is the spin rate. Setting σ = 0 gives back s = jω, which is Part 6's frequency response — so nothing has been thrown away, only added. Testing a system with every possible s instead of only the pure-spin ones is the <b>Laplace transform</b>, and the result H(s) is the <b>transfer function</b>.
+  </div>
+</div>
+
+<p>H(s) is a fraction: a polynomial in s over another polynomial in s. And a fraction is described entirely by where its top is zero and where its bottom is zero. Those two lists of numbers are the postcard.</p>
+
+<p>A <span class="term">zero</span> is a value of s where the top goes to zero — a signal shape the system kills outright. A <span class="term">pole</span> is a value of s where the <em>bottom</em> goes to zero, so that H blows up. Poles are the interesting ones, and here is why.</p>
+
+<h2>The pole is the ring</h2>
+
+<p>A pole at s = σ + jω is not an abstraction. It is a statement about what the system does when you hit it: <strong>it rings at ω radians per second while fading at rate σ.</strong> That is the entire meaning. The transfer function blowing up there is the mathematical way of saying "this is a motion the system will perform all by itself, with no input at all" — which is exactly what a struck bell does.</p>
+
+<div data-fig="pole-ring"></div>
+
+<p>Drag a cross in Figure 21, or use the slider. The poles are held on a circle so there is only one thing to change: the angle.</p>
+
+<p>Down near the horizontal axis, the poles are mostly real: σ is large and negative, ω is small. The response slumps back and does not ring. Swing the crosses up towards the vertical axis and σ shrinks while ω grows — the response rings for longer and longer. Land on the axis and it never stops. Cross it, and the ringing grows.</p>
+
+<p>Read the map like this, and you will never need to memorise a second-order formula again:</p>
+
+<div class="chain">
+  <div class="card"><h4>← left</h4>faster fade, quicker settling</div>
+  <div class="card"><h4>↑ up</h4>faster ringing, higher pitch</div>
+  <div class="card"><h4>the axis</h4>rings forever — a bell that never stops</div>
+  <div class="card"><h4>→ right</h4>runs away — the system destroys itself</div>
+</div>
+
+<p>Two derived numbers get names because engineers quote them constantly. The <span class="term">damping ratio</span> ζ is how far round towards the horizontal axis the pole sits: ζ = 1 is straight left with no ringing at all, ζ = 0 is straight up and rings forever. And the <span class="term">quality factor</span> Q = 1/(2ζ) counts roughly how many cycles the ringing lasts. Our recurring second-order room sits at ζ = 0.2 and Q = 2.5 — it overshoots by 53% and settles in about 20 ms, which is the trace you have been looking at since Figure 1.</p>
+
+<div class="check" data-check data-answer="1">
+  <div class="check__q">A guitar string's note dies away in about two seconds. Roughly where are its poles?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">Far to the left, near the horizontal axis</button>
+    <button class="check__opt" type="button">High up, very close to the vertical axis</button>
+    <button class="check__opt" type="button">In the right half-plane, since the string keeps vibrating</button>
+  </div>
+  <div class="check__a">
+    High up and very close to the vertical axis. High up because it rings at hundreds of hertz; close to the axis because it fades slowly — σ ≈ −2.5 per second against an ω of a few thousand, so the pole sits almost exactly <b>on</b> the line. A good instrument is a system built deliberately near the edge of instability, which is a lovely way to think about what "resonant" means.
+  </div>
+</div>
+
+<h2>Wiring boxes together</h2>
+
+<p>Now the payoff for using a fraction instead of a curve.</p>
+
+<div data-fig="block-diagram"></div>
+
+<p>Two systems in series: multiply the transfer functions. In parallel: add them. Both obvious, both one line of algebra instead of a point-by-point operation on two curves.</p>
+
+<p>The third diagram in Figure 22 is not obvious and is worth more than the other two put together. Take a system, measure its output, subtract that from what you wanted, and feed the difference back in through a gain K. The result is:</p>
+
+<div class="eq">
+  <div class="eq__math">H(s)  =  K·P(s) / (1 + K·P(s))</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> The forward path is on the top; the loop appears on the bottom. Now look at what happens when K·P is large: the fraction becomes approximately K·P / K·P = 1. <b>The plant cancels itself out.</b> Whatever P is — sluggish, badly made, drifting with temperature — the loop delivers what you asked for. This one fraction is why a cheap motor with feedback outperforms an expensive motor without it, and why negative feedback was worth a 1927 patent that Bell Labs described as its most valuable.
+  </div>
+</div>
+
+<h2>The catch, which is also the whole of control engineering</h2>
+
+<p>If large K makes the answer perfect, use enormous K. Try it.</p>
+
+<div data-fig="feedback"></div>
+
+<p>The plant in Figure 23 is three lags in series — something that takes 10 seconds to respond, then something that takes 1 second, then something that takes half a second. Wrap a loop around it and raise K.</p>
+
+<p>At K = 1 the output settles at half the target: a 50% error. At K = 10 the error is 9%, and the response has become brisk. At K = 30 the error is 3% and the thing is visibly wallowing. Somewhere around <strong>K = 35 two poles cross the vertical axis</strong>, and past that the output grows without limit, oscillating at a fixed period of about four seconds, forever.</p>
+
+<p>Nothing warns you. At K = 30 the response merely looks lively. The cliff is not in the steady-state error, which improves smoothly all the way; it is in the pole positions, which you cannot see from the output until it is too late.</p>
+
+<p>The physical reason is worth having. Each lag makes its output arrive late, and lateness in a loop means your correction is based on stale information. Push hard enough on stale information and the correction arrives exactly when it makes things worse — the loop's total phase reaches −180°, the subtraction becomes an addition, and negative feedback has quietly turned positive. That is precisely the howl you get from a microphone pointed at its own loudspeaker.</p>
+
+<div class="aside">
+  Real control design does not proceed by pushing a gain slider until the thing screams. It measures how much phase the loop has spent by the frequency where the gain reaches 1 — the <b>phase margin</b> — and keeps a stated reserve, typically 45° or more. That is a Bode plot from Part 6 being used as a safety calculation, and it is the standard next topic after this guide.
+</div>
+
+<div class="stamp">
+  <p>Let the test tone fade as well as spin — s = σ + jω — and a system's whole description collapses to a fraction, the <strong>transfer function</strong> H(s), fixed by its <strong>poles</strong> and <strong>zeros</strong>.</p>
+  <p>Read the map directly: <strong>left is fast, up is ringy, the right half-plane is fatal.</strong> Feedback moves the poles, which is how it cures a bad plant — and if you move them too far right, it is also how it kills one.</p>
+</div>

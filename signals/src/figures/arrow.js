@@ -203,14 +203,15 @@ export function complexFig() {
     caption: 'The middle panel is the only reason this notation is worth learning. "Shrink it and slide it later" is two separate operations on a wave, and it is <b>one multiplication</b> on an arrow. Everything from Part 6 onwards is that substitution, cashed in.',
   });
 
-  const svg = fig.svg('0 0 720 250', 'Reference drawing of a complex number as an arrow, multiplication as stretch-and-rotate, and the spinning arrow whose shadow is a cosine.');
+  const svg = fig.svg('0 0 720 268', 'Reference drawing of a complex number as an arrow, multiplication as stretch-and-rotate, and the spinning arrow whose shadow is a cosine.');
+  const PT = 26, PB = 244;                       // panel top and bottom
   const panels = [
     { x: 8, w: 226, title: 'A NUMBER WITH A DIRECTION' },
     { x: 246, w: 226, title: 'MULTIPLYING = STRETCH + TURN' },
     { x: 484, w: 228, title: 'SPINNING = A PURE TONE' },
   ];
   for (const p of panels) {
-    svg.appendChild(s('rect', { x: p.x, y: 26, width: p.w, height: 200, fill: 'var(--vellum)', stroke: 'var(--grid-major)' }));
+    svg.appendChild(s('rect', { x: p.x, y: PT, width: p.w, height: PB - PT, fill: 'var(--vellum)', stroke: 'var(--grid-major)' }));
     svg.appendChild(note(p.x, 18, p.title, { color: 'var(--ink-2)', size: 9.5, weight: 600 }));
   }
 
@@ -232,56 +233,56 @@ export function complexFig() {
     return g;
   };
 
-  /* panel 1 */
+  /* panel 1 — the arrow, and what its two numbers mean */
   {
-    const cx = 108, cy = 140, r = 74, ang = 0.62;
-    svg.appendChild(axes(cx, cy, 82));
+    const cx = 74, cy = 132, r = 78, ang = 0.66;
+    svg.appendChild(axes(cx, cy, 70));
     svg.appendChild(s('path', {
-      d: `M${cx + 26} ${cy} A 26 26 0 0 0 ${cx + 26 * Math.cos(ang)} ${cy - 26 * Math.sin(ang)}`,
+      d: `M${cx + 24} ${cy} A 24 24 0 0 0 ${cx + 24 * Math.cos(ang)} ${cy - 24 * Math.sin(ang)}`,
       fill: 'none', stroke: 'var(--sys)', 'stroke-width': 1.4,
     }));
     svg.appendChild(arrowTo(cx, cy, ang, r, 'var(--sys)'));
-    svg.appendChild(s('line', { x1: cx + r * Math.cos(ang), y1: cy - r * Math.sin(ang), x2: cx + r * Math.cos(ang), y2: cy, stroke: 'var(--sys)', 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
-    svg.appendChild(note(cx + 34, cy - 42, 'length = how much', { color: 'var(--sys)', size: 9.5 }));
-    svg.appendChild(note(cx + 34, cy - 8, 'angle = how late', { color: 'var(--sys)', size: 9.5 }));
-    svg.appendChild(note(cx - 80, cy + 58, 'two numbers, and it is still one object', { color: 'var(--ink-3)', size: 9 }));
-    svg.appendChild(note(cx - 80, cy + 74, 'written  M∠φ   or   M·e^(jφ)', { color: 'var(--ink-3)', size: 9 }));
+    svg.appendChild(note(cx + 24, cy - 54, 'length = the gain', { color: 'var(--sys)', size: 9.5 }));
+    svg.appendChild(note(cx + 30, cy - 6, 'angle = the phase', { color: 'var(--sys)', size: 9.5 }));
+    svg.appendChild(note(18, 210, 'one object, two numbers:', { color: 'var(--ink-3)', size: 9 }));
+    svg.appendChild(note(18, 226, 'M∠φ    or    M · e^(jφ)', { color: 'var(--ink-2)', size: 10 }));
   }
 
-  /* panel 2 */
+  /* panel 2 — multiplication is stretch-and-turn */
   {
-    const cx = 350, cy = 148, r = 44;
-    svg.appendChild(axes(cx, cy, 88));
-    svg.appendChild(arrowTo(cx, cy, 0.5, r, 'var(--in)', 2.2));
-    svg.appendChild(note(cx + 30, cy - 30, 'a', { color: 'var(--in)', size: 11, weight: 600 }));
-    svg.appendChild(arrowTo(cx, cy, 0.42, r * 0.62, 'var(--tone)', 2.2));
-    svg.appendChild(note(cx + 20, cy + 16, 'b', { color: 'var(--tone)', size: 11, weight: 600 }));
-    svg.appendChild(arrowTo(cx, cy, 0.92, r * 0.62 * 1.55, 'var(--out)', 2.6));
-    svg.appendChild(note(cx + 4, cy - 74, 'a × b', { color: 'var(--out)', size: 11, weight: 600 }));
-    svg.appendChild(note(cx - 84, cy + 56, 'lengths multiply', { color: 'var(--ink-2)', size: 9.5 }));
-    svg.appendChild(note(cx - 84, cy + 71, 'angles add', { color: 'var(--ink-2)', size: 9.5 }));
-    svg.appendChild(note(cx - 84, cy + 90, 'so "shrink and delay" is ONE step', { color: 'var(--ink-3)', size: 9 }));
+    const cx = 300, cy = 168;
+    svg.appendChild(axes(cx, cy, 62));
+    svg.appendChild(arrowTo(cx, cy, 0.46, 66, 'var(--in)', 2.2));
+    svg.appendChild(note(cx + 64, cy - 30, 'a', { color: 'var(--in)', size: 12, weight: 600 }));
+    svg.appendChild(arrowTo(cx, cy, 0.30, 42, 'var(--tone)', 2.2));
+    svg.appendChild(note(cx + 42, cy - 4, 'b', { color: 'var(--tone)', size: 12, weight: 600 }));
+    svg.appendChild(arrowTo(cx, cy, 0.76, 104, 'var(--out)', 2.6));
+    svg.appendChild(note(cx + 78, cy - 76, 'a × b', { color: 'var(--out)', size: 12, weight: 600 }));
+    svg.appendChild(note(256, 210, 'lengths multiply, angles add', { color: 'var(--ink-2)', size: 9.5 }));
+    svg.appendChild(note(256, 226, '"shrink it and delay it" = one step', { color: 'var(--ink-3)', size: 9 }));
   }
 
-  /* panel 3 */
+  /* panel 3 — spin it, and the shadow is a tone */
   {
-    const cx = 552, cy = 126, r = 46;
+    const cx = 534, cy = 92, r = 40;
     svg.appendChild(s('circle', { cx, cy, r, fill: 'none', stroke: 'var(--grid-major)', 'stroke-width': 1.1 }));
-    svg.appendChild(axes(cx, cy, 54));
+    svg.appendChild(axes(cx, cy, 48));
     svg.appendChild(arrowTo(cx, cy, 0.85, r, 'var(--tone)', 2.4));
     svg.appendChild(s('path', {
-      d: `M${cx + 62} ${cy - 26} a 22 22 0 0 1 -6 26`, fill: 'none',
-      stroke: 'var(--tone)', 'stroke-width': 1.3, 'marker-end': 'none',
+      d: `M${cx + 50} ${cy - 20} a 26 26 0 0 1 -4 40`, fill: 'none',
+      stroke: 'var(--ink-3)', 'stroke-width': 1.2,
     }));
-    svg.appendChild(note(cx + 56, cy - 32, 'turning at ω', { color: 'var(--tone)', size: 9.5 }));
+    svg.appendChild(note(cx + 46, cy - 28, 'turning at ω', { color: 'var(--ink-3)', size: 9 }));
+    svg.appendChild(note(494, cy + 58, 'e^(jωt)', { color: 'var(--tone)', size: 11 }));
+
     let d = '';
-    for (let i = 0; i <= 120; i++) {
-      const a = (i / 120) * 2 * L.TAU;
-      d += (i ? 'L' : 'M') + (500 + (i / 120) * 200).toFixed(1) + ' ' + (204 - 22 * Math.cos(a)).toFixed(1) + ' ';
+    for (let i = 0; i <= 160; i++) {
+      const a = (i / 160) * 2 * L.TAU;
+      d += (i ? 'L' : 'M') + (496 + (i / 160) * 204).toFixed(1) + ' ' + (192 - 22 * Math.cos(a)).toFixed(1) + ' ';
     }
     svg.appendChild(s('path', { d, fill: 'none', stroke: 'var(--tone)', 'stroke-width': 1.8 }));
-    svg.appendChild(note(500, 240, 'its sideways shadow: cos(ωt)', { color: 'var(--tone)', size: 9.5 }));
-    svg.appendChild(note(500, 178, 'e^(jωt)', { color: 'var(--ink-2)', size: 10 }));
+    svg.appendChild(s('line', { x1: 496, x2: 700, y1: 192, y2: 192, stroke: 'var(--grid)', 'stroke-width': 1 }));
+    svg.appendChild(note(494, 226, 'its sideways shadow: cos(ωt)', { color: 'var(--ink-3)', size: 9 }));
   }
   return fig.root;
 }
