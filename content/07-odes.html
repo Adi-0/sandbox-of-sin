@@ -1,0 +1,220 @@
+<p class="eyebrow">
+  <span>Part 7</span>
+  <span class="spec">NCEES 1.F</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Differential Equations</h1>
+
+<p class="lede">What you write down when you know the rule for how something
+changes but not the thing itself. And the part where the complex numbers from
+Part 2 come back and decide whether a circuit rings.</p>
+
+<h2>7.1 Why engineering produces these by accident</h2>
+
+<p>You rarely set out to write a differential equation. You write down physics
+and one appears.</p>
+
+<p>The current through a capacitor is
+<span data-tex="i = C\frac{dv}{dt}">i = C dv/dt</span>. The voltage across an
+inductor is <span data-tex="v = L\frac{di}{dt}">v = L di/dt</span>. Both of those
+relate a quantity to <em>its own rate of change</em>, so the moment you apply
+Kirchhoff's laws to a circuit containing either one, you have a
+<span class="term">differential equation</span>: an equation whose unknown is a
+function, and which involves that function's derivatives.</p>
+
+<p>Its <span class="term">order</span> is the highest derivative that appears.
+One capacitor or one inductor gives first order. One of each — an RLC circuit —
+gives second order, and that is where all the interesting behaviour lives.</p>
+
+<h2>7.2 First order: separate, or use the standard form</h2>
+
+<p>Two techniques cover the first-order questions on this exam.</p>
+
+<f-plate no="7.1" title="First-order equations" stamp="handbook"
+  caption="The second row is the one to recognise on sight. <b>Any equation you
+  can bully into the shape <span class='math'>y′ + Py = Q</span> is solved by
+  that formula</b>, and much of the difficulty is noticing that an equation is
+  already in that shape.">
+  <f-row tex="\frac{dy}{dx} = g(x)h(y) \;\Rightarrow\; \int\frac{dy}{h(y)} = \int g(x)\,dx"
+         name="separable"
+         gloss="If the two variables can be pushed to opposite sides, integrate both sides and you are done."></f-row>
+  <f-row tex="y' + P(x)y = Q(x) \;\Rightarrow\; y = e^{-\int P dx}\left[\int Q e^{\int P dx} dx + C\right]"
+         name="linear, first order"
+         gloss="The exponential factor is chosen precisely so the left side collapses into the derivative of a single product."></f-row>
+  <f-row tex="y' = ky \;\Rightarrow\; y = Ce^{kx}"
+         name="the one you must know"
+         gloss="Growth or decay. <b>Every</b> RC and RL transient on this exam is this equation wearing circuit notation."></f-row>
+</f-plate>
+
+<p>That last line deserves its own sentence, because it is the most
+frequently-used result in this whole part: <b>the only function that is its own
+derivative is the exponential</b>, so any quantity whose rate of change is
+proportional to itself must be an exponential.</p>
+
+<p>Plate 21 shows what "solving" a first-order equation actually means. The
+little arrows are the equation itself — at each point it tells you which way to
+head. A solution is any curve that follows the arrows.</p>
+
+<div data-figure="directionField"></div>
+
+<h2>7.3 Second order: the characteristic equation</h2>
+
+<p>Now the case that matters. For a <span class="term">homogeneous</span>
+equation — one whose right-hand side is zero — with constant coefficients:</p>
+
+<p class="math" data-tex="ay'' + by' + cy = 0" data-display>ay″ + by′ + cy = 0</p>
+
+<p>Guess <span data-tex="y = e^{rt}">y = e^{rt}</span>. Every derivative just
+multiplies by another <span data-tex="r">r</span>, so the whole equation collapses
+to <span data-tex="(ar^2 + br + c)e^{rt} = 0">(ar² + br + c)e^{rt} = 0</span>.
+The exponential is never zero, so the bracket must be:</p>
+
+<f-plate no="7.2" title="Second-order homogeneous equations" stamp="handbook"
+  caption="Three cases, one discriminant — the same <span class='math'
+  data-tex='b^2 - 4ac'>b²−4ac</span> from Part 1. <b>You do not need to solve the
+  equation to know how the system will behave</b>; the sign of the discriminant
+  already told you.">
+  <f-row tex="ar^2 + br + c = 0" name="characteristic equation"
+         gloss="Replace each derivative with a power of <span class='math'>r</span>. That is the whole substitution."></f-row>
+  <f-row tex="r_1 \ne r_2 \text{ real} \;\Rightarrow\; y = C_1e^{r_1t} + C_2e^{r_2t}"
+         name="overdamped"
+         gloss="Two decaying exponentials. Crawls back to rest without crossing zero."></f-row>
+  <f-row tex="r_1 = r_2 \;\Rightarrow\; y = (C_1 + C_2t)e^{rt}" name="critically damped"
+         gloss="The extra <span class='math'>t</span> is needed because one exponential cannot carry two independent constants. Fastest return with no overshoot."></f-row>
+  <f-row tex="r = \alpha \pm j\beta \;\Rightarrow\; y = e^{\alpha t}\big(C_1\cos\beta t + C_2\sin\beta t\big)"
+         name="underdamped"
+         gloss="<b>The real part sets the decay; the imaginary part sets the ringing frequency.</b> This is the case the whole part has been heading towards."></f-row>
+</f-plate>
+
+<h2>7.4 The cast, one last time</h2>
+
+<p>Take <span data-tex="y'' + 6y' + 25y = 0">y″ + 6y′ + 25y = 0</span>. The
+characteristic equation is
+<span data-tex="r^2 + 6r + 25 = 0">r² + 6r + 25 = 0</span>, and:</p>
+
+<p class="math" data-tex="r = \frac{-6 \pm \sqrt{36 - 100}}{2} = \frac{-6 \pm \sqrt{-64}}{2} = -3 \pm 4j" data-display>r = −3 ± 4j</p>
+
+<p>There it is. The discriminant went negative, the square root of a negative
+number was not a failure but an answer, and out came
+<span data-tex="-3 \pm 4j">−3 ± 4j</span> — the cast, in the complex plane where
+Part 2 left it.</p>
+
+<p>Read the two parts off directly. The solution is</p>
+
+<p class="math" data-tex="y = e^{\qx{-3}t}\big(C_1\cos \qy{4}t + C_2\sin \qy{4}t\big)" data-display>y = e^(−3t)(C₁cos4t + C₂sin4t)</p>
+
+<p>and the numbers mean something physical:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>From the root</th><th>Name</th><th class="num">Value</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td>real part</td><td>decay rate <span data-tex="\alpha">α</span></td><td class="num">−3</td><td>How fast the envelope shrinks</td></tr>
+    <tr><td>imaginary part</td><td>damped frequency <span data-tex="\omega_d">ω_d</span></td><td class="num">4 rad/s</td><td>How fast it rings</td></tr>
+    <tr><td>magnitude</td><td>natural frequency <span data-tex="\omega_n">ω_n</span></td><td class="num">5 rad/s</td><td>How fast it would ring with no damping</td></tr>
+    <tr><td>angle from the negative real axis</td><td>damping ratio <span data-tex="\zeta = \cos\theta">ζ = cos θ</span></td><td class="num">0.6</td><td>How close to oscillation-free it is</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note payoff">
+  <span class="note-tag">The cast closes the loop</span>
+  <p>The magnitude of <span class="math" data-tex="-3 + 4j">−3 + 4j</span> is 5 —
+  the hypotenuse of the 3-4-5 triangle you drew in Part 1. Its angle from the
+  negative real axis is 53.13°, and
+  <span class="math" data-tex="\cos 53.13^\circ = 0.6">cos 53.13° = 0.6</span> is
+  the damping ratio.</p>
+  <p style="margin-bottom:0"><b>The triangle from Part 1 is the thing that decides
+  whether this circuit rings.</b> Not a metaphor for it, not an analogy — the same
+  three numbers, doing the work.</p>
+</div>
+
+<p>Plate 22 makes that concrete. One knob changes the damping coefficient; watch
+the roots move in the complex plane on the left and the response change on the
+right.</p>
+
+<div data-figure="damping"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The killer comparison</span>
+  <p style="margin-bottom:0">Set the damping to <b>10</b> and the response never
+  crosses zero — it eases back to rest from one side and stops. Set it to
+  <b>6</b> and the same circuit swings straight past zero and back again before
+  it dies. One coefficient moved by four; nothing in the equation looks
+  meaningfully different. But the discriminant changed sign, the roots left the
+  real axis, and the behaviour changed <em>category</em>. <b>That sign is the
+  design decision behind every damper, every filter and every control loop you
+  will ever tune.</b></p>
+</div>
+
+<h2>7.5 When the right-hand side is not zero</h2>
+
+<p>A non-zero right-hand side means something is driving the system — a source
+switched on, a force applied. The solution then comes in two pieces:</p>
+
+<f-plate no="7.3" title="Non-homogeneous equations" stamp="handbook"
+  caption="Exam questions in this topic very often ask only for the
+  <b>complementary</b> solution, which is the easy half. Read the question
+  carefully: &ldquo;complementary solution&rdquo; means solve the characteristic
+  equation and stop.">
+  <f-row tex="y = y_c + y_p" name="the shape of every answer"
+         gloss="<b>Complementary</b>: what the system does on its own, from the characteristic equation. <b>Particular</b>: what the driving term forces it to do."></f-row>
+  <f-row tex="\text{forcing } e^{kt} \;\Rightarrow\; \text{try } y_p = Ae^{kt}"
+         name="undetermined coefficients"
+         gloss="Guess something shaped like the forcing term, substitute it in, and solve for the constant."></f-row>
+  <f-row tex="\text{forcing } \cos\omega t \;\Rightarrow\; \text{try } y_p = A\cos\omega t + B\sin\omega t"
+         gloss="A sinusoid needs <b>both</b> a sine and a cosine in the guess, because the response is generally shifted in phase."></f-row>
+</f-plate>
+
+<p>Physically, the complementary part is the <em>transient</em> — it dies away,
+because its exponentials decay. The particular part is the
+<em>steady state</em> — what remains once the transient has gone. Which is
+exactly the state Part 2's phasors assumed.</p>
+
+<div class="note honest">
+  <span class="note-tag">Honest simplification</span>
+  <p style="margin-bottom:0">Everything here assumes <b>constant coefficients</b>
+  and a <b>linear</b> equation. Real components drift with temperature and
+  saturate at high current, and neither is linear. The FE exam stays inside the
+  linear constant-coefficient world, and so does this part — but the assumption is
+  an assumption, not a law.</p>
+</div>
+
+<h2>7.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="y' = ky \;\Rightarrow\; y = Ce^{kt}">y′ = ky ⇒ y = Ce^{kt}</span>.
+        Every RC and RL transient is this.</li>
+    <li>To get the characteristic equation, replace each derivative with a power
+        of <span data-tex="r">r</span>. Second derivative becomes
+        <span data-tex="r^2">r²</span>.</li>
+    <li>The three cases, by discriminant: two real roots → overdamped, repeated
+        → critically damped, complex pair → underdamped and it rings.</li>
+    <li>For complex roots <span data-tex="\alpha \pm j\beta">α ± jβ</span>: the
+        real part is the decay, the imaginary part is the ringing frequency.</li>
+    <li>The repeated-root case needs the extra factor of
+        <span data-tex="t">t</span> in the second term.</li>
+    <li><span data-tex="y = y_c + y_p">y = y_c + y_p</span> — and check whether the
+        question wants both halves or only the complementary one.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A differential equation is a rule for change; solving it means finding the
+  function the rule describes. For constant coefficients, guessing an exponential
+  turns the whole problem into a quadratic — so the characteristic roots are the
+  answer in compressed form.</p>
+  <p>Where those roots sit is the behaviour. On the real axis the system crawls
+  back to rest; off it, the imaginary part is a ringing frequency and the real
+  part is how fast the ringing dies. The 3-4-5 triangle from Part 1 turns out to
+  be exactly the root that separates the two.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"odes","title":"Part 7 · Differential equations","topics":["first-order-solve","characteristic-roots","ode-classify","ode-general","ode-initial"],"count":6}'></div>
+
+<div data-reflex='{"only":["odes","calculus"],"count":6,"title":"Handbook Reflex · Parts 6–7"}'></div>

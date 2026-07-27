@@ -8,3 +8,4 @@ import "./geometry.js";      // 9 10
 import "./vectors.js";       // 11 12 13
 import "./linalg.js";        // 14 15 16
 import "./calculus.js";      // 17 18 19 20
+import "./odes.js";          // 21 22

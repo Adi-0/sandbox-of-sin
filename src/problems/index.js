@@ -6,3 +6,4 @@ import "./geometry.js";
 import "./vectors.js";
 import "./linalg.js";
 import "./calculus.js";
+import "./odes.js";

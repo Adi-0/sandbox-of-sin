@@ -187,8 +187,12 @@ export class Plot {
       const [ux, uy] = fn(t);
       if (Number.isFinite(ux) && Number.isFinite(uy)) pts.push([this.x(ux), this.y(uy)]);
     }
-    if (!pts.length) return null;
-    const d = "M " + pts.map(([a, b]) => `${a.toFixed(2)} ${b.toFixed(2)}`).join(" L ") + (close ? " Z" : "");
+    // Always return an element, even with nothing to draw: figures keep a
+    // reference to this path and fill it in later, and returning null there
+    // fails far away from the cause.
+    const d = pts.length
+      ? "M " + pts.map(([a, b]) => `${a.toFixed(2)} ${b.toFixed(2)}`).join(" L ") + (close ? " Z" : "")
+      : "";
     return this.add(layer, svg("path", {
       d, fill: fill ? V(fill) : "none", stroke: color ? V(color) : "none",
       strokeWidth: width, strokeDasharray: dash, strokeLinejoin: "round", opacity,
@@ -203,8 +207,8 @@ export class Plot {
       const uy = fn(ux);
       if (Number.isFinite(uy)) pts.push([this.x(ux), this.y(uy)]);
     }
-    if (pts.length < 2) return null;
-    const d = `M ${this.x(a).toFixed(2)} ${this.y(baseline).toFixed(2)} L ` +
+    const d = pts.length < 2 ? "" :
+      `M ${this.x(a).toFixed(2)} ${this.y(baseline).toFixed(2)} L ` +
       pts.map(([p, q]) => `${p.toFixed(2)} ${q.toFixed(2)}`).join(" L ") +
       ` L ${this.x(b).toFixed(2)} ${this.y(baseline).toFixed(2)} Z`;
     return this.add(layer, svg("path", {
