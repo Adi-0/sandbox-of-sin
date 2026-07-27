@@ -1,0 +1,249 @@
+<p class="eyebrow">
+  <span>Part 2</span>
+  <span class="spec">NCEES 1.B</span>
+  <span>20 minute read</span>
+</p>
+
+<h1>Complex Numbers</h1>
+
+<p class="lede">Not "imaginary." A complex number is a number that carries two
+facts at once — how big, and how turned. Electrical engineering needs exactly
+that, which is why this topic is not optional here.</p>
+
+<h2>2.1 The problem complex numbers were hired to solve</h2>
+
+<p>In a DC circuit, Ohm's law is arithmetic: divide volts by ohms, get amps.
+In an AC circuit, the voltage and the current are both sinusoids, and the current
+generally <em>lags or leads</em> the voltage. So a full answer needs two numbers:
+an amplitude and a phase shift.</p>
+
+<p>You can do that with trigonometry. Here is what it costs. To add two
+sinusoids of the same frequency you expand both with the angle-sum identity,
+collect the sine terms, collect the cosine terms, then convert the pair back into
+a single amplitude and phase. Half a page, three chances to drop a sign, once per
+element in the circuit.</p>
+
+<div class="note payoff">
+  <span class="note-tag">The killer number</span>
+  <p>A series circuit with resistance <span class="math" data-tex="R = 3\,\Omega">R = 3 Ω</span>
+  and inductive reactance <span class="math" data-tex="X_L = 4\,\Omega">X_L = 4 Ω</span>,
+  driven at 100 V. The trigonometric route is that half-page. The complex route
+  is one division:</p>
+  <p style="margin-bottom:0" class="math" data-tex="I = \frac{100\angle 0^\circ}{5\angle 53.13^\circ} = 20\angle -53.13^\circ" data-display>I = 100∠0° / 5∠53.13° = 20∠−53.13°</p>
+</div>
+
+<p>Look at the impedance in that denominator: <span data-tex="3 + 4j">3 + 4j</span>,
+magnitude 5, angle 53.13°. That is the triangle from Part 1, unchanged, now doing
+a job. This is not a coincidence dressed up for the guide — <b>the impedance
+triangle really is the 3-4-5 triangle</b>, and that is why every FE textbook uses
+these numbers.</p>
+
+<h2>2.2 What the object is</h2>
+
+<p>Define one new symbol: <span class="term">j</span>, the number whose square is
+<span data-tex="-1">−1</span>. Electrical engineering writes
+<span data-tex="j">j</span> rather than <span data-tex="i">i</span> because
+<span data-tex="i">i</span> was already taken by current, and the exam follows
+that convention throughout.</p>
+
+<p>A <span class="term">complex number</span> is then anything of the form
+<span data-tex="z = a + bj">z = a + bj</span>. Plot <span data-tex="a">a</span>
+horizontally and <span data-tex="b">b</span> vertically and you have a point on
+the <span class="term">complex plane</span> — which means every complex number is
+also an arrow from the origin, with a length and a direction.</p>
+
+<p>Those are the two ways of writing the same thing:</p>
+
+<f-plate no="2.1" title="Rectangular and polar form" stamp="handbook"
+  caption="Both lines describe one arrow. Rectangular says <b>how far across and
+  how far up</b>; polar says <b>how long and how turned</b>. Everything in this
+  part is about knowing which one makes the arithmetic easy.">
+  <f-row tex="z = \qx{a} + \qy{b}j" name="rectangular"
+         gloss="<b>a</b> is the real part, <b>b</b> the imaginary part. Coordinates."></f-row>
+  <f-row tex="z = \qr{r}\angle\theta = \qr{r}(\cos\theta + j\sin\theta) = \qr{r}e^{j\theta}" name="polar"
+         gloss="<b>r</b> is the magnitude, <b>θ</b> the argument. The last form is Euler's — worth knowing that all three are the same object."></f-row>
+  <f-row tex="\qr{r} = \sqrt{\qx{a}^2 + \qy{b}^2} \qquad \theta = \arctan\frac{\qy{b}}{\qx{a}}"
+         name="rect → polar"
+         gloss="Pythagoras, then the tangent ratio. You already did both in Part 1."></f-row>
+  <f-row tex="\qx{a} = \qr{r}\cos\theta \qquad \qy{b} = \qr{r}\sin\theta" name="polar → rect"
+         gloss="The unit-circle definitions, scaled up by <span class='math'>r</span>."></f-row>
+</f-plate>
+
+<p>Drag the point in Plate 6. Both forms update together, because they are never
+two different numbers — only two ways of naming one.</p>
+
+<div data-figure="complexPlane"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the quadrant</span>
+  <p style="margin-bottom:0">Your calculator's <span class="math" data-tex="\arctan">arctan</span>
+  only ever returns an angle between −90° and +90°. For
+  <span class="math" data-tex="z = -3 - 4j">z = −3 − 4j</span> it will happily say
+  53.13°, which is the wrong quadrant by 180°. <b>Always sketch the point first.</b>
+  Two seconds of drawing beats a plausible wrong answer, and this exact trap turns
+  up in Part 7 when we take roots.</p>
+</div>
+
+<h2>2.3 Arithmetic: use the form that makes it easy</h2>
+
+<p>This is the whole practical content of the topic. Addition is easy in
+rectangular form and horrible in polar. Multiplication is easy in polar and
+tedious in rectangular. So convert, operate, convert back.</p>
+
+<f-plate no="2.2" title="Complex arithmetic" stamp="handbook"
+  caption="The middle row is the one to internalise: <b>multiplying multiplies
+  the lengths and adds the angles</b>. Every rotation in this exam — phasors,
+  Bode plots, root loci — is that one sentence.">
+  <f-row tex="(a + bj) \pm (c + dj) = (a \pm c) + (b \pm d)j" name="add"
+         gloss="Componentwise, exactly like adding arrows. Do this in rectangular form."></f-row>
+  <f-row tex="(r_1\angle\theta_1)(r_2\angle\theta_2) = r_1 r_2 \angle(\theta_1 + \theta_2)" name="multiply"
+         gloss="Lengths multiply, angles add. Do this in polar form."></f-row>
+  <f-row tex="\frac{r_1\angle\theta_1}{r_2\angle\theta_2} = \frac{r_1}{r_2}\angle(\theta_1 - \theta_2)" name="divide"
+         gloss="Lengths divide, angles subtract. Also polar."></f-row>
+  <f-row tex="(a+bj)(c+dj) = (ac - bd) + (ad + bc)j" name="multiply, rectangular"
+         gloss="If you must stay rectangular: FOIL it out and use <span class='math'>j² = −1</span>. The minus sign in the real part <em>is</em> that substitution."></f-row>
+</f-plate>
+
+<p>Turn the knob in Plate 7. It multiplies the cast by a number of length 1 at
+whatever angle you choose. Watch the arrow swing without ever changing length —
+because multiplying by something of length 1 <em>is</em> a rotation.</p>
+
+<div data-figure="complexMultiply"></div>
+
+<div class="worked">
+  <h4>Worked · <em>squaring the cast</em></h4>
+  <div class="worked-body">
+    <p>Find <span data-tex="(3 + 4j)^2">(3 + 4j)²</span> both ways, and check they agree.</p>
+    <ol class="steps">
+      <li><b>Rectangular.</b> Multiply it out and remember <span data-tex="j^2 = -1">j² = −1</span>:
+        <span data-tex="(3+4j)(3+4j) = 9 + 12j + 12j + 16j^2 = 9 - 16 + 24j = -7 + 24j" data-display>= −7 + 24j</span></li>
+      <li><b>Polar.</b> <span data-tex="3 + 4j = 5\angle 53.13^\circ">3+4j = 5∠53.13°</span>.
+        Squaring squares the length and doubles the angle:
+        <span data-tex="(5\angle 53.13^\circ)^2 = 25\angle 106.26^\circ" data-display>= 25∠106.26°</span></li>
+      <li><b>Check.</b> <span data-tex="25\cos 106.26^\circ = -7">25 cos106.26° = −7</span> and
+        <span data-tex="25\sin 106.26^\circ = 24">25 sin106.26° = 24</span>. Agreed.
+        And note <span data-tex="\sqrt{(-7)^2 + 24^2} = \sqrt{625} = 25">√(49+576) = 25</span>
+        — the cast keeps producing whole numbers even when squared.</li>
+    </ol>
+  </div>
+</div>
+
+<h2>2.4 The conjugate, and how to divide</h2>
+
+<p>The <span class="term">conjugate</span> of <span data-tex="z = a + bj">z = a + bj</span>
+is <span data-tex="\bar{z} = a - bj">z̄ = a − bj</span>: the same point reflected
+across the horizontal axis. It exists for one reason, and it is a good one.</p>
+
+<f-plate no="2.3" title="Conjugate and division" stamp="handbook"
+  caption="A complex number times its own conjugate is <b>always real</b>. That is
+  the entire trick behind dividing: multiply top and bottom by the bottom's
+  conjugate and the denominator turns into an ordinary number you can divide by.">
+  <f-row tex="z\bar{z} = (a+bj)(a-bj) = a^2 + b^2 = |z|^2"
+         gloss="The cross terms cancel and <span class='math'>−j²</span> becomes <span class='math'>+1</span>. No imaginary part survives."></f-row>
+  <f-row tex="\frac{1}{a + bj} = \frac{a - bj}{a^2 + b^2}"
+         gloss="Multiply top and bottom by the conjugate. This is called rationalising the denominator."></f-row>
+</f-plate>
+
+<p>On the cast: <span data-tex="\frac{1}{3 + 4j} = \frac{3 - 4j}{25} = 0.12 - 0.16j">1/(3+4j) = (3−4j)/25 = 0.12 − 0.16j</span>.
+Its magnitude is <span data-tex="1/5 = 0.2">0.2</span> and its angle is −53.13°,
+which is exactly what the polar division rule predicted. Two routes, one answer —
+that is worth confirming once, so you trust the shortcut afterwards.</p>
+
+<h2>2.5 Powers and roots</h2>
+
+<p>Once you accept "lengths multiply, angles add," powers are free. Multiplying
+<span data-tex="z">z</span> by itself <span data-tex="n">n</span> times raises the
+length to the <span data-tex="n">n</span>th and multiplies the angle by
+<span data-tex="n">n</span>.</p>
+
+<f-plate no="2.4" title="De Moivre's theorem" stamp="handbook"
+  caption="Read the second line carefully: there are <b>n</b> distinct nth roots,
+  not one, and they sit evenly spaced around a circle like the spokes of a wheel.
+  Exam questions in this topic are almost always testing whether you know that.">
+  <f-row tex="(r\angle\theta)^n = r^n \angle n\theta" name="powers"
+         gloss="Length to the power n, angle multiplied by n."></f-row>
+  <f-row tex="\sqrt[n]{r\angle\theta} = \sqrt[n]{r}\;\angle\frac{\theta + k\cdot 360^\circ}{n}, \quad k = 0, 1, \ldots, n-1"
+         name="roots"
+         gloss="The <span class='math'>k · 360°</span> is not decoration — going once round the circle returns to the same point but lands on a <b>different</b> root."></f-row>
+</f-plate>
+
+<p>The cleanest example: the cube roots of 1. In polar form
+<span data-tex="1 = 1\angle 0^\circ">1 = 1∠0°</span>, so the roots have length 1
+and angles <span data-tex="0^\circ, 120^\circ, 240^\circ">0°, 120°, 240°</span> —
+three points evenly spaced round the unit circle. One of them is the boring answer
+1. The other two are complex, and they are the reason a cubic can have one real
+root and still have three roots in total.</p>
+
+<h2>2.6 Euler's formula, and why any of this is about circuits</h2>
+
+<p>Everything so far has been geometry. Here is the bridge to engineering.</p>
+
+<f-plate no="2.5" title="Euler's formula" stamp="know"
+  caption="Worth memorising because it is the definition every phasor method rests
+  on, and because reading it left to right converts a rotation into a pair of
+  waves — which is exactly the conversion an AC problem needs.">
+  <f-row tex="e^{j\theta} = \cos\theta + j\sin\theta"
+         gloss="A point on the unit circle at angle θ. Nothing more mysterious than that."></f-row>
+  <f-row tex="\cos\theta = \frac{e^{j\theta} + e^{-j\theta}}{2} \qquad \sin\theta = \frac{e^{j\theta} - e^{-j\theta}}{2j}"
+         gloss="Read backwards: every sinusoid is two counter-rotating arrows whose vertical parts cancel or add."></f-row>
+</f-plate>
+
+<p>Now let <span data-tex="\theta">θ</span> grow steadily with time —
+<span data-tex="\theta = \omega t">θ = ωt</span> — and
+<span data-tex="e^{j\omega t}">e^{jωt}</span> is an arrow spinning at constant
+speed. A <span class="term">phasor</span> is that spinning arrow, and the voltage
+you would actually measure is its shadow: the vertical projection, traced against
+time.</p>
+
+<p>That is the whole idea, and Plate 8 is the whole idea drawn. Watch the arrow
+spin on the left and the wave it writes on the right.</p>
+
+<div data-figure="phasor"></div>
+
+<p>The payoff is this: because every phasor in a circuit spins at the same
+frequency, you can stop drawing the spinning and just record where each arrow
+started. What is left is a static complex number — and Ohm's law works on those
+directly. That single simplification is why AC circuit analysis on this exam is
+arithmetic rather than calculus.</p>
+
+<div class="note honest">
+  <span class="note-tag">Honest simplification</span>
+  <p style="margin-bottom:0">Phasors work only when every source in the circuit is
+  a sinusoid at <em>the same frequency</em> and the circuit is in steady state.
+  Switch something on and the transient that follows is not a phasor problem — it
+  is a differential equation, which is exactly where Part 7 picks the story up.</p>
+</div>
+
+<h2>2.7 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="j^2 = -1">j² = −1</span>, and that
+        <span data-tex="j">j</span> means what <span data-tex="i">i</span> means
+        everywhere else.</li>
+    <li>Add in rectangular. Multiply and divide in polar. Convert freely.</li>
+    <li><b>Lengths multiply, angles add.</b> If you remember one sentence from
+        this part, this is it.</li>
+    <li><span data-tex="e^{j\theta} = \cos\theta + j\sin\theta">e^{jθ} = cos θ + j sin θ</span>.</li>
+    <li>Divide by multiplying top and bottom by the conjugate.</li>
+    <li>The cast: <span data-tex="3 + 4j = 5\angle 53.13^\circ">3 + 4j = 5∠53.13°</span>,
+        and <span data-tex="(3+4j)^2 = -7 + 24j = 25\angle 106.26^\circ">(3+4j)² = −7 + 24j</span>.</li>
+    <li>Check the quadrant before you trust an arctangent.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A complex number is a length and an angle wearing a coordinate disguise.
+  Adding uses the coordinates; multiplying uses the length and angle, because
+  multiplying multiplies lengths and adds angles.</p>
+  <p>A phasor is a complex number spinning at the circuit's frequency. Since
+  everything spins together, you can throw the spinning away and keep the
+  starting arrow — and that is why AC circuits reduce to Ohm's law.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"complex","title":"Part 2 · Complex numbers","topics":["complex-arith","rect-polar","complex-divide","complex-power","complex-roots"],"count":6}'></div>
+
+<div data-reflex='{"only":["complex","algebra-trig"],"count":6,"title":"Handbook Reflex · Parts 1–2"}'></div>

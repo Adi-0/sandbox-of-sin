@@ -54,13 +54,13 @@ One object, followed through all eight subtopics. Recognition is retention.
 
 | Part | The cast appears as |
 |---|---|
-| 1 | The **3-4-5 right triangle**. θ = 36.87°, sin θ = 0.6, cos θ = 0.8 |
-| 2 | **z₀ = 3 + 4j** = 5∠36.87°. z₀² = −7 + 24j = 25∠73.74° |
+| 1 | The **3-4-5 right triangle**. θ = 53.13°, sin θ = 0.8, cos θ = 0.6 |
+| 2 | **z₀ = 3 + 4j** = 5∠53.13°. z₀² = −7 + 24j = 25∠106.26° |
 | 3 | The circle **x² + y² = 25** through (3, 4); tangent slope −3/4 |
 | 4 | **w = 3i + 4j + 12k**, \|w\| = 13 — the triple nests |
 | 5 | **A = [[3, 4], [4, −3]]**, det = −25, eigenvalues **±5** |
 | 6 | Implicit d/dx on x² + y² = 25 → dy/dx = −x/y = −3/4 (same tangent) |
-| 7 | **y″ + 6y′ + 25y = 0** → roots **−3 ± 4j**, ωₙ = 5, ζ = 0.6 |
+| 7 | **y″ + 6y′ + 25y = 0** → roots **−3 ± 4j**, ωₙ = 5, ζ = cos 53.13° = 0.6 |
 | 8 | A 5-node graph; its adjacency matrix returns to Part 5 |
 
 The payoff: the triangle a student drew in Part 1 becomes, in Part 7, the

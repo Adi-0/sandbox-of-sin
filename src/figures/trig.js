@@ -163,7 +163,7 @@ function unitCircle() {
   const rLab = p.text(0.4, 0.35, "r = 1", { color: "q-r", size: 12.5, italic: true, bg: true });
   const sq = p.rightAngle(1, 0, Math.PI, Math.PI / 2, 9, { color: "faint" });
 
-  const rdT = readout({ key: "θ", value: "36.87°" });
+  const rdT = readout({ key: "θ", value: "53.13°" });
   const rdC = readout({ key: "cos θ", value: "0.800", tone: "x" });
   const rdS = readout({ key: "sin θ", value: "0.600", tone: "y" });
   const rdTan = readout({ key: "tan θ", value: "0.750" });
@@ -215,22 +215,22 @@ function unitCircle() {
   }
 
   const k = knob({
-    label: "angle θ", min: 0, max: 360, step: 0.01, value: 36.87,
+    label: "angle θ", min: 0, max: 360, step: 0.01, value: 53.13,
     format: (v) => `${num(v, 2)}°`,
     onInput: draw,
   });
 
   const jump = scenarios({
     options: [
-      { id: "36.87", label: "36.87° (the cast)" },
+      { id: "53.13", label: "53.13° (the cast)" },
       { id: "30", label: "30°" }, { id: "45", label: "45°" },
       { id: "90", label: "90°" }, { id: "210", label: "210°" },
     ],
-    value: "36.87",
+    value: "53.13",
     onChange: (id) => k.set(Number(id)),
   });
 
-  draw(36.87);
+  draw(53.13);
 
   return plate({
     no: 3,
@@ -265,7 +265,7 @@ function triangle345() {
     pad: { l: 32, r: 24, t: 18, b: 30 },
     label: "The 3-4-5 right triangle with vertices at the origin, (3,0) and (3,4). " +
            "The horizontal leg is 3, the vertical leg is 4, the hypotenuse is 5. " +
-           "The angle at the origin is 36.87 degrees and the angle at the top is 53.13 degrees.",
+           "The angle at the origin is 53.13 degrees and the angle at the top is 36.87 degrees.",
   });
   p.equalize();
   p.grid({ xStep: 1, yStep: 1 });
@@ -281,15 +281,15 @@ function triangle345() {
   p.text(3.18, 2, "opposite = 4", { color: "q-y", size: 13, weight: 500, anchor: "start" });
   p.text(1.05, 2.05, "hypotenuse = 5", { color: "q-r", size: 13, weight: 500, anchor: "middle", bg: true });
 
-  p.angleArc(0, 0, 0, Math.atan2(4, 3), 42, { color: "muted", fill: "q-r-soft", label: "θ = 36.87°" });
+  p.angleArc(0, 0, 0, Math.atan2(4, 3), 42, { color: "muted", fill: "q-r-soft", label: "θ = 53.13°" });
   p.angleArc(3, 4, Math.atan2(-4, -3), -Math.PI / 2, 30, { color: "faint" });
-  p.text(3, 4, "53.13°", { color: "muted", size: 11.5, dx: -30, dy: 30, view: false, anchor: "middle", bg: true });
+  p.text(3, 4, "36.87°", { color: "muted", size: 11.5, dx: -30, dy: 30, view: false, anchor: "middle", bg: true });
 
   p.dot(3, 4, { color: "ink", r: 4.5 });
   p.callout(3, 4, "(3, 4)", { dx: 30, dy: -22, color: "ink" });
 
-  p.text(4.55, 1.5, "sin θ = 4/5 = 0.6", { color: "q-y", size: 12, anchor: "start" });
-  p.text(4.55, 1.05, "cos θ = 3/5 = 0.8", { color: "q-x", size: 12, anchor: "start" });
+  p.text(4.55, 1.5, "sin θ = 4/5 = 0.8", { color: "q-y", size: 12, anchor: "start" });
+  p.text(4.55, 1.05, "cos θ = 3/5 = 0.6", { color: "q-x", size: 12, anchor: "start" });
   p.text(4.55, 0.6, "tan θ = 4/3 = 1.33", { color: "muted", size: 12, anchor: "start" });
 
   return plate({

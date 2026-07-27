@@ -3,3 +3,4 @@
 
 import "./orientation.js";   // 1
 import "./trig.js";          // 2 3 4 5
+import "./complex.js";       // 6 7 8

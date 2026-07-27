@@ -131,8 +131,11 @@ export class Plot {
       }));
     }
 
-    if (xLabel) this.text(this.pad.l + this.iw, y0 - 9, xLabel, { anchor: "end", color: "q-x", italic: true, size: 13 });
-    if (yLabel) this.text(x0 + 8, this.pad.t + 2, yLabel, { anchor: "start", color: "q-y", italic: true, size: 13 });
+    // these two are placed in view space, not data space
+    if (xLabel) this.text(this.pad.l + this.iw, y0 - 10, xLabel,
+      { anchor: "end", color: "q-x", italic: true, size: 13, view: true, bg: true });
+    if (yLabel) this.text(x0 + 10, this.pad.t + 4, yLabel,
+      { anchor: "start", color: "q-y", italic: true, size: 13, view: true, bg: true });
     return this;
   }
 
