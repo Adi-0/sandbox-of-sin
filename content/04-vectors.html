@@ -1,0 +1,194 @@
+<p class="eyebrow">
+  <span>Part 4</span>
+  <span class="spec">NCEES 1.H</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Vectors and Vector Analysis</h1>
+
+<p class="lede">Some quantities need a direction to be meaningful. This part
+gives you arithmetic that respects direction — and then two products that are
+worth more than the notation makes them look.</p>
+
+<h2>4.1 Why a second kind of number</h2>
+
+<p>Temperature is a number. Mass is a number. But a force is not: pushing north
+with 10 N and pushing east with 10 N do not add to 20 N of anything. A
+<span class="term">vector</span> is a quantity that carries a magnitude
+<em>and</em> a direction, and it needs its own arithmetic because the ordinary
+kind gives wrong answers.</p>
+
+<p>We write vectors in components along the three axis directions, using the
+<span class="term">unit vectors</span> <span data-tex="\hat{i}, \hat{j}, \hat{k}">i, j, k</span>
+— each of length 1, pointing along <span data-tex="x">x</span>,
+<span data-tex="y">y</span> and <span data-tex="z">z</span>.</p>
+
+<f-plate no="4.1" title="Vector basics" stamp="handbook"
+  caption="Magnitude is the distance formula, which is Pythagoras, which is Part 1
+  again. <b>The unit vector is the single most useful of these</b>: it strips out
+  the size and keeps only the direction, which is exactly what you want whenever a
+  problem says &ldquo;in the direction of.&rdquo;">
+  <f-row tex="\vec{A} = \qx{A_x}\hat{i} + \qy{A_y}\hat{j} + A_z\hat{k}" name="components"
+         gloss="How far along each axis. Adding vectors means adding these componentwise."></f-row>
+  <f-row tex="|\vec{A}| = \sqrt{A_x^2 + A_y^2 + A_z^2}" name="magnitude"
+         gloss="Pythagoras in three dimensions — do it in two stages if that is easier to see."></f-row>
+  <f-row tex="\hat{a} = \frac{\vec{A}}{|\vec{A}|}" name="unit vector"
+         gloss="Divide a vector by its own length and you are left with pure direction, length exactly 1."></f-row>
+</f-plate>
+
+<h2>4.2 The cast in three dimensions</h2>
+
+<p>Take <span data-tex="\vec{w} = 3\hat{i} + 4\hat{j} + 12\hat{k}">w = 3i + 4j + 12k</span>.
+Its magnitude is <span data-tex="\sqrt{9 + 16 + 144} = \sqrt{169} = 13">√169 = 13</span>
+— a whole number again, because 3-4-5 and 5-12-13 nest inside each other. Plate 11
+shows why, and it is worth seeing once: the magnitude is <em>two</em> applications
+of Pythagoras, not one exotic three-dimensional formula.</p>
+
+<div data-figure="vector3d"></div>
+
+<h2>4.3 The dot product: how much do these agree?</h2>
+
+<p>Two vectors can point the same way, opposite ways, or somewhere in between.
+The <span class="term">dot product</span> measures that, and returns an ordinary
+number — no direction attached.</p>
+
+<f-plate no="4.2" title="The dot product" stamp="handbook"
+  caption="Two formulas, one quantity. <b>Use the component form to compute and
+  the cosine form to think.</b> Setting them equal is how you get the angle
+  between two vectors, which is the most common exam use by a wide margin.">
+  <f-row tex="\vec{A} \cdot \vec{B} = A_xB_x + A_yB_y + A_zB_z" name="components"
+         gloss="Multiply matching components, add them up. Fast, and no angle needed."></f-row>
+  <f-row tex="\vec{A} \cdot \vec{B} = |\vec{A}||\vec{B}|\cos\theta" name="geometric"
+         gloss="Length times length times how much they agree. At 90° the cosine is zero, so <b>perpendicular vectors have zero dot product</b>."></f-row>
+  <f-row tex="\cos\theta = \frac{\vec{A}\cdot\vec{B}}{|\vec{A}||\vec{B}|}" name="the angle"
+         gloss="The two forms above, set equal and rearranged. This is the workhorse."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">The killer number</span>
+  <p style="margin-bottom:0">You push a crate 10 m with a force of 100 N, but your
+  arms are at 60° to the floor. Work is
+  <span class="math" data-tex="\vec{F}\cdot\vec{d}">F·d</span>, so
+  <span class="math" data-tex="W = (100)(10)\cos 60^\circ = 500\text{ J}">W = 500 J</span>
+  — <b>not 1000 J</b>. Half your effort went into pressing the crate into the
+  floor, which moves nothing. The cosine is not a correction factor bolted on; it
+  <em>is</em> the fraction of your push that points where the crate is going.</p>
+</div>
+
+<h2>4.4 The cross product: how much do these disagree?</h2>
+
+<p>The <span class="term">cross product</span> asks the opposite question, and
+answers with a vector rather than a number. It points perpendicular to both
+inputs, and its length is the area of the parallelogram they span.</p>
+
+<f-plate no="4.3" title="The cross product" stamp="handbook"
+  caption="The determinant is the practical way to compute it and Part 5 explains
+  what a determinant is. For now, note that <b>the cross product is zero for
+  parallel vectors and largest for perpendicular ones</b> — the exact mirror of
+  the dot product.">
+  <f-row tex="|\vec{A} \times \vec{B}| = |\vec{A}||\vec{B}|\sin\theta" name="magnitude"
+         gloss="The area of the parallelogram the two vectors span. Sine, not cosine — this is the disagreement."></f-row>
+  <f-row tex="\vec{A} \times \vec{B} = \begin{vmatrix} \hat{i} & \hat{j} & \hat{k} \\ A_x & A_y & A_z \\ B_x & B_y & B_z \end{vmatrix}"
+         name="determinant form"
+         gloss="Expand along the top row. Watch the middle term: it carries a <b>minus</b> sign."></f-row>
+  <f-row tex="\vec{A} \times \vec{B} = -\,\vec{B} \times \vec{A}" name="order matters"
+         gloss="Swapping the inputs reverses the output. The dot product does not care about order; the cross product does."></f-row>
+</f-plate>
+
+<p>Turn the knob in Plate 12 and watch the two products trade off. There is only
+one thing to notice, and it takes about five seconds.</p>
+
+<div data-figure="dotCross"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · which product does this problem want?</span>
+  <p style="margin-bottom:0">Ask what kind of answer the question needs. <b>A
+  number</b> — work, power, a projection, an angle, a flux through a surface —
+  means dot. <b>A vector or an area</b> — torque, angular momentum, the force on
+  a charge moving through a magnetic field, the normal to a plane — means cross.
+  Getting this right takes two seconds and is worth more than remembering either
+  formula.</p>
+</div>
+
+<h2>4.5 Vector fields, and the three derivatives</h2>
+
+<p>Now let a vector depend on where you are. A <span class="term">field</span>
+assigns a value to every point in space: the electric field around a charge, the
+velocity at every point in a river. Two kinds matter here — a
+<span class="term">scalar field</span> assigns a number to each point (a
+temperature map), and a <span class="term">vector field</span> assigns an arrow
+(a wind map).</p>
+
+<p>There are exactly three derivative operators on this exam, and each answers a
+different question.</p>
+
+<f-plate no="4.4" title="Gradient, divergence, curl" stamp="handbook"
+  caption="Watch what goes in and what comes out — that alone identifies which
+  operator a question wants. <b>Gradient: scalar in, vector out. Divergence:
+  vector in, scalar out. Curl: vector in, vector out.</b>">
+  <f-row tex="\nabla f = \frac{\partial f}{\partial x}\hat{i} + \frac{\partial f}{\partial y}\hat{j} + \frac{\partial f}{\partial z}\hat{k}"
+         name="gradient · ∇f"
+         gloss="Points in the direction of <b>steepest increase</b>, with length equal to that steepness. Scalar field in, vector field out."></f-row>
+  <f-row tex="\nabla \cdot \vec{F} = \frac{\partial F_x}{\partial x} + \frac{\partial F_y}{\partial y} + \frac{\partial F_z}{\partial z}"
+         name="divergence · ∇·F"
+         gloss="How much the field is <b>spreading out</b> from a point — a source is positive, a sink negative. Vector in, number out."></f-row>
+  <f-row tex="\nabla \times \vec{F} = \begin{vmatrix} \hat{i} & \hat{j} & \hat{k} \\ \frac{\partial}{\partial x} & \frac{\partial}{\partial y} & \frac{\partial}{\partial z} \\ F_x & F_y & F_z \end{vmatrix}"
+         name="curl · ∇×F"
+         gloss="How much the field <b>circulates</b> around a point. Drop a paddle wheel in; if it spins, the curl is not zero."></f-row>
+</f-plate>
+
+<p>The gradient is the one worth seeing drawn, because it has a property that
+ties this part straight back to Part 3.</p>
+
+<div data-figure="gradient"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The loop closes</span>
+  <p>For <span class="math" data-tex="f = x^2 + y^2">f = x² + y²</span>, the
+  gradient is <span class="math" data-tex="2x\hat{i} + 2y\hat{j}">2xi + 2yj</span>.
+  At the cast's point <span class="math" data-tex="(3,4)">(3,4)</span> that is
+  <span class="math" data-tex="6\hat{i} + 8\hat{j}">6i + 8j</span> — magnitude
+  10, pointing directly away from the origin.</p>
+  <p style="margin-bottom:0">Its direction is exactly the radius, so it is
+  <b>perpendicular to the circle through that point</b>. Which is the same
+  sentence as &ldquo;a tangent is perpendicular to its radius&rdquo; from Part 3,
+  arrived at from a completely different direction. The gradient is always
+  perpendicular to the level curve — <em>always</em>, for every scalar field, not
+  just this one.</p>
+</div>
+
+<h2>4.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Dot gives a <b>number</b>; cross gives a <b>vector</b>. Decide which the
+        question needs before you compute anything.</li>
+    <li><span data-tex="\vec{A}\cdot\vec{B} = 0">A·B = 0</span> means
+        perpendicular. This is how you test for a right angle without finding one.</li>
+    <li><span data-tex="\vec{A}\cdot\vec{B} = A_xB_x + A_yB_y + A_zB_z">A·B = AxBx + AyBy + AzBz</span>
+        — too short to be worth looking up.</li>
+    <li>The unit vector is <span data-tex="\vec{A}/|\vec{A}|">A/|A|</span>.</li>
+    <li>Gradient points uphill, steepest first, and is perpendicular to the level
+        curve.</li>
+    <li>Scalar in / vector out = gradient. Vector in / scalar out = divergence.
+        Vector in / vector out = curl.</li>
+    <li>The cast in 3-D: <span data-tex="3\hat{i} + 4\hat{j} + 12\hat{k}">3i + 4j + 12k</span>
+        has magnitude 13.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A vector is a magnitude with a direction, and its magnitude is always
+  Pythagoras — twice, in three dimensions.</p>
+  <p>The dot product measures agreement and returns a number; the cross product
+  measures disagreement and returns a perpendicular vector whose length is an
+  area. The gradient points uphill and is always perpendicular to the level
+  curve, which is why Part 3's tangent rule was never really about circles.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"vectors","title":"Part 4 · Vectors","topics":["vector-magnitude","dot-angle","cross-product","unit-vector","field-operator"],"count":6}'></div>
+
+<div data-reflex='{"only":["vectors","geometry"],"count":6,"title":"Handbook Reflex · Parts 3–4"}'></div>
