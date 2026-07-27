@@ -4,3 +4,4 @@ import "./algebra.js";
 import "./complex.js";
 import "./geometry.js";
 import "./vectors.js";
+import "./linalg.js";

@@ -1,0 +1,213 @@
+<p class="eyebrow">
+  <span>Part 5</span>
+  <span class="spec">NCEES 1.G</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Linear Algebra</h1>
+
+<p class="lede">A matrix is not a table of numbers. It is a machine that moves
+space — and once you see it that way, the determinant stops being a computation
+and becomes a diagnosis.</p>
+
+<h2>5.1 Why matrices exist</h2>
+
+<p>Node analysis on a five-node circuit gives you five equations in five
+unknowns. Solving them by substitution is possible and miserable. A
+<span class="term">matrix</span> is the bookkeeping that lets you write all five
+at once and then operate on the whole system as a single object.</p>
+
+<p class="math" data-tex="\begin{cases} 2x + 3y = 8 \\ x - y = 1 \end{cases} \qquad \Longleftrightarrow \qquad \begin{bmatrix} 2 & 3 \\ 1 & -1 \end{bmatrix}\begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} 8 \\ 1 \end{bmatrix}" data-display>the system, and the same system as a matrix equation</p>
+
+<p>The right-hand version is <span data-tex="A\vec{x} = \vec{b}">Ax = b</span>,
+and it looks exactly like the scalar equation
+<span data-tex="ax = b">ax = b</span> — which is the point. Everything you want
+to do to a system of equations, you can now do to one letter.</p>
+
+<h2>5.2 Multiplication, and why order matters</h2>
+
+<p>Matrix multiplication is defined so that
+<span data-tex="A\vec{x}">Ax</span> produces exactly the left-hand sides of your
+equations. Entry <span data-tex="(i,j)">(i,j)</span> of the product is the
+<b>dot product</b> of row <span data-tex="i">i</span> of the first matrix with
+column <span data-tex="j">j</span> of the second — the same dot product from
+Part 4, not a new operation.</p>
+
+<f-plate no="5.1" title="Matrix multiplication" stamp="handbook"
+  caption="The shape rule is worth more than the formula on a timed exam: an
+  <span class='math'>m×n</span> times an <span class='math'>n×p</span> gives an
+  <span class='math'>m×p</span>, and <b>the inner dimensions must match or the
+  product does not exist</b>. Several exam questions are answerable from that
+  alone.">
+  <f-row tex="(AB)_{ij} = \sum_{k} A_{ik}B_{kj}" name="entry by entry"
+         gloss="Row <span class='math'>i</span> dotted with column <span class='math'>j</span>. Left hand tracks across, right hand tracks down."></f-row>
+  <f-row tex="(m \times n)(n \times p) = (m \times p)" name="the shape rule"
+         gloss="The two inner numbers must agree and then vanish; the outer two survive as the answer's shape."></f-row>
+  <f-row tex="AB \ne BA" name="order matters"
+         gloss="Rotating then stretching is not the same as stretching then rotating. Matrices remember the order operations happened in."></f-row>
+</f-plate>
+
+<h2>5.3 A matrix moves space</h2>
+
+<p>Here is the idea that makes the rest of this part easy. Feed a matrix every
+point in the plane and it moves them all — and it moves them
+<em>consistently</em>: straight lines stay straight, the origin stays put,
+parallel lines stay parallel. Every matrix is a stretch, a shear, a rotation, a
+reflection, or some combination.</p>
+
+<p>So look at what it does to the unit square. Turn the knob in Plate 14 and
+watch the square deform.</p>
+
+<div data-figure="matrixTransform"></div>
+
+<p>The area of what the square becomes is the <span class="term">determinant</span>.
+That is not an analogy — it is what the determinant is.</p>
+
+<f-plate no="5.2" title="The determinant" stamp="handbook"
+  caption="<b>The determinant is an area scale factor.</b> Six means every region
+  comes out six times larger. Negative means space was flipped over. Zero means
+  the whole plane was crushed onto a line, and that single fact drives everything
+  in the next section.">
+  <f-row tex="\begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc" name="2 × 2"
+         gloss="Down-right product minus down-left product. Worth knowing cold — you will use it more than any other formula in this part."></f-row>
+  <f-row tex="\begin{vmatrix} a & b & c \\ d & e & f \\ g & h & i \end{vmatrix} = a(ei - fh) - b(di - fg) + c(dh - eg)"
+         name="3 × 3, by cofactors"
+         gloss="Expand along any row or column — choose the one with the most zeros. The signs alternate <b>+ − +</b>, and forgetting that is the usual error."></f-row>
+</f-plate>
+
+<h2>5.4 Singular means "no unique answer"</h2>
+
+<p>If a matrix flattens the plane onto a line, then many different starting
+points land on the same place — and you cannot work backwards from a result to
+a unique cause. Such a matrix is <span class="term">singular</span>: its
+determinant is zero, it has no inverse, and the system
+<span data-tex="A\vec{x} = \vec{b}">Ax = b</span> has either no solution or
+infinitely many, never exactly one.</p>
+
+<p>Geometrically, in two dimensions, that is two lines that are parallel instead
+of crossing. Plate 15 shows the three cases side by side.</p>
+
+<div data-figure="systemLines"></div>
+
+<f-plate no="5.3" title="Solving a 2 × 2 system" stamp="handbook"
+  caption="Cramer's rule is the fastest route for a 2×2 or 3×3 on a timed exam
+  because it answers <em>one</em> unknown without solving for the others — useful
+  when the question only asks for <span class='math'>x</span>. Check the
+  determinant first: <b>if it is zero, stop</b>, because there is no unique
+  answer to find.">
+  <f-row tex="A^{-1} = \frac{1}{ad - bc}\begin{bmatrix} d & -b \\ -c & a \end{bmatrix}" name="2 × 2 inverse"
+         gloss="Swap the diagonal, negate the off-diagonal, divide by the determinant. The division is why a zero determinant has no inverse."></f-row>
+  <f-row tex="x_i = \frac{|A_i|}{|A|}" name="Cramer's rule"
+         gloss="<span class='math'>A_i</span> is <span class='math'>A</span> with its <span class='math'>i</span>th column replaced by the right-hand side."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>Cramer's rule, end to end</em></h4>
+  <div class="worked-body">
+    <p>Solve <span data-tex="2x + 3y = 8">2x + 3y = 8</span> and
+      <span data-tex="x - y = 1">x − y = 1</span>.</p>
+    <ol class="steps">
+      <li>The determinant of the coefficient matrix, first — it is the
+        go/no-go check:
+        <span data-tex="|A| = \begin{vmatrix} 2 & 3 \\ 1 & -1 \end{vmatrix} = (2)(-1) - (3)(1) = -5" data-display>|A| = −5</span>
+        Non-zero, so there is exactly one solution.</li>
+      <li>Replace the <em>first</em> column with the right-hand side to get
+        <span data-tex="x">x</span>:
+        <span data-tex="x = \frac{\begin{vmatrix} 8 & 3 \\ 1 & -1 \end{vmatrix}}{-5} = \frac{-8 - 3}{-5} = \frac{-11}{-5} = 2.2" data-display>x = 2.2</span></li>
+      <li>Replace the <em>second</em> column for <span data-tex="y">y</span>:
+        <span data-tex="y = \frac{\begin{vmatrix} 2 & 8 \\ 1 & 1 \end{vmatrix}}{-5} = \frac{2 - 8}{-5} = \frac{-6}{-5} = 1.2" data-display>y = 1.2</span>
+        Check in the second equation: <span data-tex="2.2 - 1.2 = 1">2.2 − 1.2 = 1</span> ✓</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Always substitute back
+    into the equation you did <em>not</em> use to build the numerator. It costs
+    five seconds and catches sign errors, which are the only errors this method
+    really produces.</p>
+  </div>
+</div>
+
+<h2>5.5 Eigenvectors: the directions a matrix leaves alone</h2>
+
+<p>A matrix moves almost every vector to a new direction. But most matrices have
+a few special directions that come out pointing the same way they went in — only
+longer or shorter. Those are the <span class="term">eigenvectors</span>, and the
+stretch factor for each is its <span class="term">eigenvalue</span>.</p>
+
+<p class="math" data-tex="A\vec{v} = \lambda\vec{v}" data-display>Av = λv</p>
+
+<p>Read that as a sentence: <em>the matrix acting on this vector does nothing but
+scale it</em>. Turn the knob in Plate 16 and hunt for the directions where the
+two arrows line up.</p>
+
+<div data-figure="eigen"></div>
+
+<f-plate no="5.4" title="Finding eigenvalues" stamp="handbook"
+  caption="The determinant returns as a detector: it is zero exactly when
+  <span class='math' data-tex='A - \lambda I'>A − λI</span> crushes some non-zero
+  vector to zero, which is what having an eigenvector means. For a 2×2 the
+  shortcut is worth memorising — <b>sum of eigenvalues = trace, product =
+  determinant</b> — because it checks your answer in two seconds.">
+  <f-row tex="\det(A - \lambda I) = 0" name="characteristic equation"
+         gloss="Subtract λ from the diagonal, take the determinant, set it to zero, solve for λ."></f-row>
+  <f-row tex="\lambda_1 + \lambda_2 = \text{tr}(A) \qquad \lambda_1\lambda_2 = \det(A)"
+         name="the 2 × 2 check"
+         gloss="Trace is the sum of the diagonal. If your two eigenvalues fail either test, you made an arithmetic error."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">The cast, as a matrix</span>
+  <p>Take <span class="math" data-tex="A = \begin{bmatrix} 3 & 4 \\ 4 & -3 \end{bmatrix}">A = [[3,4],[4,−3]]</span>.
+  Its trace is <span class="math" data-tex="3 + (-3) = 0">0</span> and its
+  determinant is <span class="math" data-tex="(3)(-3) - (4)(4) = -25">−25</span>.
+  So the eigenvalues must sum to 0 and multiply to −25 — they are
+  <span class="math" data-tex="\pm 5">±5</span>, without solving anything.</p>
+  <p style="margin-bottom:0">The 3-4-5 triangle's hypotenuse, arriving as an
+  eigenvalue. And the negative one is not a defect: this matrix is a
+  <b>reflection</b> scaled by 5, so one direction is stretched and the
+  perpendicular one is flipped.</p>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · what the exam actually asks</span>
+  <p style="margin-bottom:0">Most FE eigenvalue questions give you a small matrix
+  and four candidate value-pairs. You almost never need to solve the
+  characteristic equation — <b>check each option against the trace and the
+  determinant</b> and usually only one survives. Two multiplications beats a
+  quadratic every time.</p>
+</div>
+
+<h2>5.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>The 2×2 determinant, <span data-tex="ad - bc">ad − bc</span>, and that it
+        is an <b>area scale factor</b>.</li>
+    <li><span data-tex="\det A = 0">det A = 0</span> means singular: no inverse,
+        no unique solution.</li>
+    <li>The shape rule for multiplication, and that
+        <span data-tex="AB \ne BA">AB ≠ BA</span>.</li>
+    <li>The 2×2 inverse: swap the diagonal, negate the off-diagonal, divide by the
+        determinant.</li>
+    <li><span data-tex="A\vec{v} = \lambda\vec{v}">Av = λv</span> as a sentence,
+        not a formula.</li>
+    <li>Trace = sum of eigenvalues, determinant = product. This is the fastest
+        check on the exam.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A matrix is a machine that moves space consistently, and its determinant is
+  the factor by which it scales area. Zero determinant means space was flattened,
+  which is why singular matrices have no inverse and their systems have no unique
+  solution.</p>
+  <p>Eigenvectors are the directions the machine leaves pointing the same way;
+  the eigenvalue is how much it stretched them. For a 2×2, the eigenvalues sum to
+  the trace and multiply to the determinant — check answers with that before you
+  solve anything.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"linear-algebra","title":"Part 5 · Linear algebra","topics":["determinant","matrix-multiply","cramer","eigenvalues","matrix-shape"],"count":6}'></div>
+
+<div data-reflex='{"only":["linear-algebra","vectors"],"count":6,"title":"Handbook Reflex · Parts 4–5"}'></div>
