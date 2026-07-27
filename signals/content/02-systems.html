@@ -1,0 +1,76 @@
+<p>A <span class="term">system</span> is anything that takes a signal in and puts a signal out. A microphone, a room, a loudspeaker, a pair of ears, a bank account, a car with its foot on the accelerator, a share portfolio, a thermostat. Draw it as a box with an arrow in and an arrow out, and resist the urge to look inside — for now, the box is defined entirely by what it does, not by what it is made of.</p>
+
+<p>Here is the problem. In general, a box like that is hopeless. To know what it does you would have to try every possible input, of which there are infinitely many, and the answer to one tells you nothing about the answer to another. There is no science to be had.</p>
+
+<p>The subject exists because two modest promises change that completely.</p>
+
+<h2>Promise one: linearity</h2>
+
+<p>A system is <span class="term">linear</span> if two things hold. Turn the input up by a factor and the output goes up by the same factor. And — this is the one that matters — send two inputs at once and you get the sum of what each would have given on its own.</p>
+
+<div class="eq">
+  <div class="eq__math">if  A → p   and   B → q,   then   A + B → p + q</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> It says the box cannot let one input interfere with how it handles another. Sending a bass note does not change the box's opinion about a treble note. That is a strong claim and it is exactly what buys us everything in Part 3: if it holds, you can break a complicated input into simple pieces, run each piece separately, and add the answers up.
+  </div>
+</div>
+
+<p>Figure 4 tests it, on two boxes at once.</p>
+
+<div data-fig="linearity-test"></div>
+
+<p>Both boxes get two tones — 100 Hz and 300 Hz. The solid orange curve is what the box does when both arrive together. The dashed blue curve is what you get by sending each one separately and adding the two answers afterwards. If the box is linear, those are the same drawing and you will only see one curve.</p>
+
+<p>The upper box is an <strong>echo</strong>: half of what is arriving now, plus half of what arrived 2 ms ago. Drag the slider to the far end. The dashed line never emerges from underneath the solid one, and the mismatch readout sits at 0.000 no matter what you do.</p>
+
+<p>The lower box is a loudspeaker that physically cannot move past ±1. At small amplitudes it also passes the test, because nothing is hitting the limit — and then somewhere around an input peak of 1.0 the two curves peel apart and the mismatch readout climbs off zero.</p>
+
+<p>That is the honest picture of linearity, and it is worth more than the definition. <strong>Linearity is not a property a box has or lacks. It is a promise a box keeps over some range of inputs and breaks outside it.</strong> Every amplifier, every sensor, every mechanical linkage you will ever meet is linear until it is not. The engineering skill is knowing where the edge is and staying inside it — which is why "keep it under the clip level" is the first thing anyone learns in a recording studio, and why aircraft control laws are re-derived for every flight regime.</p>
+
+<h2>Promise two: time invariance</h2>
+
+<p>A system is <span class="term">time invariant</span> if it has no calendar. Do the same experiment an hour later and you get the same answer an hour later — the same shape, the same size, just moved along.</p>
+
+<div class="eq">
+  <div class="eq__math">if  x(t) → y(t),   then   x(t − t₀) → y(t − t₀)</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> The shift from Part 1, applied to both sides. Delay the input by anything you like and the only thing that happens to the output is the same delay. The box does not know what time it is, and cannot behave differently at four o'clock.
+  </div>
+</div>
+
+<div data-fig="time-invariance"></div>
+
+<p>Figure 5 has the same shape as Figure 4: two boxes, one slider, one promise. The slider chooses when you clap. The grey dashed trace in each lower panel is that box's answer at t₀ = 0, simply slid along to the new arrival time — so if the box keeps the promise, the dashed trace vanishes underneath the solid one.</p>
+
+<p>The echo box keeps it, at every slider position. The time-varying box does not, and it is worth looking at what that box actually is: <strong>somebody turning a volume knob back and forth</strong>. Nothing exotic, nothing broken. Clap while the knob is up and you get a loud answer; clap while it is down and you get a quiet one. The output shape now depends on <em>when</em>, and the whole method collapses.</p>
+
+<h2>What the two promises buy</h2>
+
+<p>A system that keeps both is called <span class="term">LTI</span> — linear and time invariant. Here is what that costs and what it pays.</p>
+
+<p>The cost is real. LTI rules out anything that clips, saturates, rectifies, squares, or has a moving part that wears. It rules out anything with a gain schedule, a gate, or a limiter. It rules out most of the world.</p>
+
+<p>The payoff, which arrives in full in the next part, is this: <strong>for an LTI system, one measurement is a complete description.</strong> Not "a good approximation" — complete. Clap once, record the answer, and every future question about that system has already been answered; all that remains is arithmetic. That is why an acoustician can sell you a cathedral as a 300 kilobyte file, and why every reverb plug-in on earth works.</p>
+
+<p>Nothing else in engineering has quite this character. You cannot measure a car's response to one bump and thereby know its response to every road, because a car has springs that bottom out and dampers that heat up. You can, however, get remarkably close over the range where nothing bottoms out — and "close, over a stated range" is how the whole subject is used in practice.</p>
+
+<div class="check" data-check data-answer="1">
+  <div class="check__q">Which of these is <em>not</em> LTI?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">A one-second delay: y(t) = x(t − 1)</button>
+    <button class="check__opt" type="button">A squarer: y(t) = x(t)²</button>
+    <button class="check__opt" type="button">A running total of everything so far</button>
+  </div>
+  <div class="check__a">
+    The squarer. Double the input and the output goes up <b>four</b> times, not twice — so it fails linearity at the first hurdle. The delay and the running total are both perfectly LTI, which surprises people about the running total: it has a memory that stretches back forever, and memory is not the same thing as a calendar. A system is allowed to remember everything, as long as it treats every moment alike.
+  </div>
+</div>
+
+<div class="aside">
+  Real rooms are not exactly LTI either. Air is very slightly nonlinear at high sound levels, temperature drifts change the speed of sound over hours, and someone may open a window. The measured impulse response of a hall is good for a day and excellent for an afternoon. Every use of this theory in the real world comes with a stated range of validity, and the ones that fail dramatically — an aircraft leaving its flight envelope, an amplifier driven into clipping — fail exactly by breaking one of these two promises.
+</div>
+
+<div class="stamp">
+  <p><strong>Linear</strong> means inputs do not interfere: send two at once and you get the sum of the two separate answers. <strong>Time invariant</strong> means the box has no calendar: delay the input and the only change is the same delay.</p>
+  <p>Together they are worth an enormous amount. For an LTI system, <strong>one measurement is a complete description</strong> — and Part 3 is the collection of that measurement.</p>
+</div>

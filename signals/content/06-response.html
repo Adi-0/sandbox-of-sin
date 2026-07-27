@@ -1,0 +1,91 @@
+<p>Two facts are now on the table, and putting them together is the point of the whole guide.</p>
+
+<p>From Part 4: a system takes any sinusoid and returns the same sinusoid, scaled and slid. From Part 5: every signal is a stack of sinusoids.</p>
+
+<p>So to find out what a system does to <em>anything</em>: break the input into tones, look up what happens to each one, and add the results back up. No flipping, no sliding, no integral. Just a lookup table with one entry per frequency.</p>
+
+<p>That table has a name. The <span class="term">frequency response</span>, written H(jω), is the gain and phase the system applies at every frequency — one complex number per frequency, exactly the arrow from Figure 12.</p>
+
+<div data-fig="sweep"></div>
+
+<p>Figure 17 is how you would actually collect it. Send in one tone, measure what comes out, plot the ratio. Move to the next tone. Repeat. Sweep the slider from left to right and the curve fills in behind you — that is a measurement an instrument makes in a second and an engineer once made in an afternoon, and you have just made it by hand.</p>
+
+<p>Notice what the curve says about our room. Below about 100 Hz it sits flat at 1: low tones go straight through, untouched. Above a few hundred hertz it falls away steadily: high tones get cut. And there is a bend between them, marked at 159 Hz, where the gain has dropped to 0.707.</p>
+
+<p>That bend is the <span class="term">corner frequency</span>, and 0.707 is not an arbitrary place to put a mark: it is 1/√2, which means the <em>power</em> — proportional to amplitude squared — is exactly halved. It sits at ω = 1/τ, which for our 1 ms room is 1000 rad/s on the nose. <strong>A system's memory and its corner frequency are the same number, written two ways.</strong> A room that forgets in 1 ms cannot follow anything faster than about 1000 rad/s, and there is nothing more to the frequency response of one pole than that sentence.</p>
+
+<h2>Decibels, and why the plot looks like that</h2>
+
+<p>Figure 17's linear axes hide something. The gain at 10 kHz is 0.0159, which on that plot is indistinguishable from zero, from 0.008, and from 0.03. Yet the difference between those matters enormously — it is the difference between a barely audible hiss and an inaudible one.</p>
+
+<p>The fix is to squash both axes logarithmically. Frequency gets plotted so each equal step is a factor of ten, a <span class="term">decade</span>. Gain gets converted to <span class="term">decibels</span>: dB = 20·log₁₀(gain), so a gain of 1 is 0 dB, a gain of 0.1 is −20 dB, a gain of 0.01 is −40 dB. The result is called a <span class="term">Bode plot</span>.</p>
+
+<div data-fig="bode"></div>
+
+<p>Look at what the squashing did to the curve in Figure 18. It became <strong>two straight lines and a bend</strong>. Below the corner: a flat line at 0 dB. Above it: a straight fall at exactly 20 dB per decade. That is the entire reason anyone tolerates decibels — on these axes, a one-pole system is a ruler-and-pencil drawing, and the only thing you need in order to place it is where the bend goes.</p>
+
+<p>"Twenty dB per decade" deserves unpacking, because it is the sentence that makes the exponent do the arguing:</p>
+
+<div class="chain">
+  <div class="card"><h4>×10</h4>frequency → ÷10 the amplitude</div>
+  <div class="card"><h4>×100</h4>frequency → ÷100</div>
+  <div class="card"><h4>×1000</h4>frequency → ÷1000</div>
+</div>
+
+<p>A single pole, a single capacitor, one component — and a tone a thousand times above the corner comes out a thousand times smaller. That is why a scrap of resistor and capacitor is a perfectly serious anti-hiss filter, and why Part 8 can build almost anything by stacking a few more of them.</p>
+
+<p>The lower panel of Figure 18 is the phase, and it has its own landmark: at the corner frequency the output is <strong>always exactly 45° late</strong>, whatever the system's τ. Far below the corner the phase is 0 — low tones sail through on time. Far above it settles at −90°, a quarter of a cycle. Hold on to that number; in Part 7 a total phase of −180° is what makes a feedback loop start howling.</p>
+
+<h2>The payoff</h2>
+
+<p>Everything so far has been setup. Here is the result.</p>
+
+<div data-fig="multiply"></div>
+
+<p>Figure 19 has three panels. The top is Part 3's picture — the square wave, and the tangled output that took a flip-slide-multiply-add at every instant to compute. The middle has the input's recipe as blue lines, with the room's gain curve drawn across them in violet. The bottom is the output's recipe.</p>
+
+<p>And the bottom panel is the middle panel <strong>multiplied together</strong>. Line by line: the 100 Hz bar times 0.847, the 300 Hz bar times 0.469, the 500 Hz bar times 0.303. That is all.</p>
+
+<p>The bars in the bottom panel are not calculated that way, incidentally — that would be assuming the conclusion. They are measured from the orange waveform in the top panel by transforming it. The readout reports how far the measurement is from blue-times-violet, and it sits at a ten-thousandth. <strong>That equality is the theorem</strong>, and it is worth stating on its own line:</p>
+
+<div class="eq">
+  <div class="eq__math">y(t) = x(t) ∗ h(t)      ⟷      Y(jω) = X(jω) · H(jω)</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> On the left, the sliding sum from Part 3, in the time room. On the right, the same operation in the frequency room: one multiplication, frequency by frequency. The double arrow means these are two views of one event, not two approximations of it. Convolution in one room <b>is</b> multiplication in the other.
+  </div>
+</div>
+
+<p>Drag the τ slider and watch all three panels move together. The corners rounding off in the top panel and the tall right-hand bars shrinking in the bottom panel are the same thing happening, drawn twice.</p>
+
+<h2>The killer number</h2>
+
+<p>Part 3 costed one second of CD audio through a one-second room at about 1.9 billion multiplications. Here is the same job through the frequency room: transform the signal, transform the response, multiply them, transform back. With the fast algorithm that does those transforms, the whole thing comes to roughly <strong>14 million</strong> multiplications.</p>
+
+<div class="chain">
+  <div class="card"><h4>1,900,000,000</h4>the direct way — seconds of computation</div>
+  <div class="card"><h4>14,000,000</h4>through the frequency room — imperceptible</div>
+  <div class="card"><h4>≈ 140×</h4>and the gap widens with length</div>
+</div>
+
+<p>This is not a footnote about efficiency. It is the reason the reverb button in Figure 6 returns before you have let go of the mouse: that demo convolves a 1.3-second sound with a 0.6-second hall, and it does it by exactly the route in the equation above. <strong>The guide's own reverb could not exist without the theorem the guide is teaching.</strong></p>
+
+<div class="aside">
+  The 140× is honest arithmetic with the accounting stated: 44,100² real multiplications for the direct sum, against three transforms of length 131,072 at about four and a half million real multiplications each, plus the pointwise multiply. Different accounting — counting complex operations, or exploiting the signal being real — moves the figure by a factor of two or so in either direction. It does not move the exponent, which is the part that matters, and the advantage grows as the signals get longer.
+</div>
+
+<div class="check" data-check data-answer="0">
+  <div class="check__q">You send a 1 kHz square wave through the room in Figure 19. What frequencies can possibly come out?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">Only 1 kHz, 3 kHz, 5 kHz... — the same ones that went in, at different sizes</button>
+    <button class="check__opt" type="button">A smooth spread of frequencies, because the room rounds the corners</button>
+    <button class="check__opt" type="button">Mostly low frequencies, since the room is a lowpass</button>
+  </div>
+  <div class="check__a">
+    Exactly the ones that went in. Multiplying a recipe by a curve can shrink an ingredient to nothing, but it can never <b>invent</b> one at a frequency that was not there. This is the sharpest practical test for whether a system is LTI: if a new frequency appears at the output, some promise from Part 2 has been broken. It is precisely how audio distortion is measured, and how a radio engineer catches an amplifier misbehaving.
+  </div>
+</div>
+
+<div class="stamp">
+  <p>The <strong>frequency response</strong> H(jω) is the gain and phase at every frequency — the whole system, as one curve. On a <strong>Bode plot</strong> a single pole is two straight lines meeting at the <strong>corner frequency</strong> ω = 1/τ, falling thereafter at 20 dB per decade: ten times the frequency, a tenth of the amplitude.</p>
+  <p>And the reason it was worth the trip: <strong>convolution in time is multiplication in frequency</strong>. Part 3's miserable sliding sum is one multiplication per frequency, and about 140 times less work.</p>
+</div>

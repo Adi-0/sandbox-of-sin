@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo — an interactive field guide to signals and systems</title>
+<meta name="description" content="Signals and systems from first principles: convolution, Fourier, Laplace, filters, sampling and feedback — built one step at a time on a single idea, with live figures you turn the knobs on and sounds you can actually hear.">
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2f4f8'/><path d='M2 16 L7 16 L7 6 L11 26 L15 11 L18 20 L21 16 L30 16' fill='none' stroke='%2312599e' stroke-width='2.2' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="app">
+  <header class="masthead">
+    <button class="iconbtn railtoggle" id="rail-toggle" aria-expanded="false" aria-controls="rail">Contents</button>
+    <a class="masthead__mark" href="#/"><b>Echo</b><span class="masthead__sub"> &nbsp;/&nbsp; signals &amp; systems</span></a>
+    <span class="masthead__spacer"></span>
+    <div class="progress" title="Parts you have marked complete">
+      <span id="progress-label">0 / 11</span>
+      <span class="progress__track"><span class="progress__fill" id="progress-fill"></span></span>
+    </div>
+    <button class="iconbtn" id="theme-toggle" aria-label="Switch colour theme">theme</button>
+  </header>
+
+  <nav class="rail" id="rail" data-open="false" aria-label="Contents">
+    <div class="rail__head">The arc</div>
+    <ul class="rail__list" id="rail-list"></ul>
+    <div class="rail__bench" id="rail-bench" data-active="false">
+      <a href="#/bench">⌁ The Bench</a>
+    </div>
+    <div class="rail__foot">
+      <div>Arrow keys move between parts.</div>
+      <div style="margin-top:.6rem"><button id="reset-progress" type="button">reset progress</button></div>
+    </div>
+  </nav>
+
+  <main class="main" id="main" tabindex="-1">
+    <div id="view"></div>
+  </main>
+</div>
+
+<noscript>
+  <div class="noscript">
+    <strong>This guide needs JavaScript.</strong>
+    Every figure is a live simulation, and the chapters themselves are
+    assembled by a small script, so with JavaScript off the page stays empty.
+    The prose is written to stand on its own without a single figure — you
+    will find it as plain HTML in the <code>content/</code> folder.
+  </div>
+</noscript>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

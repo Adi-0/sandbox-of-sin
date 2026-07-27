@@ -1,0 +1,320 @@
+/* ============================================================
+   BASE — the app frame and the reading column.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--vellum);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* the vellum has a faint grid, like the paper this subject is
+   drawn on. It is deliberately almost invisible. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.5;
+}
+
+.app { position: relative; z-index: 1; }
+
+a { color: inherit; text-decoration-color: var(--rule); text-underline-offset: 2px; }
+a:hover { text-decoration-color: currentColor; }
+
+:focus-visible {
+  outline: 2px solid var(--in);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 60;
+  background: var(--ink); color: var(--vellum);
+  padding: .6rem 1rem; font-family: var(--font-mono); font-size: .8rem;
+}
+.skip-link:focus { left: .5rem; top: .5rem; }
+
+/* ---------------- masthead ---------------- */
+
+.masthead {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: .75rem;
+  padding: .5rem clamp(.75rem, 3vw, 1.5rem);
+  background: color-mix(in srgb, var(--vellum) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+  min-height: 52px;
+}
+
+.masthead__mark {
+  font-family: var(--font-display);
+  font-weight: 600; letter-spacing: -0.01em;
+  text-decoration: none; white-space: nowrap;
+}
+.masthead__mark b { font-size: 1.05rem; }
+.masthead__sub {
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3); font-weight: 400;
+}
+.masthead__spacer { flex: 1 1 auto; }
+
+.iconbtn {
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .06em;
+  text-transform: uppercase;
+  background: var(--vellum-2); color: var(--ink-2);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: .4rem .6rem; cursor: pointer; white-space: nowrap;
+}
+.iconbtn:hover { color: var(--ink); border-color: var(--ink-3); }
+.iconbtn[data-on="true"] { color: var(--in); border-color: var(--in); }
+
+.railtoggle { display: none; }
+
+.progress {
+  display: flex; align-items: center; gap: .5rem;
+  font-family: var(--font-mono); font-size: .72rem; color: var(--ink-3);
+}
+.progress__track {
+  display: block; width: 76px; height: 4px;
+  background: var(--vellum-3); border-radius: 2px; overflow: hidden;
+}
+.progress__fill {
+  display: block; height: 100%; width: 0%;
+  background: var(--in); transition: width .25s ease;
+}
+
+/* ---------------- rail ---------------- */
+
+.rail {
+  position: fixed; top: 52px; bottom: 0; left: 0; width: var(--rail);
+  overflow-y: auto; z-index: 30;
+  border-right: 1px solid var(--rule);
+  background: var(--vellum);
+  padding: 1.25rem 0 2rem;
+}
+
+.rail__head, .rail__foot {
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-3);
+  padding: 0 1.25rem; margin-bottom: .75rem;
+}
+.rail__foot {
+  margin: 1.5rem 0 0; padding-top: 1rem; text-transform: none;
+  letter-spacing: 0; line-height: 1.5;
+  border-top: 1px solid var(--rule);
+}
+.rail__foot button {
+  font-family: var(--font-mono); font-size: .68rem;
+  background: none; border: 1px solid var(--rule); border-radius: var(--radius);
+  color: var(--ink-3); padding: .3rem .5rem; cursor: pointer;
+}
+.rail__foot button:hover { color: var(--bad); border-color: var(--bad); }
+
+.rail__list { list-style: none; margin: 0; padding: 0; }
+
+.rail__item a {
+  display: grid; grid-template-columns: 2.1rem 1fr; gap: .5rem;
+  padding: .42rem 1.25rem; text-decoration: none;
+  border-left: 2px solid transparent;
+  font-size: .875rem; line-height: 1.35;
+}
+.rail__item a:hover { background: var(--vellum-2); }
+.rail__num {
+  font-family: var(--font-mono); font-size: .7rem; color: var(--ink-3);
+  padding-top: .16rem;
+}
+.rail__title { color: var(--ink-2); }
+.rail__item[data-active="true"] a { border-left-color: var(--in); background: var(--vellum-2); }
+.rail__item[data-active="true"] .rail__title { color: var(--ink); font-weight: 600; }
+.rail__item[data-active="true"] .rail__num { color: var(--in); }
+.rail__item[data-done="true"] .rail__num::after { content: " ✓"; color: var(--ok); }
+
+.rail__bench {
+  margin: 1.25rem 1.25rem 0; padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+}
+.rail__bench a {
+  display: block; text-decoration: none;
+  font-family: var(--font-mono); font-size: .74rem; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-2);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: .5rem .6rem; text-align: center;
+}
+.rail__bench a:hover { color: var(--sys); border-color: var(--sys); }
+.rail__bench[data-active="true"] a { color: var(--sys); border-color: var(--sys); }
+
+/* ---------------- main ---------------- */
+
+.main {
+  margin-left: var(--rail);
+  padding: 2.5rem clamp(1rem, 4vw, 3rem) 5rem;
+  outline: none;
+}
+
+.reader { max-width: var(--wide); margin: 0 auto; }
+
+/* prose sits in a narrow measure; figures use the full width */
+.reader p,
+.reader h2, .reader h3, .reader h4,
+.reader ul, .reader ol, .reader blockquote,
+.reader .eq, .reader .aside, .reader .stamp,
+.reader .check, .reader .tablewrap, .reader .lede,
+.reader .eyebrow, .reader .part-title, .reader .chain, .reader .key {
+  max-width: var(--measure);
+}
+
+/* ---------------- headings & prose ---------------- */
+
+.eyebrow {
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-3);
+  margin: 0 0 .5rem;
+}
+
+.part-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5.2vw, 2.9rem);
+  line-height: 1.05; letter-spacing: -0.02em; font-weight: 600;
+  margin: 0 0 .75rem;
+}
+
+.lede {
+  font-size: 1.2rem; line-height: 1.5; font-style: italic;
+  color: var(--ink-2); margin: 0 0 2.5rem;
+  padding-bottom: 1.25rem; border-bottom: 1px solid var(--rule);
+}
+
+.reader h2 {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 1.45rem; line-height: 1.2; letter-spacing: -0.01em;
+  margin: 3rem 0 .75rem;
+}
+.reader h3 {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 1.12rem; line-height: 1.3;
+  margin: 2.25rem 0 .6rem;
+}
+.reader h4 {
+  font-family: var(--font-mono); font-weight: 600;
+  font-size: .78rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-2); margin: 1.75rem 0 .4rem;
+}
+
+.reader p { margin: 0 0 1.1rem; }
+.reader ul, .reader ol { margin: 0 0 1.1rem; padding-left: 1.35rem; }
+.reader li { margin-bottom: .5rem; }
+
+.reader strong { font-weight: 700; }
+
+/* a defined term: bolded exactly once, where it is defined */
+.term {
+  font-weight: 700;
+  border-bottom: 2px solid var(--in-wash);
+  box-shadow: inset 0 -0.4em 0 var(--in-wash);
+}
+
+code, kbd {
+  font-family: var(--font-mono); font-size: .88em;
+  background: var(--vellum-2); border: 1px solid var(--rule);
+  border-radius: var(--radius); padding: .05em .3em;
+}
+
+/* ---------------- tables ---------------- */
+
+.tablewrap { overflow-x: auto; margin: 0 0 1.5rem; }
+table {
+  border-collapse: collapse; width: 100%; font-size: .9rem;
+  font-family: var(--font-body);
+}
+th, td {
+  text-align: left; padding: .5rem .7rem;
+  border-bottom: 1px solid var(--rule); vertical-align: top;
+}
+thead th {
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3);
+  border-bottom: 1px solid var(--grid-major);
+  white-space: nowrap;
+}
+td.num, th.num { font-family: var(--font-mono); font-size: .85rem; white-space: nowrap; }
+tbody tr:last-child td { border-bottom: none; }
+
+/* ---------------- pager & completion ---------------- */
+
+.done {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  margin: 3rem 0 0; padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: .72rem;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+  max-width: var(--measure);
+}
+
+.pager {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  margin-top: 2rem; max-width: var(--measure);
+}
+.pager a {
+  display: block; text-decoration: none; padding: .85rem 1rem;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--vellum-2);
+}
+.pager a:hover { border-color: var(--ink-3); }
+.pager .is-next { text-align: right; }
+.pager .is-disabled { opacity: .4; pointer-events: none; }
+.pager__dir {
+  display: block; font-family: var(--font-mono); font-size: .68rem;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+  margin-bottom: .15rem;
+}
+.pager__name { display: block; font-family: var(--font-display); font-weight: 600; font-size: .95rem; }
+
+/* ---------------- noscript ---------------- */
+
+.noscript {
+  max-width: 40rem; margin: 3rem auto; padding: 1.25rem;
+  border: 1px solid var(--warn); border-radius: var(--radius);
+  background: var(--vellum-2);
+}
+
+/* ---------------- responsive ---------------- */
+
+@media (max-width: 900px) {
+  .railtoggle { display: inline-block; }
+  .rail {
+    transform: translateX(-100%);
+    transition: transform .18s ease;
+    box-shadow: var(--shadow);
+    width: min(84vw, var(--rail));
+  }
+  .rail[data-open="true"] { transform: none; }
+  .main { margin-left: 0; }
+  .progress { display: none; }
+}
+
+@media (max-width: 560px) {
+  body { font-size: 1rem; }
+  .main { padding: 1.75rem 1rem 4rem; }
+  .pager { grid-template-columns: 1fr; }
+  .masthead__sub { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

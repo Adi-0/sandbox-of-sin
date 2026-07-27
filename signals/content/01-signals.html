@@ -1,0 +1,70 @@
+<p>Point a microphone at a snare drum and you get a voltage that leaps up and shudders back down. Put a cuff on someone's arm and you get a pressure that surges and settles, once per heartbeat. Switch on the heating and the room temperature climbs, overshoots slightly, and drifts back. Post a good quarterly result and a share price jumps, overreacts, and finds its level.</p>
+
+<p>Four instruments, four industries, four sets of units. One shape.</p>
+
+<div data-fig="one-trace"></div>
+
+<p>Figure 1 is a single array of numbers drawn four times — click through the four buttons and watch nothing change except the labels. That is not a trick, it is the entire reason this subject exists. Once you have written the measurements down, the mathematics that follows cannot tell whether they came from a microphone or a stock exchange, and it does not need to.</p>
+
+<p>So: a <span class="term">signal</span> is a number that varies over time. Write it <code>x(t)</code>, meaning "the value at moment t". That is the whole definition. It is deliberately unambitious, and its unambitiousness is what lets one set of tools serve acoustics, cardiology, seismology, radio and control engineering without modification.</p>
+
+<h2>Four shapes, and why these four</h2>
+
+<p>You cannot study every possible signal; there are too many. The move that makes the subject tractable — the same move that lets chemistry get by with a hundred elements — is to find a small set of shapes that everything else can be built from, understand those completely, and then build.</p>
+
+<p>Four shapes do almost all the work in this guide.</p>
+
+<div data-fig="building-blocks"></div>
+
+<p>Read Figure 2 left to right; each panel is labelled with what the shape is for.</p>
+
+<p>The <span class="term">impulse</span>, written δ(t), is the mathematical version of a clap: all of its effect crammed into no time at all. It is drawn as an arrow rather than a curve because it has no height worth drawing — it is infinitely brief and infinitely tall, and the only finite thing about it is its <strong>area, which is defined to be 1</strong>. No laboratory has ever produced one, and no laboratory needs to: a pulse much shorter than anything your system can react to is indistinguishable from the real thing. Part 3 is about why this unphysical object is the most useful signal in the subject.</p>
+
+<p>The <span class="term">unit step</span>, u(t), is zero forever and then one forever, with the switch thrown at t = 0. Every "switch it on and see what happens" experiment ever run is a step. Notice the relationship, because it comes back in Part 7: the impulse is how fast the step is changing. The step is flat, flat, <em>lurch</em>, flat — and all of its change is concentrated in that lurch.</p>
+
+<p>The <span class="term">sinusoid</span> is the pure tone: a single frequency, going on forever, never changing shape. It gets an entire part to itself (Part 4) for a reason that will not be obvious until you get there.</p>
+
+<p>The <span class="term">decaying exponential</span>, e<sup>−t/τ</sup>, is the shape of everything that fades: a struck bell, a hot cup of coffee, a capacitor discharging, a rumour. It is fixed by a single number, the <span class="term">time constant</span> τ, which is the time it takes to fall to 37% of where it was — and, crucially, the time it takes to fall to 37% of where it is <em>from any starting moment you choose</em>. That last property is what makes it the exponential rather than some other curve, and it is why an exponential turns up whenever a thing's rate of decline is proportional to how much is left.</p>
+
+<div class="chain">
+  <div class="card"><h4>1 τ</h4>37% left</div>
+  <div class="card"><h4>3 τ</h4>5% left</div>
+  <div class="card"><h4>5 τ</h4>0.7% left — call it over</div>
+</div>
+
+<p>"Five time constants and it is finished" is a rule of thumb worth having permanently. It is why a guitar with a 0.4 s decay stops ringing in about two seconds, and it will tell you in Part 7 how long a badly-designed control loop takes to settle down.</p>
+
+<h2>Two things you can do to a signal</h2>
+
+<p>Almost everything ahead is built from two manipulations, and one of them trips up nearly everybody the first time.</p>
+
+<p>Scaling is the easy one: 2·x(t) is the same signal, twice as tall. Turning up the volume does not change the tune.</p>
+
+<p>Shifting is the awkward one. x(t − 2) is x delayed by two seconds — it happens <em>later</em>, even though you subtracted. Figure 3 exists purely to burn this in, because Part 3 will ask you to think about "the input as it was 2 ms ago" several hundred times.</p>
+
+<div data-fig="time-shift"></div>
+
+<p>Drag the slider in Figure 3 and watch the expression in the readout. The reason the sign feels backwards is that the thing in the brackets is not a position on the page — it is a question. At clock time t = 5, the expression x(t − 2) is asking "what was x doing at 3?" To answer with something that happened earlier is to draw it later. Say that to yourself once and it stops being confusing.</p>
+
+<div class="check" data-check data-answer="2">
+  <div class="check__q">A signal x(t) has a single sharp spike at t = 1 s. Where is the spike in x(t + 3)?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">At t = 4 s — adding moves it later</button>
+    <button class="check__opt" type="button">Still at t = 1 s — adding a constant does not move a signal</button>
+    <button class="check__opt" type="button">At t = −2 s — adding moves it earlier</button>
+  </div>
+  <div class="check__a">
+    At t = −2 s. The expression x(t + 3) at clock time t is asking what x was doing at t + 3, which is three seconds into the future — so the whole picture arrives three seconds <b>early</b>. Adding shifts left, subtracting shifts right, and it will feel wrong for about another week.
+  </div>
+</div>
+
+<h2>The test signal you will get sick of</h2>
+
+<p>One last piece of furniture. From here to the end, the standard thing to poke a system with is a <strong>100 Hz square wave</strong>: up for 5 ms, down for 5 ms, forever, swinging between +1 and −1.</p>
+
+<p>It is chosen because it is the exact opposite of the sinusoid. A sine is the smoothest signal there is; a square wave is all corners, and corners are where systems reveal themselves. When you meet it again in Part 5 it will fall apart into an infinite stack of sinusoids in a way that explains almost everything, and in Part 9 it will be the frequency a ghost comes back on. Ten milliseconds per cycle. Remember the number.</p>
+
+<div class="stamp">
+  <p>A signal is a number that varies over time, and the mathematics does not care what the number measures.</p>
+  <p>Four shapes carry the whole guide: the <strong>impulse</strong> (a clap, area 1), the <strong>step</strong> (switching on), the <strong>sinusoid</strong> (a pure tone), and the <strong>decaying exponential</strong> (anything that fades, gone in 5τ).</p>
+</div>

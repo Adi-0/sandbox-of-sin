@@ -1,0 +1,95 @@
+<p>Part 2 ended with a claim that ought to bother you: for an LTI system, one measurement is a complete description. Here is the measurement.</p>
+
+<p>Clap once — send in an impulse — and record what comes out. That recording is called the <span class="term">impulse response</span>, written h(t), and it is the single most important object in this guide. Everything from here to Part 11 is either a way of computing with h, a way of looking at h from a different angle, or a way of deciding what h should be.</p>
+
+<div data-fig="impulse-response"></div>
+
+<p>The upper panel of Figure 6 is the impulse response of the room we will use for the rest of the guide: a single decaying exponential, the fourth shape from Part 1. It has exactly one adjustable number, the time constant τ, and the slider sets it. This is the simplest room that is not a wire: <strong>it remembers, and it forgets at a steady rate.</strong></p>
+
+<p>The lower panel is what a real hall's clap looks like: the direct sound, then a scatter of distinct early reflections off the nearest surfaces, then a dense tail of thousands of overlapping reflections dying away. Look past the detail and the tail is the same decaying exponential, drawn in grey behind it. Our room and that hall differ by a factor of about a hundred and sixty in speed and not at all in kind.</p>
+
+<p>Press <em>the hall's clap</em> and you are listening to h(t) directly — that sound <em>is</em> the graph. Then press <em>dry, then in the hall</em>: three plucked notes on their own, a pause, and the same three notes as they would sound in that hall. Nothing about the notes was re-recorded. The second version was computed from the first version and the graph, by the procedure in the rest of this part.</p>
+
+<h2>Why one clap is enough</h2>
+
+<p>The argument is three lines long and you already have all of it.</p>
+
+<p>Time invariance says: if a clap now gives h(t), then a clap at time t₀ gives h(t − t₀). Same answer, moved along.</p>
+
+<p>Linearity says: if you clap twice, you get both answers added together. And if the second clap is twice as hard, its answer is twice as big.</p>
+
+<p>So a pair of claps is completely determined by h. Figure 7 is that sentence with a slider on it.</p>
+
+<div data-fig="two-claps"></div>
+
+<p>Drag the gap closed. Nothing new ever appears — the answer is always the same curve twice, sliding through itself. At zero gap the peak is exactly doubled, at 3 ms the second answer starts from an almost-empty room, and in between you get every shade of overlap. There is no gap setting at which the room does something it was not going to do.</p>
+
+<h2>Now do it with a million claps</h2>
+
+<p>Here is the leap, and it is the only genuinely clever step in the subject.</p>
+
+<p>Take any input signal at all. Chop it into very thin vertical slices. Each slice is a narrow spike — a clap, scaled by how tall the signal was there, arriving at that slice's moment. So <strong>any signal is a stream of claps of varying strength</strong>, and by the two promises, the output is the sum of a stream of h's: each one scaled by the input at that moment, each one shifted to start then.</p>
+
+<p>That sum has a name. It is called <span class="term">convolution</span>, and it is written with an asterisk.</p>
+
+<div class="eq">
+  <div class="eq__math">y(t)  =  x(t) ∗ h(t)  =  ∫ x(τ) · h(t − τ) dτ</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> Read it right to left. <code>h(t − τ)</code> is the room's answer to a clap that happened at time τ, evaluated now, at time t — so the term is "how much is left of what arrived at τ". <code>x(τ)</code> is how hard that clap was. Multiply them and you have one slice's contribution to what you are hearing now. The integral sign is an instruction to add up all the slices. τ runs over the past; t is now; the answer is one number, and you have to do the whole sum again for the next value of t.
+  </div>
+</div>
+
+<p>If that formula means nothing to you yet, good — it is not supposed to mean anything until you have watched it happen. Figure 8 is the formula, drawn.</p>
+
+<div data-fig="convolution-slider"></div>
+
+<p>The horizontal axis of the upper panel is not time. It is τ, <em>the past</em>, and the black line marked <b>t</b> is now. The blue rectangle is the input, sitting where it happened. The violet curve is h drawn <strong>backwards</strong>, with its beginning at the line marked t.</p>
+
+<p>That backwards curve is the part everyone stumbles over, and it is not a mathematical convention — it is a physical statement. The room weights the recent past heavily and the distant past hardly at all. So at the moment t, looking back over your shoulder, the weighting you should apply to what happened is: full strength at t itself, 37% for the stuff from one τ ago, almost nothing for anything older. That is h, reversed. Drag the slider and watch the mirrored curve sweep across the input, dragging its weighting with it.</p>
+
+<p>The shaded region is the product of the two curves — the input, weighted by how recently it arrived. Its <strong>area</strong> is one number: the output right now. The lower panel plots that number against t, drawn only as far as you have dragged.</p>
+
+<p>Four verbs, in order: <strong>flip, slide, multiply, add.</strong> That is convolution, and there is nothing else to it. When you can watch the shaded area grow while the pulse is arriving and shrink once it is over — and see the output curve below do exactly that — you have the mechanism.</p>
+
+<div class="check" data-check data-answer="0">
+  <div class="check__q">In Figure 8, set the slider past 4 ms — after the input pulse has ended. The output is not zero. Where is it coming from?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">From the room's memory: h still overlaps the pulse that already ended</button>
+    <button class="check__opt" type="button">From numerical error in the simulation</button>
+    <button class="check__opt" type="button">From the input, which has not really finished</button>
+  </div>
+  <div class="check__a">
+    From the memory. The mirrored h extends backwards from t, so even when nothing is arriving it still reaches back over a pulse that has ended and finds something there. <b>The output outlasts the input by about 5τ</b> — the same "five time constants and it is over" rule from Part 1, now telling you how long a system rings after you stop pushing it.
+  </div>
+</div>
+
+<h2>What convolution does to our square wave</h2>
+
+<p>Now put the recurring cast together: the 100 Hz square wave from Part 1, into the room from Figure 6.</p>
+
+<div data-fig="square-through-room"></div>
+
+<p>At τ = 0.1 ms the room is faster than anything in the signal and the square comes out essentially unchanged. Slide up to 1 ms and the corners round off. Keep going to 5 ms and the square wave has slumped into something closer to a triangle, and its peaks have shrunk to half their size.</p>
+
+<p>Two things to notice, because the whole of Part 5 grows out of them.</p>
+
+<p>First: <strong>the corners go first.</strong> The flat tops survive far longer than the vertical edges do. A room with a memory cannot follow a sudden change, because "sudden" is precisely what a memory smooths over.</p>
+
+<p>Second: the shape changed. Put a square wave in, get a not-square wave out. Hold on to that, because in Part 4 you are going to meet the one signal for which that never happens.</p>
+
+<p>Press the listen button and you can hear it: the same square wave, dry and then through the room, at four times the pitch so it fits through a laptop speaker. Dry is buzzy and bright. Through the room it is duller — the same note, with something taken off it.</p>
+
+<h2>The catch</h2>
+
+<p>Convolution is exactly right, and it is horrible.</p>
+
+<p>Every single output sample needs its own flip-slide-multiply-add over the entire past. For one second of CD audio — 44,100 samples — convolved with a one-second room, that is 44,100 multiplications per output sample, 44,100 times over: <strong>about 1.9 billion multiplications for one second of sound.</strong></p>
+
+<p>It is also nearly impossible to reason about. Look at Figure 9 and try to answer this: what would the output look like if the input were a square wave at 250 Hz instead? You cannot, not without doing the whole sum again. Convolution is a machine that produces correct answers and no insight whatsoever.</p>
+
+<p>So the rest of this guide is, in a real sense, a long search for a way not to do it. The search succeeds spectacularly — the same second of audio comes out at about fourteen million multiplications instead of 1.9 billion, and the answer arrives in a form you can read at a glance — but it takes two parts to set up. Part 4 finds the one signal a system cannot distort. Part 5 shows every other signal is made of that one.</p>
+
+<div class="stamp">
+  <p>Clap once and record the answer: that is the <strong>impulse response</strong> h(t), and for an LTI system it is a complete description.</p>
+  <p>Any input is a stream of scaled, shifted claps, so any output is a stream of scaled, shifted copies of h, added up. That sum is <strong>convolution</strong>: <strong>flip, slide, multiply, add</strong>. It is always correct, and it is always miserable.</p>
+</div>

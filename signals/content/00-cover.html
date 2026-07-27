@@ -1,0 +1,43 @@
+<div class="cover__hero">
+  <p class="cover__eyebrow">An interactive field guide · about 2 hours · 30 live figures · 11 parts and a workbench</p>
+  <h1 class="cover__title">Echo</h1>
+  <p class="cover__promise">Clap once in a room. What comes back tells you everything that room will ever do to any sound you make in it — and that one fact, taken seriously, is the whole of signals and systems.</p>
+</div>
+
+<p>That claim should sound too strong. A room is a complicated object: walls, furniture, a slightly open window, the shape of the ceiling. And yet, if you record the sound of one hand-clap, you can compute exactly what a violin will sound like in that room, or a voice, or a passing lorry — without ever bringing any of them into the building. Recording studios have sold this as a product for thirty years.</p>
+
+<p>It works because of two modest-sounding assumptions, and it stops working the moment either one fails. Getting from those two assumptions to the whole toolkit — convolution, Fourier, Laplace, filters, sampling, feedback — is what these eleven parts do, in order, without skipping.</p>
+
+<div class="index">
+  <div class="index__head"><span>The arc</span><span style="margin-left:auto">read in order — each part is built out of the one before</span></div>
+  <div id="index-mount"></div>
+</div>
+
+<h2>The whole story, in one paragraph</h2>
+
+<p>A <b>signal</b> is a number that varies (Part 1). A <b>system</b> is anything that turns one signal into another, and most systems are hopeless to analyse — but two modest promises, <b>linearity</b> and <b>time invariance</b>, rescue a small and spectacularly useful family of them (Part 2). For that family, one measurement suffices: clap once, record the answer, and you can predict the response to <em>any</em> input by adding up shifted copies of that answer. The adding-up is called <b>convolution</b> (Part 3). Convolution is correct and it is miserable, so we look for a shortcut and find one: there is exactly one signal shape a system cannot distort — the sinusoid, which is a spinning arrow seen edge-on (Part 4). Every other signal is a stack of those (Part 5), so a system can be described by what it does to each one, which turns the misery of Part 3 into simple multiplication (Part 6). Let the test tone decay as well as spin and the entire system collapses to a handful of points on a map — its <b>poles</b> — where distance means speed, angle means ringing, and one side of a line means the thing explodes (Part 7). Put the points where you want them and you have designed a <b>filter</b> (Part 8). Look at the signal only now and then and you learn what survives being measured, and what comes back as a ghost (Part 9). Then spend the whole toolkit on a radio station and a cruise control (Part 10), and count how few ideas were actually doing the work (Part 11).</p>
+
+<h2>What you need to know already</h2>
+
+<p>No background is assumed beyond arithmetic, ordinary algebra, and having seen a picture of a sine wave.</p>
+
+<p>Not calculus. Where an integral is genuinely needed — and it is, twice — you will get an area you can see and drag a slider through, not a rule to memorise. Where a derivative appears, it means "how fast this is changing right now" and nothing more. Not complex numbers: Part 4 builds them from a spinning arrow, because that is what they are. Not physics, not electronics, not programming.</p>
+
+<p>What is assumed is that you will actually turn the knobs. Every figure has one control and one lesson, and the lesson is meant to arrive within about ten seconds of playing. Reading past a figure without touching it is the one way to make this guide worse than a textbook.</p>
+
+<h2>How to read it</h2>
+
+<div class="chain">
+  <div class="card"><h4>The tab</h4>Every figure has a tab on its top edge naming which room the drawing is made in — <b>t</b> for time, <b>ω</b> for frequency, <b>s</b> for the pole map. Half of this subject is knowing which room you are standing in.</div>
+  <div class="card"><h4>The pens</h4>Four colours, fixed for the whole guide. Blue is always what goes in, orange is always what comes out, violet is always the system itself, green is always one pure tone.</div>
+  <div class="card"><h4>The ear</h4>Some figures have a <b>listen</b> button. Nothing is a recording — the sound is rendered on the spot by the same simulation drawing the curve above it.</div>
+  <div class="card"><h4>The bench</h4>At the end, a workbench with no guard rails: drag poles around a map and watch the response, the spectrum and the sound all move together.</div>
+</div>
+
+<div data-key></div>
+
+<div class="aside" data-label="One number set, all the way through">
+  Almost every figure uses the same cast: a <b>100 Hz square wave</b> as the test signal, and a room with a <b>1 ms</b> memory, whose corner sits at <b>1000 radians per second</b>. Sampling happens at <b>1 kHz</b>. These are not arbitrary — they are chosen so the arithmetic stays mental, and so that when a 900 Hz tone comes back as a ghost in Part 9, it lands exactly on the 100 Hz you have been staring at since Part 1.
+</div>
+
+<p style="margin-top:2rem"><a href="#/signals"><b>Start with Part 1 →</b></a></p>

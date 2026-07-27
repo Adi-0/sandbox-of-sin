@@ -1,0 +1,87 @@
+<p>Part 4 found the one signal a system handles gracefully. That would be a curiosity rather than a method, except for a fact discovered by Joseph Fourier in 1807 while trying to work out how heat spreads through a metal bar — a fact so aggressive that the leading mathematicians of the day refused to publish it for fifteen years.</p>
+
+<p><strong>Every repeating signal is a sum of sinusoids.</strong> Not approximately. Not for well-behaved signals only. Take any waveform that repeats — including one made entirely of vertical edges and flat lines, with not a curve anywhere in it — and it is a stack of pure tones at whole-number multiples of its repetition rate.</p>
+
+<p>That last part should sound impossible. Sines are smooth. A square wave has corners. Watch it happen.</p>
+
+<div data-fig="build-square"></div>
+
+<p>Figure 13 starts with a single 100 Hz sine — one green curve, and a blue sum sitting on top of it. Nudge the slider. The third harmonic at 300 Hz arrives and pushes the middle of each half flatter. The fifth flattens it further and steepens the edges. By the 21st the thing is unmistakably a square wave, built out of nothing but smooth curves at 100, 300, 500, 700 Hz and so on.</p>
+
+<p>Two things deserve your attention here.</p>
+
+<p>The first is what is <em>not</em> in the stack. There is no 200 Hz, no 400 Hz, no 250 Hz. A square wave's recipe contains only odd multiples of its own repetition rate, and this is a general pattern: <strong>a repeating signal can only contain whole-number multiples of its repetition rate</strong>, called its <span class="term">harmonics</span>. This is why a violin and a trumpet playing the same note sound different but agree completely on the note: same fundamental, different recipe above it.</p>
+
+<p>The second is the wobble at each edge, which never goes away. Push the slider to 41 harmonics and the flat parts get admirably flat, but the spike beside each jump stays at about 9% of the jump height and merely gets narrower. This is the <span class="term">Gibbs phenomenon</span>, it is a genuine property of the sum rather than an artefact of the drawing, and it is the reason a sharply band-limited digital audio system can produce a faint ring around a sharp transient.</p>
+
+<p>Press the listen button as you move the slider. The pitch never changes — the fundamental is always 100 Hz. What changes is the <em>brightness</em>, from a soft flute-like tone to a buzzy reed. You have just heard the difference between two instruments, and the difference was entirely in the recipe.</p>
+
+<h2>The recipe is a picture</h2>
+
+<p>Since the tones are always at multiples of the fundamental, you can write the recipe as a list: how much of the 1st, how much of the 3rd, how much of the 5th. Plotted against frequency, that list is called the <span class="term">spectrum</span>, and it is the single most useful drawing in this guide.</p>
+
+<div data-fig="spectrum"></div>
+
+<p>Figure 14 shows four waveforms and their recipes. Click through them and read the two panels as one sentence: <strong>sharper corners on the left, taller lines further to the right.</strong></p>
+
+<p>The sine has one line and nothing else — of course, it is one tone. The triangle has corners but no vertical edges, and its harmonics fall off as 1/n²: the ninth is 81 times smaller than the fundamental. The square and the sawtooth both have a genuine vertical edge, and both fall off only as 1/n: the ninth is a mere 9 times down. That factor of nine between the triangle and the square at one harmonic is the mathematical price of a vertical edge.</p>
+
+<p>Which means the sentence "the corners went first" from Part 3 was a statement about the spectrum all along. Rounding off a square wave's corners <em>is</em> reducing its high harmonics; there is no third thing happening. Part 6 makes that identity exact.</p>
+
+<div class="check" data-check data-answer="2">
+  <div class="check__q">A signal repeats 50 times a second. Which of these frequencies definitely cannot be in it?</div>
+  <div class="check__opts">
+    <button class="check__opt" type="button">50 Hz</button>
+    <button class="check__opt" type="button">150 Hz</button>
+    <button class="check__opt" type="button">75 Hz</button>
+  </div>
+  <div class="check__a">
+    75 Hz, because it is one and a half times the repetition rate. A 75 Hz component would take one and a half cycles to come back to where it started, so the "repeating signal" would not actually repeat every 20 ms — it would repeat every 40 ms instead. <b>Repetition rate and harmonic spacing are the same fact stated twice.</b>
+  </div>
+</div>
+
+<h2>What about signals that never repeat?</h2>
+
+<p>A hand-clap does not repeat. Neither does a spoken word, an earthquake, or a single heartbeat, and those are most of the signals anybody cares about. Fourier series, as stated, does not apply to any of them.</p>
+
+<p>The fix is one of the most elegant moves in mathematics, and it is entirely visual.</p>
+
+<div data-fig="series-to-transform"></div>
+
+<p>Figure 15 has a train of identical 1 ms pulses. The slider sets how far apart they are — and only that; the pulse itself never changes width. Watch the lower panel as you widen the gap.</p>
+
+<p>The dashed envelope <strong>does not move</strong>. Widening the gap does not change which frequencies matter; that was settled by the shape of one pulse. All that changes is how densely the frequency axis is sampled: at a 4 ms gap the lines sit 250 Hz apart, at 40 ms they are 25 Hz apart, and by 60 ms they are so crowded that the comb has visibly become the curve it was hanging from.</p>
+
+<p>Take the gap to infinity — one pulse, never repeated — and the lines merge completely. The recipe stops being a list and becomes a continuous curve. That curve is the <span class="term">Fourier transform</span>, and it is not a new idea; it is the Fourier series of a signal that has given up repeating.</p>
+
+<div class="eq">
+  <div class="eq__math">X(ω)  =  ∫ x(t) · e<sup>−jωt</sup> dt</div>
+  <div class="eq__why">
+    <b>Why it looks like this.</b> Take the signal, and multiply it by an arrow spinning backwards at rate ω. If the signal contains something turning at ω, the backwards spin cancels it out and leaves a steady arrow that adds up to something large. If it does not, the product keeps spinning and averages to nothing. The integral is just "add it all up and see if anything survives" — so the transform is a bank of detectors, one per frequency, each asking <em>how much of this is turning at my rate?</em>
+  </div>
+</div>
+
+<h2>The seesaw you cannot get off</h2>
+
+<p>Look at Figure 15's envelope once more: a 1 ms pulse has its first null at 1 kHz. That is not a coincidence, and it generalises into the most consequential trade-off in the subject.</p>
+
+<div data-fig="uncertainty"></div>
+
+<p>Drag the width in Figure 16. Narrow the pulse in time and its spectrum spreads out; widen it and the spectrum narrows. The product of the two widths is pinned near 1 and no amount of cleverness will move it. <strong>A signal cannot be both brief and pure.</strong></p>
+
+<div class="chain">
+  <div class="card"><h4>1 ms</h4>pulse → 1 kHz wide</div>
+  <div class="card"><h4>0.1 ms</h4>pulse → 10 kHz wide</div>
+  <div class="card"><h4>1 µs</h4>pulse → 1 MHz wide</div>
+</div>
+
+<p>This is why radar, which needs brief pulses to measure distance precisely, is legally forced into wide chunks of spectrum. It is why a click on a recording cannot be notched out without gouging a hole in the music. It is why a piano tuner cannot judge the pitch of a very short note. And in Part 8, read backwards, it will tell you the price of a filter with a sharp edge: <strong>sharp in frequency means long in time</strong>, and a filter that cuts sharply must ring.</p>
+
+<div class="aside">
+  The same relationship, with the same algebra, is Heisenberg's uncertainty principle. Position and momentum in quantum mechanics are a Fourier pair exactly as time and frequency are here, and the ħ/2 in the physics is a units conversion on top of the inequality you just dragged a slider through. This is a real connection, not a metaphor — though a physicist would want the widths defined more carefully than "roughly the main lobe".
+</div>
+
+<div class="stamp">
+  <p>Every repeating signal is a stack of <strong>harmonics</strong> — sinusoids at whole-number multiples of its repetition rate. The list of how much of each is its <strong>spectrum</strong>. Sharp corners mean strong high harmonics.</p>
+  <p>Stop repeating and the lines merge into a curve: the <strong>Fourier transform</strong>. And you cannot cheat the seesaw — brief in time is always wide in frequency.</p>
+</div>
