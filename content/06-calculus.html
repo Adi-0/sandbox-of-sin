@@ -1,0 +1,272 @@
+<p class="eyebrow">
+  <span>Part 6</span>
+  <span class="spec">NCEES 1.E</span>
+  <span>32 minute read</span>
+</p>
+
+<h1>Calculus</h1>
+
+<p class="lede">Two questions, and everything else is technique. How fast is this
+changing right now? And how much has piled up so far? The astonishing part is
+that those two questions turn out to be inverses of each other.</p>
+
+<h2>6.1 The derivative is a slope you cannot measure directly</h2>
+
+<p>Slope is easy when you have two points: rise over run, as in Part 3. But
+"how fast is this changing <em>right now</em>" asks for the slope at a single
+point, and one point has no run.</p>
+
+<p>The way out is to measure the slope between your point and a nearby one, then
+move the nearby one closer and watch what the answer settles down to. That
+settling-down value is the <span class="term">limit</span>, and the limit of the
+slope is the <span class="term">derivative</span>.</p>
+
+<f-plate no="6.1" title="The derivative, defined" stamp="handbook"
+  caption="You will almost never use this definition to compute anything — the
+  rules below are faster. <b>It is here because it says what a derivative
+  is</b>, and the notation in every later part assumes you know.">
+  <f-row tex="f'(x) = \frac{dy}{dx} = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}"
+         gloss="Rise over run between two points, with the second point slid onto the first. The fraction is a slope right up until the moment the limit is taken."></f-row>
+</f-plate>
+
+<p>Plate 17 does exactly that, on a curve you already know: the top half of the
+circle <span data-tex="x^2 + y^2 = 25">x² + y² = 25</span> from Part 3. Slide
+<span data-tex="h">h</span> towards zero and watch the number the slope settles
+on.</p>
+
+<div data-figure="secantTangent"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Third time, same number</span>
+  <p style="margin-bottom:0">It settles on <b>−0.750</b>. In Part 3 we got that
+  tangent slope from the negative-reciprocal rule. In Part 4 the gradient gave the
+  same perpendicular direction. Now a limit of secant slopes produces it again,
+  with no geometry involved at all. <b>Three routes sharing no machinery,
+  arriving at −3/4.</b> That is what it feels like when a thing is true rather
+  than merely remembered.</p>
+</div>
+
+<h2>6.2 The rules that replace the definition</h2>
+
+<p>Four rules cover essentially every derivative on this exam. Two of them you
+should know without thinking; the other two are in the handbook and worth
+recognising rather than reciting.</p>
+
+<f-plate no="6.2" title="The four derivative rules" stamp="handbook"
+  caption="The chain rule is the one that separates people who can do this from
+  people who cannot. <b>Its signal is a function inside another function</b> —
+  anything of the form <span class='math'>sin(3x)</span>,
+  <span class='math'>e^{-2t}</span>, <span class='math'>(1-x)^3</span> — and
+  forgetting the inner derivative is the most common calculus error on the exam.">
+  <f-row tex="\frac{d}{dx}x^n = nx^{n-1}" name="power rule"
+         gloss="Bring the exponent down, reduce it by one. <b>Know cold.</b>"></f-row>
+  <f-row tex="\frac{d}{dx}\big[u\,v\big] = u'v + uv'" name="product rule"
+         gloss="Differentiate each factor in turn and add. Note it is <em>not</em> <span class='math'>u′v′</span>."></f-row>
+  <f-row tex="\frac{d}{dx}\left[\frac{u}{v}\right] = \frac{u'v - uv'}{v^2}" name="quotient rule"
+         gloss="The order in the numerator matters — the minus sign makes it non-symmetric. Bottom squared underneath."></f-row>
+  <f-row tex="\frac{d}{dx}f\big(g(x)\big) = f'\big(g(x)\big)\cdot g'(x)" name="chain rule"
+         gloss="Differentiate the outside, leave the inside alone, then <b>multiply by the derivative of the inside</b>. <b>Know cold.</b>"></f-row>
+</f-plate>
+
+<p>And the short list of specific derivatives worth having in memory:</p>
+
+<f-plate no="6.3" title="Derivatives you should not look up" stamp="know"
+  caption="Every one of these is in the handbook. They are here anyway because
+  looking up <span class='math'>d/dx\,\sin x</span> costs fifteen seconds you do
+  not have, and because <b>the sine and cosine entries are only true in
+  radians</b>.">
+  <f-row tex="\frac{d}{dx}\sin x = \cos x \qquad \frac{d}{dx}\cos x = -\sin x"
+         gloss="Note the <b>minus</b> on cosine. Radians only — this is where the degree-mode trap does its damage."></f-row>
+  <f-row tex="\frac{d}{dx}e^x = e^x \qquad \frac{d}{dx}\ln x = \frac{1}{x}"
+         gloss="The exponential is its own derivative, which is exactly why it turns up in every circuit that charges or decays."></f-row>
+  <f-row tex="\frac{d}{dx}\tan x = \sec^2 x \qquad \frac{d}{dx}a^x = a^x \ln a"
+         gloss="The second explains why <span class='math'>e</span> is the natural base: it is the one where <span class='math'>ln a</span> equals 1 and the clutter disappears."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>implicit differentiation, and the cast one more time</em></h4>
+  <div class="worked-body">
+    <p>Find <span data-tex="dy/dx">dy/dx</span> for
+    <span data-tex="x^2 + y^2 = 25">x² + y² = 25</span> at the point
+    <span data-tex="(3, 4)">(3, 4)</span>.</p>
+    <ol class="steps">
+      <li>You could solve for <span data-tex="y">y</span> first, but you do not
+        have to. Differentiate both sides with respect to
+        <span data-tex="x">x</span>, treating <span data-tex="y">y</span> as a
+        function of <span data-tex="x">x</span> — which means the
+        <span data-tex="y^2">y²</span> term needs the <b>chain rule</b>:
+        <span data-tex="2x + 2y\frac{dy}{dx} = 0" data-display>2x + 2y dy/dx = 0</span>
+        The <span data-tex="dy/dx">dy/dx</span> is the derivative of the inside.
+        Leaving it out is the error this technique exists to catch.</li>
+      <li>Solve:
+        <span data-tex="\frac{dy}{dx} = -\frac{x}{y}" data-display>dy/dx = −x/y</span></li>
+      <li>At <span data-tex="(3, 4)">(3, 4)</span>:
+        <span data-tex="-\frac{3}{4} = -0.75">−3/4 = −0.75</span>.
+        <b>The tangent slope from Part 3, derived from scratch.</b></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Notice what
+    <span data-tex="dy/dx = -x/y">dy/dx = −x/y</span> says in general: the tangent
+    slope is the negative reciprocal of <span data-tex="y/x">y/x</span>, which is
+    the slope of the radius. Calculus rediscovered the perpendicularity rule
+    without being told it.</p>
+  </div>
+</div>
+
+<h2>6.3 What derivatives are for: maxima, minima, and rates</h2>
+
+<p>At a peak or a valley of a smooth curve, the tangent is horizontal. So the
+recipe for optimisation is short: set the derivative to zero and solve. Those
+solutions are the <span class="term">critical points</span>.</p>
+
+<p>To tell a peak from a valley, look at the second derivative — the rate at
+which the slope itself is changing.</p>
+
+<div data-figure="critical"></div>
+
+<f-plate no="6.4" title="Classifying a critical point" stamp="handbook"
+  caption="On a <b>closed interval</b> the exam usually wants the largest and
+  smallest values overall, and those can occur at the endpoints rather than at
+  any critical point. <b>Always evaluate the endpoints too</b> — that omission
+  is what the &ldquo;on the interval [−2, 2]&rdquo; wording is testing.">
+  <f-row tex="f'(x) = 0 \;\Rightarrow\; \text{critical point}" gloss="Horizontal tangent: a peak, a valley, or a flat spot on the way past."></f-row>
+  <f-row tex="f''(x) < 0 \;\Rightarrow\; \text{maximum} \qquad f''(x) > 0 \;\Rightarrow\; \text{minimum}"
+         gloss="Concave down holds water upside-down — a peak. Concave up is a bowl — a valley."></f-row>
+  <f-row tex="f''(x) = 0 \;\Rightarrow\; \text{possible inflection point}"
+         gloss="Where the curve changes which way it bends. Not automatically a maximum or a minimum."></f-row>
+</f-plate>
+
+<h2>6.4 The integral is an accumulation</h2>
+
+<p>Now the second question. Given a rate, how much has accumulated? If a tap
+runs at a varying rate, how much water is in the bucket?</p>
+
+<p>Slice the time into thin strips, multiply rate by width for each strip to get
+a small amount, and add them all up. Make the strips infinitely thin and the sum
+becomes the <span class="term">definite integral</span> — which is why the
+integral sign is a stretched letter S, for <em>sum</em>.</p>
+
+<p>Geometrically: <b>the definite integral is the area under the curve.</b></p>
+
+<div class="note payoff">
+  <span class="note-tag">The killer comparison</span>
+  <p style="margin-bottom:0">Adding up ten thousand rectangles to get an area is
+  an afternoon of arithmetic and still only an approximation. The Fundamental
+  Theorem replaces the whole procedure with: <em>find any function whose
+  derivative is your curve, evaluate it at the two ends, subtract.</em>
+  <b>Two evaluations instead of ten thousand rectangles</b>, and the answer is
+  exact.</p>
+</div>
+
+<p>Plate 18 shows the two halves of that claim agreeing. Drag the upper limit and
+watch the shaded area grow while a second curve records the running total.</p>
+
+<div data-figure="accumulate"></div>
+
+<f-plate no="6.5" title="The Fundamental Theorem of Calculus" stamp="handbook"
+  caption="Read the first line as the definition of what integration <em>is</em>
+  and the second as how you actually do it. <b>The constant of integration matters
+  only for indefinite integrals</b> — in a definite integral it appears twice and
+  cancels itself.">
+  <f-row tex="\int_a^b f(x)\,dx = F(b) - F(a), \quad \text{where } F'(x) = f(x)"
+         gloss="Find an antiderivative, evaluate at both ends, subtract. That is the whole method."></f-row>
+  <f-row tex="\int x^n dx = \frac{x^{n+1}}{n+1} + C, \quad n \ne -1"
+         gloss="The power rule run backwards. The exception <span class='math'>n = −1</span> is why <span class='math'>∫dx/x = ln|x| + C</span> exists as its own case."></f-row>
+  <f-row tex="\int \sin x\,dx = -\cos x + C \qquad \int e^{ax} dx = \frac{e^{ax}}{a} + C"
+         gloss="Watch the minus on the sine, and the <span class='math'>1/a</span> — that is the chain rule being undone."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · area between two curves</span>
+  <p style="margin-bottom:0">To find the area <em>between</em> two curves,
+  integrate <b>upper minus lower</b> between their intersection points. Two
+  things go wrong: people forget to find the intersections first, and people
+  subtract in the wrong order and report a negative area. <b>If your area comes
+  out negative, you subtracted backwards</b> — the magnitude is still right.</p>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>area between two curves</em></h4>
+  <div class="worked-body">
+    <p>Find the area bounded by <span data-tex="y = 8 - x^2">y = 8 − x²</span>
+    and <span data-tex="y = -2 + x^2">y = −2 + x²</span>.</p>
+    <ol class="steps">
+      <li>Find where they meet — you cannot integrate before you know the limits:
+        <span data-tex="8 - x^2 = -2 + x^2 \;\Rightarrow\; 10 = 2x^2 \;\Rightarrow\; x = \pm\sqrt{5}" data-display>x = ±√5</span></li>
+      <li>Between those points the first curve is on top. Integrate the
+        difference:
+        <span data-tex="\int_{-\sqrt{5}}^{\sqrt{5}} \big[(8 - x^2) - (-2 + x^2)\big] dx = \int_{-\sqrt{5}}^{\sqrt{5}} (10 - 2x^2)\,dx" data-display>∫(10 − 2x²)dx</span></li>
+      <li>Antidifferentiate and evaluate. The integrand is even and the limits are
+        symmetric, so integrate from 0 and double — half the arithmetic and half
+        the chances of a sign error:
+        <span data-tex="2\left[10x - \frac{2x^3}{3}\right]_0^{\sqrt{5}} = 2\left(10\sqrt{5} - \frac{2 \cdot 5\sqrt{5}}{3}\right) = \frac{40\sqrt{5}}{3} \approx 29.8" data-display>≈ 29.8</span>
+        <b>About 30.</b></li>
+    </ol>
+  </div>
+</div>
+
+<h2>6.5 More than one variable</h2>
+
+<p>A function can depend on several things at once — temperature depends on
+position in all three directions. A <span class="term">partial derivative</span>
+asks how the function changes with one variable while <em>every other variable
+is held still</em>. It is written <span data-tex="\partial f/\partial x">∂f/∂x</span>,
+and computing one is easier than it sounds: treat the other variables as
+constants and differentiate normally.</p>
+
+<div data-figure="partials"></div>
+
+<p>You have already used these. The gradient in Part 4 is nothing but the three
+partial derivatives collected into a vector — which is why a scalar field goes in
+and a vector comes out.</p>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the three that cost the most marks</span>
+  <p><b>1. The chain rule's inner derivative.</b>
+  <span class="math" data-tex="\frac{d}{dx}\sin 3x = 3\cos 3x">d/dx sin3x = 3cos3x</span>,
+  not <span class="math" data-tex="\cos 3x">cos3x</span>. Every missing factor of
+  3 is this.</p>
+  <p><b>2. Degrees.</b> <span class="math" data-tex="\frac{d}{dx}\sin x = \cos x">d/dx sinx = cosx</span>
+  is only true in radians. Calculus never uses degrees.</p>
+  <p style="margin-bottom:0"><b>3. Endpoints.</b> A question asking for the
+  maximum <em>on an interval</em> wants you to check the ends as well as the
+  critical points. The answer is frequently at an end.</p>
+</div>
+
+<h2>6.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>The power rule, forwards and backwards — differentiating and integrating
+        <span data-tex="x^n">xⁿ</span>.</li>
+    <li>The chain rule, and the habit of asking "is there a function inside
+        another function?" before differentiating anything.</li>
+    <li><span data-tex="\frac{d}{dx}\sin x = \cos x">d/dx sin x = cos x</span>,
+        <span data-tex="\frac{d}{dx}\cos x = -\sin x">d/dx cos x = −sin x</span>,
+        <span data-tex="\frac{d}{dx}e^x = e^x">d/dx eˣ = eˣ</span>,
+        <span data-tex="\frac{d}{dx}\ln x = 1/x">d/dx ln x = 1/x</span>.</li>
+    <li><span data-tex="f'=0">f′=0</span> locates critical points;
+        <span data-tex="f''">f″</span> tells you which kind; endpoints must be
+        checked separately.</li>
+    <li>A definite integral is an area, and is computed as
+        <span data-tex="F(b) - F(a)">F(b) − F(a)</span>.</li>
+    <li>Area between curves is upper minus lower, between the intersections.</li>
+    <li>A partial derivative holds the other variables still. Nothing more.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A derivative is the limiting slope of a shrinking secant — the answer to
+  "how fast, right now." An integral is the limiting sum of shrinking strips —
+  the answer to "how much, in total." The Fundamental Theorem says they undo each
+  other, which converts an infinite sum into two evaluations and a subtraction.</p>
+  <p>Set the derivative to zero to find peaks and valleys, use the second
+  derivative to tell them apart, and check the endpoints because the exam is
+  counting on you not to.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"calculus","title":"Part 6 · Calculus","topics":["derivative-eval","chain-rule","critical-points","definite-integral","indefinite-integral","partial-derivative"],"count":7}'></div>
+
+<div data-reflex='{"only":["calculus","linear-algebra"],"count":6,"title":"Handbook Reflex · Parts 5–6"}'></div>

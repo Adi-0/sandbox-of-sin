@@ -82,7 +82,10 @@ function lex(src) {
     } else if (c === "{" || c === "}" || c === "^" || c === "_" || c === "&") {
       out.push({ t: c }); i++;
     } else if (/\s/.test(c)) {
-      i++;                                   // TeX eats whitespace
+      // TeX eats whitespace between atoms, but \text{} must keep it, so the
+      // token survives here and is discarded by the parser instead
+      while (i < src.length && /\s/.test(src[i])) i++;
+      out.push({ t: "ws" });
     } else if (/[0-9]/.test(c)) {
       const m = /^[0-9]+(?:\.[0-9]+)?/.exec(src.slice(i));
       out.push({ t: "num", v: m[0] }); i += m[0].length;
@@ -106,6 +109,7 @@ function parse(tokens) {
     const items = [];
     while (p < tokens.length) {
       const tk = peek();
+      if (tk.t === "ws") { eat(); continue; }
       if (tk.t === "}") break;
       if (stopAt && tk.t === "cmd" && stopAt.includes(tk.v)) break;
       if (tk.t === "&" || (tk.t === "cmd" && tk.v === "\\")) break;
@@ -114,8 +118,23 @@ function parse(tokens) {
     return { k: "row", items };
   }
 
+  /** Everything up to the matching brace, verbatim, spaces included. */
+  function parseTextArg() {
+    if (peek()?.t !== "{") return { k: "raw", v: String(eat()?.v ?? "") };
+    eat();
+    let out = "", depth = 1;
+    while (p < tokens.length) {
+      const tk = eat();
+      if (tk.t === "{") { depth++; out += "{"; continue; }
+      if (tk.t === "}") { if (--depth === 0) break; out += "}"; continue; }
+      out += tk.t === "ws" ? " " : (tk.v ?? "");
+    }
+    return { k: "raw", v: out };
+  }
+
   /** A braced argument, a single token, or an empty row. */
   function parseArg() {
+    while (peek()?.t === "ws") eat();
     const tk = peek();
     if (!tk) return { k: "row", items: [] };
     if (tk.t === "{") { eat(); const g = parseGroup(); if (peek()?.t === "}") eat(); return g; }
@@ -141,6 +160,7 @@ function parse(tokens) {
   }
 
   function parseBase() {
+    while (peek()?.t === "ws") eat();
     const tk = eat();
     if (!tk) return { k: "row", items: [] };
 
@@ -181,7 +201,7 @@ function parse(tokens) {
       return { k: "accent", mark: ACCENTS[v].mark, say: ACCENTS[v].say, body: parseArg() };
     if (v in COLORS) return { k: "color", cls: COLORS[v], body: parseArg() };
     if (v === "text" || v === "mathrm" || v === "operatorname")
-      return { k: v === "text" ? "text" : "up", body: parseArg() };
+      return { k: v === "text" ? "text" : "up", body: parseTextArg() };
     if (v === "left" || v === "right") {
       const d = eat();
       const ch = d ? (d.t === "cmd" ? (d.v === "|" ? "|" : SYMS[d.v] || d.v) : d.v) : ".";
@@ -209,6 +229,7 @@ function parse(tokens) {
     while (p < tokens.length) {
       const tk = peek();
       if (tk.t === "cmd" && tk.v === "end") { eat(); if (peek()?.t === "{") { eat(); while (peek() && peek().t !== "}") eat(); if (peek()) eat(); } break; }
+      if (tk.t === "ws") { eat(); continue; }
       if (tk.t === "&") { eat(); rows[rows.length - 1].push({ k: "row", items: [] }); continue; }
       if (tk.t === "cmd" && tk.v === "\\") { eat(); rows.push([]); continue; }
       const cur = rows[rows.length - 1];
@@ -269,6 +290,7 @@ function height(n) {
   if (!n || typeof n !== "object") return 1;
   switch (n.k) {
     case "row": return Math.max(1, ...n.items.map(height));
+    case "raw": return 1;
     case "frac": return 1 + Math.max(height(n.num), height(n.den)) * 0.9;
     case "sqrt": return height(n.rad) * 1.15;
     case "matrix": return Math.max(1.6, n.rows.length * 1.1);
@@ -307,6 +329,7 @@ function render(n) {
   if (!n) return "";
   switch (n.k) {
     case "row":   return renderRow(n.items);
+    case "raw":   return esc(n.v);
     case "primed":
       return render(n.base) + `<sup>${"′".repeat(n.n)}</sup>`;
     case "num":   return `<span class="n">${esc(n.v)}</span>`;
@@ -408,6 +431,7 @@ function speak(n) {
   if (!n) return "";
   switch (n.k) {
     case "row": return n.items.map(speak).join(" ").replace(/\s+/g, " ").trim();
+    case "raw": return n.v;
     case "sym": return SPEAK_SYM[n.v] ?? n.v;
     case "num": case "var": case "punct": return n.v;
     case "op": return SPEAK_OP[n.v] || n.v;
