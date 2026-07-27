@@ -1,0 +1,203 @@
+<p class="eyebrow">
+  <span>Part 8</span>
+  <span class="spec">NCEES 1.C</span>
+  <span>17 minute read</span>
+</p>
+
+<h1>Discrete Mathematics</h1>
+
+<p class="lede">Everything so far has been continuous — curves, fields, smooth
+change. This part is about things you can count, and it is the mathematics the
+<em>Computer</em> half of this exam runs on.</p>
+
+<h2>8.1 Sets, and the two operations</h2>
+
+<p>A <span class="term">set</span> is a collection with no duplicates and no
+order. Two operations do nearly all the work: <span class="term">union</span>
+(<span data-tex="A \cup B">A ∪ B</span>, everything in either) and
+<span class="term">intersection</span> (<span data-tex="A \cap B">A ∩ B</span>,
+only what is in both).</p>
+
+<f-plate no="8.1" title="Sets and counting them" stamp="handbook"
+  caption="The first line is inclusion–exclusion, and the reason it exists is
+  the one thing to remember: <b>adding two sets double-counts their overlap</b>,
+  so you subtract it back once. Nearly every set-counting question on this exam
+  is that sentence.">
+  <f-row tex="|A \cup B| = |A| + |B| - |A \cap B|" name="inclusion–exclusion"
+         gloss="Count both, then remove the overlap you counted twice."></f-row>
+  <f-row tex="\overline{A \cup B} = \overline{A} \cap \overline{B} \qquad \overline{A \cap B} = \overline{A} \cup \overline{B}"
+         name="De Morgan's laws"
+         gloss="Negating flips union into intersection and back. <b>The same law appears in Digital Systems as NAND and NOR</b> — it is one fact, not two."></f-row>
+</f-plate>
+
+<h2>8.2 Counting: does order matter?</h2>
+
+<p>Almost every counting question reduces to one decision, and getting it wrong
+is worth a whole factorial.</p>
+
+<ul>
+  <li>A <span class="term">permutation</span> counts arrangements where
+      <b>order matters</b> — first, second, third are different outcomes.</li>
+  <li>A <span class="term">combination</span> counts selections where
+      <b>order does not matter</b> — a committee is the same committee whichever
+      way you list its members.</li>
+</ul>
+
+<f-plate no="8.2" title="Permutations and combinations" stamp="handbook"
+  caption="The only difference is the <span class='math' data-tex='r!'>r!</span>
+  underneath. It is there because a combination lumps together all
+  <span class='math'>r!</span> orderings of the same selection and calls them one
+  thing. <b>Combinations are always the smaller number.</b>">
+  <f-row tex="P(n, r) = \frac{n!}{(n-r)!}" name="permutation · order matters"
+         gloss="Fill r slots from n options: n choices, then n−1, then n−2, and so on."></f-row>
+  <f-row tex="C(n, r) = \binom{n}{r} = \frac{n!}{r!\,(n-r)!}" name="combination · order does not"
+         gloss="The same count, divided by the <span class='math'>r!</span> ways of shuffling a selection you already made."></f-row>
+</f-plate>
+
+<p>Plate 23 makes the division visible. Turn the knob and watch the slot diagram
+fill.</p>
+
+<div data-figure="counting"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The killer number</span>
+  <p style="margin-bottom:0">Choose 3 components from a bin of 10. If you are
+  assigning them to three <em>labelled</em> positions, there are
+  <b>720</b> ways. If you are just grabbing three, there are <b>120</b>. The
+  factor between them is <span class="math" data-tex="3! = 6">3! = 6</span> —
+  <b>so misreading this one word puts your answer out by 600%</b>, and both
+  numbers will be sitting there among the four options.</p>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · finding the word that decides it</span>
+  <p style="margin-bottom:0">Read the stem for the giveaway.
+  <b>"Arrange", "order", "sequence", "first / second / third", "password", "line
+  up"</b> → permutation. <b>"Choose", "select", "committee", "team", "subset",
+  "sample"</b> → combination. If the same three items in a different order would
+  count as a different answer, it is a permutation.</p>
+</div>
+
+<h2>8.3 Logic, and where it reappears</h2>
+
+<p>A <span class="term">proposition</span> is a statement that is either true or
+false. Combine them with AND, OR and NOT and you can settle any question in this
+topic with a <span class="term">truth table</span> — write out every combination
+of inputs and evaluate. For <span data-tex="n">n</span> inputs there are
+<span data-tex="2^n">2ⁿ</span> rows, which is why nobody does this by hand past
+about four.</p>
+
+<f-plate no="8.3" title="Logical equivalences worth knowing" stamp="know"
+  caption="The implication row is the one that catches people. <b>&ldquo;If p
+  then q&rdquo; is false in exactly one case</b> — p true and q false. An
+  implication with a false premise is <em>true</em>, which feels wrong and is not.">
+  <f-row tex="p \Rightarrow q \;\equiv\; \neg p \lor q" name="implication"
+         gloss="Either the premise fails, or the conclusion holds. Only true-then-false makes the whole thing false."></f-row>
+  <f-row tex="p \Rightarrow q \;\equiv\; \neg q \Rightarrow \neg p" name="contrapositive"
+         gloss="Always equivalent to the original — this is the basis of proof by contradiction."></f-row>
+  <f-row tex="\neg(p \land q) \;\equiv\; \neg p \lor \neg q" name="De Morgan, again"
+         gloss="The set law from Form 8.1, wearing logic notation. Digital Systems will hand it to you a third time as gate equivalences."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the converse is not the contrapositive</span>
+  <p style="margin-bottom:0">From
+  <span class="math" data-tex="p \Rightarrow q">p ⇒ q</span>, the
+  <b>contrapositive</b> <span class="math" data-tex="\neg q \Rightarrow \neg p">¬q ⇒ ¬p</span>
+  is always equally true. The <b>converse</b>
+  <span class="math" data-tex="q \Rightarrow p">q ⇒ p</span> is a different claim
+  and need not be true at all. "If it is raining, the ground is wet" does not
+  mean "if the ground is wet, it is raining." Exam questions in this topic are
+  usually testing exactly that distinction.</p>
+</div>
+
+<h2>8.4 Graphs, and a matrix you have already met</h2>
+
+<p>A <span class="term">graph</span> is a set of <span class="term">vertices</span>
+joined by <span class="term">edges</span> — a network. Routing tables, circuit
+topologies, state machines and dependency chains are all graphs, which is why
+this appears on an exam for electrical and computer engineers.</p>
+
+<p>The vocabulary is small. The <span class="term">degree</span> of a vertex is
+how many edges touch it. A graph is <span class="term">connected</span> if you
+can get from any vertex to any other. A <span class="term">path</span> visits
+vertices without repeating; a <span class="term">cycle</span> is a path that
+returns to where it started.</p>
+
+<p>And there is one fact worth carrying, because it is instant and the exam likes
+it:</p>
+
+<f-plate no="8.4" title="The handshake lemma" stamp="know"
+  caption="Every edge has two ends, so adding up all the degrees counts every
+  edge exactly twice. <b>An immediate consequence: the number of odd-degree
+  vertices in any graph is always even</b> — which settles several exam questions
+  on its own.">
+  <f-row tex="\sum_{v} \deg(v) = 2|E|" name="handshake lemma"
+         gloss="Total degree is twice the edge count, in every graph, always."></f-row>
+</f-plate>
+
+<p>A graph can also be written as a matrix. Put a 1 at row
+<span data-tex="i">i</span>, column <span data-tex="j">j</span> when vertices
+<span data-tex="i">i</span> and <span data-tex="j">j</span> are joined, and 0
+otherwise: that is the <span class="term">adjacency matrix</span>. Click the
+edges in Plate 24 and watch it fill in.</p>
+
+<div data-figure="graphMatrix"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Part 5 comes back</span>
+  <p style="margin-bottom:0">The adjacency matrix is a real matrix, and matrix
+  multiplication means something here: <b>entry
+  <span class="math" data-tex="(i, j)">(i,j)</span> of
+  <span class="math" data-tex="A^2">A²</span> counts the two-step routes from
+  <span class="math" data-tex="i">i</span> to
+  <span class="math" data-tex="j">j</span></b>. The row-dot-column rule from
+  Part 5 is doing exactly what it looks like — checking every intermediate
+  vertex and counting the ones that connect through.</p>
+</div>
+
+<h2>8.5 Recurrence relations</h2>
+
+<p>A <span class="term">recurrence relation</span> defines each term of a
+sequence using earlier ones — the discrete cousin of a differential equation, and
+solved the same way. For a linear recurrence with constant coefficients, guess
+<span data-tex="y_k = r^k">y_k = rᵏ</span>, substitute, and you get a
+characteristic equation exactly as in Part 7.</p>
+
+<p>The FE exam mostly asks you to verify a proposed solution rather than derive
+one, which is a gift: <b>substitute each option into the recurrence and see which
+survives</b>. That is four substitutions against one derivation, and it cannot go
+wrong.</p>
+
+<h2>8.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Order matters → permutation
+        <span data-tex="n!/(n-r)!">n!/(n−r)!</span>. Order does not →
+        combination, the same thing over <span data-tex="r!">r!</span>.</li>
+    <li>Combinations are always smaller. If your "choose" answer is bigger than
+        your "arrange" answer, you have them backwards.</li>
+    <li><span data-tex="|A \cup B| = |A| + |B| - |A \cap B|">|A∪B| = |A|+|B|−|A∩B|</span>.</li>
+    <li>De Morgan, in all three costumes: sets, logic, and logic gates.</li>
+    <li>The contrapositive is always true; the converse need not be.</li>
+    <li><span data-tex="\sum \deg(v) = 2|E|">Σdeg(v) = 2|E|</span>, so odd-degree
+        vertices always come in pairs.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Counting questions turn on one word: whether order matters. Permutation if
+  it does, combination if it does not, and the two differ by exactly
+  <span data-tex="r!">r!</span>.</p>
+  <p>De Morgan's laws are one fact appearing in three notations. And a graph is a
+  matrix in disguise, which means the machinery from Part 5 applies to networks
+  without any translation.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"discrete","title":"Part 8 · Discrete mathematics","topics":["perm-comb","set-count","logic-equiv","graph-degree"],"count":6}'></div>
+
+<div data-reflex='{"only":["discrete","odes"],"count":6,"title":"Handbook Reflex · Parts 7–8"}'></div>
