@@ -33,8 +33,12 @@ UNSUPPORTED = re.compile(r'^export\s+default|^export\s*\{|^import\s+\*|^import\s
 
 
 def resolve(base: str, spec: str) -> str:
-    """Resolve a relative specifier against the importing module's path."""
-    return str((Path(base).parent / spec).resolve().relative_to(ROOT)).replace("\\", "/")
+    """Resolve a relative specifier against the importing module's path.
+
+    Anchored to ROOT rather than the process's working directory, so this
+    works when run from anywhere: `python3 /path/to/build.py`.
+    """
+    return str((ROOT / base).parent.joinpath(spec).resolve().relative_to(ROOT)).replace("\\", "/")
 
 
 def collect(entry: str):
