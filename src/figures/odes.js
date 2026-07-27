@@ -224,7 +224,7 @@ function damping() {
   const row = el("div", {
     style: {
       display: "grid", gap: "var(--s3)", width: "100%", alignItems: "center",
-      gridTemplateColumns: "minmax(11rem, 1fr) minmax(13rem, 1.35fr)",
+      gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 15rem), 1fr))",
     },
   }, p.root, q.root);
 

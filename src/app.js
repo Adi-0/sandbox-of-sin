@@ -75,11 +75,18 @@ async function route() {
     text: "Loading…", style: { color: "var(--faint)", fontSize: "var(--t-small)" },
   }));
 
+  const path = `content/${String(part.n).padStart(2, "0")}-${part.id}.html`;
   let html;
   try {
-    const res = await fetch(`content/${String(part.n).padStart(2, "0")}-${part.id}.html`, { cache: "no-cache" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    html = await res.text();
+    // build.py inlines every chapter here, so the single-file bundle needs no
+    // server and no network at all
+    if (window.__FE_CONTENT && window.__FE_CONTENT[path] != null) {
+      html = window.__FE_CONTENT[path];
+    } else {
+      const res = await fetch(path, { cache: "no-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      html = await res.text();
+    }
   } catch (err) {
     clear(reading);
     reading.appendChild(el("div.noscript-note", {

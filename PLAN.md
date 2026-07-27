@@ -139,19 +139,58 @@ JavaScript. One hosted font stylesheet with full system fallbacks.
 | `--q-r` | magnitude / result / accumulated area | hypotenuse, \|z\|, ∫, determinant |
 | `--q-bad` | error, trap, discontinuity | asymptotes, wrong-answer traces |
 
-## 8. Status
+## 8. Status — Mathematics is complete
 
-- [x] Part 0 Orientation
-- [x] Part 1 Algebra and Trigonometry
-- [x] Part 2 Complex Numbers
-- [x] Part 3 Analytic Geometry
-- [x] Part 4 Vectors and Vector Analysis
-- [x] Part 5 Linear Algebra
-- [x] Part 6 Calculus
-- [x] Part 7 Differential Equations
-- [x] Part 8 Discrete Mathematics
-- [x] Part 9 Synthesis
+All ten parts written, all eight NCEES subtopics covered.
 
-Later turns take other NCEES knowledge areas (Circuit Analysis, Digital
-Systems, …) on their own branches, reusing `styles/` and `src/lib/`
-unchanged so the compilation reads as one work.
+| | Part | Plates | Generators |
+|---|---|---|---|
+| 0 | Orientation | 1 | — |
+| 1 | Algebra and Trigonometry | 2–5 | 6 |
+| 2 | Complex Numbers | 6–8 | 5 |
+| 3 | Analytic Geometry | 9–10 | 5 |
+| 4 | Vectors and Vector Analysis | 11–13 | 5 |
+| 5 | Linear Algebra | 14–16 | 5 |
+| 6 | Calculus | 17–20 | 6 |
+| 7 | Differential Equations | 21–22 | 5 |
+| 8 | Discrete Mathematics | 23–24 | 4 |
+| 9 | Synthesis and mixed bench | 25 | (reuses 10) |
+
+25 plates, ~15 of them interactive. 41 generators, 42 reflex items.
+
+### Verified
+
+Run from `scratchpad/` against `python3 serve.py -p 8123`:
+
+- `check.mjs` — every part loads, every figure and formula plate mounts, no
+  unrendered `data-tex` survives, no console errors.
+- `interact.mjs` — every slider driven to min/mid/max, every scenario button
+  clicked, a full bench answered and a reflex drill run, on every part.
+- `xref.mjs` — every "Plate N" named in prose resolves, every plate number is
+  used exactly once with no gaps, every bench topic has a generator.
+- `bundle.mjs` — the single-file build runs from `file://` with no server.
+- No horizontal scroll at 360 px or 768 px; both themes checked.
+- The four quantity colours pass all six checks of the palette validator in
+  light *and* dark.
+
+### Known limits, stated honestly
+
+- The reflex drill's wrong options are drawn from the pool of other items'
+  tools, so on a small `only:` filter the same distractors recur.
+- `build.py` bundles by regex, which is safe only because every module here
+  uses named imports and `export function|const|let|class`. It refuses to
+  build rather than emit something broken if that stops being true.
+
+## 9. Next turns
+
+Other NCEES knowledge areas, each on its own branch, reusing `styles/` and
+`src/lib/` unchanged:
+
+- **Circuit Analysis** (11–17 q) — Part 2 doing real work.
+- **Linear Systems + Control Systems** (11–17 q) — Part 7 as transfer functions.
+- **Digital Systems** (8–12 q) — Part 8's logic as gates and K-maps.
+- **Electronics** (7–11 q), **Power Systems** (8–12 q), and the rest.
+
+Anything added should keep: the HANDBOOK / KNOW COLD stamp, the four quantity
+colours, one knob and one lesson per plate, generated problems with distractors
+built from real error modes, and prose that stands alone if no figure renders.

@@ -10,3 +10,4 @@ import "./linalg.js";        // 14 15 16
 import "./calculus.js";      // 17 18 19 20
 import "./odes.js";          // 21 22
 import "./discrete.js";      // 23 24
+import "./synthesis.js";     // 25

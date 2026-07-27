@@ -62,10 +62,18 @@
   justify-content: center; align-items: baseline;
 }
 .formula-list {
-  display: grid; gap: var(--s4); width: 100%;
+  display: grid; gap: var(--s4); width: 100%; min-width: 0;
   justify-items: center;
 }
-.formula-list .item { display: grid; gap: var(--s1); justify-items: center; }
+/* min-width: 0 is load-bearing — without it a grid item refuses to shrink
+   below its content and a long formula pushes the whole page sideways. */
+.formula-list .item {
+  display: grid; gap: var(--s1); justify-items: center;
+  min-width: 0; max-width: 100%;
+}
+.formula-list .item > * { min-width: 0; max-width: 100%; }
+.named { min-width: 0; }
+.named > :first-child { min-width: 0; overflow-x: auto; }
 .formula-list .item .gloss { text-align: center; }
 
 /* --- controls ------------------------------------------------------------- */

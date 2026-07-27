@@ -354,7 +354,7 @@ function partials() {
   const row = el("div", {
     style: {
       display: "grid", gap: "var(--s3)", width: "100%",
-      gridTemplateColumns: "repeat(auto-fit, minmax(15rem, 1fr))", alignItems: "start",
+      gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 15rem), 1fr))", alignItems: "start",
     },
   }, p.root, el("div", null, sx.root, sy.root));
 
