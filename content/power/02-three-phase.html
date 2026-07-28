@@ -1,0 +1,204 @@
+<p class="eyebrow">
+  <span>Power Systems · Part 2</span>
+  <span class="spec">NCEES 10.A · 10.B</span>
+  <span>28 minute read</span>
+</p>
+
+<h1>Three-Phase</h1>
+
+<p class="lede">Almost every power question on this exam is three-phase, and almost
+every wrong answer is a √3 in the wrong place. This part earns the √3 instead of
+quoting it, which is the only way it stays put.</p>
+
+<h2>2.1 Why three, and not one</h2>
+
+<p>A single-phase supply does not deliver power steadily. Voltage and current are
+both sinusoids, so their product pulsates at <em>twice</em> the line frequency and
+falls to zero twice per cycle. A single-phase motor is therefore being pushed in
+gusts, 120 times a second.</p>
+
+<p>Now take three supplies of equal size, 120° apart, each feeding an identical
+load. Each one still pulsates. But the pulsating parts are 240° apart from one
+another, and three equal quantities spaced 120° around a circle sum to zero.</p>
+
+<div data-figure="threePhasePower"></div>
+
+<p><b>The total is constant, at every load angle.</b> That is the reason for three
+phases — not copper savings, though those are real, and not tradition. Constant
+power means constant torque, which means a motor that does not shake itself apart.
+It is also why three, specifically: two phases would not cancel, and four would
+cost more to achieve nothing extra.</p>
+
+<h2>2.2 Two ways to connect three things</h2>
+
+<p>Given three impedances and three supply wires, there are exactly two sensible
+arrangements.</p>
+
+<ul>
+  <li><b>Wye (Y, star).</b> One end of each impedance goes to its own line; the
+  other three ends tie together at a <span class="term">neutral</span>.</li>
+  <li><b>Delta (Δ, mesh).</b> The three impedances form a closed triangle, with a
+  line attached at each corner. There is no neutral.</li>
+</ul>
+
+<p>Two vocabulary words carry the entire topic, and confusing them is the single
+most common error in FE power questions:</p>
+
+<div class="note honest">
+  <span class="note-tag">Phase versus line</span>
+  <p style="margin-bottom:0"><b>Phase</b> quantities belong to one of the three
+  <em>components</em> — the voltage across it, the current through it.
+  <b>Line</b> quantities belong to the three <em>wires</em> — the voltage between
+  two of them, the current in one of them. They are not the same thing, and which
+  ones coincide depends entirely on the connection.</p>
+</div>
+
+<h2>2.3 Where the √3 actually comes from</h2>
+
+<p>Put a voltmeter between lines a and b. It does not read a phase voltage; it
+reads the <em>difference</em> of two of them:</p>
+
+<p class="math" data-tex="\mathbf{V}_{ab} = \mathbf{V}_{an} - \mathbf{V}_{bn}" data-display>Vab = Van − Vbn</p>
+
+<p>Those two phasors are equal in magnitude and 120° apart. Subtracting them is a
+parallelogram, and the parallelogram closes at a length of
+<span data-tex="\sqrt{3}">√3</span> times the side, rotated 30° ahead:</p>
+
+<div data-figure="lineVsPhase"></div>
+
+<p>Nothing was memorised there. If the √3 ever slips, redraw two arrows 120° apart
+and subtract them — the answer falls out in about fifteen seconds, and it also
+hands you the 30° that a memorised formula never does.</p>
+
+<div class="note payoff">
+  <span class="note-tag">Where 208 volts comes from</span>
+  <p style="margin-bottom:0">A standard commercial service is quoted as
+  <b>208Y/120</b>. Those are not two unrelated numbers: the 120 V is the phase
+  voltage — <em>the same 120 V outlet from Circuit Analysis Part 5</em> — and
+  <span class="math" data-tex="120\sqrt{3} = 207.85">120√3 = 207.85</span>, rounded
+  to 208, is what appears between any two lines. The odd-looking 208 has been
+  <span class="math" data-tex="\sqrt{3}">√3</span> the whole time. Likewise
+  <b>480Y/277</b>, since <span class="math" data-tex="277\sqrt{3} = 480">277√3 = 480</span>.</p>
+</div>
+
+<h2>2.4 The four relationships</h2>
+
+<f-plate no="10.4" title="Line and phase, both connections" stamp="know"
+  caption="<b>The √3 is always on exactly one of the two</b>, and it is always on
+  the quantity that is <em>not</em> shared. In a wye the three phases share a
+  neutral, so the current passes straight through — the voltage takes the √3. In a
+  delta they share the lines, so the voltage passes straight through and the
+  current takes it.">
+  <f-row tex="\text{Wye:}\quad V_L = \sqrt{3}\,V_\phi \angle 30^\circ, \qquad I_L = I_\phi"
+         name="wye" gloss="Each phase is between a line and the neutral, so its current <b>is</b> the line current."></f-row>
+  <f-row tex="\text{Delta:}\quad V_L = V_\phi, \qquad I_L = \sqrt{3}\,I_\phi \angle -30^\circ"
+         name="delta" gloss="Each phase is between two lines, so it sees the full line voltage. Two phase currents meet at every corner."></f-row>
+  <f-row tex="S = \sqrt{3}\,V_L I_L = 3 V_\phi I_\phi" name="apparent power"
+         gloss="<b>Identical for both connections</b> — which is why the line form is the one worth carrying."></f-row>
+  <f-row tex="P = \sqrt{3}\,V_L I_L \cos\theta, \qquad Q = \sqrt{3}\,V_L I_L \sin\theta"
+         name="real and reactive"
+         gloss="<b>θ is the impedance angle</b> — the angle of the load, not the 30° between line and phase voltage. Mixing those two is the classic trap."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · which angle is θ?</span>
+  <p style="margin-bottom:0">In
+  <span class="math" data-tex="P = \sqrt{3}V_L I_L\cos\theta">P = √3 VL IL cos θ</span>
+  it is tempting to read θ as the angle between the line voltage and the line
+  current, because that is what the symbols sit next to. <b>It is not.</b> θ is the
+  angle of the load impedance — the angle between the <em>phase</em> voltage and
+  the <em>phase</em> current. The 30° from the previous section is already baked
+  into the √3, and applying it twice is a wrong answer that will be on offer.</p>
+</div>
+
+<div data-figure="wyeDelta"></div>
+
+<h2>2.5 The plant, in full</h2>
+
+<div class="worked">
+  <h4>Worked · <em>the cast becomes a three-phase load</em></h4>
+  <div class="worked-body">
+    <p>Three impedances of
+    <span data-tex="\mathbf{Z} = 3 + j4\ \Omega">Z = 3 + j4 Ω</span>, wye-connected,
+    on a 208 V three-phase supply. Find the line current and the total power.</p>
+    <ol class="steps">
+      <li>Wye, so each impedance sees the phase voltage:
+        <span data-tex="V_\phi = \frac{208}{\sqrt{3}} = 120\text{ V}" data-display>Vφ = 120 V</span></li>
+      <li>Each phase current, by Ohm's law with the impedance <em>magnitude</em>:
+        <span data-tex="I_\phi = \frac{120}{5} = 24\text{ A}" data-display>Iφ = 24 A</span>
+        and in a wye the line current is the same 24 A.</li>
+      <li>Total real power — three phases, each dissipating in its resistance only:
+        <span data-tex="P = 3I_\phi^2 R = 3(24)^2(3) = 5184\text{ W}" data-display>P = 5184 W</span></li>
+      <li>Cross-check with the line formula, which must agree:
+        <span data-tex="P = \sqrt{3}(208)(24)(0.6) = 5184\text{ W}" data-display>√3 (208)(24)(0.6) = 5184 W ✓</span></li>
+      <li>And the rest of the triangle:
+        <span data-tex="Q = 3I_\phi^2 X = 6912\text{ VAR}, \qquad S = \sqrt{3}(208)(24) = 8640\text{ VA}" data-display>Q = 6912 VAR, S = 8640 VA</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">5184, 6912, 8640 is
+    <b>1728 × (3, 4, 5)</b>. The plant's power triangle is the triangle from
+    Mathematics Part 1, at three times the scale of the single branch in Part 1 of
+    this module. The power factor is still 0.6 lagging, because connecting three
+    identical loads cannot change the angle of any one of them.</p>
+  </div>
+</div>
+
+<h2>2.6 Converting between the two</h2>
+
+<p>A balanced delta and a balanced wye are interchangeable if their impedances are
+in a ratio of three:</p>
+
+<f-plate no="10.5" title="Delta ⇄ wye, balanced" stamp="handbook">
+  <f-row tex="Z_\Delta = 3\,Z_Y" name="the balanced conversion"
+         gloss="Memorise the <b>direction</b> by asking which draws more power. Delta draws three times as much on the same line voltage, so for the <em>same</em> load its impedance must be three times larger."></f-row>
+  <f-row tex="P_\Delta = 3\,P_Y \quad\text{(same } Z,\ \text{same } V_L)"
+         name="the consequence"
+         gloss="Why large motors start wye and run delta: starting in wye draws a third of the current and a third of the torque, then the contactor switches over."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · which way round is the 3?</span>
+  <p style="margin-bottom:0">Half of all students write
+  <span class="math" data-tex="Z_Y = 3Z_\Delta">ZY = 3ZΔ</span>. The check takes
+  two seconds and never fails: <b>a delta on a given line voltage is the heavier
+  load</b>, because every impedance sees the full line voltage instead of
+  <span class="math" data-tex="1/\sqrt{3}">1/√3</span> of it. Heavier load, more
+  current, so to be <em>equivalent</em> the delta impedances must be the
+  <em>larger</em> ones. <span class="math" data-tex="Z_\Delta = 3Z_Y">ZΔ = 3ZY</span>.</p>
+</div>
+
+<h2>2.7 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>Wye:</b> <span data-tex="V_L = \sqrt{3}V_\phi">VL = √3 Vφ</span>,
+        <span data-tex="I_L = I_\phi">IL = Iφ</span>.</li>
+    <li><b>Delta:</b> <span data-tex="V_L = V_\phi">VL = Vφ</span>,
+        <span data-tex="I_L = \sqrt{3}I_\phi">IL = √3 Iφ</span>.</li>
+    <li><span data-tex="S = \sqrt{3}V_L I_L">S = √3 VL IL</span> and
+        <span data-tex="P = \sqrt{3}V_L I_L\cos\theta">P = √3 VL IL cos θ</span>,
+        <b>both connections</b>, with θ the impedance angle.</li>
+    <li><span data-tex="Z_\Delta = 3Z_Y">ZΔ = 3ZY</span>, and delta draws three
+        times the power of wye on the same line voltage.</li>
+    <li>208Y/120 and 480Y/277 — recognise them as
+        <span data-tex="\sqrt{3}">√3</span> pairs on sight.</li>
+    <li>The line voltage <b>leads</b> its phase voltage by 30° in a wye.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Three supplies 120° apart deliver constant total power, which is the whole
+  reason the grid is three-phase. A line quantity and a phase quantity differ by
+  <span class="math" data-tex="\sqrt{3}">√3</span> and 30°, and which one carries
+  the factor depends on the connection: wye shares a neutral so the current passes
+  through unchanged, delta shares the lines so the voltage does.</p>
+  <p>Every √3 in this subject is one vector subtraction of two phasors 120° apart.
+  Redrawing that picture is faster and more reliable than recalling which formula
+  the radical belongs in.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"three-phase","title":"Part 2 · Line, phase, and three-phase power","topics":["line-phase","three-phase-power","wye-delta-convert","balanced-load"],"count":6}'></div>
+
+<div data-reflex='{"only":["power-factor","three-phase"],"count":6,"title":"Handbook Reflex · Parts 1–2"}'></div>

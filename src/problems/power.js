@@ -242,3 +242,227 @@ defineReflex([
     because: "Voltage enters squared — that is the term most often dropped.",
   },
 ]);
+
+/* ==========================================================================
+   Part 2 — three-phase
+   ========================================================================== */
+
+const RT3 = Math.sqrt(3);
+
+defineProblem("line-phase", {
+  topic: "Line and phase quantities",
+  lookup: "Electrical → Power → Three-phase (delta and wye connections)",
+  make(rng) {
+    const wye = rng.pick([true, false]);
+    const VL = rng.pick([208, 240, 480, 600]);
+    const Zm = rng.pick([4, 5, 8, 10, 12, 20]);
+
+    const Vp = wye ? VL / RT3 : VL;
+    const Ip = Vp / Zm;
+    const Il = wye ? Ip : Ip * RT3;
+    const ask = rng.pick(["Il", "Vp"]);
+
+    if (ask === "Vp") {
+      return {
+        stem: `A balanced ${wye ? "wye" : "delta"}-connected load is supplied at ${VL} V line-to-line. ` +
+              `What voltage appears across each phase impedance, most nearly?`,
+        choices: [
+          { text: `${fixed(Vp, 1)} V`, why: "" },
+          { text: `${fixed(wye ? VL : VL / RT3, 1)} V`,
+            why: wye
+              ? "That is the line voltage itself. In a <b>wye</b> each impedance runs from a line to the neutral, so it sees only V<sub>L</sub>/√3."
+              : "That divides by √3, which is the wye rule. In a <b>delta</b> each impedance is connected directly between two lines, so it sees the full line voltage." },
+          { text: `${fixed(VL * RT3, 1)} V`, why: "Multiplied by √3 instead of divided. A phase voltage is never larger than the line voltage." },
+          { text: `${fixed(VL / 3, 1)} V`, why: "Divided by 3 rather than √3. The factor comes from a vector subtraction of two phasors 120° apart, and it is √3 ≈ 1.732." },
+        ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.05),
+        answer: 0,
+        steps: [
+          wye
+            ? `In a wye each impedance sits between one line and the neutral, so it carries the <b>phase</b> voltage:`
+            : `In a delta each impedance is wired directly across two lines, so it carries the <b>line</b> voltage:`,
+          `<span class="math display" data-tex="V_\\phi = ${wye ? `\\frac{V_L}{\\sqrt{3}} = \\frac{${VL}}{1.732}` : `V_L`} = ${fixed(Vp, 1)}\\text{ V}"></span>`,
+          `<b>${fixed(Vp, 1)} V.</b> ${wye ? "The √3 is on the voltage in a wye, and on the current in a delta." : "No √3 on the voltage here — it moves to the current instead."}`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A balanced ${wye ? "wye" : "delta"}-connected load of ${Zm} Ω per phase is supplied at ${VL} V line-to-line. ` +
+            `What is the line current, most nearly?`,
+      choices: [
+        { text: `${fixed(Il, 2)} A`, why: "" },
+        { text: `${fixed(wye ? Ip * RT3 : Ip, 2)} A`,
+          why: wye
+            ? "That applies the delta rule. In a <b>wye</b> the phase current has nowhere else to go — it <em>is</em> the line current, with no √3."
+            : "That is the <b>phase</b> current, through one impedance. At each corner of a delta two phase currents combine, and the line current is √3 times larger." },
+        { text: `${fixed(VL / Zm, 2)} A`,
+          why: `That uses the full line voltage across the impedance${wye ? ", but a wye phase only sees V<sub>L</sub>/√3" : " and then stops — correct for the phase current in a delta, but the line current is √3 times it"}.` },
+        { text: `${fixed(Il / 3, 2)} A`, why: "A factor of 3 where √3 belongs." },
+      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.02),
+      answer: 0,
+      steps: [
+        `Phase voltage first — that is what decides the current through each impedance:`,
+        `<span class="math display" data-tex="V_\\phi = ${wye ? `\\frac{${VL}}{\\sqrt{3}}` : `${VL}`} = ${fixed(Vp, 1)}\\text{ V}"></span>`,
+        `<span class="math display" data-tex="I_\\phi = \\frac{V_\\phi}{|Z|} = \\frac{${fixed(Vp, 1)}}{${Zm}} = ${fixed(Ip, 2)}\\text{ A}"></span>`,
+        wye
+          ? `In a wye the line current equals the phase current: <b>${fixed(Il, 2)} A</b>.`
+          : `<span class="math display" data-tex="I_L = \\sqrt{3}\\,I_\\phi = 1.732 \\times ${fixed(Ip, 2)} = ${fixed(Il, 2)}\\text{ A}"></span><b>${fixed(Il, 2)} A.</b>`,
+      ],
+    };
+  },
+});
+
+defineProblem("three-phase-power", {
+  topic: "Three-phase power",
+  lookup: "Electrical → Power → Three-phase power",
+  make(rng) {
+    const VL = rng.pick([208, 240, 480, 4160]);
+    const Il = rng.pick([10, 15, 24, 40, 60]);
+    const pf = rng.pick([0.6, 0.75, 0.8, 0.85, 0.9]);
+    const S = RT3 * VL * Il;
+    const P = S * pf;
+    const Q = S * Math.sqrt(1 - pf * pf);
+    const ask = rng.pick(["P", "S"]);
+
+    const kw = (v) => (v >= 10000 ? `${fixed(v / 1000, 1)} k` : `${num(v, 0)} `);
+
+    if (ask === "S") {
+      return {
+        stem: `A balanced three-phase load draws ${Il} A from a ${num(VL, 0)} V (line-to-line) supply at ${pf} power factor lagging. ` +
+              `What is the total apparent power, most nearly?`,
+        choices: [
+          { text: `${kw(S)}VA`, why: "" },
+          { text: `${kw(VL * Il)}VA`, why: "Missing the √3. Total apparent power in a balanced three-phase system is <b>√3 V<sub>L</sub> I<sub>L</sub></b>, not V<sub>L</sub>I<sub>L</sub>." },
+          { text: `${kw(3 * VL * Il)}VA`, why: "That uses 3 where √3 belongs. The 3 form is <b>3 V<sub>φ</sub> I<sub>φ</sub></b> — with <em>phase</em> quantities, not line quantities." },
+          { text: `${kw(P)}VA`, why: "That is the <b>real</b> power in watts. Apparent power does not include the power factor." },
+        ],
+        answer: 0,
+        steps: [
+          `Apparent power from line quantities carries the √3, and it is the same formula for wye and delta:`,
+          `<span class="math display" data-tex="S = \\sqrt{3}\\,V_L I_L = 1.732 \\times ${VL} \\times ${Il} = ${num(S, 0)}\\text{ VA}"></span>`,
+          `<b>${kw(S)}VA.</b> Note that the power factor plays no part — it only splits S into P and Q.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A balanced three-phase load draws ${Il} A from a ${num(VL, 0)} V (line-to-line) supply at ${pf} power factor lagging. ` +
+            `What is the total real power, most nearly?`,
+      choices: [
+        { text: `${kw(P)}W`, why: "" },
+        { text: `${kw(VL * Il * pf)}W`, why: "Missing the √3." },
+        { text: `${kw(S)}W`, why: "That is the apparent power in VA. Real power needs the power factor as well." },
+        { text: `${kw(Q)}W`, why: `That used ${T("\\sin\\theta")} instead of ${T("\\cos\\theta")} — it is the reactive power, in VAR.` },
+      ],
+      answer: 0,
+      steps: [
+        `The line form of three-phase power holds for both connections:`,
+        `<span class="math display" data-tex="P = \\sqrt{3}\\,V_L I_L \\cos\\theta"></span>`,
+        `<span class="math display" data-tex="P = 1.732 \\times ${VL} \\times ${Il} \\times ${pf} = ${num(P, 0)}\\text{ W}"></span>`,
+        `<b>${kw(P)}W.</b> θ here is the <b>impedance angle</b> — the angle between phase voltage and phase current. The 30° between line and phase voltage is already inside the √3.`,
+      ],
+    };
+  },
+});
+
+defineProblem("wye-delta-convert", {
+  topic: "Delta ⇄ wye conversion",
+  lookup: "Electrical → Power → Delta and wye connections",
+  make(rng) {
+    const toDelta = rng.pick([true, false]);
+    const base = rng.pick([3, 4, 5, 6, 9, 12, 15]);
+    const Zy = toDelta ? base : base * 3;
+    const Zd = Zy * 3;
+
+    return {
+      stem: toDelta
+        ? `A balanced wye-connected load has ${Zy} Ω in each phase. What is the equivalent balanced delta impedance per phase?`
+        : `A balanced delta-connected load has ${Zd} Ω in each phase. What is the equivalent balanced wye impedance per phase?`,
+      choices: [
+        { text: `${num(toDelta ? Zd : Zy, 2)} Ω`, why: "" },
+        { text: `${num(toDelta ? Zy / 3 : Zd * 3, 2)} Ω`,
+          why: "The factor of 3 is the right size and the wrong direction. <b>Z<sub>Δ</sub> = 3 Z<sub>Y</sub></b> — the delta impedances are the larger ones, because on the same line voltage a delta would otherwise draw three times the power." },
+        { text: `${fixed((toDelta ? Zy * RT3 : Zd / RT3), 2)} Ω`,
+          why: "That is √3, not 3. The √3 relates <em>line</em> and <em>phase</em> quantities; the delta-wye impedance conversion is a clean factor of three." },
+        { text: `${num(toDelta ? Zy : Zd, 2)} Ω`, why: "Unchanged. The two connections present the same load only if the impedances differ by three." },
+      ],
+      answer: 0,
+      steps: [
+        `For a <b>balanced</b> load the general delta-wye formulas collapse to a single ratio:`,
+        `<span class="math display" data-tex="Z_\\Delta = 3\\,Z_Y"></span>`,
+        toDelta
+          ? `<span class="math display" data-tex="Z_\\Delta = 3 \\times ${Zy} = ${num(Zd, 2)}\\ \\Omega"></span>`
+          : `<span class="math display" data-tex="Z_Y = \\frac{${Zd}}{3} = ${num(Zy, 2)}\\ \\Omega"></span>`,
+        `<b>${num(toDelta ? Zd : Zy, 2)} Ω.</b> The direction check that never fails: a delta on a given line voltage is the <em>heavier</em> load, so equivalent delta impedances must be the <em>bigger</em> ones.`,
+      ],
+    };
+  },
+});
+
+defineProblem("balanced-load", {
+  topic: "Solving a balanced three-phase load",
+  lookup: "Electrical → Power → Three-phase, balanced loads",
+  make(rng) {
+    const [R, X] = rng.pick([[3, 4], [6, 8], [8, 6], [4, 3], [5, 12], [12, 5]]);
+    const Zm = Math.hypot(R, X);
+    const pf = R / Zm;
+    const VL = rng.pick([208, 240, 480]);
+    const wye = rng.pick([true, false]);
+
+    const Vp = wye ? VL / RT3 : VL;
+    const Ip = Vp / Zm;
+    const Il = wye ? Ip : Ip * RT3;
+    const P = 3 * Ip * Ip * R;
+
+    return {
+      stem: `Three impedances of ${T(`${R} + j${X}\\ \\Omega`)} are connected in ${wye ? "wye" : "delta"} across a ${VL} V three-phase supply. ` +
+            `What is the total real power, most nearly?`,
+      choices: [
+        { text: `${fixed(P / 1000, 2)} kW`, why: "" },
+        { text: `${fixed(P / (wye ? 1 / 3 : 3) / 1000, 2)} kW`,
+          why: wye
+            ? "That is the delta figure. In a wye each impedance sees only V<sub>L</sub>/√3, so the power is a third of what the same impedances would draw in delta."
+            : "That is the wye figure. In a delta each impedance sees the full line voltage, so it draws three times as much." },
+        { text: `${fixed(Ip * Ip * R / 1000, 2)} kW`, why: "That is <b>one</b> phase. Three identical phases are dissipating, so multiply by three." },
+        { text: `${fixed(3 * Ip * Ip * Zm / 1000, 2)} kW`,
+          why: `That uses the impedance <b>magnitude</b> where the resistance belongs. Real power comes only from resistance — ${T("P = I^2R")}, never ${T("I^2|Z|")}.` },
+      ],
+      answer: 0,
+      steps: [
+        `${wye ? "Wye, so each impedance sees the phase voltage:" : "Delta, so each impedance sees the full line voltage:"}`,
+        `<span class="math display" data-tex="V_\\phi = ${wye ? `\\frac{${VL}}{\\sqrt{3}} = ${fixed(Vp, 1)}` : `${VL}`}\\text{ V}"></span>`,
+        `<span class="math display" data-tex="|Z| = \\sqrt{${R}^2 + ${X}^2} = ${fixed(Zm, 2)}\\ \\Omega, \\qquad I_\\phi = \\frac{${fixed(Vp, 1)}}{${fixed(Zm, 2)}} = ${fixed(Ip, 2)}\\text{ A}"></span>`,
+        `Real power comes from the resistive part only, three phases of it:`,
+        `<span class="math display" data-tex="P = 3 I_\\phi^2 R = 3(${fixed(Ip, 2)})^2(${R}) = ${num(P, 0)}\\text{ W}"></span>`,
+        `<b>${fixed(P / 1000, 2)} kW.</b> Cross-check with the line form: ${T(`\\sqrt{3}(${VL})(${fixed(Il, 2)})(${fixed(pf, 3)}) = ${num(RT3 * VL * Il * pf, 0)}`)} W ✓`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "three-phase",
+    stem: "A delta load of 12 Ω per phase sits on 480 V three-phase. What is the line current?",
+    tool: "V_φ = V_L in delta, then I_L = √3 I_φ",
+    because: "Delta phases see the full line voltage; the √3 moves to the current.",
+  },
+  {
+    part: "three-phase",
+    stem: "A balanced load draws 40 A at 480 V line-to-line, 0.85 pf. Total kW?",
+    tool: "P = √3 V_L I_L cos θ",
+    because: "The line form of three-phase power, identical for wye and delta.",
+  },
+  {
+    part: "three-phase",
+    stem: "A wye load has 9 Ω per phase. What delta impedance is equivalent?",
+    tool: "Z_Δ = 3 Z_Y",
+    because: "Delta is the heavier load on a given line voltage, so equivalent delta impedances are the larger ones.",
+  },
+  {
+    part: "three-phase",
+    stem: "A 208 V three-phase panel — what is the voltage from any line to neutral?",
+    tool: "V_φ = V_L / √3",
+    because: "208Y/120 is a √3 pair; the phase voltage is the familiar 120 V.",
+  },
+]);
