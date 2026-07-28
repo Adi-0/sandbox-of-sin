@@ -1,0 +1,165 @@
+<p class="eyebrow">
+  <span>Circuit Analysis · Part 4</span>
+  <span class="spec">NCEES 6.C</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Thévenin and Norton</h1>
+
+<p class="lede">However many components are inside a box, if they are all linear
+then from outside it is <em>one source and one resistor</em>. Not approximately —
+exactly, and for every load you could ever attach.</p>
+
+<h2>4.1 The problem it solves</h2>
+
+<p>You have a network of a dozen resistors and two sources, and you want to know
+what happens when you connect a load. Then a different load. Then eight more,
+because you are choosing a value.</p>
+
+<p>With Part 3's methods that is ten full solutions of the same network, each
+differing in one number. That is not hard, it is just wasteful — and on a timed
+exam, wasteful is the same as wrong.</p>
+
+<p><span class="term">Thévenin's theorem</span> says you never have to. Solve the
+network <em>once</em>, with the load removed, and you get a two-component
+stand-in that behaves identically at those terminals forever after.</p>
+
+<f-plate no="6.8" title="Thévenin and Norton equivalents" stamp="handbook"
+  caption="Both equivalents carry the same information and convert into each
+  other by Ohm's law. <b>Use Thévenin when the load is in series with things and
+  Norton when it is in parallel</b> — the choice is about which one saves you an
+  algebra step, never about which is correct.">
+  <f-row tex="V_{th} = V_{oc} \quad\text{(the open-circuit terminal voltage)}"
+         gloss="Remove the load, solve for the voltage that appears across the empty terminals."></f-row>
+  <f-row tex="R_{th} = \frac{V_{oc}}{I_{sc}} \quad\text{or, sources killed, look in}"
+         gloss="Kill the <b>independent</b> sources — voltage sources become shorts, current sources become opens — then find the resistance between the terminals."></f-row>
+  <f-row tex="I_N = I_{sc}, \qquad R_N = R_{th}"
+         name="Norton"
+         gloss="Same resistance, and the current the terminals deliver when shorted together."></f-row>
+  <f-row tex="V_{th} = I_N R_{th}" name="source transformation"
+         gloss="A voltage source with a series resistor and a current source with the same resistor in parallel are indistinguishable from outside."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · what "killing a source" means</span>
+  <p style="margin-bottom:0">A voltage source becomes a <b>short circuit</b>
+  (0 V across it means a wire). A current source becomes an <b>open circuit</b>
+  (0 A through it means a gap). People reliably get these the wrong way round.
+  Reason it out rather than memorising: a source is killed by setting <em>its own
+  quantity</em> to zero, and then you ask what component behaves that way.
+  <b>And only independent sources are killed</b> — a dependent source stays,
+  which is why that case needs the <span class="math">V_{oc}/I_{sc}</span> route
+  instead.</p>
+</div>
+
+<h2>4.2 Doing it</h2>
+
+<div class="worked">
+  <h4>Worked · <em>a divider, Thévenised</em></h4>
+  <div class="worked-body">
+    <p>A 100 V source feeds a 20 Ω resistor, and a 5 Ω resistor sits from that
+    junction to ground. The load will hang across the 5 Ω. Find the Thévenin
+    equivalent seen by the load.</p>
+    <ol class="steps">
+      <li><b>Open-circuit voltage.</b> With no load, no current is drawn from the
+        junction, so the 20 Ω and 5 Ω form a plain voltage divider:
+        <span data-tex="V_{th} = 100 \times \frac{5}{20 + 5} = 20\text{ V}" data-display>Vth = 20 V</span></li>
+      <li><b>Thévenin resistance.</b> Kill the 100 V source — replace it with a
+        wire. Now the 20 Ω and the 5 Ω both run from the junction to ground, so
+        from the terminals they are in <em>parallel</em>:
+        <span data-tex="R_{th} = \frac{(20)(5)}{20 + 5} = 4\ \Omega" data-display>Rth = 4 Ω</span>
+        Shorting the source is what turns a series divider into a parallel pair —
+        that reversal is the step to get right.</li>
+      <li><b>Check with the short-circuit current.</b> Short the terminals and
+        the 5 Ω is bypassed, so
+        <span data-tex="I_{sc} = 100/20 = 5\text{ A}">I_sc = 100/20 = 5 A</span>,
+        and <span data-tex="V_{oc}/I_{sc} = 20/5 = 4\ \Omega">20/5 = 4 Ω</span> ✓
+        Two independent routes to the same
+        <span data-tex="R_{th}">R_th</span>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">So the entire network
+    is <b>20 V behind 4 Ω</b>. Attach any load you like and one division answers
+    it. Attach 4 Ω and the load gets 10 V; attach 16 Ω and it gets 16 V; attach
+    nothing and it reads 20 V.</p>
+  </div>
+</div>
+
+<p>Plate 30 puts the original network and its two-component equivalent side by
+side, with the same load on each. The meters agree at every load value — that is
+the theorem, drawn.</p>
+
+<div data-figure="theveninBox"></div>
+
+<h2>4.3 Maximum power transfer</h2>
+
+<p>Now a question the equivalent makes easy and the original makes horrible.
+Which load resistance draws the most power?</p>
+
+<p>Too small a load and it gets almost no voltage, because
+<span data-tex="R_{th}">R_th</span> takes it all. Too large and it gets almost no
+current. Somewhere between is a peak, and with the Thévenin form it takes one
+line to find:</p>
+
+<f-plate no="6.9" title="Maximum power transfer" stamp="handbook"
+  caption="The peak is genuinely flat — at twice or half the matched resistance
+  you still get 89% of the maximum. <b>That is why impedance matching in practice
+  is forgiving</b>, and why nobody trims a load to three decimal places.">
+  <f-row tex="R_L = R_{th} \;\Rightarrow\; P_{max} = \frac{V_{th}^2}{4R_{th}}"
+         gloss="Match the load to the source resistance. The 4 in the denominator is the whole formula worth remembering."></f-row>
+</f-plate>
+
+<p>On the worked example: <span data-tex="R_L = 4\ \Omega">R_L = 4 Ω</span> and
+<span data-tex="P_{max} = 400/16 = 25\text{ W}">P_max = 400/16 = 25 W</span>.
+Drag the load in Plate 31 and watch the curve.</p>
+
+<div data-figure="maxPower"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The killer number — and why the grid ignores it</span>
+  <p>At the matched point the load and the source resistance carry the same
+  current through the same resistance, so they dissipate <em>the same power</em>.
+  <b>Maximum power transfer runs at exactly 50% efficiency.</b> Half of
+  everything generated is burned inside the source.</p>
+  <p style="margin-bottom:0">For a radio receiver extracting a faint signal, that
+  is the right trade. For a power station it would be catastrophic — so
+  transmission systems are deliberately run <em>far</em> from matched, with source
+  resistance as low as it can be made, accepting less than maximum power in
+  exchange for efficiency in the high nineties. <b>"Maximum power" and "maximum
+  efficiency" are different targets, and the exam asks which one you were
+  aiming at.</b></p>
+</div>
+
+<h2>4.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="V_{th}">V_th</span> is the open-circuit voltage;
+        <span data-tex="I_N">I_N</span> is the short-circuit current;
+        <span data-tex="R_{th} = R_N = V_{oc}/I_{sc}">R_th = R_N = V_oc/I_sc</span>.</li>
+    <li>To find <span data-tex="R_{th}">R_th</span> by inspection: <b>voltage
+        sources become shorts, current sources become opens</b>, then look in from
+        the terminals.</li>
+    <li>Only <em>independent</em> sources get killed.</li>
+    <li>Source transformation: <span data-tex="V_{th} = I_N R">V_th = I_N R</span>,
+        both ways, any time.</li>
+    <li>Maximum power at <span data-tex="R_L = R_{th}">R_L = R_th</span>, giving
+        <span data-tex="V_{th}^2/4R_{th}">V_th²/4R_th</span> — and 50% efficiency.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Any linear two-terminal network is one source behind one resistor. Find the
+  source by opening the terminals, find the resistance by killing the independent
+  sources and looking in, and check by shorting the terminals — three
+  measurements, two of which suffice and the third of which verifies.</p>
+  <p>The equivalent turns "re-solve for every load" into one division, and it
+  makes maximum power transfer a one-line result: match the load, accept 50%
+  efficiency, and know why a power system refuses to.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"thevenin","title":"Part 4 · Thévenin, Norton, max power","topics":["thevenin-find","rth-inspect","max-power","source-transform"],"count":6}'></div>
+
+<div data-reflex='{"only":["thevenin","node-loop"],"count":6,"title":"Handbook Reflex · Parts 3–4"}'></div>

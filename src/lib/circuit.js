@@ -227,9 +227,11 @@ export class Schematic {
           transform: rot ? `rotate(${-rot})` : null,
         }));
       } else if (kind === "i") {
+        // the arrow runs along the body axis (local x) so that it points along
+        // the branch after the group is rotated, not across it
         const head = this.arrowhead(color, 6);
         g.appendChild(svg("line", {
-          x1: 0, y1: sign * half * 0.62, x2: 0, y2: -sign * half * 0.62,
+          x1: sign * half * 0.62, y1: 0, x2: -sign * half * 0.62, y2: 0,
           stroke: V(color), strokeWidth: 1.75, markerEnd: `url(#${head})`,
         }));
       }

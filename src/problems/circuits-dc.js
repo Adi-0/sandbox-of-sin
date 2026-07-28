@@ -468,3 +468,311 @@ defineReflex([
     because: "Collapse the unambiguous group furthest from the terminals and work back.",
   },
 ]);
+
+/* ==========================================================================
+   Part 3 — node and mesh analysis
+   ========================================================================== */
+
+defineProblem("node-solve", {
+  topic: "Node analysis",
+  lookup: "Electrical → Circuit analysis → Node analysis",
+  make(rng) {
+    const Ra = rng.pick([2, 4, 5, 10]);
+    const Rb = rng.pick([5, 10, 20]);
+    const Is = rng.pick([2, 3, 5, 6, 10]);
+    // one unknown node: source current in, two resistors to ground
+    const G = 1 / Ra + 1 / Rb;
+    const Vn = Is / G;
+
+    return {
+      stem:
+        `A ${Is} A current source feeds a single node, from which a ${Ra} Ω and a ` +
+        `${Rb} Ω resistor both run to ground. What is the node voltage?`,
+      choices: [
+        { text: `${fixed(Vn, 3)} V`, why: "" },
+        { text: `${fixed(Is * (Ra + Rb), 1)} V`, why: "The two resistors were treated as in series. They share both nodes, so they are in parallel and the node sees <b>less</b> resistance than either." },
+        { text: `${fixed(Is * Math.min(Ra, Rb), 2)} V`, why: `Only one branch was counted. All the current has to leave through <em>both</em>.` },
+        { text: `${fixed(Is / G / 2, 3)} V`, why: "Halving is only right for two equal resistors." },
+      ],
+      answer: 0,
+      steps: [
+        `Ground the bottom rail and call the unknown ${T("V_n")}. KCL says everything arriving must leave:` +
+          `<span class="math display" data-tex="${Is} = \\frac{V_n}{${Ra}} + \\frac{V_n}{${Rb}}"></span>`,
+        `Factor out ${T("V_n")} — the bracket is the sum of the conductances at the node, which is the diagonal entry of the matrix:` +
+          `<span class="math display" data-tex="${Is} = V_n\\left(\\frac{1}{${Ra}} + \\frac{1}{${Rb}}\\right) = V_n(${fixed(G, 4)})"></span>`,
+        `<span class="math display" data-tex="V_n = \\frac{${Is}}{${fixed(G, 4)}} = ${fixed(Vn, 3)}\\text{ V}"></span>` +
+          `<b>Check:</b> the branches then carry ${fixed(Vn / Ra, 3)} + ${fixed(Vn / Rb, 3)} = ${fixed(Is, 3)} A ✓`,
+      ],
+    };
+  },
+});
+
+defineProblem("mesh-solve", {
+  topic: "Mesh analysis",
+  lookup: "Electrical → Circuit analysis → Loop (mesh) analysis",
+  make(rng) {
+    const V1 = rng.pick([10, 12, 20, 24]);
+    const R1 = rng.pick([2, 4, 6]);
+    const Rm = rng.pick([3, 6, 12]);       // the shared resistor
+    const R2 = rng.pick([2, 4, 8]);
+    // two clockwise meshes, source only in mesh 1
+    const A = [[R1 + Rm, -Rm], [-Rm, R2 + Rm]];
+    const [I1, I2] = solve(A, [V1, 0]);
+    const shared = I1 - I2;
+
+    return {
+      stem:
+        `Two meshes share a ${Rm} Ω resistor. The first also contains a ${V1} V source and ` +
+        `a ${R1} Ω; the second also contains a ${R2} Ω. Taking both mesh currents clockwise, ` +
+        `what current flows in the shared ${Rm} Ω resistor?`,
+      choices: [
+        { text: `${fixed(shared, 3)} A`, why: "" },
+        { text: `${fixed(I1, 3)} A`, why: `That is mesh current ${T("I_1")} alone. A shared branch carries the <b>difference</b> of the two mesh currents, because the second mesh pushes back through it.` },
+        { text: `${fixed(I1 + I2, 3)} A`, why: "Added rather than subtracted. With both meshes clockwise, their currents oppose each other in the shared branch." },
+        { text: `${fixed(V1 / (R1 + Rm + R2), 3)} A`, why: "That treats all three resistors as one series loop, which ignores that the shared resistor carries both meshes." },
+      ],
+      answer: 0,
+      steps: [
+        `Both loops clockwise. The resistance matrix is read off directly — diagonal is the total round each mesh, off-diagonal is minus what they share:` +
+          `<span class="math display" data-tex="\\begin{bmatrix} ${R1 + Rm} & ${-Rm} \\\\ ${-Rm} & ${R2 + Rm} \\end{bmatrix}\\begin{bmatrix} I_1 \\\\ I_2 \\end{bmatrix} = \\begin{bmatrix} ${V1} \\\\ 0 \\end{bmatrix}"></span>`,
+        `Solving gives ${T(`I_1 = ${fixed(I1, 3)}`)} A and ${T(`I_2 = ${fixed(I2, 3)}`)} A.`,
+        `The shared branch carries the difference:` +
+          `<span class="math display" data-tex="I_{${Rm}\\Omega} = I_1 - I_2 = ${fixed(I1, 3)} - ${fixed(I2, 3)} = ${fixed(shared, 3)}\\text{ A}"></span>` +
+          `<b>${fixed(shared, 3)} A.</b> Forgetting the subtraction is the single most common mesh-analysis error.`,
+      ],
+    };
+  },
+});
+
+defineProblem("method-choice", {
+  topic: "Choosing a method",
+  lookup: "Electrical → Circuit analysis → Node and loop analysis",
+  make(rng) {
+    const nodes = rng.int(3, 6), meshes = rng.int(2, 5);
+    if (Math.abs((nodes - 1) - meshes) < 1) return this.make(rng);
+    const nodeEq = nodes - 1;
+    const better = nodeEq < meshes ? "node" : "mesh";
+    const n = Math.min(nodeEq, meshes);
+
+    return {
+      stem:
+        `A planar circuit has ${nodes} nodes and ${meshes} independent meshes. ` +
+        `Which analysis gives the smaller system, and how many equations?`,
+      choices: [
+        { text: `${better} analysis, ${n} equations`, why: "" },
+        { text: `${better === "node" ? "mesh" : "node"} analysis, ${Math.max(nodeEq, meshes)} equations`,
+          why: `That is the larger system. Node analysis needs <b>nodes − 1</b> = ${nodeEq} equations; mesh analysis needs one per mesh = ${meshes}.` },
+        { text: `node analysis, ${nodes} equations`,
+          why: "One node is the reference and has no unknown, so it is nodes <b>minus one</b>." },
+        { text: "either — they always give the same number", why: `Only when nodes − 1 happens to equal the mesh count. Here they are ${nodeEq} and ${meshes}.` },
+      ],
+      answer: 0,
+      steps: [
+        `Node analysis needs one equation per <em>unknown</em> node: ${nodes} − 1 = <b>${nodeEq}</b>.`,
+        `Mesh analysis needs one per independent mesh: <b>${meshes}</b>.`,
+        `<b>${better === "node" ? "Node" : "Mesh"} analysis, ${n} equations.</b> ` +
+          `That count takes thirty seconds and regularly saves three minutes — do it before committing to a method, ` +
+          `and let the source types break any tie (current sources favour node, voltage sources favour mesh).`,
+      ],
+    };
+  },
+});
+
+/* ==========================================================================
+   Part 4 — Thévenin, Norton, maximum power
+   ========================================================================== */
+
+defineProblem("thevenin-find", {
+  topic: "Thévenin equivalent",
+  lookup: "Electrical → Circuit analysis → Thevenin and Norton theorems",
+  make(rng) {
+    const Vs = rng.pick([12, 20, 24, 48, 100]);
+    const R1 = rng.pick([4, 6, 10, 20, 30]);
+    const R2 = rng.pick([2, 5, 6, 12, 20]);
+    const Vth = Vs * R2 / (R1 + R2);
+    const Rth = parallel(R1, R2);
+
+    return {
+      stem:
+        `A ${Vs} V source drives a ${R1} Ω in series with a ${R2} Ω to ground. Looking into ` +
+        `the terminals across the ${R2} Ω, what is the Thévenin equivalent?`,
+      choices: [
+        { text: `${fixed(Vth, 2)} V behind ${fixed(Rth, 3)} Ω`, why: "" },
+        { text: `${fixed(Vth, 2)} V behind ${fixed(R1 + R2, 0)} Ω`,
+          why: `${T("V_{th}")} is right, but ${T("R_{th}")} is not the series sum. With the source shorted, the two resistors are in <b>parallel</b> between the terminals.` },
+        { text: `${fixed(Vs, 0)} V behind ${fixed(Rth, 3)} Ω`,
+          why: `${T("V_{th}")} is the <em>open-circuit terminal</em> voltage, not the source voltage — the ${R1} Ω still drops part of it.` },
+        { text: `${fixed(Vth, 2)} V behind ${fixed(R1, 0)} Ω`,
+          why: `Only one resistor was counted. Shorting the source puts both of them between the terminals.` },
+      ],
+      answer: 0,
+      steps: [
+        `<b>Open-circuit voltage.</b> With nothing attached, no current is drawn from the junction, so it is a plain divider:` +
+          `<span class="math display" data-tex="V_{th} = ${Vs}\\times\\frac{${R2}}{${R1}+${R2}} = ${fixed(Vth, 2)}\\text{ V}"></span>`,
+        `<b>Thévenin resistance.</b> Kill the source — a voltage source becomes a short. Both resistors now run from the terminal to ground, so they are in parallel:` +
+          `<span class="math display" data-tex="R_{th} = \\frac{(${R1})(${R2})}{${R1}+${R2}} = ${fixed(Rth, 3)}\\ \\Omega"></span>`,
+        `<b>Check with the short-circuit current:</b> shorting the terminals bypasses the ${R2} Ω, so ` +
+          `${T(`I_{sc} = ${Vs}/${R1} = ${fixed(Vs / R1, 3)}`)} A, and ` +
+          `${T(`V_{oc}/I_{sc} = ${fixed(Vth, 2)}/${fixed(Vs / R1, 3)} = ${fixed(Rth, 3)}`)} Ω ✓`,
+      ],
+    };
+  },
+});
+
+defineProblem("rth-inspect", {
+  topic: "Killing sources",
+  lookup: "Electrical → Circuit analysis → Thevenin resistance",
+  make(rng) {
+    const kind = rng.pick(["v", "i"]);
+    return {
+      stem: `To find ${T("R_{th}")} by inspection, what replaces an independent ${kind === "v" ? "voltage" : "current"} source?`,
+      choices: [
+        { text: kind === "v" ? "a short circuit" : "an open circuit", why: "" },
+        { text: kind === "v" ? "an open circuit" : "a short circuit",
+          why: `Backwards. Killing a source means setting <b>its own quantity</b> to zero: a voltage source at 0 V has no potential difference across it, which is a <em>wire</em>; a current source at 0 A passes nothing, which is a <em>gap</em>.` },
+        { text: "its internal resistance", why: "An <em>ideal</em> source has none, and the exam's sources are ideal unless it says otherwise." },
+        { text: "nothing — dependent and independent sources are all left in place",
+          why: "Independent sources are killed. <b>Dependent</b> sources are the ones that stay, which is why that case needs the V_oc/I_sc route instead." },
+      ],
+      answer: 0,
+      steps: [
+        `Do not memorise this pair — derive it in two seconds every time.`,
+        kind === "v"
+          ? `A voltage source set to zero has <b>0 V across it</b>. The component with zero volts across it no matter the current is a <b>wire</b> — a short circuit.`
+          : `A current source set to zero passes <b>0 A</b>. The component with zero current through it no matter the voltage is a <b>gap</b> — an open circuit.`,
+        `<b>${kind === "v" ? "A short circuit." : "An open circuit."}</b> ` +
+          `And only <em>independent</em> sources get this treatment — a dependent source is part of the network's behaviour, not a stimulus applied to it.`,
+      ],
+    };
+  },
+});
+
+defineProblem("max-power", {
+  topic: "Maximum power transfer",
+  lookup: "Electrical → Circuit analysis → Maximum power transfer",
+  make(rng) {
+    const Vth = rng.pick([10, 12, 20, 24, 40]);
+    const Rth = rng.pick([2, 4, 5, 8, 10]);
+    const Pmax = (Vth * Vth) / (4 * Rth);
+    const askEff = rng.chance(0.3);
+
+    if (askEff) {
+      return {
+        stem:
+          `A source with ${Vth} V open-circuit and ${Rth} Ω internal resistance drives a load ` +
+          `sized for maximum power transfer. What fraction of the total power reaches the load?`,
+        choices: [
+          { text: "50%", why: "" },
+          { text: "100%", why: "The internal resistance carries the same current through the same resistance, so it burns exactly as much as the load does." },
+          { text: "75%", why: "At the matched point the two resistances are equal and share the power evenly." },
+          { text: "It depends on the source voltage", why: "It does not — the efficiency depends only on the ratio of load to source resistance, which at match is 1." },
+        ],
+        answer: 0,
+        steps: [
+          `At maximum power transfer ${T("R_L = R_{th}")}, so the same current flows through two equal resistances.`,
+          `Equal current through equal resistance means equal ${T("I^2R")} — the load and the source dissipate the same amount.`,
+          `<b>50%.</b> That is fine for a receiver pulling in a weak signal and unacceptable for a power system, ` +
+            `which is why transmission is deliberately run nowhere near matched.`,
+        ],
+      };
+    }
+
+    return {
+      stem:
+        `A network's Thévenin equivalent is ${Vth} V behind ${Rth} Ω. What is the greatest power ` +
+        `that can be delivered to a load, and at what load resistance?`,
+      choices: [
+        { text: `${fixed(Pmax, 2)} W at ${Rth} Ω`, why: "" },
+        { text: `${fixed((Vth * Vth) / (2 * Rth), 2)} W at ${Rth} Ω`,
+          why: `The load resistance is right but the power is not. At match, the load sees <b>half</b> the Thévenin voltage, so ${T("P = (V_{th}/2)^2/R_L = V_{th}^2/4R_{th}")} — note the 4.` },
+        { text: `${fixed((Vth * Vth) / Rth, 2)} W at 0 Ω`,
+          why: "A short circuit takes maximum <em>current</em> but zero voltage, so it takes zero power. Both extremes deliver nothing." },
+        { text: `${fixed(Pmax, 2)} W at ${Rth * 2} Ω`,
+          why: `The power is right but the match is not. Maximum transfer needs ${T("R_L = R_{th}")} exactly.` },
+      ],
+      answer: 0,
+      steps: [
+        `Maximum power transfer occurs when the load matches the source resistance: ${T(`R_L = R_{th} = ${Rth}`)} Ω.`,
+        `At that point the divider splits the Thévenin voltage evenly, so the load sees ${T(`${Vth}/2 = ${Vth / 2}`)} V:` +
+          `<span class="math display" data-tex="P_{max} = \\frac{(V_{th}/2)^2}{R_L} = \\frac{V_{th}^2}{4R_{th}} = \\frac{${Vth * Vth}}{${4 * Rth}} = ${fixed(Pmax, 2)}\\text{ W}"></span>`,
+        `<b>${fixed(Pmax, 2)} W at ${Rth} Ω.</b> The peak is broad — at half or double that load you still get 89% of it — ` +
+          `and the efficiency there is only 50%.`,
+      ],
+    };
+  },
+});
+
+defineProblem("source-transform", {
+  topic: "Source transformation",
+  lookup: "Electrical → Circuit analysis → Source transformation, Norton",
+  make(rng) {
+    const toNorton = rng.chance(0.5);
+    const R = rng.pick([2, 4, 5, 10, 20, 25]);
+    const Vth = rng.pick([10, 20, 40, 50, 100]);
+    const In = Vth / R;
+
+    return {
+      stem: toNorton
+        ? `Convert a ${Vth} V source in series with ${R} Ω into its Norton equivalent.`
+        : `Convert a ${num(In)} A source in parallel with ${R} Ω into its Thévenin equivalent.`,
+      choices: [
+        { text: toNorton ? `${num(In)} A in parallel with ${R} Ω` : `${Vth} V in series with ${R} Ω`, why: "" },
+        { text: toNorton ? `${num(In)} A in series with ${R} Ω` : `${Vth} V in parallel with ${R} Ω`,
+          why: "The topology is wrong. A Norton source sits in <b>parallel</b> with its resistance; a Thévenin source sits in <b>series</b> with it. A current source in series with a resistor would just be a current source." },
+        { text: toNorton ? `${num(Vth * R)} A in parallel with ${R} Ω` : `${num(In / R)} V in series with ${R} Ω`,
+          why: `Multiplied where you should divide. The conversion is ${T("V_{th} = I_N R")}, so going the other way divides.` },
+        { text: toNorton ? `${num(In)} A in parallel with ${num(1 / R, 3)} Ω` : `${Vth} V in series with ${num(1 / R, 3)} Ω`,
+          why: "The resistance is unchanged by the transformation — it is the same resistance in both forms, not its reciprocal." },
+      ],
+      answer: 0,
+      steps: [
+        `The resistance is the same in both forms: ${T(`R_{th} = R_N = ${R}`)} Ω. Only the source changes.`,
+        `<span class="math display" data-tex="V_{th} = I_N R_N \\quad\\Longleftrightarrow\\quad I_N = \\frac{V_{th}}{R_{th}}"></span>` +
+          (toNorton
+            ? `${T(`I_N = ${Vth}/${R} = ${num(In)}`)} A`
+            : `${T(`V_{th} = (${num(In)})(${R}) = ${Vth}`)} V`),
+        `<b>${toNorton ? `${num(In)} A in parallel with ${R} Ω` : `${Vth} V in series with ${R} Ω`}.</b> ` +
+          `From outside the two are indistinguishable — same open-circuit voltage, same short-circuit current.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "node-loop",
+    stem: "A bridge circuit has no two resistors in series and none in parallel. Find the branch currents.",
+    tool: "Node analysis",
+    because: "The reduction shortcuts have nothing to grab, but KCL at each node always works.",
+  },
+  {
+    part: "node-loop",
+    stem: "Two windows, both containing voltage sources; find the current in the shared branch.",
+    tool: "Mesh analysis",
+    because: "Voltage sources drop straight onto the right-hand side of the mesh equations.",
+  },
+  {
+    part: "node-loop",
+    stem: "Write the coefficient matrix for a three-node circuit without doing any algebra.",
+    tool: "Conductance matrix by inspection",
+    because: "Diagonal is what touches the node; off-diagonal is minus what is shared.",
+  },
+  {
+    part: "thevenin",
+    stem: "The same network will be tested with eight different load resistors.",
+    tool: "Thévenin equivalent",
+    because: "Solve once with the load removed, then every load is a single division.",
+  },
+  {
+    part: "thevenin",
+    stem: "What load resistance extracts the most power from a given source?",
+    tool: "Maximum power transfer",
+    because: "Match the load to the Thévenin resistance; the power is V²/4R.",
+  },
+  {
+    part: "thevenin",
+    stem: "A current source in parallel with 10 Ω needs to become a voltage source.",
+    tool: "Source transformation",
+    because: "Same resistance either way, with V = IR relating the two sources.",
+  },
+]);

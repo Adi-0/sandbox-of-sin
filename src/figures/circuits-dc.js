@@ -10,6 +10,7 @@ import { register, plate } from "../lib/figure.js";
 import { Schematic, solve, parallel } from "../lib/circuit.js";
 import { Plot } from "../lib/plot.js";
 import { num, fixed } from "../lib/fmt.js";
+import { texd } from "../lib/tex.js";
 
 const V = (n) => `var(--${n})`;
 
@@ -348,3 +349,275 @@ const setText = (n, x, t) => { n.setAttribute("x", x); n.textContent = t; };
 
 register("seriesParallel", { no: 27, build: seriesParallel });
 register("dividers", { no: 28, build: dividers });
+
+/* ==========================================================================
+   Plate 29 — the conductance matrix, read off the drawing
+   One knob: the bridging resistor. Lesson: the diagonal is what touches the
+   node, the off-diagonal is minus what is shared.
+   ========================================================================== */
+
+function nodeMatrix() {
+  const RA = 5, RB = 10, IS = 6;          // source into A, load from B to ground
+
+  const s = new Schematic({
+    w: 9, h: 5.2, unit: 30, pad: 34,
+    label: "A two-node circuit: a 6 amp source into node A, a 5 ohm from A to " +
+           "ground, an adjustable resistor bridging A to B, and a 10 ohm from B " +
+           "to ground. Beside it, the conductance matrix the circuit produces.",
+  });
+
+  s.wire([[1, 1.5], [1, 0.5], [3, 0.5]]);
+  s.wire([[3, 0.5], [3, 1.5]]);
+  s.wire([[5, 0.5], [3, 0.5]]);
+  s.wire([[7, 0.5], [7, 1.5]]);
+  s.wire([[1, 3.5], [1, 4.5], [7, 4.5], [7, 3.5]]);
+  s.wire([[3, 3.5], [3, 4.5]]);
+  s.source([1, 2.5], "v", { kind: "i", label: "6 A", at: "w", color: "q-y" });
+  s.resistor([3, 2.5], "v", { label: "5 Ω", at: "w", color: "ink" });
+  const rBridge = s.resistor([5, 0.5], "h", { label: "4 Ω", at: "n", color: "q-r" });
+  s.resistor([7, 2.5], "v", { label: "10 Ω", at: "e", color: "ink" });
+  s.node([3, 0.5], { label: "A", at: "nw", labelColor: "q-x" });
+  s.node([7, 0.5], { label: "B", at: "ne", labelColor: "q-x" });
+  s.node([3, 4.5]);
+  s.ground([5, 4.5]);
+  const vA = s.label([2.15, 1.05], "", { at: "c", color: "q-x", size: 12, weight: 500 });
+  const vB = s.label([7.9, 1.05], "", { at: "c", color: "q-x", size: 12, weight: 500 });
+
+  /* the matrix, as live text beside the drawing */
+  const mathBox = el("div", { style: { textAlign: "center", padding: "0 0 var(--s2)" } });
+
+  const rdA = readout({ key: "V at A", value: "", tone: "x" });
+  const rdB = readout({ key: "V at B", value: "", tone: "x" });
+  const rdDiag = readout({ key: "diagonal = what touches the node", value: "" });
+  const rdOff = readout({ key: "off-diagonal = minus what is shared", value: "" });
+  rdDiag.root.classList.add("wide");
+  rdOff.root.classList.add("wide");
+
+  function draw(Rb) {
+    const gA = 1 / RA + 1 / Rb;
+    const gB = 1 / RB + 1 / Rb;
+    const gAB = 1 / Rb;
+    const [VA, VB] = solve([[gA, -gAB], [-gAB, gB]], [IS, 0]);
+
+    Schematic.setLabel(rBridge.label, `${num(Rb, 1)} Ω`);
+    Schematic.setLabel(vA, `${fixed(VA, 2)} V`);
+    Schematic.setLabel(vB, `${fixed(VB, 2)} V`);
+
+    mathBox.innerHTML = texd(
+      `\\begin{bmatrix} ${fixed(gA, 3)} & ${fixed(-gAB, 3)} \\\\ ` +
+      `${fixed(-gAB, 3)} & ${fixed(gB, 3)} \\end{bmatrix}` +
+      `\\begin{bmatrix} V_A \\\\ V_B \\end{bmatrix} = ` +
+      `\\begin{bmatrix} ${fixed(IS, 0)} \\\\ 0 \\end{bmatrix}`
+    );
+
+    rdA.set(`${fixed(VA, 2)} V`);
+    rdB.set(`${fixed(VB, 2)} V`);
+    rdDiag.set(`at A: 1/${RA} + 1/${num(Rb, 1)} = ${fixed(gA, 3)} S · at B: 1/${RB} + 1/${num(Rb, 1)} = ${fixed(gB, 3)} S`);
+    rdOff.set(`only the ${num(Rb, 1)} Ω bridges A and B, so both corners are −1/${num(Rb, 1)} = ${fixed(-gAB, 3)} S`);
+  }
+
+  const k = knob({
+    label: "the resistor bridging A and B", min: 1, max: 40, step: 0.5, value: 4,
+    format: (v) => `${num(v, 1)} Ω`,
+    onInput: draw,
+  });
+  draw(4);
+
+  return plate({
+    no: 29,
+    title: "The conductance matrix, by inspection",
+    tag: "interactive",
+    label: "A two-node circuit and its conductance matrix",
+    stage: [s.root, mathBox],
+    controls: el("div.plate-controls", null, k.root),
+    readouts: readouts(rdA, rdB, rdDiag, rdOff),
+    caption:
+      "Change the bridging resistor and <b>four entries move at once</b> — both " +
+      "diagonals, because that resistor touches both nodes, and both off-diagonals, " +
+      "because it is what they share. Push it to 40 Ω and the corners approach " +
+      "zero: with almost nothing joining them, the two halves stop interacting and " +
+      "the matrix becomes diagonal. <b>Zero off-diagonal means two independent " +
+      "circuits.</b>",
+  });
+}
+
+/* ==========================================================================
+   Plate 30 — the black box, and the two components that replace it
+   ========================================================================== */
+
+function theveninBox() {
+  const VS = 100, R1 = 20, R2 = 5;
+  const VTH = VS * R2 / (R1 + R2);        // 20 V
+  const RTH = parallel(R1, R2);           // 4 Ω
+
+  const s = new Schematic({
+    w: 16, h: 5.4, unit: 26, pad: 40,
+    label: "On the left, a 100 volt source with a 20 ohm and a 5 ohm divider " +
+           "feeding a load. On the right, a 20 volt source behind 4 ohms feeding " +
+           "the same load. Both meters read identically at every load value.",
+  });
+
+  /* --- original --------------------------------------------------------------- */
+  s.label([3, -0.6], "THE ORIGINAL NETWORK", { at: "c", color: "muted", size: 11, weight: 500 });
+  s.wire([[0, 1.5], [0, 0.5], [2, 0.5]]);
+  s.wire([[4, 0.5], [6, 0.5], [6, 1.5]]);
+  s.wire([[0, 3.5], [0, 4.5], [6, 4.5], [6, 3.5]]);
+  s.wire([[4, 0.5], [4, 1.5]]);
+  s.wire([[4, 3.5], [4, 4.5]]);
+  s.source([0, 2.5], "v", { kind: "dc", label: "100 V", at: "w", color: "q-x" });
+  s.resistor([3, 0.5], "h", { label: "20 Ω", at: "n", color: "ink" });
+  s.resistor([4, 2.5], "v", { label: "5 Ω", at: "w", color: "ink" });
+  const loadA = s.box([6, 2.5], "v", { label: "RL", at: "e", color: "q-r" });
+  s.node([4, 0.5]);
+  s.node([4, 4.5]);
+  s.ground([2, 4.5]);
+  // clear of the 5 Ω label, which sits west of the middle branch
+  const readA = s.label([5, 3.9], "", { at: "c", color: "q-y", size: 12.5, weight: 500 });
+
+  /* --- equivalent -------------------------------------------------------------- */
+  s.label([12.5, -0.6], "ITS THÉVENIN EQUIVALENT", { at: "c", color: "muted", size: 11, weight: 500 });
+  s.wire([[10, 1.5], [10, 0.5], [11, 0.5]]);
+  s.wire([[13, 0.5], [15, 0.5], [15, 1.5]]);
+  s.wire([[10, 3.5], [10, 4.5], [15, 4.5], [15, 3.5]]);
+  s.source([10, 2.5], "v", { kind: "dc", label: "20 V", at: "w", color: "q-x" });
+  s.resistor([12, 0.5], "h", { label: "4 Ω", at: "n", color: "ink" });
+  const loadB = s.box([15, 2.5], "v", { label: "RL", at: "e", color: "q-r" });
+  s.ground([12.5, 4.5]);
+  const readB = s.label([13, 3.9], "", { at: "c", color: "q-y", size: 12.5, weight: 500 });
+
+  const rdLoad = readout({ key: "load", value: "" });
+  const rdOrig = readout({ key: "original network", value: "", tone: "y" });
+  const rdEquiv = readout({ key: "Thévenin equivalent", value: "", tone: "y" });
+  const rdSame = readout({ key: "agreement", value: "" });
+  rdSame.root.classList.add("wide");
+
+  function draw(RL) {
+    // original: the load is in parallel with R2, that pair in series with R1
+    const rp = parallel(R2, RL);
+    const vLoadA = VS * rp / (R1 + rp);
+    const iA = vLoadA / RL;
+    // equivalent: a plain divider
+    const vLoadB = VTH * RL / (RTH + RL);
+    const iB = vLoadB / RL;
+
+    Schematic.setLabel(loadA.label, `${num(RL, 1)} Ω`);
+    Schematic.setLabel(loadB.label, `${num(RL, 1)} Ω`);
+    Schematic.setLabel(readA, `${fixed(vLoadA, 2)} V`);
+    Schematic.setLabel(readB, `${fixed(vLoadB, 2)} V`);
+
+    rdLoad.set(`${num(RL, 1)} Ω`);
+    rdOrig.set(`${fixed(vLoadA, 3)} V · ${fixed(iA, 3)} A`);
+    rdEquiv.set(`${fixed(vLoadB, 3)} V · ${fixed(iB, 3)} A`);
+    rdSame.set(Math.abs(vLoadA - vLoadB) < 5e-4
+      ? "identical to three decimals, at this load and at every other ✓"
+      : `differ by ${fixed(Math.abs(vLoadA - vLoadB), 4)} V — which would mean an arithmetic slip`);
+  }
+
+  const k = knob({
+    label: "load resistance", min: 0.5, max: 40, step: 0.5, value: 4,
+    format: (v) => `${num(v, 1)} Ω`,
+    onInput: draw,
+  });
+  draw(4);
+
+  return plate({
+    no: 30,
+    title: "Two circuits nothing outside can tell apart",
+    tag: "interactive",
+    label: "A network and its Thévenin equivalent",
+    stage: s.root,
+    controls: el("div.plate-controls", null, k.root),
+    readouts: readouts(rdLoad, rdOrig, rdEquiv, rdSame),
+    caption:
+      "Sweep the load across the whole range and the two readings never separate. " +
+      "That is what the theorem claims and it is worth seeing rather than trusting: " +
+      "<b>from the load's point of view, four components and two are the same " +
+      "circuit.</b> Turn the load down towards 0.5 Ω and both collapse together; " +
+      "turn it up and both approach 20 V, which is <span class='math'>V_{th}</span> " +
+      "with nothing drawing current.",
+  });
+}
+
+/* ==========================================================================
+   Plate 31 — the power curve, and the flat peak on top of it
+   ========================================================================== */
+
+function maxPower() {
+  const VTH = 20, RTH = 4;
+  const P = (RL) => (VTH * VTH * RL) / Math.pow(RTH + RL, 2);
+  const PMAX = (VTH * VTH) / (4 * RTH);
+
+  const p = new Plot({
+    w: 560, h: 320, xr: [0, 24], yr: [0, 30],
+    pad: { l: 46, r: 24, t: 18, b: 38 },
+    label: "Power delivered to the load against load resistance. It peaks at 25 " +
+           "watts when the load equals the 4 ohm Thévenin resistance, and the peak " +
+           "is broad.",
+  });
+  p.grid({ xStep: 2, yStep: 5 });
+  p.axes({
+    xStep: 4, yStep: 10, xLabel: "R_L (Ω)", yLabel: "P (W)",
+    xFmt: (v) => (v === 0 ? "" : num(v, 0)), yFmt: (v) => (v === 0 ? "" : num(v, 0)),
+  });
+  p.curve(P, { color: "q-r", width: 2.75 });
+  // the 89%-of-peak band, to make "the peak is flat" a thing you can see
+  p.line(0, PMAX * 0.89, 24, PMAX * 0.89, { color: "muted", width: 1, dash: "4 4" });
+  p.text(23.4, PMAX * 0.89, "89% of the peak", { color: "muted", size: 10.5, dy: -6, anchor: "end", bg: true });
+  p.ring(RTH, PMAX, { color: "q-r", r: 6, width: 2 });
+  p.text(RTH, PMAX, "matched", { color: "q-r", size: 11.5, dy: -14, bg: true });
+
+  const marker = p.line(RTH, 0, RTH, PMAX, { color: "q-x", width: 1.5, dash: "3 3" });
+  const dot = p.dot(RTH, PMAX, { color: "q-x", r: 5.5 });
+
+  const rdRL = readout({ key: "load", value: "" });
+  const rdP = readout({ key: "power in the load", value: "", tone: "r" });
+  const rdPct = readout({ key: "share of the peak", value: "" });
+  const rdEff = readout({ key: "efficiency", value: "", tone: "y" });
+  const rdNote = readout({ key: "", value: "" });
+  rdNote.root.classList.add("wide");
+
+  function draw(RL) {
+    const pw = P(RL);
+    const eff = RL / (RTH + RL);
+    marker.setAttribute("x1", p.x(RL)); marker.setAttribute("x2", p.x(RL));
+    marker.setAttribute("y2", p.y(pw));
+    for (const c of dot.childNodes) { c.setAttribute("cx", p.x(RL)); c.setAttribute("cy", p.y(pw)); }
+
+    rdRL.set(`${num(RL, 1)} Ω`);
+    rdP.set(`${fixed(pw, 2)} W`);
+    rdPct.set(`${fixed((pw / PMAX) * 100, 1)}%`);
+    rdEff.set(`${fixed(eff * 100, 1)}%`);
+    rdNote.set(Math.abs(RL - RTH) < 0.26
+      ? "matched — maximum power, and exactly half of it is wasted inside the source"
+      : RL < RTH
+      ? "load too small: it gets plenty of current but almost no voltage"
+      : "load too large: it gets plenty of voltage but almost no current — though efficiency is climbing");
+  }
+
+  const k = knob({
+    label: "load resistance", min: 0.25, max: 24, step: 0.25, value: 4,
+    format: (v) => `${num(v, 2)} Ω`,
+    onInput: draw,
+  });
+  draw(4);
+
+  return plate({
+    no: 31,
+    title: "Maximum power, and what it costs",
+    tag: "interactive",
+    label: "Load power against load resistance",
+    stage: p.root,
+    controls: el("div.plate-controls", null, k.root),
+    readouts: readouts(rdRL, rdP, rdPct, rdEff, rdNote),
+    caption:
+      "Two things to take from this. <b>The peak is broad</b> — anywhere from 2 Ω " +
+      "to 8 Ω still delivers 89% of the maximum, which is why matching in practice " +
+      "is forgiving. And <b>watch the efficiency readout as you sweep</b>: it is " +
+      "50% at the matched point and keeps climbing as the load grows. Maximum power " +
+      "and maximum efficiency are different targets, and they never coincide.",
+  });
+}
+
+register("nodeMatrix", { no: 29, build: nodeMatrix });
+register("theveninBox", { no: 30, build: theveninBox });
+register("maxPower", { no: 31, build: maxPower });

@@ -1,0 +1,188 @@
+<p class="eyebrow">
+  <span>Circuit Analysis · Part 3</span>
+  <span class="spec">NCEES 6.D</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Node and Loop Analysis</h1>
+
+<p class="lede">The method that never needs cleverness. It works on every linear
+circuit, including the ones where Part 2's shortcuts have nothing to grab —
+and the system it produces is the matrix from Mathematics Part 5, read straight
+off the drawing.</p>
+
+<h2>3.1 When the shortcuts run out</h2>
+
+<p>Part 2's technique needs a series or parallel group to collapse. Draw a
+<span class="term">bridge</span> — four resistors in a diamond with a fifth
+across the middle — and there is not one. No two share both nodes, so nothing is
+in parallel; every junction has three branches, so nothing is in series. Every
+shortcut you have fails on the first step.</p>
+
+<p>What is needed is a procedure that does not depend on the shape of the
+network at all. There are two, they are the same idea applied to the two laws in
+turn, and between them they cover everything on this exam.</p>
+
+<h2>3.2 Node analysis</h2>
+
+<p>Pick one node and declare it the reference — <span class="term">ground</span>,
+zero volts. Every other node now has an unknown voltage. Write KCL at each of
+those unknowns, express each branch current as
+<span data-tex="\Delta V / R">ΔV/R</span>, and solve.</p>
+
+<f-plate no="6.6" title="Node analysis, as a recipe" stamp="know"
+  caption="Four steps, no judgement calls. <b>The one place people go wrong is
+  step 3</b>: the current leaving node A through a resistor towards node B is
+  <span class='math' data-tex='(V_A - V_B)/R'>(V_A − V_B)/R</span> — the
+  <em>local</em> node's voltage comes first, every time, regardless of which is
+  actually higher.">
+  <f-row tex="\text{1. Choose a reference node and call it } 0\text{ V}"
+         gloss="Pick the one with the most branches, usually the bottom rail. It makes the algebra shortest."></f-row>
+  <f-row tex="\text{2. Label the remaining node voltages } V_A, V_B, \ldots"
+         gloss="A circuit with n nodes gives n − 1 unknowns."></f-row>
+  <f-row tex="\text{3. Write } \sum I_{\text{out}} = 0 \text{ at each unknown node}"
+         gloss="Every term is (this node − that node) over the resistance between them."></f-row>
+  <f-row tex="\text{4. Solve the system, then get every branch from Ohm's law}"
+         gloss="The node voltages are the whole answer; everything else follows in one line each."></f-row>
+</f-plate>
+
+<h2>3.3 The matrix you can read off the drawing</h2>
+
+<p>Do that on a two-node circuit and something worth noticing happens. The
+equations always arrange themselves into the same shape:</p>
+
+<p class="math" data-tex="\begin{bmatrix} \sum G_A & -G_{AB} \\ -G_{AB} & \sum G_B \end{bmatrix}\begin{bmatrix} V_A \\ V_B \end{bmatrix} = \begin{bmatrix} I_A \\ I_B \end{bmatrix}" data-display>G V = I</p>
+
+<p>with <span data-tex="G = 1/R">G = 1/R</span> as always. And each entry has a
+plain meaning you can read directly off the circuit:</p>
+
+<ul>
+  <li><b>Diagonal entry</b> — the sum of <em>all</em> conductances touching that
+      node. Always positive.</li>
+  <li><b>Off-diagonal entry</b> — minus the conductance <em>between</em> those
+      two nodes. Always negative, and always symmetric.</li>
+  <li><b>Right-hand side</b> — the current pushed <em>into</em> that node by
+      sources.</li>
+</ul>
+
+<p>That means you can write the matrix without doing any algebra at all. Turn the
+knob in Plate 29 and watch the entries move as the circuit changes.</p>
+
+<div data-figure="nodeMatrix"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Mathematics Part 5 comes back</span>
+  <p style="margin-bottom:0">This is <span class="math" data-tex="A\vec{x} = \vec{b}">Ax = b</span>,
+  and Cramer's rule solves it in two determinants. The conductance matrix is
+  always <b>symmetric</b> for a network of resistors, and it is
+  <b>singular exactly when you forgot to pick a ground</b> — because without a
+  reference the node voltages are only defined up to a constant, so no unique
+  solution exists. <b>A zero determinant here is a modelling mistake, not an
+  arithmetic one.</b></p>
+</div>
+
+<h2>3.4 Mesh analysis</h2>
+
+<p>The mirror image. Instead of node voltages, assume a circulating
+<span class="term">mesh current</span> in each window of the circuit, then write
+KVL round each window. Where two meshes share a resistor, the current in it is
+the <em>difference</em> of the two mesh currents — which is the step people
+forget.</p>
+
+<f-plate no="6.7" title="Mesh analysis, as a recipe" stamp="know"
+  caption="The resistance matrix mirrors the conductance matrix exactly:
+  <b>diagonal is the sum of resistances round that mesh; off-diagonal is minus
+  the resistance shared with the neighbouring mesh.</b> Same pattern, dual
+  quantities.">
+  <f-row tex="\text{1. Assign a loop current to each window, all clockwise}"
+         gloss="Choosing the same direction everywhere is what makes the off-diagonal terms uniformly negative."></f-row>
+  <f-row tex="\text{2. Write KVL round each window}"
+         gloss="A shared resistor carries the difference of the two mesh currents."></f-row>
+  <f-row tex="\begin{bmatrix} \sum R_1 & -R_{12} \\ -R_{12} & \sum R_2 \end{bmatrix}\begin{bmatrix} I_1 \\ I_2 \end{bmatrix} = \begin{bmatrix} V_1 \\ V_2 \end{bmatrix}"
+         name="the pattern"
+         gloss="Right-hand side: the sum of source rises driving that loop clockwise."></f-row>
+</f-plate>
+
+<h2>3.5 Choosing between them</h2>
+
+<p>Both always work. On a timed exam, pick the one with fewer unknowns:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Use</th><th>When</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><b>Node</b></td><td>Few nodes; current sources present</td>
+        <td>A current source contributes a right-hand-side term directly — no extra work</td></tr>
+    <tr><td><b>Mesh</b></td><td>Few windows; voltage sources present</td>
+        <td>A voltage source contributes a right-hand-side term directly</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Count before you commit. A circuit with 4 nodes and 2 windows gives 3 node
+equations or 2 mesh equations — take the mesh. Reverse those numbers and take the
+node. <b>That thirty-second count regularly saves three minutes.</b></p>
+
+<div class="worked">
+  <h4>Worked · <em>the cast circuit as a matrix</em></h4>
+  <div class="worked-body">
+    <p>Part 1 solved this with one KCL equation. Here it is in the matrix form,
+    so the pattern is visible on a case you already know the answer to.</p>
+    <ol class="steps">
+      <li>Ground the bottom rail. There is exactly one unknown node — call it P —
+        so the "matrix" is 1×1.</li>
+      <li>Diagonal: every conductance touching P.
+        <span data-tex="G_P = \frac{1}{2} + \frac{1}{12} + \frac{1}{4} = 0.8333\text{ S}" data-display>G_P = 0.8333 S</span></li>
+      <li>Right-hand side: the current the source pushes in, which for a voltage
+        source behind a resistor is
+        <span data-tex="100/2 = 50\text{ A}">100/2 = 50 A</span>.</li>
+      <li><span data-tex="V_P = 50 / 0.8333 = 60\text{ V}">V_P = 50/0.8333 = 60 V</span>
+        — the same 60 V as Part 1 and Part 2, by a method that would have worked
+        just as well on a bridge.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the sign on the off-diagonal</span>
+  <p style="margin-bottom:0">Off-diagonal entries are <b>negative</b>, in both
+  the node and the mesh matrix. The reason is physical, not conventional: a
+  branch shared between two nodes carries current that <em>leaves</em> one and
+  <em>enters</em> the other, so it appears with opposite signs in the two
+  equations. If your matrix comes out with a positive off-diagonal, you have
+  dropped a sign, and the answer will be wrong in a way that still looks
+  plausible.</p>
+</div>
+
+<h2>3.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Node analysis: ground one node, KCL at the rest, currents written as
+        (local node − other node)/R.</li>
+    <li>The conductance matrix by inspection: diagonal is the sum of conductances
+        at the node, off-diagonal is minus the shared conductance.</li>
+    <li>Mesh analysis: clockwise loop currents, KVL round each; a shared resistor
+        carries the <b>difference</b>.</li>
+    <li>Off-diagonal entries are negative in both methods.</li>
+    <li>Count unknowns before choosing. Nodes minus one, versus windows.</li>
+    <li>No ground means a singular matrix. Pick a reference first, always.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Node analysis is KCL written at every node at once; mesh analysis is KVL
+  written round every window at once. Both turn a circuit into a linear system
+  that a determinant can solve, and neither cares what the network looks like.</p>
+  <p>The system's matrix can be written straight off the drawing — diagonal is
+  what touches that node or loop, off-diagonal is minus what is shared. That is
+  the whole of the method, and it is why circuits are a linear algebra problem
+  wearing a schematic.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"node-loop","title":"Part 3 · Node and mesh analysis","topics":["node-solve","mesh-solve","method-choice"],"count":6}'></div>
+
+<div data-reflex='{"only":["node-loop","series-parallel"],"count":6,"title":"Handbook Reflex · Parts 2–3"}'></div>
