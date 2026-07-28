@@ -1,0 +1,130 @@
+<p class="eyebrow">
+  <span>Power Systems · Part 6</span>
+  <span class="spec">NCEES 10.A–10.D</span>
+  <span>12 minute read</span>
+</p>
+
+<h1>Synthesis and the Mixed Bench</h1>
+
+<p class="lede">Four subtopics, one physical system. What looked like separate
+chapters was a single path from a generator to a shaft, and this is the shortest
+way to hold all of it.</p>
+
+<h2>6.1 The module was one plant</h2>
+
+<div data-figure="powerMap"></div>
+
+<p>The specification lists power theory, transmission, transformers and machines
+as though they were four subjects. Following one plant through all of them shows
+what they really are: consecutive stations on the way from generation to torque,
+each one raising the question the next one answers.</p>
+
+<ul>
+  <li>Part 3 showed that moving power cheaply demands <b>high voltage</b> — so
+  Part 4 had to explain the device that provides it.</li>
+  <li>Part 2 showed that three phases deliver <b>constant power</b> — which is
+  what makes Part 5's motors turn smoothly.</li>
+  <li>Part 5 explained why the motor draws <b>lagging current</b> — which is the
+  problem Part 1 opened with.</li>
+</ul>
+
+<h2>6.2 How few relationships were really doing the work</h2>
+
+<p>Strip out the narrative and the whole module is about eight expressions.</p>
+
+<f-plate no="10.12" title="Power Systems, complete" stamp="know"
+  caption="Every problem in this module's benches is one or two of these composed.
+  <b>If you can write these eight from memory and say what each symbol means, the
+  area is covered.</b>">
+  <f-row tex="P = \sqrt{3}\,V_L I_L\cos\theta" name="three-phase power"
+         gloss="Line quantities, impedance angle, both connections. Its cousins <span class='math'>S = \sqrt{3}V_LI_L</span> and <span class='math'>Q = \sqrt{3}V_LI_L\sin\theta</span> come free."></f-row>
+  <f-row tex="\text{Y}: V_L = \sqrt{3}V_\phi,\ I_L = I_\phi \qquad \Delta: V_L = V_\phi,\ I_L = \sqrt{3}I_\phi"
+         name="line and phase"
+         gloss="The √3 sits on whichever quantity is <em>not</em> shared by the connection."></f-row>
+  <f-row tex="Q_C = P(\tan\theta_1 - \tan\theta_2)" name="correction"
+         gloss="Tangents, because tangent is VAR per watt."></f-row>
+  <f-row tex="P_{loss} = 3I_L^2R = \frac{P^2R}{V_L^2\cos^2\theta}" name="line loss"
+         gloss="Three conductors, and the inverse square in voltage that shapes the grid."></f-row>
+  <f-row tex="a = \frac{V_1}{V_2} = \frac{I_2}{I_1}, \qquad Z_1 = a^2Z_2"
+         name="transformer"
+         gloss="Voltage direct, current inverse, impedance squared."></f-row>
+  <f-row tex="n_s = \frac{120f}{p}, \qquad s = \frac{n_s-n}{n_s}"
+         name="speed and slip"
+         gloss="Poles, not pole pairs. Slip referenced to synchronous speed."></f-row>
+  <f-row tex="P_{rotor} = s\,P_{ag}, \qquad P_{mech} = (1-s)P_{ag}"
+         name="induction power split"
+         gloss="An identity. Slip is a direct percentage tax on the air-gap power."></f-row>
+  <f-row tex="\eta = \frac{P_{out}}{P_{in}}, \qquad 1\text{ hp} = 746\text{ W}"
+         name="the two conversions"
+         gloss="Efficiency acts on watts, power factor acts on volt-amperes, and horsepower gets you into watts in the first place."></f-row>
+</f-plate>
+
+<h2>6.3 The five mistakes that cost the most</h2>
+
+<div class="note trap">
+  <span class="note-tag">Worth one last look before the bench</span>
+  <ol style="margin:0.4rem 0 0;padding-left:1.2rem">
+    <li><b>√3 versus 3.</b> Line-to-phase is √3. Delta-to-wye impedance is 3.
+    Three conductors in a loss calculation is 3. They are different threes.</li>
+    <li><b>Which θ.</b> In
+    <span class="math" data-tex="P = \sqrt{3}V_LI_L\cos\theta">√3 VL IL cos θ</span>
+    it is the <em>impedance</em> angle. The 30° between line and phase voltage is
+    already inside the √3.</li>
+    <li><b>Nameplate ratio versus bank ratio.</b> A Δ–Y bank of 20 : 1
+    transformers is 11.55 : 1 overall.</li>
+    <li><b>Tangents, not cosines,</b> in power factor correction.</li>
+    <li><b>Poles, not pole pairs,</b> in
+    <span class="math" data-tex="n_s = 120f/p">ns = 120f/p</span>. Three pole
+    pairs is six poles.</li>
+  </ol>
+</div>
+
+<h2>6.4 Order of operations, when a question stacks them</h2>
+
+<p>Power questions on this exam are often two or three steps wearing one stem.
+The reliable route is almost always the same:</p>
+
+<ol class="steps">
+  <li><b>Get to watts.</b> Horsepower × 746, or read the kW off the stem.</li>
+  <li><b>Divide by efficiency</b> if the number given was mechanical output.
+  Electrical input is always the larger figure.</li>
+  <li><b>Divide by power factor</b> to reach volt-amperes, which is what the
+  supply, the cable and the transformer are rated for.</li>
+  <li><b>Divide by √3 V<sub>L</sub></b> to reach line current — the quantity
+  everything physical depends on.</li>
+  <li><b>Square it</b> for losses, or use it directly for drop.</li>
+</ol>
+
+<p>Steps 2 and 3 are the ones that get swapped. Efficiency acts on <em>watts</em>;
+power factor acts on <em>volt-amperes</em>. Keeping the units straight keeps the
+order straight.</p>
+
+<div class="note payoff">
+  <span class="note-tag">Where the triangle ends up</span>
+  <p style="margin-bottom:0">The 3-4-5 triangle that arrived in Mathematics Part 1
+  as a trigonometry exercise has now been a complex number, an eigenvalue, a
+  characteristic root, an impedance, a power triangle, and finally a plant drawing
+  <b>5184 W, 6912 VAR and 8640 VA</b> from a 208 V service. It was never a
+  coincidence and never a teaching device borrowed for the occasion — a right
+  triangle with a 53.13° angle is what a 0.6 power factor <em>is</em>.</p>
+</div>
+
+<h2>6.5 Under exam conditions</h2>
+
+<p>Eight questions, drawn across all four subtopics, at the real pace of 2 minutes
+50 seconds each. Nothing here needs a formula you have not already written down.</p>
+
+<div data-bench='{"id":"power-mixed","title":"Power Systems · mixed set, exam pace","topics":["pf-correct","three-phase-power","line-phase","line-loss","turns-ratio","reflected-z","xfmr-3ph","sync-speed","slip-find","rotor-power","kva-size","balanced-load"],"count":8}'></div>
+
+<div data-reflex='{"only":["power-factor","three-phase","transmission","transformers","machines"],"count":10,"title":"Handbook Reflex · all of Power Systems"}'></div>
+
+<div class="keyidea">
+  <p>Power Systems is one path: generate, transmit, transform, distribute,
+  correct, convert to torque. Each of its four published subtopics is a station
+  along that path, and the questions the exam asks are almost always about the
+  junction between two stations rather than about either one alone.</p>
+  <p>Eight expressions cover the area. The arithmetic is short. What the questions
+  actually test is whether you can tell a line quantity from a phase one, a
+  nameplate ratio from a bank ratio, and watts from volt-amperes — which is why
+  reading the stem carefully is worth more here than speed.</p>
+</div>

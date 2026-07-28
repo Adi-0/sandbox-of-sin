@@ -3,15 +3,16 @@
 An interactive educator for the NCEES *Fundamentals of Engineering (Electrical
 and Computer)* exam, built one knowledge area at a time.
 
-**Covered so far — the two largest blocks on the exam, 22 to 34 of the 110
+**Covered so far — the three largest blocks on the exam, 30 to 46 of the 110
 questions:**
 
 | | Module | NCEES | Questions | Parts | Plates |
 |---|---|---|---|---|---|
 | 1 | **Mathematics** | area 1 | 11–17 | 9 | 1–25 |
 | 6 | **Circuit Analysis (DC and AC Steady State)** | area 6 | 11–17 | 7 | 26–36 |
+| 10 | **Power Systems** | area 10 | 8–12 | 6 | 37–48 |
 
-Thirty-six live plates, sixty-three problem generators, and one right triangle
+Forty-eight live plates, eighty-three problem generators, and one right triangle
 followed from the first plate to the last.
 
 ## Run it
@@ -39,7 +40,7 @@ tablet and read it on a train.
 
 The FE exam is **closed book with an electronic reference** — the NCEES FE
 Reference Handbook, searchable, open in a second window. Almost every formula
-in these ten parts is in it.
+in these twenty-three parts is in it.
 
 So the usual approach — flashcard the formulas until they stick — spends your
 most expensive resource on the one thing the exam gives away. What the handbook
@@ -74,12 +75,15 @@ literature uses these numbers for the same reason.
 | Circuits 4 | 100 V behind 20 Ω and 5 Ω | V_th = 20 V, R_th = 4 Ω, 25 W maximum |
 | Circuits 6 | **Z = 3 + j4 = 5∠53.13° Ω** | 20 A lagging 53.13° |
 | Circuits 6 | the **power triangle** | 1200 W, 1600 VAR, 2000 VA, pf 0.6 lagging |
+| Power 1 | one 120 V branch of a plant | 1728 W, 2304 VAR, 2880 VA — 576 × (3,4,5) |
+| Power 2–5 | the **whole plant** on 208Y/120 | 5184 W, 6912 VAR, 8640 VA — 1728 × (3,4,5) |
 
-The payoff arrives twice. In Mathematics Part 7 the triangle becomes the
+The payoff arrives three times. In Mathematics Part 7 the triangle becomes the
 characteristic root that decides whether a circuit rings. In Circuit Analysis
 Part 6 it becomes the power triangle — 1200, 1600 and 2000 are 3, 4 and 5
-multiplied by 400. Neither is an analogy; they are the same three numbers doing
-the work.
+multiplied by 400. In Power Systems it becomes an actual industrial plant, drawn
+end to end on the final plate. None of it is analogy; they are the same three
+numbers doing the work, and a 0.6 power factor simply *is* a 53.13° triangle.
 
 ## What is in it
 
@@ -110,17 +114,28 @@ the work.
 | 6 | **Phasors and Impedance** | 6.F · 6.G | 26 min | 34–35 |
 | 7 | **Synthesis and the Mixed Bench** | 6.A–6.G | 12 min | 36 |
 
-Every subtopic of both published specifications is covered; the order within
+### Module 10 — Power Systems (NCEES area 10)
+
+| Part | | NCEES | Read | Plates |
+|---|---|---|---|---|
+| 1 | **Power Factor and What It Costs** — the angle from Circuits, with money on it | 10.A | 24 min | 37–38 |
+| 2 | **Three-Phase** — where the √3 comes from, and why 208 V is really 120 V | 10.A · 10.B | 28 min | 39–41 |
+| 3 | **Transmission and Distribution** | 10.B | 22 min | 42–43 |
+| 4 | **Transformers** | 10.C | 24 min | 44–45 |
+| 5 | **Motors and Generators** | 10.D | 26 min | 46–47 |
+| 6 | **Synthesis and the Mixed Bench** | 10.A–10.D | 12 min | 48 |
+
+Every subtopic of all three published specifications is covered; the order within
 each module is pedagogical rather than the alphabetical order NCEES prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 63 types is a seeded
+- **Problems are generated, not stored.** Each of the 83 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
-  the sign, working in degrees, forgetting the ½, or misreading "choose" as
-  "arrange" — and each one explains which error it represents. A wrong answer is
+  the sign, working in degrees, forgetting the ½, or reading a nameplate ratio as a
+  bank ratio — and each one explains which error it represents. A wrong answer is
   a diagnosis, not a dead end.
 - **The Handbook Reflex drill.** A stem, fifteen seconds, name the tool. No
   arithmetic at all. It trains classification, which is the step almost nobody
@@ -159,13 +174,14 @@ src/
     fmt.js          number formatting — no floating-point tails, ever
     rng.js          seeded RNG, so any problem set is reproducible
     circuit.js      schematic drawing on a grid, plus a network solver
-  figures/          one file per part, 36 plates
-  problems/         one file per part, 63 generators
+  figures/          one file per part, 48 plates
+  problems/         one file per part, 83 generators
 
 content/
   start/            the orientation part
   math/             Mathematics, 9 parts
   circuits/         Circuit Analysis, 7 parts
+  power/            Power Systems, 6 parts
 ```
 
 Vanilla ES modules. No framework, no external JavaScript, no maths library.
@@ -189,8 +205,8 @@ floor, adjacent CVD separation, normal-vision separation and contrast — at the
 rather than highlighter. Do not nudge them by eye.
 
 The HANDBOOK / KNOW COLD stamps are deliberately monochrome, so they stay out of
-the colour vocabulary entirely. In Circuit Analysis the same three quantity
-tokens carry over as voltage, current and result.
+the colour vocabulary entirely. In Circuit Analysis and Power Systems the same
+three quantity tokens carry over as voltage, current and result.
 
 **Figures compute their own numbers.** `circuit.js` ships a Gaussian-elimination
 solver and every schematic figure runs the same node analysis the prose teaches.
@@ -220,7 +236,7 @@ Verified with no horizontal scroll down to a 360 px viewport, in both themes.
 
 ---
 
-Two of the seventeen NCEES knowledge areas are done. The next ones — Linear
-Systems, Power Systems, Digital Systems, Electronics — reuse `styles/` and
+Three of the seventeen NCEES knowledge areas are done. The next ones — Electronics,
+Digital Systems, Linear Systems and Control Systems — reuse `styles/` and
 `src/lib/` unchanged and slot into `outline.js` as further modules, so the
 compilation keeps reading as one work.

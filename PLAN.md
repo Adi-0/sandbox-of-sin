@@ -9,9 +9,10 @@ This file is the durable memory across turns. Read it first.
 |---|---|---|---|---|---|
 | **Mathematics** | 1 | 11–17 | 9 | 1–25 | complete |
 | **Circuit Analysis (DC and AC Steady State)** | 6 | 11–17 | 7 | 26–36 | complete |
+| **Power Systems** | 10 | 8–12 | 6 | 37–48 | complete |
 
-Two of seventeen areas; 22–34 of the 110 questions. A shared orientation part
-sits ahead of both.
+Three of seventeen areas; 30–46 of the 110 questions. A shared orientation part
+sits ahead of all of them.
 
 ---
 
@@ -50,6 +51,14 @@ From the NCEES *FE Electrical and Computer CBT Exam Specifications*
 | 6.E | Waveform analysis (RMS, average, frequency, period) | Circuits 5 |
 | 6.F | Phasors | Circuits 6 |
 | 6.G | Impedance | Circuits 6 |
+| 10.A | Power theory (power factor, single and three phase, voltage regulation) | Power 1, Power 2 |
+| 10.B | Transmission and distribution (losses, efficiency, voltage drop, delta and wye) | Power 2, Power 3 |
+| 10.C | Transformers (single- and three-phase connections, reflected impedance) | Power 4 |
+| 10.D | Motors and generators (synchronous, induction, dc) | Power 5 |
+
+**Checked against the PDF, not from memory:** area 10 has no per-unit and no
+symmetrical components. Those are PE topics. An earlier draft of this file
+listed them as planned work, and they would have been a wasted part.
 
 The order within each module is pedagogical, not the alphabetical order NCEES
 prints. Circuits 4 follows Circuits 3 because Thévenin is easiest to *prove*
@@ -93,15 +102,23 @@ literature uses them for the same reason.
 | Circuits 5 | The wall outlet: **120 V RMS = 170 V peak = 340 V peak-to-peak** |
 | Circuits 6 | **Z = 3 + j4 = 5∠53.13° Ω** at 100 V → **20 A lagging 53.13°** |
 | Circuits 6 | The **power triangle**: P = 1200 W, Q = 1600 VAR, S = 2000 VA, pf 0.6 lagging |
+| Power 1 | One 120 V branch of a plant: **1728 W, 2304 VAR, 2880 VA** = 576 × (3,4,5) |
+| Power 2–5 | The whole plant on **208Y/120**: 24 A, **5184 W, 6912 VAR, 8640 VA** = 1728 × (3,4,5) |
+| Power 4 | The **4160 : 208** transformer, a = 20, so a² = 400 and 5 Ω reflects as 2000 Ω |
+| Power 5 | The plant is a **4-pole induction motor** at 1764 rpm, 2% slip, 91.3% efficient |
 
 Every DC cast quantity is an integer, deliberately: a student checking their
 arithmetic should never be unsure whether the mismatch is theirs or rounding's.
 
-The payoff arrives twice. In Maths 7 the triangle becomes the characteristic
-root that decides whether a circuit rings. In Circuits 6 it becomes the power
-triangle — 1200, 1600 and 2000 are 3, 4 and 5 multiplied by 400, and the angle
-whose cosine is 0.6 is the power factor. Neither is an analogy; they are the
-same three numbers doing the work.
+The payoff arrives three times. In Maths 7 the triangle becomes the
+characteristic root that decides whether a circuit rings. In Circuits 6 it
+becomes the power triangle — 1200, 1600 and 2000 are 3, 4 and 5 multiplied by
+400, and the angle whose cosine is 0.6 is the power factor. In Power it becomes
+a real plant, and the final plate draws it end to end. None of it is analogy: a
+0.6 power factor simply **is** a 53.13° right triangle.
+
+Power Systems also earns its 208 V: it is 120√3, and the 120 is Circuits Part
+5's wall outlet. Students are rarely told where that number comes from.
 
 ## 4. The arc
 
@@ -134,6 +151,27 @@ same three numbers doing the work.
 
 Circuits is the module where the Mathematics module pays. Parts 3, 5 and 6
 each open by naming the maths part they are cashing in.
+
+### Module 10 — Power Systems (area 10)
+
+| # | Part | Read | Why it comes here |
+|---|---|---|---|
+| 1 | Power Factor and What It Costs | 24 min | Picks up Circuits 6's power triangle and attaches money to it |
+| 2 | Three-Phase | 28 min | The √3 derived from a phasor subtraction, not asserted |
+| 3 | Transmission and Distribution | 22 min | Loss ∝ 1/V² — creates the *need* for the transformer |
+| 4 | Transformers | 24 min | The answer to the question Part 3 just raised |
+| 5 | Motors and Generators | 26 min | Where the power goes, and why the pf was 0.6 to begin with |
+| 6 | Synthesis and mixed bench | 12 min | One plant, drawn end to end across all four subtopics |
+
+**Part 1 is deliberately single-phase.** Three-phase is named in 10.A but is
+not taught until Part 2, and using it in Part 1 would break the build-up. The
+key result — correcting 0.6 → 0.9 drops the current from 24 A to exactly 16 A
+and copper loss to 4/9 — is a ratio, so it survives the rescaling intact.
+
+Part 3 before Part 4 is the module's other ordering decision: T&D ends with
+"you cannot transmit at 208 V", and the transformer walks in as the answer.
+Part 5 then closes the loop by explaining that the plant's 0.6 power factor was
+its own motor's magnetising current all along.
 
 ## 5. Beyond a static guide
 
@@ -180,13 +218,14 @@ src/
     figure.js       plate scaffolding, rAF loop, reduced-motion
     rng.js          seeded RNG so a problem set is reproducible
     bench.js        problem engine, MCQ UI, stepped solutions
-  figures/          one module per part, 36 plates
-  problems/         one module per part, 63 generators
+  figures/          one module per part, 48 plates
+  problems/         one module per part, 83 generators
 
 content/
   start/            orientation
   math/             Mathematics, 9 parts
   circuits/         Circuit Analysis, 7 parts
+  power/            Power Systems, 6 parts
 ```
 
 Vanilla ES modules. No framework, no build step to run it, no external
@@ -198,18 +237,37 @@ module registered in their `index.js`. Nothing in `styles/` or `src/lib/`
 should need to change; if it does, that is a signal the new module is breaking
 the design rules rather than extending them.
 
-**Schematic conventions** (`circuit.js`, for whoever adds Power or
-Electronics): everything is in grid units, component bodies are 2 units long
-so wires meet leads exactly, and centres must therefore be ≥ 2 units apart.
-`#body` returns `{ node, label }` so a figure can relabel a component's value
-live. `current()` chooses its label side from the *sign* of the offset.
+**Schematic conventions** (`circuit.js`, for whoever adds Electronics):
+everything is in grid units, component bodies are 2 units long so wires meet
+leads exactly, and centres must therefore be ≥ 2 units apart. `#body` returns
+`{ node, label }` so a figure can relabel a component's value live.
+`current()` chooses its label side from the *sign* of the offset.
+
+**Two drawing rules learned the hard way in Power Systems**, both worth
+keeping:
+
+- For a one-line diagram, set `xr`/`yr` so **one data unit is one pixel** and
+  remember **+y is up**. Plate 42 was first written with the offsets inverted
+  and came out upside-down. A schematic is drawn, not plotted.
+- For any plate that makes a *geometric* claim — a power triangle, a phasor
+  subtraction — the two axis scales must be **equal**, or the angle the reader
+  measures will not be the angle in the readout. Plates 37, 38 and 40 are
+  scaled that way deliberately.
+- `Plot.text(..., { bg: true })` returns a **group** of two `<text>` nodes, not
+  a `<text>`. Updating it needs both; see `haloText()` in `three-phase.js`.
+  Silently doing nothing is the failure mode.
+
+**Interactive defaults must land on the cast.** Plate 39's knob is the power
+factor rather than the load angle purely because 53.13° is unreachable on a
+whole-degree step, and a plate reading 5200 W beside prose reading 5184 W is a
+defect the reader will notice and not be able to explain.
 
 ## 7. Semantic colour — constant in every figure
 
 | Token | Means, everywhere | Maths | Circuits |
 |---|---|---|---|
-| `--q-x` | input / horizontal / real part | x-axis, cos θ, Re(z) | voltage |
-| `--q-y` | output / vertical / imaginary part | y-axis, sin θ, Im(z) | current |
+| `--q-x` | input / horizontal / real part | x-axis, cos θ, Re(z) | voltage, real power |
+| `--q-y` | output / vertical / imaginary part | y-axis, sin θ, Im(z) | current, reactive power |
 | `--q-r` | magnitude / result / accumulated area | hypotenuse, \|z\|, ∫ | the computed answer |
 | `--q-bad` | error, trap, discontinuity | asymptotes, wrong traces | the trap reading |
 
@@ -220,7 +278,7 @@ them reading as drafting ink rather than highlighter. Do not nudge them by eye.
 
 ## 8. Status
 
-Seventeen parts, 36 plates, 63 generators, 63 reflex items.
+Twenty-three parts, 48 plates, 83 generators, 83 reflex items.
 
 | Module | Part | Plates | Generators |
 |---|---|---|---|
@@ -241,19 +299,26 @@ Seventeen parts, 36 plates, 63 generators, 63 reflex items.
 | Circuits | 5 Waveforms | 32–33 | 3 |
 | Circuits | 6 Phasors and Impedance | 34–35 | 4 |
 | Circuits | 7 Synthesis and mixed bench | 36 | (reuses 10) |
+| Power | 1 Power Factor and What It Costs | 37–38 | 4 |
+| Power | 2 Three-Phase | 39–41 | 4 |
+| Power | 3 Transmission and Distribution | 42–43 | 4 |
+| Power | 4 Transformers | 44–45 | 4 |
+| Power | 5 Motors and Generators | 46–47 | 4 |
+| Power | 6 Synthesis and mixed bench | 48 | (reuses 12) |
 
 ### Verified
 
-Run from `scratchpad/` against `python3 serve.py -p 8123`:
+Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
+read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 17 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 23 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 36 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 48 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
-- `bundle.mjs` — `dist/the-bench.html` (725 KB, 35 modules, 17 chapters) runs
-  from `file://` with no server and no network.
+- `bundle.mjs` — `dist/the-bench.html` runs from `file://` with no server and
+  no network.
 - No horizontal scroll at 360 px or 768 px; both themes checked.
 - The four quantity colours pass all six checks of the palette validator in
   light *and* dark.
@@ -268,19 +333,29 @@ Run from `scratchpad/` against `python3 serve.py -p 8123`:
 - Circuits stops at steady state, as area 6 does. Transient RL/RC response
   belongs to Linear Systems and is deliberately not taught here — Circuits 6
   names the boundary rather than blurring it.
+- Plate 46's torque–speed curve is Kloss's approximation, which understates
+  starting torque against a real NEMA Design B machine. The plate says so.
+- Plate 47's flow band barely narrows at a healthy motor's 2% slip, because
+  the losses genuinely are small. The loss *arrows* are scaled instead;
+  exaggerating the band would have been a lie about the machine.
 
 ## 9. Next turns
 
 The remaining NCEES areas, in the order that reuses the most:
 
+- **Electronics** (7–11 q) — Circuits 4's Thévenin as a small-signal model,
+  and Power 4's reflected impedance as impedance matching.
+- **Digital Systems** (7–11 q) — Maths 8's logic as gates and K-maps.
 - **Linear Systems** (5–8 q) + **Control Systems** (6–9 q) — Maths 7 and
   Circuits 6 as transfer functions; the transient half of the RL/RC story.
-- **Power Systems** (8–12 q) — Circuits 6's power triangle at three phases.
-- **Digital Systems** (7–11 q) — Maths 8's logic as gates and K-maps.
-- **Electronics** (7–11 q) — Circuits 4's Thévenin as a small-signal model.
-- Then: Signal Processing, Electromagnetics, Computer Systems, Software
-  Development, Engineering Economics, Ethics, Probability and Statistics,
-  Properties of Electrical Materials.
+- **Signal Processing** (5–8 q) — Maths 6's integral as the Fourier transform.
+- Then: Electromagnetics, Communications, Computer Networks, Computer Systems,
+  Software Development, Engineering Economics, Ethics, Probability and
+  Statistics, Properties of Electrical Materials.
+
+Counts above are from the specification PDF. **Read it again before starting a
+module** rather than trusting this list — the area 10 per-unit mistake was
+caught exactly that way.
 
 Each slots into `outline.js` as another module and continues the plate
 numbering, so the compilation keeps reading as one work.
