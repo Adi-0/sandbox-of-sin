@@ -1,0 +1,142 @@
+<p class="eyebrow">
+  <span>Circuit Analysis · Part 7</span>
+  <span class="spec">NCEES 6.A–6.G</span>
+  <span>12 minute read</span>
+</p>
+
+<h1>Synthesis and the Mixed Bench</h1>
+
+<p class="lede">Six parts, eleven plates, and two conservation laws that did all
+of the work.</p>
+
+<h2>7.1 Everything was KCL and KVL</h2>
+
+<p>Look back at what each part actually added.</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Part</th><th>What it introduced</th><th>What it really was</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>KCL, KVL, Ohm, power</td><td>conservation of charge and of energy</td></tr>
+    <tr><td>2</td><td>series, parallel, dividers</td><td>one line of KVL and one of KCL, pre-solved</td></tr>
+    <tr><td>3</td><td>node and mesh analysis</td><td>the same two laws written at every node or loop at once</td></tr>
+    <tr><td>4</td><td>Thévenin and Norton</td><td>the same two laws, solved once and reused</td></tr>
+    <tr><td>5</td><td>RMS and waveform values</td><td>the number that makes AC power obey the DC formulas</td></tr>
+    <tr><td>6</td><td>phasors and impedance</td><td>the same two laws, over complex numbers</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Not one of those parts introduced a new law of physics. Parts 2 to 4 are
+bookkeeping, chosen to make the laws cheap to apply. Parts 5 and 6 are a change
+of number system that lets the whole DC toolkit survive contact with a sinusoid.
+<b>If you understand Part 1 and can do complex arithmetic, you can rederive every
+other formula in this module.</b></p>
+
+<div data-figure="circuitsMap"></div>
+
+<h2>7.2 The cast, end to end</h2>
+
+<p>One set of numbers, followed all the way through — and reaching back into
+Mathematics.</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Where</th><th>The cast appears as</th><th>Giving</th></tr></thead>
+  <tbody>
+    <tr><td>Maths 1</td><td>the 3-4-5 right triangle</td><td>θ = 53.13°, cos θ = 0.6</td></tr>
+    <tr><td>Maths 2</td><td><span data-tex="3 + 4j = 5\angle 53.13^\circ">3 + 4j</span></td><td>the complex plane</td></tr>
+    <tr><td>Circuits 1–3</td><td>100 V, 2 Ω, then 12 Ω ∥ 4 Ω</td><td>20 A splitting 5 A and 15 A, 60 V across the pair</td></tr>
+    <tr><td>Circuits 4</td><td>100 V behind 20 Ω and 5 Ω</td><td><span data-tex="V_{th} = 20">V_th = 20</span> V, <span data-tex="R_{th} = 4">R_th = 4</span> Ω, 25 W maximum</td></tr>
+    <tr><td>Circuits 6</td><td><span data-tex="Z = 3 + j4 = 5\angle 53.13^\circ">Z = 3 + j4</span></td><td>20 A lagging 53.13°</td></tr>
+    <tr><td>Circuits 6</td><td>the power triangle</td><td>1200 W, 1600 VAR, 2000 VA, pf 0.6 lagging</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The last row is worth pausing on. <b>1200, 1600 and 2000 are 3, 4 and 5
+multiplied by 400.</b> The triangle drawn on the first plate of the Mathematics
+module is, without modification, the power triangle of an AC circuit — and the
+angle that was an abstraction there is the power factor here.</p>
+
+<h2>7.3 The cheat sheet</h2>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Part</th><th>What to have in memory</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><span data-tex="V=IR">V=IR</span>; <span data-tex="P = VI = I^2R = V^2/R">P = VI = I²R = V²/R</span>; KCL and KVL as sums to zero</td></tr>
+    <tr><td>1</td><td>Current enters a resistor at its + terminal. A negative result means the arrow was drawn backwards, not that the work was wrong.</td></tr>
+    <tr><td>2</td><td>Series adds R; parallel adds 1/R. Product over sum for <b>two</b>. <span data-tex="R/n">R/n</span> for <span data-tex="n">n</span> equal.</td></tr>
+    <tr><td>2</td><td>Voltage divider: own R on top. Current divider: the <b>other</b> R on top.</td></tr>
+    <tr><td>3</td><td>Conductance matrix by inspection: diagonal is what touches the node, off-diagonal is minus what is shared.</td></tr>
+    <tr><td>3</td><td>Count nodes − 1 against meshes before choosing a method.</td></tr>
+    <tr><td>4</td><td><span data-tex="V_{th}=V_{oc}">V_th = V_oc</span>, <span data-tex="R_{th}=V_{oc}/I_{sc}">R_th = V_oc/I_sc</span>. Kill sources: voltage → short, current → open.</td></tr>
+    <tr><td>4</td><td>Max power at <span data-tex="R_L = R_{th}">R_L = R_th</span>, worth <span data-tex="V_{th}^2/4R_{th}">V_th²/4R_th</span>, at 50% efficiency.</td></tr>
+    <tr><td>5</td><td><span data-tex="\omega = 2\pi f">ω = 2πf</span>; 60 Hz is 377 rad/s; <span data-tex="V_{rms} = V_m/\sqrt{2}">Vrms = Vm/√2</span> <b>for sinusoids only</b>.</td></tr>
+    <tr><td>5</td><td>A quoted AC voltage is RMS; an equation's coefficient is peak. Power always uses RMS.</td></tr>
+    <tr><td>6</td><td><span data-tex="Z_L = j\omega L">Z_L = jωL</span>, <span data-tex="Z_C = -j/\omega C">Z_C = −j/ωC</span>; ELI the ICE man.</td></tr>
+    <tr><td>6</td><td><span data-tex="P = VI\cos\theta">P = VI cos θ</span>, <span data-tex="Q = VI\sin\theta">Q = VI sin θ</span>, <span data-tex="S^2 = P^2 + Q^2">S² = P² + Q²</span>. Power factor always carries lagging or leading.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7.4 On exam day, for this topic specifically</h2>
+
+<ul>
+  <li><b>Label the nodes before anything else.</b> Most wrong answers in circuit
+      analysis come from misreading the topology, not from the arithmetic. Trace
+      each wire with a finger and mark which junctions are actually the same
+      node.</li>
+  <li><b>Check with the law you did not use.</b> Solved by mesh? Check KCL at a
+      node. Solved by node? Check KVL round a loop. Then check power balance.
+      Three free verifications, ten seconds each.</li>
+  <li><b>Watch the RMS/peak boundary.</b> It is the single most common source of
+      a <span data-tex="\sqrt{2}">√2</span> error, and both wrong values will be
+      among the options.</li>
+  <li><b>Say lagging or leading.</b> A bare power factor is an incomplete
+      answer and the exam grades it as one.</li>
+  <li><b>Sanity-check magnitudes.</b> A parallel combination smaller than its
+      smallest member; the easier path carrying more current; a power factor
+      between 0 and 1. Each of these strikes out options for free.</li>
+</ul>
+
+<h2>7.5 Where to go next</h2>
+
+<ul>
+  <li><b>Linear Systems</b> (5–8 questions) takes Part 6's impedance and lets the
+      frequency vary — resonance is where
+      <span data-tex="X_L = X_C">X_L = X_C</span> and the reactance cancels.
+      Transient response is Mathematics Part 7's differential equations applied to
+      the same RLC circuit.</li>
+  <li><b>Power Systems</b> (8–12) extends Part 6's power triangle to three phases,
+      transformers and transmission lines. Power factor correction is the direct
+      sequel to Plate 35.</li>
+  <li><b>Electronics</b> (7–11) replaces resistors with devices whose
+      <span data-tex="V">V</span>–<span data-tex="I">I</span> curves are not
+      straight lines — but the analysis around them is still Parts 1 to 4,
+      applied to a small-signal model.</li>
+  <li><b>Signal Processing and Communications</b> (10–16) is Part 6 across many
+      frequencies at once, which is what a Fourier transform is for.</li>
+</ul>
+
+<div class="keyidea">
+  <p>Two conservation laws, one component rule, and a change of number system
+  cover the whole of Circuit Analysis. Everything else in this module exists to
+  make those cheap to apply, and every one of them can be rederived if it slips.</p>
+  <p>And the triangle from the first plate of the Mathematics module turned out
+  to be an impedance, a current lag, and a power factor. That was not a
+  coincidence arranged for the guide — it is why the exam keeps using those
+  numbers.</p>
+</div>
+
+<h2>The mixed bench</h2>
+
+<p>Ten problems drawn from all seven subtopics in no announced order, so
+classification is part of the work.</p>
+
+<div data-bench='{"id":"circuits-mixed","title":"Mixed set · all of Circuit Analysis","topics":["kcl-node","equivalent-r","voltage-divider","node-solve","thevenin-find","max-power","rms-value","impedance-find","power-triangle","current-divider"],"count":10}'></div>
+
+<p>And the full-range reflex drill for this module.</p>
+
+<div data-reflex='{"only":["two-laws","series-parallel","node-loop","thevenin","waveforms","phasors"],"count":12,"title":"Handbook Reflex · all of Circuit Analysis"}'></div>

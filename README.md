@@ -1,11 +1,18 @@
-# The Bench — FE Electrical and Computer: Mathematics
+# The Bench — FE Electrical and Computer
 
-An interactive educator for **knowledge area 1, Mathematics**, of the NCEES
-*Fundamentals of Engineering (Electrical and Computer)* exam — 11 to 17 of the
-110 questions, tied with Circuit Analysis for the largest single block.
+An interactive educator for the NCEES *Fundamentals of Engineering (Electrical
+and Computer)* exam, built one knowledge area at a time.
 
-Ten parts, twenty-five live plates, forty-one problem generators, and one
-right triangle followed all the way through.
+**Covered so far — the two largest blocks on the exam, 22 to 34 of the 110
+questions:**
+
+| | Module | NCEES | Questions | Parts | Plates |
+|---|---|---|---|---|---|
+| 1 | **Mathematics** | area 1 | 11–17 | 9 | 1–25 |
+| 6 | **Circuit Analysis (DC and AC Steady State)** | area 6 | 11–17 | 7 | 26–36 |
+
+Thirty-six live plates, sixty-three problem generators, and one right triangle
+followed from the first plate to the last.
 
 ## Run it
 
@@ -22,10 +29,10 @@ chapters as separate files and browsers block that over `file://`. For that
 case there is a bundle:
 
 ```
-python3 build.py            # writes dist/the-bench-mathematics.html
+python3 build.py            # writes dist/the-bench.html
 ```
 
-One file, 520 KB, opens from disk with no server and no network. Put it on a
+One file, 725 KB, opens from disk with no server and no network. Put it on a
 tablet and read it on a train.
 
 ## The idea it is built around
@@ -50,25 +57,33 @@ numbered drawing sheet with a title block, and the stamp sits in it.
 
 ## The recurring cast
 
-Mathematics goes badly when every topic arrives as a stranger, so one object
-runs through all eight subtopics.
+Engineering maths goes badly when every topic arrives as a stranger, so one
+object runs through both modules. It is chosen, not contrived — the FE
+literature uses these numbers for the same reason.
 
-| Part | The cast appears as | Which gives you |
+| Where | The cast appears as | Which gives you |
 |---|---|---|
-| 1 | the **3-4-5 right triangle** | sin θ = 0.8, cos θ = 0.6, θ = 53.13° |
-| 2 | **3 + 4j = 5∠53.13°** | the impedance of a 3 Ω, 4 Ω series circuit |
-| 3 | **(3,4)** on x² + y² = 25 | tangent slope −3/4, from perpendicularity |
-| 4 | **3i + 4j + 12k**, and ∇f = 6i + 8j | magnitude 13; the gradient ⟂ the circle |
-| 5 | **[[3, 4], [4, −3]]** | trace 0, det −25, eigenvalues **±5** |
-| 6 | d/dx √(25 − x²) at x = 3 | **−3/4 again**, this time from a limit |
-| 7 | roots **−3 ± 4j** | ωₙ = 5, ω_d = 4, ζ = 0.6 |
-| 8 | a 5-vertex graph | Part 5's matrices, applied to a network |
+| Maths 1 | the **3-4-5 right triangle** | sin θ = 0.8, cos θ = 0.6, θ = 53.13° |
+| Maths 2 | **3 + 4j = 5∠53.13°** | the complex plane |
+| Maths 3 | **(3,4)** on x² + y² = 25 | tangent slope −3/4, from perpendicularity |
+| Maths 4 | **3i + 4j + 12k**, ∇f = 6i + 8j | magnitude 13; the gradient ⟂ the circle |
+| Maths 5 | **[[3, 4], [4, −3]]** | trace 0, det −25, eigenvalues **±5** |
+| Maths 6 | d/dx √(25 − x²) at x = 3 | **−3/4 again**, this time from a limit |
+| Maths 7 | roots **−3 ± 4j** | ωₙ = 5, ω_d = 4, ζ = 0.6 |
+| Circuits 1–3 | 100 V, 2 Ω, then 12 Ω ∥ 4 Ω | 20 A splitting 5 A and 15 A |
+| Circuits 4 | 100 V behind 20 Ω and 5 Ω | V_th = 20 V, R_th = 4 Ω, 25 W maximum |
+| Circuits 6 | **Z = 3 + j4 = 5∠53.13° Ω** | 20 A lagging 53.13° |
+| Circuits 6 | the **power triangle** | 1200 W, 1600 VAR, 2000 VA, pf 0.6 lagging |
 
-The payoff: the triangle a student draws in Part 1 turns out, in Part 7, to be
-the characteristic root that decides whether a circuit rings. Not an analogy —
-the same three numbers doing the work.
+The payoff arrives twice. In Mathematics Part 7 the triangle becomes the
+characteristic root that decides whether a circuit rings. In Circuit Analysis
+Part 6 it becomes the power triangle — 1200, 1600 and 2000 are 3, 4 and 5
+multiplied by 400. Neither is an analogy; they are the same three numbers doing
+the work.
 
 ## What is in it
+
+### Module 1 — Mathematics (NCEES area 1)
 
 | Part | | NCEES | Read | Plates |
 |---|---|---|---|---|
@@ -83,12 +98,24 @@ the same three numbers doing the work.
 | 8 | **Discrete Mathematics** | 1.C | 17 min | 23–24 |
 | 9 | **Synthesis and the Mixed Bench** | 1.A–1.H | 12 min | 25 |
 
-All eight subtopics of the published specification are covered; the order is
-pedagogical rather than the alphabetical order NCEES prints them in.
+### Module 6 — Circuit Analysis, DC and AC Steady State (NCEES area 6)
+
+| Part | | NCEES | Read | Plates |
+|---|---|---|---|---|
+| 1 | **The Two Laws** — charge and energy conservation, and why everything else is bookkeeping | 6.A | 22 min | 26 |
+| 2 | **Series, Parallel, and Dividers** | 6.B | 22 min | 27–28 |
+| 3 | **Node and Loop Analysis** | 6.D | 24 min | 29 |
+| 4 | **Thévenin and Norton** | 6.C | 22 min | 30–31 |
+| 5 | **Waveforms** — peak, average, RMS | 6.E | 22 min | 32–33 |
+| 6 | **Phasors and Impedance** | 6.F · 6.G | 26 min | 34–35 |
+| 7 | **Synthesis and the Mixed Bench** | 6.A–6.G | 12 min | 36 |
+
+Every subtopic of both published specifications is covered; the order within
+each module is pedagogical rather than the alphabetical order NCEES prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 41 types is a seeded
+- **Problems are generated, not stored.** Each of the 63 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
@@ -131,15 +158,19 @@ src/
     dom.js          element and SVG helpers, sliders, readouts
     fmt.js          number formatting — no floating-point tails, ever
     rng.js          seeded RNG, so any problem set is reproducible
-  figures/          one module per part, 25 plates
-  problems/         one module per part, 41 generators
+    circuit.js      schematic drawing on a grid, plus a network solver
+  figures/          one file per part, 36 plates
+  problems/         one file per part, 63 generators
 
-content/            one HTML fragment per part
+content/
+  start/            the orientation part
+  math/             Mathematics, 9 parts
+  circuits/         Circuit Analysis, 7 parts
 ```
 
 Vanilla ES modules. No framework, no external JavaScript, no maths library.
 
-Two decisions worth knowing about if you extend this:
+Three decisions worth knowing about if you extend this:
 
 **`tex.js` instead of MathJax or KaTeX.** The document has to run offline from
 one folder with no build step, and every glyph has to take its colour from the
@@ -158,7 +189,13 @@ floor, adjacent CVD separation, normal-vision separation and contrast — at the
 rather than highlighter. Do not nudge them by eye.
 
 The HANDBOOK / KNOW COLD stamps are deliberately monochrome, so they stay out of
-the colour vocabulary entirely.
+the colour vocabulary entirely. In Circuit Analysis the same three quantity
+tokens carry over as voltage, current and result.
+
+**Figures compute their own numbers.** `circuit.js` ships a Gaussian-elimination
+solver and every schematic figure runs the same node analysis the prose teaches.
+Nothing in a plate is a hand-computed constant, so a caption cannot drift out of
+agreement with the drawing when a slider moves.
 
 ## Accessibility
 
@@ -183,6 +220,7 @@ Verified with no horizontal scroll down to a 360 px viewport, in both themes.
 
 ---
 
-Part of a compilation covering the whole FE Electrical and Computer exam. Other
-knowledge areas live on their own branches and reuse `styles/` and `src/lib/`
-unchanged, so the compilation reads as one work.
+Two of the seventeen NCEES knowledge areas are done. The next ones — Linear
+Systems, Power Systems, Digital Systems, Electronics — reuse `styles/` and
+`src/lib/` unchanged and slot into `outline.js` as further modules, so the
+compilation keeps reading as one work.

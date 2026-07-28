@@ -11,3 +11,4 @@ import "./discrete.js";
 
 /* --- Circuit Analysis --- */
 import "./circuits-dc.js";
+import "./circuits-ac.js";

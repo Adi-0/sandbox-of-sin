@@ -1,0 +1,155 @@
+<p class="eyebrow">
+  <span>Circuit Analysis · Part 5</span>
+  <span class="spec">NCEES 6.E</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Waveforms</h1>
+
+<p class="lede">A quantity that changes every millisecond still has to be quoted
+as one number. Which number, and why the answer is not the obvious one.</p>
+
+<h2>5.1 The vocabulary, in one pass</h2>
+
+<p>Everything so far has been DC: constant voltages, constant currents, nothing
+moving. Now the source is a sinusoid, and before anything can be calculated the
+terms have to be pinned down.</p>
+
+<f-plate no="6.10" title="Describing a sinusoid" stamp="handbook"
+  caption="<b>The one to be careful with is <span class='math'>ω</span></b>. It is
+  in radians per second, not hertz, and the factor of
+  <span class='math'>2\pi</span> between them is the most-dropped constant in AC
+  work. A 60 Hz supply has ω = 377 rad/s — worth knowing on sight.">
+  <f-row tex="v(t) = V_m\sin(\omega t + \phi)" name="the general sinusoid"
+         gloss="<b>V_m</b> is the peak, <b>ω</b> the angular frequency, <b>φ</b> the phase — the head start it has at t = 0."></f-row>
+  <f-row tex="\omega = 2\pi f = \frac{2\pi}{T}" name="frequency"
+         gloss="<b>T</b> is the period in seconds and <b>f</b> = 1/T is the frequency in hertz."></f-row>
+  <f-row tex="\lambda = \frac{c}{f}" name="wavelength"
+         gloss="Only meaningful for a travelling wave — how far the disturbance gets in one period. On a circuit board it rarely matters; on a transmission line it decides everything."></f-row>
+</f-plate>
+
+<p><span class="term">Phase</span> is a shift along the time axis measured as an
+angle, because one full cycle is 360°. Two waveforms of the same frequency have a
+fixed phase difference forever; two of <em>different</em> frequencies do not have
+a phase relationship at all, which is why the phasor methods in Part 6 insist
+that everything share one frequency.</p>
+
+<h2>5.2 Which number do you quote?</h2>
+
+<p>A 60 Hz sinusoid is at its peak for an instant and at zero twice per cycle.
+There are four honest ways to summarise it, and they disagree.</p>
+
+<div data-figure="waveformAnatomy"></div>
+
+<p>The <span class="term">average</span> over a whole cycle is <b>zero</b> for any
+symmetric waveform — the positive half exactly cancels the negative. That is a
+true fact and a useless summary, so when a problem says "average" for a
+sinusoid it almost always means the average of the <em>rectified</em> waveform,
+over a half cycle. Read the stem carefully; this is a deliberate ambiguity that
+the exam exploits.</p>
+
+<h2>5.3 RMS: the number that means something physical</h2>
+
+<p>Here is the question that settles it. A resistor does not care about the sign
+of the voltage — power is <span data-tex="v^2/R">v²/R</span>, and squaring kills
+the sign. So: <b>what DC voltage would heat this resistor at the same rate as
+the AC waveform does?</b></p>
+
+<p>That number is the <span class="term">root-mean-square</span> value, and its
+name is the recipe read backwards: square the waveform, take the mean of that,
+then take the root.</p>
+
+<div data-figure="rmsHeating"></div>
+
+<f-plate no="6.11" title="Average and RMS" stamp="handbook"
+  caption="<b>The <span class='math'>\sqrt{2}</span> is for sinusoids only.</b> A
+  square wave has RMS equal to its peak; a triangle wave has peak over
+  <span class='math'>\sqrt{3}</span>. Applying the sinusoid factor to a
+  non-sinusoid is a standard exam trap, and Plate 32 lets you watch the ratio
+  change as you switch shapes.">
+  <f-row tex="V_{rms} = \sqrt{\frac{1}{T}\int_0^T v^2(t)\,dt}" name="the definition"
+         gloss="Square it, average that, take the root. It applies to any periodic waveform whatsoever."></f-row>
+  <f-row tex="V_{rms} = \frac{V_m}{\sqrt{2}} \approx 0.707\,V_m" name="sinusoid only"
+         gloss="Because the mean of sin² over a cycle is exactly ½ — the double-angle identity from Mathematics Part 1."></f-row>
+  <f-row tex="V_{avg} = \frac{2V_m}{\pi} \approx 0.637\,V_m" name="rectified sinusoid"
+         gloss="The average of a half cycle. Smaller than the RMS, because squaring weights the peaks more heavily."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">The killer number</span>
+  <p style="margin-bottom:0">A domestic outlet is quoted as <b>120 V</b>. That is
+  RMS — the heating-equivalent value. Its actual peak is
+  <span class="math" data-tex="120\sqrt{2} = 170\text{ V}">170 V</span>, and
+  peak-to-peak it swings <b>340 V</b>. Insulation, capacitor voltage ratings and
+  semiconductor breakdown all have to survive the 170, while the power
+  calculation uses the 120. <b>Quote the wrong one and you either specify a part
+  that explodes or one that costs three times what it needs to.</b></p>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>reading a waveform statement</em></h4>
+  <div class="worked-body">
+    <p>A voltage is
+    <span data-tex="v(t) = 170\sin(377t + 30^\circ)">v(t) = 170 sin(377t + 30°)</span> volts.
+    Find its frequency, its RMS value, and the power it delivers to a 20 Ω
+    resistor.</p>
+    <ol class="steps">
+      <li>The coefficient of <span data-tex="t">t</span> is
+        <span data-tex="\omega">ω</span>, in rad/s. So
+        <span data-tex="f = \omega/2\pi = 377/6.283 = 60\text{ Hz}" data-display>f = 60 Hz</span>
+        and the period is <span data-tex="T = 1/60 = 16.7\text{ ms}">16.7 ms</span>.</li>
+      <li>170 is the <b>peak</b>, because that is what multiplies the sine. So
+        <span data-tex="V_{rms} = 170/\sqrt{2} = 120\text{ V}" data-display>Vrms = 120 V</span></li>
+      <li>Power always uses RMS — that is what RMS is for:
+        <span data-tex="P = \frac{V_{rms}^2}{R} = \frac{120^2}{20} = 720\text{ W}" data-display>P = 720 W</span>
+        Using the peak instead would have given 1445 W, exactly twice too much.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">The 30° phase never
+    entered. For a single source it sets only where the clock starts — it matters
+    the moment there is a <em>second</em> waveform to compare with, which is
+    Part 6.</p>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · which value is the stem giving you?</span>
+  <p style="margin-bottom:0">If a waveform is written as an equation, the number
+  in front is the <b>peak</b>. If it is quoted as a bare voltage — "a 240 V
+  supply" — it is <b>RMS</b>, always, by universal convention. If it says
+  "peak-to-peak", halve it before doing anything else. <b>Getting this wrong is
+  a factor of <span class="math">\sqrt{2}</span> or 2, and both wrong answers
+  will be offered.</b></p>
+</div>
+
+<h2>5.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="\omega = 2\pi f">ω = 2πf</span>, and that 60 Hz is
+        377 rad/s.</li>
+    <li><span data-tex="V_{rms} = V_m/\sqrt{2}">Vrms = Vm/√2</span> —
+        <b>for sinusoids only</b>.</li>
+    <li>A square wave's RMS equals its peak. A triangle wave's is
+        <span data-tex="V_m/\sqrt{3}">Vm/√3</span>.</li>
+    <li>Rectified average is <span data-tex="2V_m/\pi \approx 0.637V_m">0.637 Vm</span>;
+        the true average over a full cycle is zero.</li>
+    <li>Power always uses RMS values.</li>
+    <li>A quoted AC voltage is RMS; an equation's coefficient is peak.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A periodic waveform is summarised by its peak, its rectified average, or its
+  RMS, and they are different numbers. RMS is the one that means something
+  physical: it is the DC value that would heat a resistor at the same rate, which
+  is why every power calculation uses it.</p>
+  <p>For a sinusoid RMS is peak over <span data-tex="\sqrt{2}">√2</span>. For
+  anything else it is not, and the exam knows you might not have noticed.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"waveforms","title":"Part 5 · Waveform analysis","topics":["rms-value","waveform-read","avg-vs-rms"],"count":6}'></div>
+
+<div data-reflex='{"only":["waveforms","thevenin"],"count":6,"title":"Handbook Reflex · Parts 4–5"}'></div>

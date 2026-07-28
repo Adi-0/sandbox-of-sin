@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bundle the whole guide into one self-contained HTML file.
 
-    python3 build.py            # writes dist/the-bench-mathematics.html
+    python3 build.py            # writes dist/the-bench.html
 
 The result opens straight from disk with no server and no network — put it on
 a tablet and read it on a train. The multi-file version in this folder stays
@@ -155,7 +155,7 @@ def main():
         '<link rel="stylesheet" media="print" onload="this.media=\'all\'" href="https://fonts.googleapis.com',
     )
 
-    out = ROOT / "dist" / "the-bench-mathematics.html"
+    out = ROOT / "dist" / "the-bench.html"
     out.parent.mkdir(exist_ok=True)
     out.write_text(html)
 

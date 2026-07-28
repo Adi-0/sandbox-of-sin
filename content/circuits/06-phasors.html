@@ -1,0 +1,184 @@
+<p class="eyebrow">
+  <span>Circuit Analysis · Part 6</span>
+  <span class="spec">NCEES 6.F · 6.G</span>
+  <span>26 minute read</span>
+</p>
+
+<h1>Phasors and Impedance</h1>
+
+<p class="lede">Ohm's law, with an angle. Every method from Parts 1 to 4 survives
+intact — the only change is that resistance becomes a complex number, and the
+3-4-5 triangle arrives to be that number.</p>
+
+<h2>6.1 The trade that makes AC easy</h2>
+
+<p>Mathematics Part 2 built the machinery; this is what it was for. A
+<span class="term">phasor</span> is a complex number holding a sinusoid's
+amplitude and phase, on the understanding that everything in the circuit shares
+one frequency. Once the frequency is agreed, it need never be written down again.</p>
+
+<p class="math" data-tex="v(t) = V_m\cos(\omega t + \phi) \quad\longleftrightarrow\quad \mathbf{V} = V_{rms}\angle\phi" data-display>v(t) = Vm cos(ωt+φ) ↔ V = Vrms∠φ</p>
+
+<div class="note trap">
+  <span class="note-tag">Trap · RMS or peak in the phasor?</span>
+  <p style="margin-bottom:0">Both conventions exist. <b>Power engineering — and
+  the FE exam — uses RMS magnitudes</b>, so that
+  <span class="math" data-tex="P = VI\cos\theta">P = VI cos θ</span> comes out
+  right with no stray factor of two. Some textbooks use peak. If a problem quotes
+  a bare voltage, treat it as RMS; if it hands you a time-domain equation, convert
+  the peak first.</p>
+</div>
+
+<h2>6.2 Impedance: resistance that can rotate</h2>
+
+<p>A resistor obeys <span data-tex="v = iR">v = iR</span> — voltage and current
+in step. An inductor obeys <span data-tex="v = L\,di/dt">v = L di/dt</span>, and
+a capacitor <span data-tex="i = C\,dv/dt">i = C dv/dt</span>. Those derivatives
+are what made AC circuits differential equations.</p>
+
+<p>But differentiating a sinusoid is the same as multiplying its phasor by
+<span data-tex="j\omega">jω</span> — a 90° rotation and a scaling. So the
+derivative disappears, and every component gets a single complex number relating
+its voltage phasor to its current phasor. That number is its
+<span class="term">impedance</span>.</p>
+
+<f-plate no="6.12" title="Impedance" stamp="handbook"
+  caption="<b>Everything you learned in Parts 1 to 4 now applies unchanged</b> —
+  series impedances add, parallel impedances combine by product over sum, KCL and
+  KVL hold, Thévenin still works. The arithmetic is complex rather than real, and
+  that is the only difference.">
+  <f-row tex="\mathbf{Z} = \frac{\mathbf{V}}{\mathbf{I}} = R + jX" name="impedance"
+         gloss="Real part <b>R</b> is resistance and dissipates energy; imaginary part <b>X</b> is reactance and only stores and returns it."></f-row>
+  <f-row tex="Z_R = R, \qquad Z_L = j\omega L, \qquad Z_C = \frac{1}{j\omega C} = -\frac{j}{\omega C}"
+         name="the three components"
+         gloss="An inductor's impedance <b>grows</b> with frequency; a capacitor's <b>shrinks</b>. That single contrast is what every filter is built from."></f-row>
+  <f-row tex="|\mathbf{Z}| = \sqrt{R^2 + X^2}, \qquad \theta = \arctan\frac{X}{R}"
+         name="polar form"
+         gloss="Pythagoras on the impedance triangle — which is the triangle from Mathematics Part 1, again."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">ELI the ICE man</span>
+  <p style="margin-bottom:0">The standard mnemonic, and it does earn its keep.
+  In an induct<b>o</b>r (L), <b>E</b> leads <b>I</b> — voltage first. In a
+  <b>c</b>apacitor (C), <b>I</b> leads <b>E</b> — current first. Physically:
+  a capacitor must be charged before its voltage rises, so current comes first;
+  an inductor resists a change in current, so voltage appears before the current
+  responds.</p>
+</div>
+
+<h2>6.3 The cast arrives</h2>
+
+<p>Take a resistor of 3 Ω in series with an inductive reactance of 4 Ω. The
+impedance is</p>
+
+<p class="math" data-tex="\mathbf{Z} = 3 + j4 = 5\angle 53.13^\circ\ \Omega" data-display>Z = 3 + j4 = 5∠53.13° Ω</p>
+
+<p>which is exactly the complex number from Mathematics Part 2 and the triangle
+from Mathematics Part 1. This is not a teaching device borrowed for the
+occasion — <b>the impedance triangle really is a right triangle</b>, with
+resistance along one leg, reactance along the other, and magnitude as the
+hypotenuse. Every FE textbook uses these numbers for the same reason.</p>
+
+<p>Drive it with 100 V and the current follows in one division:</p>
+
+<p class="math" data-tex="\mathbf{I} = \frac{100\angle 0^\circ}{5\angle 53.13^\circ} = 20\angle -53.13^\circ\ \text{A}" data-display>I = 20∠−53.13° A</p>
+
+<p>20 A, lagging the voltage by 53.13° — lagging because the load is inductive,
+as ELI promised. Compare the effort with the trigonometric route: this is one
+division.</p>
+
+<div data-figure="impedanceTriangle"></div>
+
+<h2>6.4 Power in an AC circuit</h2>
+
+<p>Now a complication with no DC counterpart. Current lags voltage, so for part
+of every cycle they have opposite signs and the instantaneous power is
+<em>negative</em> — energy is flowing back out of the load into the source. The
+reactance stores it and returns it, over and over, without ever consuming any.</p>
+
+<p>So AC power needs three numbers, not one.</p>
+
+<f-plate no="6.13" title="Real, reactive and apparent power" stamp="handbook"
+  caption="These three form a right triangle with the same angle as the impedance
+  triangle. <b>Only P is consumed</b>; Q sloshes back and forth and S is what the
+  wiring must physically carry. A utility bills for P and sizes its cables for S,
+  which is why a poor power factor costs money without using energy.">
+  <f-row tex="S = VI \quad \text{(volt-amperes, VA)}" name="apparent power"
+         gloss="Just the product of the RMS values. What the cable and the transformer have to handle."></f-row>
+  <f-row tex="P = VI\cos\theta \quad \text{(watts, W)}" name="real power"
+         gloss="The part actually converted to heat or work. <b>θ is the impedance angle</b>, and cos θ is the power factor."></f-row>
+  <f-row tex="Q = VI\sin\theta \quad \text{(volt-amperes reactive, VAR)}" name="reactive power"
+         gloss="The part that shuttles in and out each cycle. Positive for inductive loads, negative for capacitive."></f-row>
+  <f-row tex="S^2 = P^2 + Q^2, \qquad \text{pf} = \cos\theta = \frac{P}{S}"
+         name="the power triangle"
+         gloss="Pythagoras once more — the fourth time the same theorem has settled a question in this compilation."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">The cast, one last time</span>
+  <p>With <span class="math" data-tex="V = 100">V = 100</span> V and
+  <span class="math" data-tex="I = 20">I = 20</span> A at 53.13°:</p>
+  <p><span class="math" data-tex="S = (100)(20) = 2000\text{ VA}, \quad P = 2000(0.6) = 1200\text{ W}, \quad Q = 2000(0.8) = 1600\text{ VAR}" data-display>S = 2000 VA, P = 1200 W, Q = 1600 VAR</span></p>
+  <p style="margin-bottom:0">Check: <span class="math" data-tex="1200^2 + 1600^2 = 2000^2">1200² + 1600² = 2000²</span>.
+  <b>The power triangle is the 3-4-5 triangle, scaled by 400.</b> The same three
+  numbers that were a triangle in Mathematics Part 1, a complex number in Part 2,
+  an eigenvalue in Part 5 and a characteristic root in Part 7 are now watts,
+  VARs and volt-amperes.</p>
+</div>
+
+<div data-figure="powerTriangle"></div>
+
+<p>Two cross-checks worth knowing, because they catch nearly every slip:
+<span data-tex="P = I^2R">P = I²R</span> using only the <em>resistive</em> part
+gives <span data-tex="(20)^2(3) = 1200">400 × 3 = 1200 W</span> ✓, and
+<span data-tex="Q = I^2X">Q = I²X</span> gives
+<span data-tex="(20)^2(4) = 1600">400 × 4 = 1600 VAR</span> ✓. <b>Real power
+comes only from resistance; reactive power comes only from reactance.</b></p>
+
+<div class="note trap">
+  <span class="note-tag">Trap · power factor without a direction is half an answer</span>
+  <p style="margin-bottom:0">A power factor of 0.6 could be an inductive load at
+  +53.13° or a capacitive one at −53.13°; the cosine cannot tell them apart. A
+  complete answer is always <b>"0.6 lagging"</b> or <b>"0.6 leading"</b> —
+  lagging for inductive, leading for capacitive. Exam options routinely include
+  both, and only one is right.</p>
+</div>
+
+<h2>6.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="Z_L = j\omega L">Z_L = jωL</span> and
+        <span data-tex="Z_C = -j/\omega C">Z_C = −j/ωC</span>. Inductive reactance
+        rises with frequency; capacitive falls.</li>
+    <li><span data-tex="\mathbf{Z} = R + jX">Z = R + jX</span>, and impedances
+        combine exactly like resistances.</li>
+    <li>ELI the ICE man — voltage leads current in an inductor, lags it in a
+        capacitor.</li>
+    <li><span data-tex="P = VI\cos\theta">P = VI cos θ</span>,
+        <span data-tex="Q = VI\sin\theta">Q = VI sin θ</span>,
+        <span data-tex="S = VI">S = VI</span>, and
+        <span data-tex="S^2 = P^2 + Q^2">S² = P² + Q²</span>.</li>
+    <li>Power factor always carries <b>lagging</b> or <b>leading</b>.</li>
+    <li>The cast: <span data-tex="3 + j4 = 5\angle 53.13^\circ">3 + j4 = 5∠53.13°</span>,
+        giving 1200 W, 1600 VAR, 2000 VA at 0.6 lagging.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A phasor stores a sinusoid's amplitude and phase once the frequency is
+  agreed. Impedance is the complex ratio of voltage phasor to current phasor, and
+  because KCL and KVL never stopped holding, every technique from Parts 1 to 4
+  carries over untouched — only the arithmetic becomes complex.</p>
+  <p>AC power splits into a part that is consumed and a part that is merely
+  borrowed, and the two combine as the legs of a right triangle whose angle is
+  the impedance angle. It is the same triangle, for the fifth time.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"phasors","title":"Part 6 · Impedance and AC power","topics":["impedance-find","ac-current","power-triangle","reactance-calc"],"count":6}'></div>
+
+<div data-reflex='{"only":["phasors","waveforms"],"count":6,"title":"Handbook Reflex · Parts 5–6"}'></div>
