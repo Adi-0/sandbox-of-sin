@@ -254,3 +254,217 @@ defineReflex([
     because: "Parallel means equal voltage, so the smaller resistance dissipates more.",
   },
 ]);
+
+/* ==========================================================================
+   Part 2 — equivalent resistance and the two dividers
+   ========================================================================== */
+
+defineProblem("equivalent-r", {
+  topic: "Equivalent resistance",
+  lookup: "Electrical → Circuit analysis → Series/parallel equivalent circuits",
+  make(rng) {
+    const kind = rng.pick(["two-par", "n-equal", "mixed"]);
+
+    if (kind === "n-equal") {
+      const R = rng.pick([10, 12, 20, 60, 100]);
+      const n = rng.int(3, 5);
+      return {
+        stem: `What is the equivalent resistance of ${n} identical ${R} Ω resistors connected in parallel?`,
+        choices: [
+          { text: `${fixed(R / n, 2)} Ω`, why: "" },
+          { text: `${fixed(R * n, 0)} Ω`, why: "That is the <b>series</b> total. Parallel always gives less than the smallest member." },
+          { text: `${fixed(R, 0)} Ω`, why: "Adding more parallel paths must reduce the resistance — it cannot leave it unchanged." },
+          { text: `${fixed(n / R, 4)} Ω`, why: `That is the total <em>conductance</em> in siemens, not the resistance. Take its reciprocal.` },
+        ],
+        answer: 0,
+        steps: [
+          `Conductances add, and here all ${n} are the same:` +
+            `<span class="math display" data-tex="\\frac{1}{R_{eq}} = ${n} \\times \\frac{1}{${R}} = \\frac{${n}}{${R}}"></span>`,
+          `<span class="math display" data-tex="R_{eq} = \\frac{${R}}{${n}} = ${fixed(R / n, 2)}\\ \\Omega"></span>`,
+          `<b>${fixed(R / n, 2)} Ω.</b> For <em>n</em> equal resistors in parallel the answer is always ` +
+            `${T("R/n")} — worth spotting on sight, because it turns a calculation into a glance.`,
+        ],
+      };
+    }
+
+    if (kind === "two-par") {
+      const Ra = rng.pick([3, 4, 6, 8, 12, 20]);
+      const Rb = rng.pick([4, 6, 12, 24, 30]);
+      const Rp = parallel(Ra, Rb);
+      return {
+        stem: `A ${Ra} Ω and a ${Rb} Ω resistor are connected in parallel. What is the equivalent resistance?`,
+        choices: [
+          { text: `${fixed(Rp, 3)} Ω`, why: "" },
+          { text: `${fixed(Ra + Rb, 0)} Ω`, why: "That is the series total. In parallel the result must be <b>smaller than either</b> resistor." },
+          { text: `${fixed((Ra + Rb) / 2, 2)} Ω`, why: "Parallel is not an average. It is smaller than the smaller of the two." },
+          { text: `${fixed(1 / Ra + 1 / Rb, 4)} Ω`, why: "The reciprocals were added but never inverted back. That figure is the conductance, in siemens." },
+        ],
+        answer: 0,
+        steps: [
+          `For two resistors, product over sum:` +
+            `<span class="math display" data-tex="R_{eq} = \\frac{(${Ra})(${Rb})}{${Ra} + ${Rb}} = \\frac{${Ra * Rb}}{${Ra + Rb}} = ${fixed(Rp, 3)}\\ \\Omega"></span>`,
+          `<b>Sanity check first, always:</b> the answer must be less than ${Math.min(Ra, Rb)} Ω, ` +
+            `and ${fixed(Rp, 3)} is ✓`,
+          `Note the shortcut is for <b>two</b> resistors only. With three, go back to summing conductances.`,
+        ],
+      };
+    }
+
+    // series then parallel
+    const Rs = rng.pick([2, 4, 5, 10]);
+    const Ra = rng.pick([6, 12, 20]);
+    const Rb = rng.pick([4, 6, 30]);
+    const total = Rs + parallel(Ra, Rb);
+    return {
+      stem:
+        `A ${Rs} Ω resistor is in series with the parallel combination of ${Ra} Ω and ${Rb} Ω. ` +
+        `What is the total resistance seen by the source?`,
+      choices: [
+        { text: `${fixed(total, 3)} Ω`, why: "" },
+        { text: `${fixed(Rs + Ra + Rb, 0)} Ω`, why: "All three were added as if in series. Only the first one is in series with the group." },
+        { text: `${fixed(parallel(Rs, Ra, Rb), 3)} Ω`, why: "All three were treated as parallel. The " + Rs + " Ω is in the single path the current must take first." },
+        { text: `${fixed(parallel(Ra, Rb), 3)} Ω`, why: `That is only the parallel pair. The ${Rs} Ω is still in the loop and still drops voltage.` },
+      ],
+      answer: 0,
+      steps: [
+        `Work from the far end back. The ${Ra} Ω and ${Rb} Ω share both nodes, so collapse them first:` +
+          `<span class="math display" data-tex="R_p = \\frac{(${Ra})(${Rb})}{${Ra}+${Rb}} = ${fixed(parallel(Ra, Rb), 3)}\\ \\Omega"></span>`,
+        `That block is now a single resistor in series with the ${Rs} Ω:` +
+          `<span class="math display" data-tex="R_t = ${Rs} + ${fixed(parallel(Ra, Rb), 3)} = ${fixed(total, 3)}\\ \\Omega"></span>`,
+        `<b>${fixed(total, 3)} Ω.</b> The order matters: collapse the unambiguous group furthest from the source first, then work back.`,
+      ],
+    };
+  },
+});
+
+defineProblem("voltage-divider", {
+  topic: "Voltage divider",
+  lookup: "Electrical → Circuit analysis → Voltage division",
+  make(rng) {
+    const V = rng.pick([10, 12, 20, 24, 48, 60, 100]);
+    const R1 = rng.pick([1, 2, 3, 4, 5, 6, 8]);
+    const R2 = rng.pick([2, 3, 4, 6, 9, 12, 16]);
+    const v2 = V * R2 / (R1 + R2);
+
+    return {
+      stem:
+        `A ${V} V source is across a ${R1} Ω and a ${R2} Ω resistor in series. ` +
+        `What is the voltage across the ${R2} Ω?`,
+      choices: [
+        { text: `${fixed(v2, 2)} V`, why: "" },
+        { text: `${fixed(V * R1 / (R1 + R2), 2)} V`,
+          why: `That is the drop across the ${R1} Ω. The voltage divider puts the resistor's <b>own</b> value on top — it is the current divider that uses the other one.` },
+        { text: `${fixed(V * R2 / R1, 2)} V`, why: "The denominator must be the <b>total</b> resistance, not the other resistor." },
+        { text: `${fixed(V / 2, 2)} V`, why: "The split is even only for equal resistors, and these are not equal." },
+      ],
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="V_2 = V\\,\\frac{R_2}{R_1 + R_2} = ${V}\\times\\frac{${R2}}{${R1 + R2}}"></span>`,
+        `= <b>${fixed(v2, 2)} V</b>.`,
+        `<b>Check:</b> the ${R2 > R1 ? "larger" : "smaller"} resistor should take the ` +
+          `${R2 > R1 ? "larger" : "smaller"} share, and ${fixed(v2, 2)} V out of ${V} V ` +
+          `${R2 > R1 ? "is more than half" : "is less than half"} ✓ The two drops add to ` +
+          `${fixed(V * R1 / (R1 + R2), 2)} + ${fixed(v2, 2)} = ${V} V ✓`,
+      ],
+    };
+  },
+});
+
+defineProblem("current-divider", {
+  topic: "Current divider",
+  lookup: "Electrical → Circuit analysis → Current division",
+  make(rng) {
+    const I = rng.pick([2, 4, 6, 10, 12, 20]);
+    const R1 = rng.pick([2, 3, 4, 6, 12]);
+    const R2 = rng.pick([1, 2, 4, 6, 8, 12]);
+    if (R1 === R2) return this.make(rng);
+    const i1 = I * R2 / (R1 + R2);
+
+    return {
+      stem:
+        `A ${I} A source feeds a ${R1} Ω and a ${R2} Ω resistor in parallel. ` +
+        `How much current flows in the ${R1} Ω?`,
+      choices: [
+        { text: `${fixed(i1, 3)} A`, why: "" },
+        { text: `${fixed(I * R1 / (R1 + R2), 3)} A`,
+          why: `The resistor's own value was put on top. In a <b>current</b> divider the <em>other</em> resistance goes on top, because the easier path takes the bigger share.` },
+        { text: `${fixed(I / 2, 3)} A`, why: "An even split needs equal resistors." },
+        { text: `${fixed(I * R2 / R1, 3)} A`, why: "The denominator must be the sum of the two resistances." },
+      ],
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="I_1 = I\\,\\frac{R_2}{R_1 + R_2} = ${I}\\times\\frac{${R2}}{${R1 + R2}}"></span>` +
+          `The <b>other</b> resistance is on top — that is the whole difference from the voltage divider.`,
+        `= <b>${fixed(i1, 3)} A</b>.`,
+        `<b>Check:</b> the ${Math.min(R1, R2)} Ω is the easier path, so it should carry more. ` +
+          `Here the ${R1} Ω carries ${fixed(i1, 3)} A and the ${R2} Ω carries ${fixed(I - i1, 3)} A — ` +
+          `${R1 < R2 ? "the smaller resistor has the larger current" : "the larger resistor has the smaller current"} ✓`,
+      ],
+    };
+  },
+});
+
+defineProblem("ladder-reduce", {
+  topic: "Ladder networks",
+  lookup: "Electrical → Circuit analysis → Series/parallel reduction",
+  make(rng) {
+    const Ra = rng.pick([2, 4, 6]);
+    const Rb = rng.pick([4, 6, 12]);
+    const Rc = rng.pick([4, 12, 24]);
+    const Rd = rng.pick([3, 6, 8]);
+    // Rc parallel Rd, in series with Rb, all that in parallel with... keep it a ladder
+    const inner = parallel(Rc, Rd);
+    const mid = Rb + inner;
+    const total = Ra + mid;
+
+    return {
+      stem:
+        `Starting from the far end: a ${Rc} Ω and a ${Rd} Ω are in parallel; that pair is in ` +
+        `series with a ${Rb} Ω; and a ${Ra} Ω is in series ahead of all of it. ` +
+        `What resistance does the source see?`,
+      choices: [
+        { text: `${fixed(total, 3)} Ω`, why: "" },
+        { text: `${fixed(Ra + Rb + Rc + Rd, 0)} Ω`, why: "Everything was added in series. The last two share both their nodes, so they must be collapsed as a parallel pair first." },
+        { text: `${fixed(Ra + parallel(Rb, Rc, Rd), 3)} Ω`, why: `The ${Rb} Ω is in series with the pair, not in parallel with it.` },
+        { text: `${fixed(parallel(Ra, mid), 3)} Ω`, why: `The ${Ra} Ω is in the single path ahead of the network, so it adds rather than combining in parallel.` },
+      ],
+      answer: 0,
+      steps: [
+        `<b>Always start furthest from the source</b>, where the grouping is unambiguous:` +
+          `<span class="math display" data-tex="${Rc} \\parallel ${Rd} = \\frac{(${Rc})(${Rd})}{${Rc}+${Rd}} = ${fixed(inner, 3)}\\ \\Omega"></span>`,
+        `That block is in series with the ${Rb} Ω:` +
+          `<span class="math display" data-tex="${Rb} + ${fixed(inner, 3)} = ${fixed(mid, 3)}\\ \\Omega"></span>`,
+        `And the ${Ra} Ω is in series ahead of that:` +
+          `<span class="math display" data-tex="R_t = ${Ra} + ${fixed(mid, 3)} = ${fixed(total, 3)}\\ \\Omega"></span>` +
+          `<b>${fixed(total, 3)} Ω.</b> Each step replaced two components with one, and the network shrank until nothing was left to combine.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "series-parallel",
+    stem: "Six 60 Ω heater elements are wired in parallel across the supply. Find the total resistance.",
+    tool: "R/n for equal parallel resistors",
+    because: "Identical resistors in parallel divide straight down by how many there are.",
+  },
+  {
+    part: "series-parallel",
+    stem: "Two resistors are across a battery; find the voltage across one of them.",
+    tool: "Voltage divider",
+    because: "Series pair, so each takes a share in proportion to its own resistance.",
+  },
+  {
+    part: "series-parallel",
+    stem: "A known total current arrives at two parallel branches; find one branch's current.",
+    tool: "Current divider",
+    because: "Parallel pair, and the branch's share uses the <em>other</em> resistance on top.",
+  },
+  {
+    part: "series-parallel",
+    stem: "A network of five resistors must be reduced to one value at the terminals.",
+    tool: "Series/parallel reduction",
+    because: "Collapse the unambiguous group furthest from the terminals and work back.",
+  },
+]);

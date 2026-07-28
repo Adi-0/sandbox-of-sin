@@ -1,0 +1,185 @@
+<p class="eyebrow">
+  <span>Circuit Analysis · Part 2</span>
+  <span class="spec">NCEES 6.B</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Series, Parallel, and Dividers</h1>
+
+<p class="lede">Two shortcuts that collapse a network down to a single resistor,
+and two more that split what flows through it. Both pairs fall straight out of
+the two laws from Part 1 — which is why they are worth deriving once rather
+than memorising twice.</p>
+
+<h2>2.1 Series: the current has nowhere else to go</h2>
+
+<p>Components are <span class="term">in series</span> when they are joined end to
+end with nothing branching off between them. That geometry has one consequence,
+and everything else follows from it: <b>the same current flows through all of
+them</b>, because there is no junction where it could divide.</p>
+
+<p>Now apply KVL. The source voltage has to equal the sum of the individual
+drops, and each drop is <span data-tex="IR">IR</span> with the same
+<span data-tex="I">I</span>:</p>
+
+<p class="math" data-tex="V = IR_1 + IR_2 + IR_3 = I(R_1 + R_2 + R_3)" data-display>V = I(R₁+R₂+R₃)</p>
+
+<p>Compare that with <span data-tex="V = IR_{eq}">V = IR_eq</span> and the rule
+reads itself off: <b>series resistances add</b>. No memorisation required — it is
+one line of KVL.</p>
+
+<h2>2.2 Parallel: the voltage has nowhere else to be</h2>
+
+<p>Components are <span class="term">in parallel</span> when both ends of each
+are tied to the same two nodes. That geometry also has one consequence:
+<b>the same voltage appears across all of them</b>, because their ends are
+literally the same two points.</p>
+
+<p>Now apply KCL. The current arriving splits among the branches, and each branch
+takes <span data-tex="V/R">V/R</span> with the same <span data-tex="V">V</span>:</p>
+
+<p class="math" data-tex="I = \frac{V}{R_1} + \frac{V}{R_2} = V\left(\frac{1}{R_1} + \frac{1}{R_2}\right)" data-display>I = V(1/R₁ + 1/R₂)</p>
+
+<p>So it is not the resistances that add in parallel — it is their reciprocals.
+The reciprocal of resistance is <span class="term">conductance</span>, measured
+in siemens, and the honest statement of the parallel rule is:
+<b>conductances add</b>.</p>
+
+<f-plate no="6.4" title="Series and parallel" stamp="handbook"
+  caption="The third row is worth having in memory because it saves a
+  reciprocal-of-a-sum-of-reciprocals every time — but it works for <b>exactly
+  two</b> resistors. Applying product-over-sum to three at once is one of the
+  most common wrong answers in this topic.">
+  <f-row tex="R_{\text{series}} = R_1 + R_2 + \cdots + R_n" name="series"
+         gloss="Same current through each, so the voltage drops add — and so do the resistances."></f-row>
+  <f-row tex="\frac{1}{R_{\text{par}}} = \frac{1}{R_1} + \frac{1}{R_2} + \cdots + \frac{1}{R_n}" name="parallel"
+         gloss="Same voltage across each, so the branch currents add — and so do the conductances."></f-row>
+  <f-row tex="R_{\text{par}} = \frac{R_1R_2}{R_1 + R_2} \quad \text{(two only)}" name="product over sum"
+         gloss="A rearrangement of the line above, valid for two resistors and no more."></f-row>
+  <f-row tex="n \text{ equal resistors in parallel} \;\Rightarrow\; R/n"
+         gloss="Four 100 Ω in parallel is 25 Ω. Worth spotting on sight — it turns a calculation into a glance."></f-row>
+</f-plate>
+
+<h2>2.3 The thing that surprises everyone</h2>
+
+<p><b>A parallel combination is always smaller than the smallest resistor in
+it.</b> Not the average — smaller than the smallest.</p>
+
+<p>The plumbing picture from Part 1 makes this obvious rather than surprising.
+Adding a resistor in parallel is adding another lane to the road. Traffic gets
+easier, never harder, however narrow the new lane is. Turn the knob in Plate 27
+and watch the two rules pull in opposite directions.</p>
+
+<div data-figure="seriesParallel"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The killer number</span>
+  <p style="margin-bottom:0">Put a 1 MΩ resistor <b>in parallel</b> with a 10 Ω
+  resistor and the combination is 9.9999 Ω — the megohm might as well not be
+  there. Put the same two <b>in series</b> and you get 1 000 010 Ω, where the
+  10 Ω might as well not be there. <b>Same two components, and which one matters
+  is decided entirely by the wiring.</b> In parallel the smallest wins; in series
+  the largest does. That single sentence answers a surprising number of exam
+  questions before any arithmetic starts.</p>
+</div>
+
+<h2>2.4 Collapsing a ladder</h2>
+
+<p>Real networks are nests of series and parallel groups. The technique is
+mechanical: <b>start at the end furthest from the source and work back</b>,
+collapsing whichever group is unambiguous at each step.</p>
+
+<div class="worked">
+  <h4>Worked · <em>the cast circuit, collapsed</em></h4>
+  <div class="worked-body">
+    <p>Part 1 solved this with node analysis. Here it is again in three lines.</p>
+    <ol class="steps">
+      <li>The 12 Ω and 4 Ω share both nodes, so they are in parallel:
+        <span data-tex="R_p = \frac{(12)(4)}{12 + 4} = \frac{48}{16} = 3\ \Omega" data-display>Rp = 3 Ω</span>
+        Note it came out smaller than 4 — as it must.</li>
+      <li>That 3 Ω is now in series with the 2 Ω, so the source sees
+        <span data-tex="R_t = 2 + 3 = 5\ \Omega">R_t = 5 Ω</span> and delivers
+        <span data-tex="I = 100/5 = 20\text{ A}">I = 20 A</span>.</li>
+      <li>The voltage across the parallel pair is
+        <span data-tex="(20)(3) = 60\text{ V}">(20)(3) = 60 V</span>, so the
+        branches carry <span data-tex="60/12 = 5\text{ A}">5 A</span> and
+        <span data-tex="60/4 = 15\text{ A}">15 A</span>.
+        <b>Identical to Part 1's answer, in a third of the work.</b></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">This is why the
+    shortcuts exist. It is also why Part 1 came first: when a network has no
+    clean series or parallel groups — and Part 3 has one — the shortcut simply
+    does not apply, and you fall back on the laws.</p>
+  </div>
+</div>
+
+<h2>2.5 The two dividers</h2>
+
+<p>Having collapsed a network you usually need to go back and find one branch's
+share. Two formulas do that, and <b>they are not symmetric</b> — which is the
+single most examined trap in this whole topic.</p>
+
+<f-plate no="6.5" title="The voltage and current dividers" stamp="handbook"
+  caption="Look at the numerators. The <b>voltage</b> divider puts the resistor's
+  <em>own</em> value on top. The <b>current</b> divider puts the <em>other</em>
+  resistor's value on top. Getting these the same way round is the classic
+  mistake, and both wrong answers will be among the options.">
+  <f-row tex="V_1 = V\,\frac{\qx{R_1}}{R_1 + R_2}" name="voltage divider · series"
+         gloss="The bigger resistor takes the bigger share of the voltage — it is doing more of the resisting."></f-row>
+  <f-row tex="I_1 = I\,\frac{\qy{R_2}}{R_1 + R_2}" name="current divider · parallel"
+         gloss="The bigger resistor takes the <b>smaller</b> share of the current — which is why the <em>other</em> resistance appears on top."></f-row>
+</f-plate>
+
+<p>Both are sanity-checkable in two seconds, and you should always do it: on the
+cast circuit, the 4 Ω branch is the easier path, so it must take
+<em>more</em> than half the current. The formula gives
+<span data-tex="20 \times \frac{12}{16} = 15\text{ A}">20 × 12/16 = 15 A</span>
+— three quarters. Correct. Had you used the resistor's own value you would have
+got 5 A, and the sanity check would have caught it.</p>
+
+<div data-figure="dividers"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · "in parallel" is about nodes, not about drawing</span>
+  <p style="margin-bottom:0">Two resistors are in parallel when <b>both</b> ends
+  connect to the same pair of nodes — not when they merely look side by side on
+  the page. Exam figures are drawn to make this hard: a resistor tucked between
+  two others often shares only <em>one</em> node with each, which makes all three
+  a series chain rather than a parallel group. <b>Trace the wire with a finger and
+  label the nodes before you reach for a formula.</b></p>
+</div>
+
+<h2>2.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Series: same current, resistances add. Parallel: same voltage,
+        conductances add.</li>
+    <li>Product over sum, <span data-tex="R_1R_2/(R_1+R_2)">R₁R₂/(R₁+R₂)</span>,
+        for <b>two</b> resistors only.</li>
+    <li><span data-tex="n">n</span> equal resistors in parallel give
+        <span data-tex="R/n">R/n</span>.</li>
+    <li>A parallel combination is always smaller than the smallest member.</li>
+    <li>Voltage divider: the resistor's <b>own</b> value on top. Current divider:
+        the <b>other</b> one on top.</li>
+    <li>Check every divider answer against "does the easier path get more
+        current?" before writing it down.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Series means shared current, so voltages and resistances add. Parallel means
+  shared voltage, so currents and conductances add. Both rules are one line of
+  KCL or KVL, which means you can rebuild either one if it slips.</p>
+  <p>The two dividers differ in exactly one place — which resistance sits on top —
+  and the reason is that resistance opposes current but claims voltage. When in
+  doubt, ask which branch is the easier path and check your answer against the
+  question.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"series-parallel","title":"Part 2 · Equivalent resistance and dividers","topics":["equivalent-r","voltage-divider","current-divider","ladder-reduce"],"count":6}'></div>
+
+<div data-reflex='{"only":["series-parallel","two-laws"],"count":6,"title":"Handbook Reflex · Parts 1–2"}'></div>
