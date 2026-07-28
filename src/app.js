@@ -6,7 +6,7 @@
    guarded so one broken plate cannot take the page down with it.
    ========================================================================== */
 
-import { PARTS, byId, indexOfPart, TOTAL_MINUTES } from "./outline.js";
+import { MODULES, PARTS, byId, indexOfPart, contentPath, TOTAL_MINUTES } from "./outline.js";
 import { state, onStateChange } from "./state.js";
 import { el, clear, $ } from "./lib/dom.js";
 import { renderMathIn } from "./lib/tex.js";
@@ -28,13 +28,22 @@ let teardowns = [];
 
 function buildToc() {
   clear(tocEl);
-  PARTS.forEach((p) => {
-    const a = el("a", { href: `#/${p.id}` },
-      el("span.num", { text: p.n === 0 ? "00" : String(p.n).padStart(2, "0") }),
-      el("span.label", { text: p.title }),
-      el("span.meta", { text: `${p.spec ? p.spec + " · " : ""}${p.minutes} min` })
-    );
-    tocEl.appendChild(el("li", null, a));
+  MODULES.forEach((m) => {
+    // a module heading only earns its place once there is more than one module
+    if (MODULES.length > 1) {
+      tocEl.appendChild(el("li.toc-group", null,
+        el("span", { text: m.area ? `${m.area} · ${m.title}` : m.title }),
+        m.questions ? el("span.q", { text: `${m.questions} q` }) : null
+      ));
+    }
+    m.parts.forEach((p) => {
+      const a = el("a", { href: `#/${p.id}` },
+        el("span.num", { text: String(p.n).padStart(2, "0") }),
+        el("span.label", { text: p.title }),
+        el("span.meta", { text: `${p.spec ? p.spec + " · " : ""}${p.minutes} min` })
+      );
+      tocEl.appendChild(el("li", null, a));
+    });
   });
   paintToc();
 }
@@ -43,6 +52,7 @@ function paintToc() {
   const cur = currentId();
   tocEl.querySelectorAll("a").forEach((a, i) => {
     const p = PARTS[i];
+    if (!p) return;
     a.toggleAttribute("aria-current", p.id === cur);
     if (p.id === cur) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     a.dataset.done = state.isRead(p.id) ? "1" : "0";
@@ -75,7 +85,7 @@ async function route() {
     text: "Loading…", style: { color: "var(--faint)", fontSize: "var(--t-small)" },
   }));
 
-  const path = `content/${String(part.n).padStart(2, "0")}-${part.id}.html`;
+  const path = contentPath(part);
   let html;
   try {
     // build.py inlines every chapter here, so the single-file bundle needs no
@@ -109,6 +119,7 @@ async function route() {
 
   article.appendChild(partNav(id));
   document.title = `${part.n === 0 ? "" : `Part ${part.n} · `}${part.title} — The Bench`;
+  reading.dataset.module = part.module;
   paintToc();
   window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
   reading.focus({ preventScroll: true });

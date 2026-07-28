@@ -11,3 +11,6 @@ import "./calculus.js";      // 17 18 19 20
 import "./odes.js";          // 21 22
 import "./discrete.js";      // 23 24
 import "./synthesis.js";     // 25
+
+/* --- Circuit Analysis --- */
+import "./circuits-dc.js";   // 26

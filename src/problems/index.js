@@ -8,3 +8,6 @@ import "./linalg.js";
 import "./calculus.js";
 import "./odes.js";
 import "./discrete.js";
+
+/* --- Circuit Analysis --- */
+import "./circuits-dc.js";

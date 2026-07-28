@@ -121,9 +121,10 @@ def main():
     modules = collect(ENTRY)
     bundle = "\n".join(wrap(p) for p in modules)
 
-    chapters = sorted((ROOT / "content").glob("*.html"))
+    chapters = sorted((ROOT / "content").rglob("*.html"))
     content_map = ",\n".join(
-        f'  "content/{p.name}": {js_string(p.read_text())}' for p in chapters
+        f'  "{p.relative_to(ROOT).as_posix()}": {js_string(p.read_text())}'
+        for p in chapters
     )
 
     stray = LEFTOVER.search(bundle)

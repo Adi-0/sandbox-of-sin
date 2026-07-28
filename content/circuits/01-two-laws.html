@@ -1,0 +1,217 @@
+<p class="eyebrow">
+  <span>Circuit Analysis · Part 1</span>
+  <span class="spec">NCEES 6.A</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>The Two Laws</h1>
+
+<p class="lede">Charge cannot pile up, and energy cannot appear from nowhere.
+Write those two sentences as equations and you can solve every circuit on this
+exam. Everything in the next five parts is a shortcut for doing it faster.</p>
+
+<h2>1.1 What a circuit question is actually asking</h2>
+
+<p>Circuit Analysis is <b>11 to 17 questions</b> — tied with Mathematics for the
+largest block on the exam, and unlike Mathematics it is a topic where a
+methodical person beats a clever one. There is no trick you have to spot. There
+is a procedure, and the procedure always terminates.</p>
+
+<p>Here is the whole of it. A circuit is a set of components joined by wires. At
+any instant you want to know two things: <b>how much current is in each branch</b>
+and <b>what the voltage is at each node</b>. Three facts get you there:</p>
+
+<ol>
+  <li>Charge is conserved, so whatever flows into a junction flows out.</li>
+  <li>Energy is conserved, so a round trip around any loop returns you to the
+      voltage you started at.</li>
+  <li>Each component has its own rule linking its voltage to its current — for a
+      resistor, that rule is Ohm's law.</li>
+</ol>
+
+<p>That is it. Series and parallel formulas, Thévenin equivalents, node analysis,
+phasors — all of them are bookkeeping that makes those three facts cheaper to
+apply to a big network. <b>If you ever forget a shortcut mid-exam, you can still
+grind out the answer from the two laws.</b> That is worth more than the shortcut.</p>
+
+<h2>1.2 Current, voltage, and what they measure</h2>
+
+<p><span class="term">Current</span> is the rate at which charge flows past a
+point — coulombs per second, which we call amperes. It is a flow, so it makes
+sense to ask which way it goes, and it makes no sense to ask what the current
+"at" a node is; current is in a <em>branch</em>.</p>
+
+<p><span class="term">Voltage</span> is energy per unit charge — joules per
+coulomb, which we call volts. It is a <em>difference</em> between two points,
+always. A single point does not have a voltage until you name a reference, which
+is what a <span class="term">ground</span> symbol does: it declares one node to
+be zero so every other node has a number.</p>
+
+<div class="note honest">
+  <span class="note-tag">The plumbing analogy, and where it stops</span>
+  <p style="margin-bottom:0">Current is the flow rate; voltage is the pressure
+  difference driving it; resistance is the narrowness of the pipe. The analogy is
+  genuinely load-bearing and this guide will reuse it — but it fails at
+  capacitors and inductors, which have no clean plumbing counterpart, and it
+  fails at the idea that current is the <em>same</em> all the way round a series
+  loop. Water leaks; charge does not.</p>
+</div>
+
+<f-plate no="6.1" title="Ohm's law and power" stamp="handbook"
+  caption="The three power forms are one formula with Ohm's law substituted in.
+  <b>Which one to use is decided by what you already know</b> — reach for
+  <span class='math'>I²R</span> when you know the current through a resistor, and
+  <span class='math'>V²/R</span> when you know the voltage across it. Substituting
+  the wrong pair is the most common arithmetic slip in this topic.">
+  <f-row tex="V = IR" name="Ohm's law"
+         gloss="Push harder or narrow the pipe and you get proportionally more or less flow. True for resistors, and only for resistors."></f-row>
+  <f-row tex="P = VI = I^2R = \frac{V^2}{R}" name="power"
+         gloss="Volts are joules per coulomb and amps are coulombs per second, so their product is joules per second — watts. The units do the deriving."></f-row>
+</f-plate>
+
+<h2>1.3 Kirchhoff's Current Law</h2>
+
+<p>A junction of wires — a <span class="term">node</span> — has no capacity to
+store charge. Whatever arrives must leave, immediately and exactly.</p>
+
+<f-plate no="6.2" title="Kirchhoff's Current Law" stamp="know"
+  caption="Both lines say the same thing. <b>Use the second form</b>: give every
+  branch an assumed direction, write everything leaving the node as positive, and
+  set the sum to zero. A negative answer then means only that you guessed the
+  arrow backwards — <em>which is not an error and does not need fixing</em>.">
+  <f-row tex="\sum I_{\text{in}} = \sum I_{\text{out}}" name="KCL"
+         gloss="Charge is conserved. A node is a junction, not a bucket."></f-row>
+  <f-row tex="\sum_{\text{node}} I = 0" name="the working form"
+         gloss="With a consistent sign convention, all the branch currents at a node add to zero."></f-row>
+</f-plate>
+
+<h2>1.4 Kirchhoff's Voltage Law</h2>
+
+<p>Walk a closed loop around a circuit, adding up every rise and drop, and you
+arrive back where you started — at the same voltage, necessarily, because it is
+the same point.</p>
+
+<f-plate no="6.3" title="Kirchhoff's Voltage Law" stamp="know"
+  caption="The bookkeeping rule that makes this reliable: pick a direction to
+  walk, and <b>write down the sign of the terminal you enter first</b>. Enter a
+  source at its + terminal and you write a rise; enter a resistor at the end the
+  current arrow points into, and you write a drop.">
+  <f-row tex="\sum_{\text{loop}} V = 0" name="KVL"
+         gloss="Energy per charge is conserved. Going round a hill and back returns you to the same altitude."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the passive sign convention</span>
+  <p style="margin-bottom:0">For a resistor, current enters the <b>+</b> terminal
+  — the end it flows into is the higher-voltage end, because a resistor consumes
+  energy. For a source that is <em>delivering</em>, current leaves the + terminal.
+  Get this backwards and your power comes out negative. <b>A negative power is
+  not automatically wrong</b>: it means that element is absorbing when you assumed
+  it was delivering, which a battery being charged really does.</p>
+</div>
+
+<h2>1.5 The circuit this module is built on</h2>
+
+<p>One network runs through the whole of Circuit Analysis, the way the 3-4-5
+triangle ran through Mathematics. Here it is: a 100 V source, a 2 Ω resistor in
+series, and then 12 Ω and 4 Ω side by side.</p>
+
+<p>Every number in it is a whole number, which is deliberate — you will be able
+to check both laws in your head at every step, and any arithmetic slip announces
+itself immediately.</p>
+
+<div data-figure="castCircuit"></div>
+
+<div class="worked">
+  <h4>Worked · <em>the cast circuit, from the two laws alone</em></h4>
+  <div class="worked-body">
+    <p>No series or parallel formulas yet — those come in Part 2. Just KCL, KVL
+    and Ohm's law.</p>
+    <ol class="steps">
+      <li>Call the voltage at the junction <span data-tex="V_p">V_p</span>, with
+        the bottom rail as our zero. <b>KCL at that junction</b>: the current
+        arriving through the 2 Ω equals the two currents leaving through the
+        12 Ω and the 4 Ω.
+        <span data-tex="\frac{100 - V_p}{2} = \frac{V_p}{12} + \frac{V_p}{4}" data-display>(100 − Vp)/2 = Vp/12 + Vp/4</span></li>
+      <li>Multiply through by 12 to clear the fractions:
+        <span data-tex="6(100 - V_p) = V_p + 3V_p \;\Rightarrow\; 600 = 10V_p \;\Rightarrow\; V_p = 60\text{ V}" data-display>Vp = 60 V</span></li>
+      <li>Now every branch follows from Ohm's law:
+        <span data-tex="I_{2} = \frac{100-60}{2} = 20\text{ A}, \quad I_{12} = \frac{60}{12} = 5\text{ A}, \quad I_{4} = \frac{60}{4} = 15\text{ A}" data-display>I2 = 20 A, I12 = 5 A, I4 = 15 A</span></li>
+      <li><b>Check both laws.</b> KCL: <span data-tex="5 + 15 = 20">5 + 15 = 20</span> ✓.
+        KVL round the left loop:
+        <span data-tex="100 - (20)(2) - 60 = 0">100 − 40 − 60 = 0</span> ✓.
+        Two independent checks, ten seconds, and they catch almost every mistake
+        you can make in this topic.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Notice the shape of
+    what we did: <em>one unknown, one equation from KCL, then Ohm's law for
+    everything else.</em> That is node analysis, and Part 3 does nothing more than
+    make it systematic for circuits with more than one unknown node.</p>
+  </div>
+</div>
+
+<div class="note payoff">
+  <span class="note-tag">The killer habit</span>
+  <p style="margin-bottom:0">Those two checks in step 4 cost ten seconds and are
+  the highest-value seconds on the whole exam. Every branch current and every
+  node voltage you produce can be verified against a law you did not use to
+  derive it. <b>On a multiple-choice exam where a wrong answer scores the same as
+  a blank one, a free correctness check is worth more than a faster method.</b></p>
+</div>
+
+<h2>1.6 Power, and where it goes</h2>
+
+<p>Add up what every resistor dissipates and it must equal what the source
+delivers — that is conservation of energy again, and it is a third free check.</p>
+
+<p>In the cast circuit: the source delivers
+<span data-tex="P = (100)(20) = 2000\text{ W}">100 × 20 = 2000 W</span>. The
+2 Ω dissipates <span data-tex="I^2R = (20)^2(2) = 800\text{ W}">(20)²(2) = 800 W</span>,
+the 12 Ω dissipates <span data-tex="(5)^2(12) = 300\text{ W}">(5)²(12) = 300 W</span>,
+and the 4 Ω dissipates <span data-tex="(15)^2(4) = 900\text{ W}">(15)²(4) = 900 W</span>.
+Total: <span data-tex="800 + 300 + 900 = 2000\text{ W}">2000 W</span> ✓.</p>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the bigger resistor is not the hotter one</span>
+  <p style="margin-bottom:0">The 4 Ω dissipates <b>three times</b> what the 12 Ω
+  does, despite being three times smaller. In <em>parallel</em>, both see the same
+  voltage, so <span class="math" data-tex="P = V^2/R">P = V²/R</span> makes the
+  smaller resistor the hotter one. In <em>series</em>, both carry the same current,
+  so <span class="math" data-tex="P = I^2R">P = I²R</span> makes the bigger one
+  hotter. <b>Same components, opposite conclusion, depending only on how they are
+  wired.</b> Exam questions are built on exactly this reversal.</p>
+</div>
+
+<h2>1.7 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="V = IR">V = IR</span>, and the three power forms
+        <span data-tex="P = VI = I^2R = V^2/R">P = VI = I²R = V²/R</span>.</li>
+    <li><b>KCL</b>: currents at a node sum to zero. <b>KVL</b>: voltages round a
+        loop sum to zero. Neither is in the handbook in a form that helps you
+        under time pressure.</li>
+    <li>A negative current or power means your assumed arrow was backwards. It is
+        not a mistake and does not need redoing.</li>
+    <li>Current enters a resistor at its + terminal.</li>
+    <li>Always check KCL at a node and KVL round a loop before answering.</li>
+    <li>The cast: <b>100 V, 2 Ω, then 12 Ω ∥ 4 Ω</b> → 20 A total, splitting 5 A
+        and 15 A, with 60 V across the pair.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Two conservation laws run every circuit on this exam. Charge cannot
+  accumulate at a junction, so branch currents there sum to zero. Energy per
+  charge is single-valued, so voltages round a loop sum to zero.</p>
+  <p>Every technique in the parts that follow is a way of applying those two
+  faster. None of them can give an answer the two laws would not — which is why
+  checking against them is free, and why you should always do it.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"two-laws","title":"Part 1 · KCL, KVL, Ohm and power","topics":["kcl-node","kvl-loop","ohm-power","power-balance"],"count":6}'></div>
+
+<div data-reflex='{"only":["two-laws"],"count":5,"title":"Handbook Reflex · Part 1"}'></div>
