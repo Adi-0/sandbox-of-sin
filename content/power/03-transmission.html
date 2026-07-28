@@ -1,0 +1,169 @@
+<p class="eyebrow">
+  <span>Power Systems · Part 3</span>
+  <span class="spec">NCEES 10.B</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Transmission and Distribution</h1>
+
+<p class="lede">Everything so far assumed the supply arrives at the load unchanged.
+It does not. The wire between them has impedance, and one consequence of that
+fact decides the shape of every power grid on earth.</p>
+
+<h2>3.1 The line is a component</h2>
+
+<p>A conductor running any real distance is a resistance in series with an
+inductive reactance — resistance from the metal, reactance from the magnetic field
+around it. Both sit between the source and the load, and both are carrying the
+full load current.</p>
+
+<p>So the voltage at the far end is not the voltage at the near end:</p>
+
+<p class="math" data-tex="\mathbf{V}_S = \mathbf{V}_R + \mathbf{I}\,(R_{line} + jX_{line})" data-display>VS = VR + I(Rline + jXline)</p>
+
+<div data-figure="lineDrop"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the drop is not I·R</span>
+  <p style="margin-bottom:0">With the plant's 24 A through 0.5 Ω of line
+  resistance, <span class="math" data-tex="IR = 12">IR = 12</span> V. The actual
+  drop is <b>16.8 V</b>. The difference is the reactance, and the reason it
+  matters so much here is the <b>load angle</b>: at 0.6 lagging the current is
+  53° behind the voltage, which rotates
+  <span class="math" data-tex="jX\mathbf{I}">jXI</span> into near-alignment with
+  <span class="math" data-tex="\mathbf{V}_R">VR</span> so almost all of it adds to
+  the magnitude. <b>A lagging load makes voltage drop worse than the resistance
+  alone predicts.</b> Correcting the power factor fixes it twice over — less
+  current, and a smaller angle.</p>
+</div>
+
+<h2>3.2 Voltage regulation</h2>
+
+<p>Utilities need one number for "how much does the voltage at this point sag when
+the load comes on." That number is <span class="term">voltage regulation</span>:</p>
+
+<f-plate no="10.6" title="Regulation and efficiency" stamp="handbook">
+  <f-row tex="\text{VR}\% = \frac{|V_{nl}| - |V_{fl}|}{|V_{fl}|} \times 100"
+         name="voltage regulation"
+         gloss="No-load minus full-load, <b>over the full-load value</b>. The denominator is the one people get wrong — it is not the no-load voltage."></f-row>
+  <f-row tex="\eta = \frac{P_{out}}{P_{out} + P_{loss}} \times 100"
+         name="transmission efficiency"
+         gloss="Delivered over delivered-plus-wasted. Equivalently <span class='math'>P_{out}/P_{in}</span>, which is the same statement."></f-row>
+  <f-row tex="P_{loss} = 3 I_L^2 R_{line} \quad \text{(three-phase)}"
+         name="the copper loss"
+         gloss="<b>Three conductors, each carrying the line current.</b> Per-phase resistance, times three. The most common slip in this topic is forgetting the 3."></f-row>
+</f-plate>
+
+<p>For a line with no source impedance of its own, the no-load voltage is just the
+sending-end voltage — nothing is flowing, so nothing drops. That makes regulation
+a direct measure of what the line's impedance costs you at full load.</p>
+
+<div class="note honest">
+  <span class="note-tag">What counts as acceptable</span>
+  <p style="margin-bottom:0">Standards generally hold service voltage within about
+  <b>±5%</b> of nominal. A regulation figure of 14%, like the plate's one-kilometre
+  case, would be unacceptable in practice — it is drawn that way so the effect is
+  visible. Real feeders are sized so the drop lands near 2–3%, which usually means
+  a fatter conductor, a shorter run, or a higher distribution voltage.</p>
+</div>
+
+<h2>3.3 The fact the grid is built around</h2>
+
+<p>Here is the argument in three lines. Deliver a fixed real power
+<span data-tex="P">P</span> at line voltage <span data-tex="V_L">VL</span> and
+power factor <span data-tex="\cos\theta">cos θ</span>. The current required is</p>
+
+<p class="math" data-tex="I_L = \frac{P}{\sqrt{3}\,V_L\cos\theta}" data-display>IL = P / (√3 VL cos θ)</p>
+
+<p>and the loss in the conductors is
+<span data-tex="3I_L^2R">3 IL² R</span>. Substituting:</p>
+
+<p class="math" data-tex="P_{loss} = 3R\left(\frac{P}{\sqrt{3}\,V_L\cos\theta}\right)^{\!2} = \frac{P^2 R}{V_L^2\cos^2\theta}" data-display>Ploss = P²R / (VL² cos²θ)</p>
+
+<div class="note payoff">
+  <span class="note-tag">Loss falls as the square of voltage</span>
+  <p style="margin-bottom:0">Everything in that expression is fixed by the job
+  except <span class="math" data-tex="V_L">VL</span>. <b>Double the transmission
+  voltage and the loss quarters. Multiply it by twenty and the loss falls by four
+  hundred.</b> Nothing else in power engineering offers a lever like that, and it
+  is the entire justification for the grid's structure: generate at medium voltage,
+  step up for the journey, step back down at the end.</p>
+  <p style="margin-bottom:0">Note the <span class="math" data-tex="\cos^2\theta">cos²θ</span>
+  in the denominator too. <b>Power factor enters squared</b> — the same lever as
+  Part 1, and the reason correction pays for itself on a long feeder.</p>
+</div>
+
+<div data-figure="voltageSquared"></div>
+
+<h2>3.4 What it costs to go high</h2>
+
+<p>If high voltage is free efficiency, why is anything distributed at 208 V? Because
+voltage costs money in every direction other than loss:</p>
+
+<ul>
+  <li><b>Insulation</b> thickness scales with voltage, in cables, transformers and
+  switchgear alike.</li>
+  <li><b>Clearances</b> — the physical air gap to anything else — scale with it,
+  which is why transmission towers are tall and substations are large.</li>
+  <li><b>Switching and protection</b> get dramatically harder: interrupting a fault
+  at 138 kV is a different engineering problem than at 480 V.</li>
+  <li><b>Nothing uses it.</b> Motors, lighting and electronics all want hundreds of
+  volts, not thousands.</li>
+</ul>
+
+<p>So the grid steps down in stages, each one trading a little more loss for a lot
+less apparatus, until the last transformer on the street delivers the 120 V that
+started this module.</p>
+
+<div class="worked">
+  <h4>Worked · <em>a feeder, end to end</em></h4>
+  <div class="worked-body">
+    <p>A three-phase feeder delivers 300 kW at 4160 V and 0.85 power factor lagging.
+    Each conductor has 0.8 Ω of resistance. Find the line loss and the transmission
+    efficiency.</p>
+    <ol class="steps">
+      <li>Line current, from the three-phase power relation rearranged:
+        <span data-tex="I_L = \frac{300{,}000}{\sqrt{3}(4160)(0.85)} = 49.0\text{ A}" data-display>IL = 49.0 A</span></li>
+      <li>Loss in all three conductors — <b>the 3 is not optional</b>:
+        <span data-tex="P_{loss} = 3I_L^2R = 3(49.0)^2(0.8) = 5760\text{ W}" data-display>Ploss = 5760 W ≈ 5.76 kW</span></li>
+      <li>Efficiency:
+        <span data-tex="\eta = \frac{300}{300 + 5.76} \times 100 = 98.1\%" data-display>η = 98.1%</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Now repeat it mentally
+    at 480 V instead of 4160. The current becomes 425 A, the loss becomes 433 kW —
+    <em>larger than the load</em>. The line would not deliver the power at all; it
+    would melt. That is what the inverse square looks like from the wrong side.</p>
+  </div>
+</div>
+
+<h2>3.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="P_{loss} = 3I_L^2 R">Ploss = 3 IL² R</span> for three-phase.
+        <b>Three conductors.</b></li>
+    <li><span data-tex="P_{loss} \propto 1/V^2">Ploss ∝ 1/V²</span> at fixed
+        delivered power — and
+        <span data-tex="\propto 1/\cos^2\theta">∝ 1/cos²θ</span> as well.</li>
+    <li><span data-tex="\text{VR}\% = (V_{nl} - V_{fl})/V_{fl} \times 100">VR% = (Vnl − Vfl)/Vfl × 100</span>
+        — divide by the <b>full-load</b> value.</li>
+    <li><span data-tex="\mathbf{V}_S = \mathbf{V}_R + \mathbf{I}\mathbf{Z}">VS = VR + IZ</span>,
+        as phasors. The drop is not I·R.</li>
+    <li>Service voltage is normally held within about ±5%.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A transmission line is a series impedance carrying the load current, so the
+  far end always sits lower than the near end, and the shortfall depends on the
+  load's angle as much as on the line's resistance.</p>
+  <p>Delivering fixed power means current is inversely proportional to voltage, and
+  loss is proportional to current squared — so loss is inversely proportional to
+  voltage squared. Every structural decision in a power system, from the height of
+  a tower to the location of a substation, follows from that one exponent.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"transmission","title":"Part 3 · Drop, loss, and efficiency","topics":["line-loss","volt-reg","line-drop","hv-benefit"],"count":6}'></div>

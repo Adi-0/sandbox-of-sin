@@ -19,3 +19,4 @@ import "./circuits-ac.js";   // 32 33 34 35 36
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41
+import "./transmission.js";  // 42 43

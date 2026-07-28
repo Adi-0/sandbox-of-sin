@@ -466,3 +466,210 @@ defineReflex([
     because: "208Y/120 is a √3 pair; the phase voltage is the familiar 120 V.",
   },
 ]);
+
+/* ==========================================================================
+   Part 3 — transmission and distribution
+   ========================================================================== */
+
+defineProblem("line-loss", {
+  topic: "Line loss and efficiency",
+  lookup: "Electrical → Power → Transmission (real losses, efficiency)",
+  make(rng) {
+    const kW = rng.pick([100, 250, 300, 500, 750]);
+    const VL = rng.pick([2400, 4160, 12470, 13800]);
+    const pf = rng.pick([0.8, 0.85, 0.9]);
+    const R = rng.pick([0.4, 0.8, 1.2, 2.0]);
+    const P = kW * 1000;
+    const Il = P / (RT3 * VL * pf);
+    const loss = 3 * Il * Il * R;
+    const eff = (P / (P + loss)) * 100;
+    const ask = rng.pick(["loss", "eff"]);
+
+    const common = [
+      `Line current first, from the three-phase power relation rearranged:`,
+      `<span class="math display" data-tex="I_L = \\frac{P}{\\sqrt{3}V_L\\cos\\theta} = \\frac{${num(P, 0)}}{1.732 \\times ${VL} \\times ${pf}} = ${fixed(Il, 1)}\\text{ A}"></span>`,
+      `All three conductors carry it, so the loss is three times ${T("I^2R")}:`,
+      `<span class="math display" data-tex="P_{loss} = 3I_L^2R = 3(${fixed(Il, 1)})^2(${R}) = ${num(loss, 0)}\\text{ W}"></span>`,
+    ];
+
+    if (ask === "eff") {
+      return {
+        stem: `A three-phase line delivers ${kW} kW at ${num(VL, 0)} V and ${pf} power factor lagging. ` +
+              `Each conductor has ${R} Ω of resistance. What is the transmission efficiency, most nearly?`,
+        choices: [
+          { text: `${fixed(eff, 1)}%`, why: "" },
+          { text: `${fixed((P / (P + loss / 3)) * 100, 1)}%`,
+            why: "That counts the loss in only one conductor. A three-phase line has <b>three</b> of them, each carrying the line current." },
+          { text: `${fixed((P - loss) / P * 100, 1)}%`,
+            why: "Close, but the loss is <em>additional</em> to what is delivered — it belongs in the input, not subtracted from the output. η = P<sub>out</sub>/(P<sub>out</sub> + P<sub>loss</sub>)." },
+          { text: `${fixed(100 - loss / P * 100 * 3, 1)}%`, why: "The loss has been counted three times over." },
+        ],
+        answer: 0,
+        steps: [
+          ...common,
+          `<span class="math display" data-tex="\\eta = \\frac{P_{out}}{P_{out}+P_{loss}} = \\frac{${num(P, 0)}}{${num(P + loss, 0)}} = ${fixed(eff, 1)}\\%"></span>`,
+          `<b>${fixed(eff, 1)}%.</b>`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A three-phase line delivers ${kW} kW at ${num(VL, 0)} V and ${pf} power factor lagging. ` +
+            `Each conductor has ${R} Ω of resistance. What is the total line loss, most nearly?`,
+      choices: [
+        { text: `${fixed(loss / 1000, 2)} kW`, why: "" },
+        { text: `${fixed(loss / 3000, 2)} kW`, why: "That is one conductor's share. Three conductors carry the line current, so multiply by three." },
+        { text: `${fixed(3 * (P / (RT3 * VL)) ** 2 * R / 1000, 2)} kW`,
+          why: "The power factor was left out of the current. At lagging pf the current is <b>larger</b> than the watts alone suggest, and loss goes as its square." },
+        { text: `${fixed(3 * Il * R / 1000, 2)} kW`, why: `That is ${T("3IR")} — a voltage, not a power. Loss needs ${T("I^2R")}.` },
+      ],
+      answer: 0,
+      steps: [...common, `<b>${fixed(loss / 1000, 2)} kW.</b> That is ${fixed(loss / P * 100, 1)}% of what the line is delivering.`],
+    };
+  },
+});
+
+defineProblem("volt-reg", {
+  topic: "Voltage regulation",
+  lookup: "Electrical → Power → Voltage regulation",
+  make(rng) {
+    const Vfl = rng.pick([115, 120, 230, 460, 2300, 4000]);
+    const pct = rng.pick([2, 3, 4, 5, 8, 12]);
+    const Vnl = Vfl * (1 + pct / 100);
+
+    return {
+      stem: `A feeder measures ${fixed(Vnl, 1)} V at no load and ${Vfl} V at full load. ` +
+            `What is its voltage regulation, most nearly?`,
+      choices: [
+        { text: `${fixed(pct, 1)}%`, why: "" },
+        { text: `${fixed((Vnl - Vfl) / Vnl * 100, 1)}%`,
+          why: "Divided by the <b>no-load</b> voltage. Voltage regulation is referenced to the <b>full-load</b> value — that is the condition the equipment actually has to operate in." },
+        { text: `${fixed(Vnl / Vfl * 100, 1)}%`, why: "That is the ratio itself, not the change. Regulation is a percentage <em>difference</em>." },
+        { text: `${fixed(Vnl - Vfl, 1)}%`, why: "That is the drop in volts, not a percentage." },
+      ],
+      answer: 0,
+      steps: [
+        `Voltage regulation compares the no-load and full-load voltages, referenced to full load:`,
+        `<span class="math display" data-tex="\\text{VR}\\% = \\frac{|V_{nl}| - |V_{fl}|}{|V_{fl}|} \\times 100"></span>`,
+        `<span class="math display" data-tex="= \\frac{${fixed(Vnl, 1)} - ${Vfl}}{${Vfl}} \\times 100 = ${fixed(pct, 1)}\\%"></span>`,
+        `<b>${fixed(pct, 1)}%.</b> ${pct <= 5 ? "Within the ±5% that service standards generally require." : "Well outside the ±5% service standards generally allow — this feeder needs a larger conductor, a shorter run, or power factor correction at the load."}`,
+      ],
+    };
+  },
+});
+
+defineProblem("line-drop", {
+  topic: "Voltage drop along a line",
+  lookup: "Electrical → Power → Voltage drop",
+  make(rng) {
+    const Vr = rng.pick([120, 240, 277, 480]);
+    const I = rng.pick([10, 20, 24, 40, 50]);
+    const R = rng.pick([0.2, 0.5, 0.8, 1.0]);
+    const X = rng.pick([0.3, 0.5, 0.6]);
+    const pf = rng.pick([0.6, 0.7, 0.8, 0.9]);
+    const th = Math.acos(pf);
+    const Ire = I * pf, Iim = -I * Math.sin(th);
+    const vsRe = Vr + (Ire * R - Iim * X);
+    const vsIm = Ire * X + Iim * R;
+    const Vs = Math.hypot(vsRe, vsIm);
+
+    return {
+      stem: `A load draws ${I} A at ${pf} power factor lagging, with ${Vr} V at its terminals. ` +
+            `The line supplying it has an impedance of ${T(`${R} + j${X}\\ \\Omega`)}. ` +
+            `What sending-end voltage is required, most nearly?`,
+      choices: [
+        { text: `${fixed(Vs, 1)} V`, why: "" },
+        { text: `${fixed(Vr + I * R, 1)} V`,
+          why: `That is ${T("V_R + IR")} — resistance only. The reactance carries current too, and at a lagging power factor its contribution largely <b>adds</b> to the magnitude rather than cancelling.` },
+        { text: `${fixed(Vr + I * Math.hypot(R, X), 1)} V`,
+          why: `That adds the full ${T("I|Z|")} arithmetically. The drop is a <b>phasor</b> added to a phasor — only its component along V<sub>R</sub> raises the magnitude much.` },
+        { text: `${fixed(Vr - (Vs - Vr), 1)} V`,
+          why: "Subtracted instead of added. The sending end is always the <b>higher</b> of the two — the line cannot manufacture voltage." },
+      ],
+      answer: 0,
+      steps: [
+        `Take the load voltage as the reference. The current lags it by ${T(`\\arccos ${pf} = ${fixed(th * D, 1)}^\\circ`)}:`,
+        `<span class="math display" data-tex="\\mathbf{I} = ${I}\\angle-${fixed(th * D, 1)}^\\circ = ${fixed(Ire, 2)} - j${fixed(-Iim, 2)}\\text{ A}"></span>`,
+        `<span class="math display" data-tex="\\mathbf{V}_S = \\mathbf{V}_R + \\mathbf{I}\\mathbf{Z} = ${Vr} + (${fixed(Ire, 2)} - j${fixed(-Iim, 2)})(${R} + j${X})"></span>`,
+        `<span class="math display" data-tex="= ${fixed(vsRe, 2)} ${vsIm >= 0 ? "+" : "-"} j${fixed(Math.abs(vsIm), 2)} = ${fixed(Vs, 1)}\\angle${fixed(Math.atan2(vsIm, vsRe) * D, 1)}^\\circ\\text{ V}"></span>`,
+        `<b>${fixed(Vs, 1)} V</b> — a drop of ${fixed(Vs - Vr, 1)} V, against ${fixed(I * R, 1)} V from the resistance alone.`,
+      ],
+    };
+  },
+});
+
+defineProblem("hv-benefit", {
+  topic: "Why transmission voltage is high",
+  lookup: "Electrical → Power → Transmission losses",
+  make(rng) {
+    const n = rng.pick([2, 3, 4, 5, 10, 20]);
+    const V1 = rng.pick([240, 480, 4160]);
+    const ask = rng.pick(["loss", "current"]);
+
+    if (ask === "current") {
+      return {
+        stem: `The same real power is delivered over the same line, but the voltage is raised from ${num(V1, 0)} V to ${num(V1 * n, 0)} V ` +
+              `at unchanged power factor. By what factor does the line current change?`,
+        choices: [
+          { text: `${n}× smaller`, why: "" },
+          { text: `${n * n}× smaller`, why: `That is what happens to the <b>loss</b>. Current itself is inversely proportional to voltage — the square appears only when you put that current into ${T("I^2R")}.` },
+          { text: `${n}× larger`, why: "The wrong direction. At fixed power, raising voltage <b>lowers</b> current — that is the whole point of doing it." },
+          { text: "unchanged", why: `Current is set by ${T("P/(\\sqrt{3}V\\cos\\theta)")}, so it cannot be independent of the voltage.` },
+        ],
+        answer: 0,
+        steps: [
+          `At fixed delivered power and power factor, current and voltage are inversely proportional:`,
+          `<span class="math display" data-tex="I_L = \\frac{P}{\\sqrt{3}\\,V_L\\cos\\theta} \;\\propto\; \\frac{1}{V_L}"></span>`,
+          `Raising the voltage ${n}-fold therefore divides the current by ${n}: <b>${n}× smaller</b>.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A transmission voltage is raised by a factor of ${n} while the same real power is delivered over the same conductors ` +
+            `at unchanged power factor. What happens to the line loss?`,
+      choices: [
+        { text: `It falls to 1/${n * n} of its former value`, why: "" },
+        { text: `It falls to 1/${n} of its former value`,
+          why: `That is what happens to the <b>current</b>. Loss is ${T("I^2R")}, so the factor is squared.` },
+        { text: `It rises by a factor of ${n * n}`, why: "The wrong direction — higher voltage means lower current at fixed power, and therefore lower loss." },
+        { text: "It is unchanged, since the same power is delivered", why: "Loss depends on <b>current</b>, not on power delivered. Two lines carrying the same watts at different voltages carry very different currents." },
+      ],
+      answer: 0,
+      steps: [
+        `Current at fixed power is inversely proportional to voltage:`,
+        `<span class="math display" data-tex="I_L = \\frac{P}{\\sqrt{3}V_L\\cos\\theta}"></span>`,
+        `Substituting into the loss expression makes the dependence explicit:`,
+        `<span class="math display" data-tex="P_{loss} = 3I_L^2R = \\frac{P^2R}{V_L^2\\cos^2\\theta} \;\\propto\; \\frac{1}{V_L^2}"></span>`,
+        `<b>Loss falls to 1/${n * n}.</b> A ${n}:1 transformer at each end buys a ${n * n}-fold reduction in wasted power, which is why the grid is built the way it is.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "transmission",
+    stem: "A 3-phase line carries 60 A through 1.2 Ω per conductor. Total loss?",
+    tool: "P_loss = 3 I_L² R",
+    because: "Three conductors each carry the line current — the factor of three is the step most often dropped.",
+  },
+  {
+    part: "transmission",
+    stem: "A feeder reads 252 V unloaded and 240 V at full load. Regulation?",
+    tool: "VR% = (V_nl − V_fl) / V_fl × 100",
+    because: "Referenced to the full-load voltage, not the no-load one.",
+  },
+  {
+    part: "transmission",
+    stem: "Transmission voltage is tripled at the same delivered power. Loss?",
+    tool: "P_loss ∝ 1/V²",
+    because: "Current falls with voltage and loss goes as current squared, so the factor is nine.",
+  },
+  {
+    part: "transmission",
+    stem: "A load draws 30 A at 0.7 lagging through a line of 0.4 + j0.6 Ω. Sending-end volts?",
+    tool: "V_S = V_R + I Z, as phasors",
+    because: "The drop is a complex addition; I·R alone understates it at a lagging power factor.",
+  },
+]);
