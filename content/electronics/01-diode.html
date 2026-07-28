@@ -1,0 +1,176 @@
+<p class="eyebrow">
+  <span>Electronics · Part 1</span>
+  <span class="spec">NCEES 9.A</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>The Diode</h1>
+
+<p class="lede">The first component in this compilation that Ohm's law cannot
+solve. It is also the cheapest place to learn the method that every remaining
+part of Electronics depends on.</p>
+
+<h2>1.1 What changes when a component is not linear</h2>
+
+<p>Every element so far — resistor, capacitor, inductor — obeys a straight-line
+relationship between voltage and current. That is why node analysis worked: a
+linear circuit is a set of simultaneous linear equations, and Mathematics Part 5
+solves those.</p>
+
+<p>A diode does not. Its current rises <em>exponentially</em> with voltage:</p>
+
+<f-plate no="9.1" title="The diode equation" stamp="handbook"
+  caption="<b>The exponent is the whole story.</b> Because e^(V/VT) grows so fast,
+  the voltage across a conducting silicon diode barely moves — which is exactly
+  what licenses the shortcut in the next plate.">
+  <f-row tex="I = I_S\left(e^{V_D/nV_T} - 1\right)" name="Shockley equation"
+         gloss="<b>I<sub>S</sub></b> is the saturation current (order of 10<sup>−14</sup> A), <b>n</b> the ideality factor (take it as 1 unless told otherwise)."></f-row>
+  <f-row tex="V_T = \frac{kT}{q} \approx 26\text{ mV at room temperature}"
+         name="thermal voltage"
+         gloss="<b>Memorise 26 mV.</b> It appears in every diode and transistor question, and questions that hand you k, T and q are just testing whether you know that."></f-row>
+  <f-row tex="I \approx I_S e^{V_D/V_T} \quad (V_D \gg V_T)"
+         name="the useful approximation"
+         gloss="Once forward-biased by more than about 100 mV, the −1 is negligible. Dropping it early saves time and changes nothing."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">A decade per 60 millivolts</span>
+  <p style="margin-bottom:0">Because <span class="math" data-tex="V_T \approx 26">VT ≈ 26</span> mV,
+  multiplying the current by ten needs only
+  <span class="math" data-tex="V_T\ln 10 = 60">VT ln 10 = 60</span> mV more. A
+  diode carrying 1 mA sits at about 0.7 V; at 10 mA it sits at 0.76 V; at 100 mA,
+  0.82 V. <b>Three orders of magnitude in current for a fifth of a volt.</b> That
+  is why "a diode drops 0.7 V" is a usable statement at all.</p>
+</div>
+
+<h2>1.2 Three models, and when each is honest</h2>
+
+<p>Nobody solves the exponential by hand under exam pressure. Three
+approximations exist, and choosing between them is a real engineering decision:</p>
+
+<ul>
+  <li><b>Ideal.</b> A perfect switch: zero volts when forward, zero current when
+  reverse. Use it when the supply is tens of volts and 0.7 is noise.</li>
+  <li><b>Constant drop.</b> A perfect switch in series with 0.7 V. <b>The default
+  for this exam.</b></li>
+  <li><b>Exponential.</b> The real thing. Needed only when the question is
+  <em>about</em> the diode equation — thermal voltage, saturation current, or a
+  ratio of two currents.</li>
+</ul>
+
+<div data-figure="diodeLoadLine"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · when "ideal" is not close enough</span>
+  <p style="margin-bottom:0">With a 5 V supply the ideal model overstates the
+  current by <b>16%</b> — enough to pick the wrong option. With a 1 V supply it
+  overstates it by <b>170%</b>. The rule that actually works: <b>if the supply is
+  less than about ten times 0.7 V, keep the drop.</b> Distractors on this exam are
+  routinely built from exactly this omission.</p>
+</div>
+
+<h2>1.3 The method: assume, solve, check</h2>
+
+<p>A diode has two states, and which one it is in depends on the answer you have
+not computed yet. That circularity is broken the same way every time:</p>
+
+<ol class="steps">
+  <li><b>Assume</b> a state — say, the diode is conducting.</li>
+  <li><b>Solve</b> the circuit as a linear one, replacing the diode with a 0.7 V
+  source (or a short, or an open if you assumed off).</li>
+  <li><b>Check</b> the assumption against the result. A conducting diode must have
+  <em>positive</em> current through it; a non-conducting one must have
+  <em>negative</em> voltage across it. If the check fails, the other assumption
+  was right.</li>
+</ol>
+
+<p><b>Learn this here.</b> Part 3 uses the identical procedure to decide whether a
+transistor is cut off, active or saturated — a three-state version of the same
+idea — and that is where most Electronics marks are won or lost.</p>
+
+<div class="worked">
+  <h4>Worked · <em>a diode that turns out to be off</em></h4>
+  <div class="worked-body">
+    <p>A 5 V source drives a 1 kΩ resistor to ground. A diode is connected from
+    the resistor's midpoint to a 6 V rail, cathode at the midpoint. Is it
+    conducting?</p>
+    <ol class="steps">
+      <li><b>Assume off.</b> Then no current flows through the diode, and the
+        midpoint sits at whatever the rest of the circuit says — here 5 V.</li>
+      <li><b>Check.</b> The anode is at 6 V and the cathode at 5 V, so the diode
+        is forward-biased by 1 V. <b>The assumption fails.</b></li>
+      <li><b>Assume on.</b> The cathode is then at
+        <span data-tex="6 - 0.7 = 5.3">6 − 0.7 = 5.3</span> V, and current flows
+        from the 6 V rail into the node.</li>
+      <li><b>Check.</b> Current through the diode is positive, so this assumption
+        holds.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Two assumptions, two
+    checks, thirty seconds. <b>Never guess a diode's state from the picture</b> —
+    the whole point of the check is that intuition is unreliable once there is
+    more than one source.</p>
+  </div>
+</div>
+
+<h2>1.4 Reverse breakdown, put to work</h2>
+
+<p>Push a diode backwards hard enough and it conducts anyway, at a sharply defined
+voltage. In an ordinary diode that is a failure. In a <span class="term">Zener
+diode</span> it is the product: the breakdown voltage is manufactured to a
+tolerance and the device is used deliberately in reverse.</p>
+
+<div data-figure="zenerRegulator"></div>
+
+<f-plate no="9.2" title="The Zener shunt regulator" stamp="know">
+  <f-row tex="V_{out} = V_Z \quad \text{(while conducting)}" name="the output"
+         gloss="Independent of the input, which is the entire purpose."></f-row>
+  <f-row tex="I_Z = \frac{V_{in} - V_Z}{R_S} - \frac{V_Z}{R_L}" name="Zener current"
+         gloss="<b>What Rs delivers minus what the load takes.</b> The Zener is the remainder term — it absorbs whatever is left over."></f-row>
+  <f-row tex="P_Z = V_Z I_Z \le P_{rated}" name="the real limit"
+         gloss="A regulator fails on <b>power</b>, not voltage. Worst case is <em>maximum</em> input with <em>minimum</em> load, when the Zener carries almost everything."></f-row>
+  <f-row tex="I_Z \ge I_{Z,min} \approx 0.1\,I_{Z,max}" name="staying in regulation"
+         gloss="Too little Zener current and it drops out of breakdown, and the output collapses back to a divider. Worst case here is <em>minimum</em> input with <em>maximum</em> load — the opposite corner."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Two opposite worst cases</span>
+  <p style="margin-bottom:0">This is the insight the plate is built to give.
+  <b>The Zener's power is worst when the load takes least</b>, because everything
+  Rs delivers has to go somewhere. <b>Regulation is worst when the load takes
+  most</b>, because there may be nothing left over to keep the Zener in
+  breakdown. A design has to survive both corners at once, which is why
+  <span class="math" data-tex="R_S">Rs</span> has an upper <em>and</em> a lower
+  bound rather than a single right value.</p>
+</div>
+
+<h2>1.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="V_T \approx 26\text{ mV}">VT ≈ 26 mV</span> at room
+        temperature, and 60 mV per decade of current.</li>
+    <li><span data-tex="I = I_S(e^{V_D/nV_T}-1)">I = IS(e^(VD/nVT) − 1)</span>,
+        with the −1 droppable once forward-biased.</li>
+    <li>Silicon drops <b>0.7 V</b> forward; germanium and Schottky about 0.3 V.</li>
+    <li><b>Assume, solve, check.</b> A conducting diode needs positive current; an
+        off diode needs reverse voltage.</li>
+    <li>Zener: <span data-tex="I_Z = (V_{in}-V_Z)/R_S - V_Z/R_L">IZ = (Vin − VZ)/RS − VZ/RL</span>,
+        and the limit is <span data-tex="P_Z = V_ZI_Z">PZ = VZ IZ</span>.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A diode's exponential characteristic makes its forward voltage almost
+  constant over decades of current, which is what makes the 0.7 V model both crude
+  and excellent. The ideal model is not — at supply voltages of a few volts it is
+  wrong by tens of percent.</p>
+  <p>Because the device has states, solving its circuit means assuming one,
+  solving linearly, and checking. That loop is the single most transferable thing
+  in this module: it is how transistors are solved too, and it is why Electronics
+  questions reward care over speed.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"diode","title":"Part 1 · Diode models and Zeners","topics":["diode-model","diode-eq","diode-state","zener-design"],"count":6}'></div>

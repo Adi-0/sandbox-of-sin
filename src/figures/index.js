@@ -16,6 +16,9 @@ import "./synthesis.js";     // 25
 import "./circuits-dc.js";   // 26 27 28 29 30 31
 import "./circuits-ac.js";   // 32 33 34 35 36
 
+/* --- Electronics --- */
+import "./diode.js";         // 49 50
+
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41

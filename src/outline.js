@@ -136,6 +136,54 @@ export const MODULES = [
     ],
   },
   {
+    id: "electronics", dir: "electronics", area: 9,
+    title: "Electronics", questions: "7–11",
+    parts: [
+      {
+        id: "diode", n: 1, spec: "9.A",
+        title: "The Diode",
+        blurb: "The first component that is not linear, and the method that handles it",
+        minutes: 22, figures: [49, 50],
+      },
+      {
+        id: "rectifiers", n: 2, spec: "9.E",
+        title: "Rectifiers and Power Conversion",
+        blurb: "AC to DC, and the debt Circuit Analysis Part 5 has been holding",
+        minutes: 24, figures: [51, 52],
+      },
+      {
+        id: "transistors", n: 3, spec: "9.A · 9.B",
+        title: "Transistors",
+        blurb: "A valve you can control — BJT and FET, and the region each is in",
+        minutes: 28, figures: [53, 54, 55],
+      },
+      {
+        id: "amplifiers", n: 4, spec: "9.B",
+        title: "Amplifiers",
+        blurb: "Biasing, the load line, and where the gain actually comes from",
+        minutes: 26, figures: [56, 57],
+      },
+      {
+        id: "opamps", n: 5, spec: "9.C",
+        title: "Operational Amplifiers",
+        blurb: "Two rules that make almost every circuit in this part a one-line answer",
+        minutes: 26, figures: [58, 59],
+      },
+      {
+        id: "instrumentation", n: 6, spec: "9.D",
+        title: "Instrumentation",
+        blurb: "Measuring a thing without changing it, and turning the world into volts",
+        minutes: 22, figures: [60, 61],
+      },
+      {
+        id: "electronics-synthesis", n: 7, spec: "9.A–9.E",
+        title: "Synthesis and the Mixed Bench",
+        blurb: "One method ran through all of it, and a set under exam conditions",
+        minutes: 12, figures: [62],
+      },
+    ],
+  },
+  {
     id: "power", dir: "power", area: 10,
     title: "Power Systems", questions: "8–12",
     parts: [
@@ -215,6 +263,13 @@ export const SPEC = {
     ["6.E", "Waveform analysis (RMS, average, frequency, phase, wavelength)", "waveforms"],
     ["6.F", "Phasors", "phasors"],
     ["6.G", "Impedance", "phasors"],
+  ],
+  electronics: [
+    ["9.A", "Models, biasing, and performance of discrete devices (diodes, transistors, thyristors)", "diode"],
+    ["9.B", "Amplifiers (single-stage/common emitter, differential, biasing)", "amplifiers"],
+    ["9.C", "Operational amplifiers (ideal, nonideal)", "opamps"],
+    ["9.D", "Instrumentation (measurements, data acquisition, transducers)", "instrumentation"],
+    ["9.E", "Power electronics (rectifiers, inverters, converters)", "rectifiers"],
   ],
   power: [
     ["10.A", "Power theory (power factor, single and three phase, voltage regulation)", "power-factor"],

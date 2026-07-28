@@ -13,5 +13,8 @@ import "./discrete.js";
 import "./circuits-dc.js";
 import "./circuits-ac.js";
 
+/* --- Electronics --- */
+import "./electronics.js";
+
 /* --- Power Systems --- */
 import "./power.js";
