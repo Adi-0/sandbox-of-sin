@@ -1,0 +1,191 @@
+<p class="eyebrow">
+  <span>Power Systems · Part 1</span>
+  <span class="spec">NCEES 10.A</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Power Factor and What It Costs</h1>
+
+<p class="lede">Circuit Analysis ended with a power triangle. This module begins by
+attaching money to it. The angle you computed there is the reason electricity
+bills have a line item most engineers never learn to read.</p>
+
+<h2>1.1 Three powers, one recap</h2>
+
+<p>From Circuit Analysis Part 6, and unchanged here:</p>
+
+<f-plate no="10.1" title="The three powers" stamp="handbook"
+  caption="<b>Only P leaves the system.</b> Q goes out and comes back, sixty times
+  a second, forever. S is the size of the pipe that has to accommodate both.">
+  <f-row tex="S = VI \quad \text{(VA)}" name="apparent"
+         gloss="RMS volts times RMS amps. <b>What the wire, the breaker and the transformer must be built for.</b>"></f-row>
+  <f-row tex="P = VI\cos\theta \quad \text{(W)}" name="real"
+         gloss="The part converted to heat, torque or light. <b>What the meter records and the utility bills.</b>"></f-row>
+  <f-row tex="Q = VI\sin\theta \quad \text{(VAR)}" name="reactive"
+         gloss="The part that charges a field and gives it back. Consumes no energy over a cycle, and still requires current to move it."></f-row>
+  <f-row tex="\text{pf} = \cos\theta = \frac{P}{S}" name="power factor"
+         gloss="The fraction of the delivered current that is doing something. Always quoted <b>lagging</b> or <b>leading</b>."></f-row>
+</f-plate>
+
+<p>Nothing new so far. What is new is the consequence.</p>
+
+<h2>1.2 The bill has two numbers on it</h2>
+
+<p>A utility charges a large customer for two different things.</p>
+
+<ul>
+  <li><b>Energy</b>, in kilowatt-hours — that is <span data-tex="P">P</span>
+  integrated over the month. It is what you actually consumed.</li>
+  <li><b>Demand</b>, in kilovolt-amperes — that is
+  <span data-tex="S">S</span> at its worst moment. It is what the utility had to
+  <em>build</em> for you: conductor cross-section, transformer rating, switchgear
+  interrupting capacity.</li>
+</ul>
+
+<p>Those two are equal only at unity power factor. Everywhere else you are asking
+for infrastructure you do not use. <b>The current in the cable is set by S, not by
+P</b>, and the cable heats as the square of that current — so a poor power factor
+wastes real energy in the wires while consuming none in the load.</p>
+
+<div class="note payoff">
+  <span class="note-tag">The cast arrives, at plant scale</span>
+  <p>Take one 120 V branch feeding the impedance from Circuit Analysis Part 6,
+  <span class="math" data-tex="\mathbf{Z} = 3 + j4 = 5\angle 53.13^\circ\ \Omega">Z = 3 + j4 = 5∠53.13° Ω</span>,
+  and scale the current up to a plant-sized <b>24 A</b>:</p>
+  <p><span class="math" data-tex="S = (120)(24) = 2880\text{ VA}, \quad P = I^2R = (24)^2(3) = 1728\text{ W}, \quad Q = I^2X = (24)^2(4) = 2304\text{ VAR}" data-display>S = 2880 VA, P = 1728 W, Q = 2304 VAR</span></p>
+  <p style="margin-bottom:0">1728, 2304, 2880 is <b>576 × (3, 4, 5)</b>. The power
+  factor is 0.6 lagging, the angle is 53.13°, and it is the same triangle it has
+  been since Mathematics Part 1.</p>
+</div>
+
+<div data-figure="powerCost"></div>
+
+<h2>1.3 Why the angle exists at all</h2>
+
+<p>Reactive power is not an accounting fiction. An induction motor cannot produce
+torque without a magnetic field, and establishing that field takes energy that is
+returned when it collapses. A transformer needs a magnetising current whether or
+not anything is plugged into it. Both are inductive, both draw lagging current,
+and together they are most of the load on any real grid.</p>
+
+<p>So <b>Q is unavoidable — but it does not have to travel.</b> That is the entire
+idea behind correction: supply the VARs locally instead of hauling them from the
+generating station and back sixty times a second.</p>
+
+<h2>1.4 Correcting it with a capacitor</h2>
+
+<p>A capacitor's reactive power is negative. Put one in parallel with the load and
+the two Q values subtract, while <span data-tex="P">P</span> — being in parallel
+too — is untouched.</p>
+
+<f-plate no="10.2" title="Power factor correction" stamp="know">
+  <f-row tex="Q_{\text{needed}} = P\left(\tan\theta_{\text{old}} - \tan\theta_{\text{new}}\right)"
+         name="the capacitor's rating"
+         gloss="<b>The one formula this section is about.</b> Work in tangents, not cosines — the tangent is Q per watt, so the subtraction is direct."></f-row>
+  <f-row tex="Q_C = \frac{V^2}{X_C} = 2\pi f C V^2" name="from VAR to farads"
+         gloss="Rearranged: <span class='math'>C = Q_C / (2\pi f V^2)</span>. V is the RMS voltage <b>across the capacitor</b>."></f-row>
+  <f-row tex="\theta = \arccos(\text{pf})" name="the conversion you will do twice"
+         gloss="Once for the starting power factor and once for the target. Almost every error in this topic is a cosine used where a tangent belonged."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>correcting the branch to 0.9</em></h4>
+  <div class="worked-body">
+    <p>The 1728 W load above runs at 0.6 lagging on 120 V, 60 Hz. Size a capacitor
+    to bring it to 0.9 lagging, and find the new current.</p>
+    <ol class="steps">
+      <li>Both angles, from their power factors:
+        <span data-tex="\theta_{old} = \arccos 0.6 = 53.13^\circ">θold = 53.13°</span> and
+        <span data-tex="\theta_{new} = \arccos 0.9 = 25.84^\circ">θnew = 25.84°</span>.</li>
+      <li>Their tangents:
+        <span data-tex="\tan 53.13^\circ = 1.3333">tan 53.13° = 1.3333</span>,
+        <span data-tex="\tan 25.84^\circ = 0.4843">tan 25.84° = 0.4843</span>.</li>
+      <li>The capacitor supplies the difference:
+        <span data-tex="Q_C = 1728\,(1.3333 - 0.4843) = 1467\text{ VAR}" data-display>QC = 1467 VAR</span></li>
+      <li>In farads, at 120 V and 60 Hz:
+        <span data-tex="C = \frac{1467}{2\pi(60)(120)^2} = 270\ \mu\text{F}" data-display>C = 270 µF</span></li>
+      <li>The new current follows from the new apparent power:
+        <span data-tex="S_{new} = \frac{P}{\text{pf}} = \frac{1728}{0.9} = 1920\text{ VA}, \qquad I = \frac{1920}{120} = 16\text{ A}" data-display>Snew = 1920 VA, I = 16 A</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left"><b>24 A became 16 A.</b>
+    A third of the current is gone and the load does not know the difference —
+    same 1728 W, same torque, same output. The copper loss in the feeder, which
+    goes as <span class="math" data-tex="I^2">I²</span>, is now
+    <span class="math" data-tex="(16/24)^2 = 4/9">(16/24)² = 4/9</span> of what it
+    was: <b>less than half</b>.</p>
+  </div>
+</div>
+
+<div data-figure="pfCorrection"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · correcting all the way to unity</span>
+  <p style="margin-bottom:0">It looks optimal and it is not what anyone does. Real
+  loads vary through the day, and a bank sized for unity at full load
+  <b>over-corrects</b> at light load — the power factor swings past 1.0 into
+  leading, the current climbs again, and the capacitor can push the local voltage
+  <em>above</em> nominal. Utilities target 0.9 to 0.95 lagging and stop. On the
+  exam, a question asking you to correct "to unity" is legitimate arithmetic; one
+  asking what is <em>good practice</em> wants 0.95.</p>
+</div>
+
+<h2>1.5 Efficiency, and the horsepower conversion</h2>
+
+<p>Power questions on this exam very often arrive wrapped in mechanical units,
+because the load is a motor. Two conversions do all of it:</p>
+
+<f-plate no="10.3" title="Mechanical to electrical" stamp="know">
+  <f-row tex="1\text{ hp} = 746\text{ W}" name="horsepower"
+         gloss="<b>Memorise it.</b> It appears in more Power Systems questions than any other single number."></f-row>
+  <f-row tex="\eta = \frac{P_{out}}{P_{in}} \quad\Longrightarrow\quad P_{in} = \frac{P_{out}}{\eta}"
+         name="efficiency"
+         gloss="Output over input, always. <b>The electrical input is the larger number</b> — dividing when you should multiply is the standard slip."></f-row>
+  <f-row tex="S = \frac{P_{in}}{\text{pf}}" name="what the supply must carry"
+         gloss="Efficiency gets you from shaft watts to electrical watts; power factor gets you from watts to volt-amperes. <b>Two separate divisions, in that order.</b>"></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">The order matters, and only one order is right</span>
+  <p style="margin-bottom:0">A 10 hp motor at 85% efficiency and 0.8 power factor
+  needs <span class="math" data-tex="10 \times 746 = 7460">7460</span> W of shaft
+  output, therefore <span class="math" data-tex="7460/0.85 = 8776">8776</span> W of
+  electrical input, therefore
+  <span class="math" data-tex="8776/0.8 = 10\,970">10 970</span> VA of supply
+  capacity. <b>Efficiency first, then power factor.</b> Doing it in the other order
+  gives the same answer here because both are divisions — but efficiency applies to
+  watts and power factor to volt-amperes, and mixing up which is which is what
+  produces the wrong option.</p>
+</div>
+
+<h2>1.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="Q_C = P(\tan\theta_1 - \tan\theta_2)">QC = P(tan θ₁ − tan θ₂)</span>
+        — the correction formula. Tangents, not cosines.</li>
+    <li><span data-tex="C = Q_C/(2\pi f V^2)">C = QC / (2πfV²)</span>.</li>
+    <li><span data-tex="1\text{ hp} = 746\text{ W}">1 hp = 746 W</span>.</li>
+    <li>Correction changes <b>S, Q, current and losses</b>. It never changes
+        <b>P</b>.</li>
+    <li>Utilities bill energy on P and demand on S. The gap between them is the
+        power factor.</li>
+    <li>Over-correction produces a leading power factor, which is a fault, not a
+        bonus.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Real power is what a load consumes; apparent power is what the system must be
+  built to deliver. A power factor below one means those two differ, and the
+  difference is paid for in conductor size, transformer rating and
+  <span class="math" data-tex="I^2R">I²R</span> heating along every metre of the
+  path — none of which shows up as useful output.</p>
+  <p>A parallel capacitor supplies the reactive power locally so it no longer has
+  to be carried. It is the cheapest intervention in power engineering, and the
+  arithmetic is one subtraction of tangents.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"power-factor","title":"Part 1 · Power factor and correction","topics":["pf-find","pf-correct","cap-size","kva-size"],"count":6}'></div>

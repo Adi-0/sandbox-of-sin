@@ -12,3 +12,6 @@ import "./discrete.js";
 /* --- Circuit Analysis --- */
 import "./circuits-dc.js";
 import "./circuits-ac.js";
+
+/* --- Power Systems --- */
+import "./power.js";

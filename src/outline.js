@@ -135,6 +135,48 @@ export const MODULES = [
       },
     ],
   },
+  {
+    id: "power", dir: "power", area: 10,
+    title: "Power Systems", questions: "8–12",
+    parts: [
+      {
+        id: "power-factor", n: 1, spec: "10.A",
+        title: "Power Factor and What It Costs",
+        blurb: "The angle from Part 6 turns into money, and a capacitor buys it back",
+        minutes: 24, figures: [37, 38],
+      },
+      {
+        id: "three-phase", n: 2, spec: "10.A · 10.B",
+        title: "Three-Phase",
+        blurb: "Where the √3 comes from, and why 208 volts is really 120 volts",
+        minutes: 28, figures: [39, 40, 41],
+      },
+      {
+        id: "transmission", n: 3, spec: "10.B",
+        title: "Transmission and Distribution",
+        blurb: "Loss falls as the square of voltage — the one fact the whole grid is shaped by",
+        minutes: 22, figures: [42, 43],
+      },
+      {
+        id: "transformers", n: 4, spec: "10.C",
+        title: "Transformers",
+        blurb: "The device that makes the last part possible, and impedance seen through it",
+        minutes: 24, figures: [44, 45],
+      },
+      {
+        id: "machines", n: 5, spec: "10.D",
+        title: "Motors and Generators",
+        blurb: "Synchronous speed, slip, and why the plant's power factor was 0.6 to begin with",
+        minutes: 26, figures: [46, 47],
+      },
+      {
+        id: "power-synthesis", n: 6, spec: "10.A–10.D",
+        title: "Synthesis and the Mixed Bench",
+        blurb: "One plant, followed from its motor to the transmission line, and a set under exam conditions",
+        minutes: 12, figures: [48],
+      },
+    ],
+  },
 ];
 
 /** Every part, flattened, each tagged with the module it belongs to. */
@@ -173,6 +215,12 @@ export const SPEC = {
     ["6.E", "Waveform analysis (RMS, average, frequency, phase, wavelength)", "waveforms"],
     ["6.F", "Phasors", "phasors"],
     ["6.G", "Impedance", "phasors"],
+  ],
+  power: [
+    ["10.A", "Power theory (power factor, single and three phase, voltage regulation)", "power-factor"],
+    ["10.B", "Transmission and distribution (real and reactive losses, efficiency, voltage drop, delta and wye connections)", "transmission"],
+    ["10.C", "Transformers (single-phase and three-phase connections, reflected impedance)", "transformers"],
+    ["10.D", "Motors and generators (synchronous, induction, dc)", "machines"],
   ],
 };
 

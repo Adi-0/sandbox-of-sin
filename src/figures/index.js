@@ -15,3 +15,6 @@ import "./synthesis.js";     // 25
 /* --- Circuit Analysis --- */
 import "./circuits-dc.js";   // 26 27 28 29 30 31
 import "./circuits-ac.js";   // 32 33 34 35 36
+
+/* --- Power Systems --- */
+import "./power-factor.js";  // 37 38
