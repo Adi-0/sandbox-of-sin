@@ -21,3 +21,4 @@ import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41
 import "./transmission.js";  // 42 43
 import "./transformers.js";  // 44 45
+import "./machines.js";      // 46 47

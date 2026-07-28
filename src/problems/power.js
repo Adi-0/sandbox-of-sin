@@ -856,3 +856,245 @@ defineReflex([
     because: "Core loss is constant and copper loss goes as load squared, so the sum per watt delivered is least where they match.",
   },
 ]);
+
+/* ==========================================================================
+   Part 5 — motors and generators
+   ========================================================================== */
+
+const nsyn = (f, p) => (120 * f) / p;
+
+defineProblem("sync-speed", {
+  topic: "Synchronous speed",
+  lookup: "Electrical → Power → Rotating machines (synchronous speed)",
+  make(rng) {
+    const f = rng.pick([50, 60, 60, 60]);
+    const poles = rng.pick([2, 4, 6, 8, 12]);
+    const ns = nsyn(f, poles);
+    const ask = rng.pick(["speed", "poles"]);
+
+    if (ask === "poles") {
+      return {
+        stem: `A three-phase synchronous generator produces ${f} Hz while turning at ${num(ns, 0)} rpm. How many poles does it have?`,
+        choices: [
+          { text: `${poles}`, why: "" },
+          { text: `${poles / 2}`, why: "That is the number of pole <b>pairs</b>. The formula takes poles — a machine with 3 pole pairs has 6 poles." },
+          { text: `${poles * 2}`, why: "Doubled. Check by substituting back: this many poles would halve the speed." },
+          { text: `${num(Math.round(ns / f), 0)}`, why: `That is ${T("n_s/f")} without the 120.` },
+        ].filter((c, i, all) => i === 0 || c.text !== all[0].text),
+        answer: 0,
+        steps: [
+          `Rearrange the synchronous speed relation for the pole count:`,
+          `<span class="math display" data-tex="n_s = \\frac{120f}{p} \\quad\\Longrightarrow\\quad p = \\frac{120f}{n_s}"></span>`,
+          `<span class="math display" data-tex="p = \\frac{120(${f})}{${num(ns, 0)}} = ${poles}"></span>`,
+          `<b>${poles} poles</b> — that is ${poles / 2} pole pair${poles === 2 ? "" : "s"}. The distinction is where most errors in this formula come from.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A ${poles}-pole induction motor runs on a ${f} Hz supply. What is its synchronous speed?`,
+      choices: [
+        { text: `${num(ns, 0)} rpm`, why: "" },
+        { text: `${num(nsyn(f, poles / 2), 0)} rpm`, why: "That treats the figure given as pole <b>pairs</b>. The formula wants poles." },
+        { text: `${num(nsyn(f, poles * 2), 0)} rpm`, why: "The pole count has been doubled — that halves the speed." },
+        { text: `${num(60 * f / poles, 0)} rpm`, why: "Used 60 rather than 120. The constant is 60 s/min × 2 poles per pair." },
+      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.5),
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="n_s = \\frac{120f}{p} = \\frac{120(${f})}{${poles}} = ${num(ns, 0)}\\text{ rpm}"></span>`,
+        `<b>${num(ns, 0)} rpm.</b> Note this is the <em>field's</em> speed. An induction motor's rotor always turns slower — a nameplate speed that is a round number belongs to a synchronous machine, not an induction one.`,
+      ],
+    };
+  },
+});
+
+defineProblem("slip-find", {
+  topic: "Slip and running speed",
+  lookup: "Electrical → Power → Induction machines (slip)",
+  make(rng) {
+    const f = rng.pick([50, 60, 60]);
+    const poles = rng.pick([2, 4, 6, 8]);
+    const s = rng.pick([0.02, 0.03, 0.04, 0.05, 0.07]);
+    const ns = nsyn(f, poles);
+    const n = ns * (1 - s);
+    const ask = rng.pick(["slip", "speed"]);
+
+    if (ask === "speed") {
+      return {
+        stem: `A ${poles}-pole induction motor on a ${f} Hz supply runs with ${fixed(s * 100, 0)}% slip. What is its operating speed, most nearly?`,
+        choices: [
+          { text: `${num(n, 0)} rpm`, why: "" },
+          { text: `${num(ns * (1 + s), 0)} rpm`, why: "Slip is added rather than subtracted. An induction motor always runs <b>below</b> synchronous speed — above it, the machine would be generating." },
+          { text: `${num(ns, 0)} rpm`, why: "That is the synchronous speed, which an induction motor cannot reach: with no relative motion nothing would be induced in the rotor and it would produce no torque." },
+          { text: `${num(ns * s, 0)} rpm`, why: "That is the slip speed — the difference between the two, not the operating speed." },
+        ],
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="n_s = \\frac{120(${f})}{${poles}} = ${num(ns, 0)}\\text{ rpm}"></span>`,
+          `<span class="math display" data-tex="n = (1-s)\\,n_s = (1 - ${s})(${num(ns, 0)}) = ${num(n, 0)}\\text{ rpm}"></span>`,
+          `<b>${num(n, 0)} rpm.</b> The rotor conductors see ${T(`f_r = sf = ${fixed(s * f, 2)}`)} Hz — only the difference frequency.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A ${poles}-pole induction motor on a ${f} Hz supply turns at ${num(n, 0)} rpm. What is the slip, most nearly?`,
+      choices: [
+        { text: `${fixed(s * 100, 1)}%`, why: "" },
+        { text: `${fixed((1 - s) * 100, 1)}%`, why: "That is the fraction of synchronous speed the rotor <em>reaches</em>. Slip is the fraction it falls <b>short</b> by." },
+        { text: `${fixed((ns - n) / n * 100, 1)}%`, why: "Divided by the rotor speed. Slip is referenced to the <b>synchronous</b> speed." },
+        { text: `${num(ns - n, 0)}%`, why: "That is the slip speed in rpm, not a percentage." },
+      ],
+      answer: 0,
+      steps: [
+        `Synchronous speed first — slip is meaningless without it:`,
+        `<span class="math display" data-tex="n_s = \\frac{120(${f})}{${poles}} = ${num(ns, 0)}\\text{ rpm}"></span>`,
+        `<span class="math display" data-tex="s = \\frac{n_s - n}{n_s} = \\frac{${num(ns, 0)} - ${num(n, 0)}}{${num(ns, 0)}} = ${fixed(s, 4)} = ${fixed(s * 100, 1)}\\%"></span>`,
+        `<b>${fixed(s * 100, 1)}%.</b> A healthy induction motor sits between about 1% and 5% at full load.`,
+      ],
+    };
+  },
+});
+
+defineProblem("rotor-power", {
+  topic: "Induction motor power flow",
+  lookup: "Electrical → Power → Induction machines (power, torque)",
+  make(rng) {
+    const Pag = rng.pick([5000, 8000, 10000, 20000, 40000]);
+    const s = rng.pick([0.02, 0.03, 0.04, 0.05]);
+    const poles = rng.pick([4, 6]);
+    const ns = nsyn(60, poles);
+    const n = ns * (1 - s);
+    const Prot = s * Pag;
+    const Pmech = Pag - Prot;
+    const ask = rng.pick(["rotor", "torque"]);
+
+    if (ask === "torque") {
+      const w = (2 * Math.PI * n) / 60;
+      const T2 = Pmech / w;
+      return {
+        stem: `A ${poles}-pole, 60 Hz induction motor has ${num(Pag, 0)} W crossing its air gap at ${fixed(s * 100, 0)}% slip. ` +
+              `What torque does it develop, most nearly?`,
+        choices: [
+          { text: `${fixed(T2, 1)} N·m`, why: "" },
+          { text: `${fixed(Pag / w, 1)} N·m`, why: `That uses the air-gap power. The rotor keeps only ${T("(1-s)")} of it — the rest is heat in the bars.` },
+          { text: `${fixed(Pmech / n, 3)} N·m`, why: "Divided by rpm instead of rad/s. Torque needs ω = 2πn/60." },
+          { text: `${fixed(Pmech / (2 * Math.PI * ns / 60), 1)} N·m`, why: "Used synchronous speed for ω. The shaft turns at the rotor speed." },
+        ],
+        answer: 0,
+        steps: [
+          `The rotor dissipates the slip fraction and keeps the rest:`,
+          `<span class="math display" data-tex="P_{mech} = (1-s)P_{ag} = ${1 - s} \\times ${num(Pag, 0)} = ${num(Pmech, 0)}\\text{ W}"></span>`,
+          `Rotor speed, then angular velocity in rad/s:`,
+          `<span class="math display" data-tex="n = (1-s)\\frac{120(60)}{${poles}} = ${num(n, 0)}\\text{ rpm}, \\qquad \\omega = \\frac{2\\pi(${num(n, 0)})}{60} = ${fixed(w, 2)}\\text{ rad/s}"></span>`,
+          `<span class="math display" data-tex="T = \\frac{P_{mech}}{\\omega} = \\frac{${num(Pmech, 0)}}{${fixed(w, 2)}} = ${fixed(T2, 1)}\\text{ N·m}"></span>`,
+          `<b>${fixed(T2, 1)} N·m.</b>`,
+        ],
+      };
+    }
+
+    return {
+      stem: `An induction motor has ${num(Pag, 0)} W crossing the air gap and runs at ${fixed(s * 100, 0)}% slip. ` +
+            `How much power is lost in the rotor?`,
+      choices: [
+        { text: `${num(Prot, 0)} W`, why: "" },
+        { text: `${num(Pmech, 0)} W`, why: `That is the <b>mechanical</b> power developed, ${T("(1-s)P_{ag}")}. The rotor loss is the other piece.` },
+        { text: `${num(Pag, 0)} W`, why: "That is the whole air-gap power. All of it would be rotor loss only at standstill, where s = 1." },
+        { text: `${num(Prot / s, 0)} W`, why: "Divided by the slip rather than multiplied." },
+      ],
+      answer: 0,
+      steps: [
+        `Rotor copper loss is exactly the slip fraction of the air-gap power — an identity, not an approximation:`,
+        `<span class="math display" data-tex="P_{rotor} = s\\,P_{ag} = ${s} \\times ${num(Pag, 0)} = ${num(Prot, 0)}\\text{ W}"></span>`,
+        `<b>${num(Prot, 0)} W.</b> The remaining ${T(`(1-s)P_{ag} = ${num(Pmech, 0)}`)} W becomes mechanical power. This is why slip is expensive: it is a direct percentage tax on everything that reaches the rotor.`,
+      ],
+    };
+  },
+});
+
+defineProblem("dc-machine", {
+  topic: "DC machines",
+  lookup: "Electrical → Power → DC machines",
+  make(rng) {
+    const form = rng.pick(["emf", "flux"]);
+
+    if (form === "flux") {
+      const V = rng.pick([120, 200, 240]);
+      const n = rng.pick([1200, 1500, 2000]);
+      const ka = rng.pick([0.5, 0.8, 0.1]);
+      const Lf = rng.pick([0.02, 0.05, 0.1]);
+      const phi = V / (ka * n);
+      const If = phi / Lf;
+
+      return {
+        stem: `A DC generator turns at ${num(n, 0)} rpm and produces ${V} V. Its armature constant is ${ka} V·min/Wb ` +
+              `and its field constant is ${Lf} H. What is the field current, most nearly?`,
+        choices: [
+          { text: `${fixed(If, 2)} A`, why: "" },
+          { text: `${fixed(phi, 3)} A`, why: "That is the flux in webers, an intermediate result. Divide it by the field constant to reach amperes." },
+          { text: `${fixed(phi * Lf, 4)} A`, why: "Multiplied by the field constant where you should divide — flux is L times current, so current is flux over L." },
+          { text: `${fixed(V / (ka * Lf), 1)} A`, why: "The speed has been dropped. Generated voltage is proportional to flux <b>and</b> speed." },
+        ],
+        answer: 0,
+        steps: [
+          `Generated voltage is the armature constant times flux times speed:`,
+          `<span class="math display" data-tex="E_a = k_a\\,\\phi\\,n \\quad\\Longrightarrow\\quad \\phi = \\frac{E_a}{k_a n}"></span>`,
+          `<span class="math display" data-tex="\\phi = \\frac{${V}}{(${ka})(${num(n, 0)})} = ${fixed(phi, 4)}\\text{ Wb}"></span>`,
+          `Flux comes from the field winding's current through its inductance:`,
+          `<span class="math display" data-tex="I_f = \\frac{\\phi}{L_f} = \\frac{${fixed(phi, 4)}}{${Lf}} = ${fixed(If, 2)}\\text{ A}"></span>`,
+          `<b>${fixed(If, 2)} A.</b>`,
+        ],
+      };
+    }
+
+    const Vt = rng.pick([120, 240, 480]);
+    const Ra = rng.pick([0.2, 0.4, 0.5, 1.0]);
+    const Ia = rng.pick([10, 20, 25, 40]);
+    const Ea = Vt - Ia * Ra;
+
+    return {
+      stem: `A DC motor with an armature resistance of ${Ra} Ω draws ${Ia} A from a ${Vt} V supply. ` +
+            `What is its back EMF?`,
+      choices: [
+        { text: `${fixed(Ea, 1)} V`, why: "" },
+        { text: `${fixed(Vt + Ia * Ra, 1)} V`, why: "Added instead of subtracted. In a <b>motor</b> the back EMF opposes the supply, so it is always <em>less</em> than the terminal voltage — that difference is what drives the armature current." },
+        { text: `${fixed(Ia * Ra, 1)} V`, why: "That is the drop across the armature resistance, not the back EMF." },
+        { text: `${fixed(Vt, 1)} V`, why: "That is the terminal voltage. If they were equal, no current would flow at all." },
+      ],
+      answer: 0,
+      steps: [
+        `For a motor the supply must overcome both the back EMF and the armature drop:`,
+        `<span class="math display" data-tex="V_t = E_a + I_aR_a \\quad\\Longrightarrow\\quad E_a = V_t - I_aR_a"></span>`,
+        `<span class="math display" data-tex="E_a = ${Vt} - (${Ia})(${Ra}) = ${fixed(Ea, 1)}\\text{ V}"></span>`,
+        `<b>${fixed(Ea, 1)} V.</b> The sign is the only thing separating motor from generator: a generator's terminal voltage is ${T("E_a - I_aR_a")}, <em>below</em> its generated voltage.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "machines",
+    stem: "A 6-pole motor runs on 60 Hz. What is the field's speed?",
+    tool: "n_s = 120f / p",
+    because: "Poles, not pole pairs — 6 poles at 60 Hz gives 1200 rpm.",
+  },
+  {
+    part: "machines",
+    stem: "A 4-pole 60 Hz motor turns at 1740 rpm. What fraction is it behind?",
+    tool: "s = (n_s − n) / n_s",
+    because: "Slip is referenced to synchronous speed, not to the rotor speed.",
+  },
+  {
+    part: "machines",
+    stem: "12 kW crosses the air gap at 4% slip. Heat in the rotor bars?",
+    tool: "P_rotor = s × P_airgap",
+    because: "The rotor dissipates exactly the slip fraction — an identity, not an estimate.",
+  },
+  {
+    part: "machines",
+    stem: "A motor develops 8 kW at 1750 rpm. What torque is on the shaft?",
+    tool: "T = P / ω, with ω = 2πn/60",
+    because: "Torque needs angular velocity in radians per second, never rpm.",
+  },
+]);

@@ -1,0 +1,188 @@
+<p class="eyebrow">
+  <span>Power Systems · Part 5</span>
+  <span class="spec">NCEES 10.D</span>
+  <span>26 minute read</span>
+</p>
+
+<h1>Motors and Generators</h1>
+
+<p class="lede">Where the power has been going the whole time. Motors are roughly
+half of all electricity consumed, and the plant this module has followed since
+Part 1 is one — which is also the answer to a question left open there.</p>
+
+<h2>5.1 One idea, three machines</h2>
+
+<p>Every rotating machine here works the same way: a magnetic field rotates, and
+something on the rotor is dragged along by it. What separates the three families
+is <b>how the rotor gets its own field</b>.</p>
+
+<ul>
+  <li><b>Synchronous</b> — the rotor is fed DC and becomes a magnet. It locks to
+  the rotating field and turns at exactly its speed. Every large generator on the
+  grid is one.</li>
+  <li><b>Induction</b> — the rotor has no supply at all; the rotating field
+  <em>induces</em> current in it. Cheap, rugged, and the overwhelming majority of
+  motors in service.</li>
+  <li><b>DC</b> — the field is stationary and a commutator switches the armature
+  current so the torque stays in one direction.</li>
+</ul>
+
+<h2>5.2 Synchronous speed</h2>
+
+<p>The rotating field's speed is set by two things only: the supply frequency, and
+how many magnetic poles the stator is wound for.</p>
+
+<f-plate no="10.9" title="Speed, slip and frequency" stamp="know">
+  <f-row tex="n_s = \frac{120f}{p} \quad \text{(rpm)}" name="synchronous speed"
+         gloss="<b>p is the number of poles, not pole pairs.</b> The 120 is 60 seconds per minute times 2 poles per pair — a unit conversion, not physics."></f-row>
+  <f-row tex="s = \frac{n_s - n}{n_s}" name="slip"
+         gloss="The fractional shortfall. <b>s = 0</b> is synchronous, <b>s = 1</b> is standstill, and <b>s &lt; 0</b> means the machine is being driven and is generating."></f-row>
+  <f-row tex="f_r = s f" name="rotor frequency"
+         gloss="The rotor conductors see only the <em>difference</em> in speed. At 2% slip on a 60 Hz supply that is 1.2 Hz."></f-row>
+  <f-row tex="n = (1-s)\,n_s" name="running speed"
+         gloss="The same statement rearranged, and usually the faster route to an answer."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">The four numbers to have by heart</span>
+  <p style="margin-bottom:0">At <b>60 Hz</b>: 2 poles → <b>3600</b> rpm, 4 poles →
+  <b>1800</b>, 6 poles → <b>1200</b>, 8 poles → <b>900</b>. At <b>50 Hz</b> they
+  become 3000, 1500, 1000 and 750. A nameplate reading 1750 rpm is a four-pole
+  induction motor at about 2.8% slip — recognising that on sight saves a
+  calculation on exam day. <b>And an induction motor's nameplate speed is never a
+  round number</b>, precisely because it is never synchronous.</p>
+</div>
+
+<h2>5.3 Why an induction motor cannot reach synchronous speed</h2>
+
+<p>The rotor of an induction motor is a short-circuited cage with no connection to
+anything. Its current exists only because the stator's rotating field sweeps past
+it and induces one. If the rotor ever caught up, the field would be stationary
+relative to it, nothing would be induced, no current would flow — and there would
+be no torque at all.</p>
+
+<p><b>So the motor must slip.</b> It settles at whatever speed produces exactly the
+torque the load demands, and heavier loads settle further below synchronous.</p>
+
+<div data-figure="torqueSpeed"></div>
+
+<h2>5.4 What slip costs</h2>
+
+<p>Slip is not merely a speed error. It is a fixed fraction of the power thrown
+away as heat, and the relationship is exact:</p>
+
+<f-plate no="10.10" title="Induction motor power flow" stamp="handbook"
+  caption="<b>The rotor keeps (1 − s) and burns s.</b> Everything else about
+  induction motor efficiency follows from this one split.">
+  <f-row tex="P_{ag} = P_{in} - P_{stator}" name="air-gap power"
+         gloss="What survives the stator windings and core and actually crosses into the rotor."></f-row>
+  <f-row tex="P_{rotor\,loss} = s\,P_{ag}" name="rotor copper loss"
+         gloss="<b>Exactly the slip fraction.</b> Not approximately — this is an identity, not an estimate."></f-row>
+  <f-row tex="P_{mech} = (1-s)\,P_{ag}" name="developed mechanical power"
+         gloss="The remainder. Subtract friction and windage to get shaft output."></f-row>
+  <f-row tex="T = \frac{P_{mech}}{\omega} = \frac{P_{mech}}{2\pi n/60}" name="torque"
+         gloss="Mechanical power over mechanical angular velocity. <b>n must be in rad/s</b>, so divide rpm by 60 and multiply by 2π."></f-row>
+</f-plate>
+
+<div data-figure="powerFlow"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · a stalled motor</span>
+  <p style="margin-bottom:0">At standstill <span class="math" data-tex="s = 1">s = 1</span>,
+  so <span class="math" data-tex="P_{rotor} = P_{ag}">Protor = Pag</span> —
+  <b>every watt crossing the air gap becomes heat in the rotor</b>, and none of it
+  becomes shaft power. Meanwhile the stator draws its full locked-rotor current,
+  typically six times rated. That is why a jammed motor destroys itself in
+  seconds, and why overload protection exists.</p>
+</div>
+
+<h2>5.5 The DC machine</h2>
+
+<p>DC machines are simpler to describe and now much rarer, but they remain on the
+specification and the arithmetic is short.</p>
+
+<f-plate no="10.11" title="The DC machine" stamp="handbook">
+  <f-row tex="E_a = k\,\phi\,\omega" name="generated voltage"
+         gloss="Proportional to flux and speed. In a generator it is the output; in a motor it is the <span class='term'>back EMF</span> opposing the supply."></f-row>
+  <f-row tex="T = k\,\phi\,I_a" name="torque"
+         gloss="<b>Same constant k.</b> Flux times armature current. Both relations share it, which is what makes DC machines so easy to control."></f-row>
+  <f-row tex="V_t = E_a + I_aR_a \ \text{(motor)}, \qquad V_t = E_a - I_aR_a \ \text{(generator)}"
+         name="terminal voltage"
+         gloss="A motor's terminal voltage exceeds its back EMF; a generator's falls short of its generated voltage. <b>The sign is the only thing distinguishing the two.</b>"></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>the plant's motor</em></h4>
+  <div class="worked-body">
+    <p>The plant is a four-pole, 60 Hz induction motor drawing 5184 W with a
+    nameplate speed of 1764 rpm. Stator losses are 250 W and windage 100 W. Find
+    the slip, the rotor loss, the shaft output and the efficiency.</p>
+    <ol class="steps">
+      <li>Synchronous speed, from poles and frequency:
+        <span data-tex="n_s = \frac{120(60)}{4} = 1800\text{ rpm}" data-display>ns = 1800 rpm</span></li>
+      <li>Slip:
+        <span data-tex="s = \frac{1800 - 1764}{1800} = 0.02 = 2\%" data-display>s = 2%</span></li>
+      <li>Air-gap power is the input less the stator's share:
+        <span data-tex="P_{ag} = 5184 - 250 = 4934\text{ W}" data-display>Pag = 4934 W</span></li>
+      <li>The rotor loses exactly the slip fraction of it:
+        <span data-tex="P_{rotor} = (0.02)(4934) = 98.7\text{ W}" data-display>Protor = 98.7 W</span></li>
+      <li>Shaft output is what remains after windage:
+        <span data-tex="P_{out} = 4934 - 98.7 - 100 = 4735\text{ W} = 6.35\text{ hp}" data-display>Pout = 4735 W = 6.35 hp</span></li>
+      <li>Efficiency:
+        <span data-tex="\eta = \frac{4735}{5184} = 91.3\%" data-display>η = 91.3%</span></li>
+    </ol>
+  </div>
+</div>
+
+<div class="note payoff">
+  <span class="note-tag">The question Part 1 left open</span>
+  <p style="margin-bottom:0">This module began with a plant running at
+  <b>0.6 power factor lagging</b> and treated that as a given. Here is why. An
+  induction motor must magnetise its air gap before it can produce any torque at
+  all, and that magnetising current is almost purely <em>reactive</em> — it is
+  drawn whether the motor is loaded or not. A fully loaded motor might reach 0.85;
+  <b>a lightly loaded one falls to 0.5 or below</b>, because the real component
+  shrinks with the load while the magnetising component does not.</p>
+  <p style="margin-bottom:0">So the reactive power that Part 1's capacitor was
+  buying back was the air gap of this motor, being charged and discharged sixty
+  times a second. <b>Oversized motors running light are the single largest cause
+  of poor industrial power factor</b> — and the cheapest fix is often to fit a
+  smaller motor rather than a capacitor.</p>
+</div>
+
+<h2>5.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="n_s = 120f/p">ns = 120f/p</span>, with <b>p poles</b>, not
+        pole pairs. 60 Hz: 3600 / 1800 / 1200 / 900 for 2 / 4 / 6 / 8 poles.</li>
+    <li><span data-tex="s = (n_s-n)/n_s">s = (ns − n)/ns</span> and
+        <span data-tex="n = (1-s)n_s">n = (1 − s)ns</span>.</li>
+    <li><span data-tex="f_r = sf">fr = sf</span> — the rotor sees the difference
+        frequency.</li>
+    <li><span data-tex="P_{rotor} = sP_{ag}">Protor = s·Pag</span>, so
+        <span data-tex="P_{mech} = (1-s)P_{ag}">Pmech = (1 − s)Pag</span>.</li>
+    <li><span data-tex="T = P/\omega">T = P/ω</span>, with ω in rad/s
+        (<span data-tex="\omega = 2\pi n/60">ω = 2πn/60</span>).</li>
+    <li>DC: <span data-tex="E_a = k\phi\omega">Ea = kφω</span> and
+        <span data-tex="T = k\phi I_a">T = kφIa</span>, same k.</li>
+    <li>An induction motor never reaches synchronous speed. A synchronous machine
+        runs at nothing else.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A rotating field's speed is fixed by frequency and pole count. A synchronous
+  machine locks to it; an induction machine must lag it, because induction requires
+  relative motion and torque requires induced current.</p>
+  <p>That lag is slip, and slip is expensive in an exact way: the rotor dissipates
+  precisely the slip fraction of everything crossing the air gap. It is also why
+  induction motors draw lagging current — the air gap has to be magnetised before
+  any of this can happen, and that magnetising current is reactive whether the
+  motor is working or idling.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"machines","title":"Part 5 · Speed, slip, and machines","topics":["sync-speed","slip-find","rotor-power","dc-machine"],"count":6}'></div>
