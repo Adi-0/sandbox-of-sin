@@ -1,0 +1,171 @@
+<p class="eyebrow">
+  <span>Power Systems · Part 4</span>
+  <span class="spec">NCEES 10.C</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Transformers</h1>
+
+<p class="lede">Part 3 ended with a problem: transmission wants high voltage and
+everything else wants low voltage. The transformer is the entire answer, and it is
+the reason alternating current won.</p>
+
+<h2>4.1 Why this device decided the argument</h2>
+
+<p>There is no simple, efficient, static way to change a DC voltage. There is for
+AC: wind two coils on a shared magnetic core, and a changing current in one
+induces a voltage in the other, in proportion to the turns. No moving parts, and
+efficiencies above 98% in any decent unit.</p>
+
+<p>That single fact settled the nineteenth-century argument over which kind of
+current the grid would use. Without a transformer, Part 3's inverse square law is
+unusable — you would be stuck generating, transmitting and consuming at the same
+voltage.</p>
+
+<h2>4.2 The ideal transformer</h2>
+
+<f-plate no="10.7" title="The ideal transformer" stamp="handbook"
+  caption="<b>Everything follows from the first relation and conservation of
+  energy.</b> If the voltage goes up and no power is lost, the current must come
+  down by the same factor — and impedance, being their ratio, moves by the square.">
+  <f-row tex="a = \frac{N_1}{N_2} = \frac{V_1}{V_2}" name="turns ratio"
+         gloss="Voltage follows turns directly. <b>Define a and write it down</b> before touching anything else; most errors here are a ratio used upside down."></f-row>
+  <f-row tex="\frac{I_1}{I_2} = \frac{N_2}{N_1} = \frac{1}{a}" name="current"
+         gloss="<b>Inverted.</b> The winding with more turns carries less current — which is also why its wire is thinner."></f-row>
+  <f-row tex="S_1 = V_1I_1 = V_2I_2 = S_2" name="power is conserved"
+         gloss="An ideal transformer stores nothing and dissipates nothing. This is the cross-check to run on every answer."></f-row>
+  <f-row tex="Z_{1} = a^2 Z_{2}" name="reflected impedance"
+         gloss="<b>The one people forget.</b> An impedance on the secondary appears on the primary multiplied by a². Squared, because both voltage and current changed."></f-row>
+</f-plate>
+
+<div data-figure="idealTransformer"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Reflected impedance, with the cast</span>
+  <p style="margin-bottom:0">The plant's phase impedance is 5 Ω. Behind a 4160 : 208
+  transformer — a turns ratio of <b>20</b> — the source does not see 5 Ω. It sees</p>
+  <p style="margin-bottom:0"><span class="math" data-tex="Z_1 = a^2 Z_2 = 20^2 \times 5 = 2000\ \Omega" data-display>Z1 = 400 × 5 = 2000 Ω</span></p>
+  <p style="margin-bottom:0">Check it the long way: 4160 V produces 2.08 A on the
+  primary, and 4160/2.08 = 2000 Ω. The transformer has not changed the load; it has
+  changed what the load <em>looks like</em> from the other side. Electronics uses
+  the identical trick to match a loudspeaker to an amplifier, and Part 5 uses it to
+  refer a motor's rotor circuit to its stator.</p>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · which way is <em>a</em>?</span>
+  <p style="margin-bottom:0">A "480 : 120 transformer" has
+  <span class="math" data-tex="a = 4">a = 4</span> with the 480 V side as the
+  primary — but nothing stops you energising the 120 V side instead, and then it
+  is a step-up with <span class="math" data-tex="a = 1/4">a = 1/4</span>. <b>Read
+  which side the source is on before writing anything.</b> The physical check never
+  fails: the high-voltage winding always has more turns and carries less current.</p>
+</div>
+
+<h2>4.3 Real transformers</h2>
+
+<p>Two loss mechanisms, and they behave completely differently with load:</p>
+
+<ul>
+  <li><b>Core loss</b> (iron loss) — hysteresis and eddy currents in the steel.
+  It depends on voltage and frequency, so it is essentially <em>constant</em>
+  whenever the transformer is energised, load or no load. It is what an open-circuit
+  test measures.</li>
+  <li><b>Copper loss</b> — <span data-tex="I^2R">I²R</span> in the windings.
+  It goes as the <em>square</em> of load. It is what a short-circuit test measures.</li>
+</ul>
+
+<div class="note honest">
+  <span class="note-tag">Why efficiency peaks partway up</span>
+  <p style="margin-bottom:0">One loss is fixed and the other grows as load squared,
+  so efficiency is maximised where <b>copper loss equals core loss</b> — typically
+  at 40–70% of rated load, not at full load. Distribution transformers are
+  deliberately designed for peak efficiency well below their rating, because that
+  is where they actually spend their lives.</p>
+</div>
+
+<p>Transformers are rated in <b>kVA, not kW</b>, and the reason is now obvious:
+the two loss mechanisms are driven by voltage and by current, and neither cares
+about the angle between them. A 100 kVA transformer can deliver 100 kW at unity
+power factor or 60 kW at 0.6 — the winding is at its limit either way.</p>
+
+<h2>4.4 Three-phase connections</h2>
+
+<p>Three single-phase transformers (or one three-limbed core) make a three-phase
+bank, and each side can be wired wye or delta independently. That gives four
+combinations, and they do not all have the same voltage ratio.</p>
+
+<div data-figure="threePhaseXfmr"></div>
+
+<f-plate no="10.8" title="Bank ratios" stamp="know">
+  <f-row tex="\text{Y–Y and } \Delta\text{–}\Delta:\quad \frac{V_{L1}}{V_{L2}} = a"
+         name="matched connections"
+         gloss="The √3 appears on both sides and cancels, so the line ratio is the turns ratio."></f-row>
+  <f-row tex="\Delta\text{–Y}:\quad \frac{V_{L1}}{V_{L2}} = \frac{a}{\sqrt{3}}"
+         name="delta to wye"
+         gloss="An extra √3 <b>step up</b>. The standard distribution transformer, because the wye secondary provides the neutral that makes 208Y/120 possible."></f-row>
+  <f-row tex="\text{Y–}\Delta:\quad \frac{V_{L1}}{V_{L2}} = a\sqrt{3}"
+         name="wye to delta"
+         gloss="An extra √3 <b>step down</b>. Used where the high side needs a neutral for grounding."></f-row>
+  <f-row tex="S_{3\phi} = \sqrt{3}\,V_L I_L = 3 S_{1\phi}" name="bank rating"
+         gloss="Three transformers of S each make a bank of 3S. Rated in kVA, like every transformer."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>sizing a bank</em></h4>
+  <div class="worked-body">
+    <p>Three single-phase transformers, each rated 25 kVA at 2400 : 240 V, are
+    connected delta–wye. What is the bank's rating and its secondary line voltage?</p>
+    <ol class="steps">
+      <li>Bank rating is just the sum — the connection does not change how much
+        each transformer can carry:
+        <span data-tex="S = 3 \times 25 = 75\text{ kVA}" data-display>S = 75 kVA</span></li>
+      <li>Primary is delta, so each transformer's primary winding sees the full
+        line voltage, 2400 V. Its secondary therefore produces its rated 240 V —
+        as a <em>phase</em> voltage, because the secondary is wye.</li>
+      <li>Secondary line voltage picks up the √3:
+        <span data-tex="V_{L2} = \sqrt{3}\times 240 = 416\text{ V}" data-display>VL2 = 416 V</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">The overall ratio is
+    2400/416 = <b>5.77 : 1</b>, not the 10 : 1 printed on each nameplate. That gap
+    is the √3, and reading past it is the single most common transformer error on
+    this exam.</p>
+  </div>
+</div>
+
+<h2>4.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="a = N_1/N_2 = V_1/V_2 = I_2/I_1">a = N1/N2 = V1/V2 = I2/I1</span>
+        — voltage follows turns, current inverts.</li>
+    <li><span data-tex="Z_1 = a^2Z_2">Z1 = a²Z2</span>. <b>Squared.</b></li>
+    <li><span data-tex="V_1I_1 = V_2I_2">V1I1 = V2I2</span> for an ideal
+        transformer — the cross-check on every answer.</li>
+    <li>Δ–Y multiplies the ratio by <span data-tex="1/\sqrt{3}">1/√3</span>;
+        Y–Δ multiplies it by <span data-tex="\sqrt{3}">√3</span>; matched
+        connections leave it alone.</li>
+    <li>Core loss is constant, copper loss goes as load squared, and efficiency
+        peaks where they are equal.</li>
+    <li>Transformers are rated in <b>kVA</b>.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A transformer trades voltage for current at constant apparent power, which is
+  what makes Part 3's inverse square law usable and what made alternating current
+  the winner. Because it changes voltage and current in opposite directions, it
+  changes impedance by the square of the ratio — the most useful consequence of the
+  device and the one most often left out.</p>
+  <p>In three-phase banks the nameplate ratio belongs to one transformer, not to
+  the bank. Mismatched connections leave a √3 uncancelled, and delta–wye is the
+  workhorse precisely because that extra √3 and the neutral it provides are both
+  wanted.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"transformers","title":"Part 4 · Ratios, reflection, and banks","topics":["turns-ratio","reflected-z","xfmr-3ph","xfmr-rating"],"count":6}'></div>
+
+<div data-reflex='{"only":["transmission","transformers"],"count":6,"title":"Handbook Reflex · Parts 3–4"}'></div>

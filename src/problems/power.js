@@ -673,3 +673,186 @@ defineReflex([
     because: "The drop is a complex addition; I·R alone understates it at a lagging power factor.",
   },
 ]);
+
+/* ==========================================================================
+   Part 4 — transformers
+   ========================================================================== */
+
+defineProblem("turns-ratio", {
+  topic: "Turns ratio",
+  lookup: "Electrical → Power → Transformers (ideal)",
+  make(rng) {
+    const [V1, V2] = rng.pick([[480, 120], [2400, 240], [4160, 208], [7200, 240], [240, 120], [13800, 480]]);
+    const a = V1 / V2;
+    const Rl = rng.pick([2, 5, 8, 10, 20]);
+    const I2 = V2 / Rl;
+    const I1 = I2 / a;
+    const ask = rng.pick(["I1", "I2"]);
+
+    return {
+      stem: `An ideal ${num(V1, 0)} : ${num(V2, 0)} V transformer supplies a ${Rl} Ω resistive load on its secondary. ` +
+            `What is the ${ask === "I1" ? "primary" : "secondary"} current, most nearly?`,
+      choices: ask === "I1"
+        ? [
+            { text: `${fixed(I1, 2)} A`, why: "" },
+            { text: `${fixed(I2, 2)} A`, why: "That is the <b>secondary</b> current. The primary is the high-voltage side, so it carries less current, by the turns ratio." },
+            { text: `${fixed(I2 * a, 2)} A`, why: "Multiplied by the turns ratio where you should divide. The high-voltage winding always carries the <em>smaller</em> current." },
+            { text: `${fixed(V1 / Rl, 2)} A`, why: "That puts the primary voltage across the secondary's load resistance. The load only ever sees the secondary voltage." },
+          ]
+        : [
+            { text: `${fixed(I2, 2)} A`, why: "" },
+            { text: `${fixed(I1, 2)} A`, why: "That is the <b>primary</b> current, smaller by the turns ratio." },
+            { text: `${fixed(V1 / Rl, 2)} A`, why: "That uses the primary voltage across the load. The load sees the secondary voltage only." },
+            { text: `${fixed(I2 / a, 2)} A`, why: "Divided by the turns ratio a second time." },
+          ],
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="a = \\frac{V_1}{V_2} = \\frac{${V1}}{${V2}} = ${fixed(a, 2)}"></span>`,
+        `The load sees the secondary voltage, so Ohm's law gives the secondary current:`,
+        `<span class="math display" data-tex="I_2 = \\frac{V_2}{R} = \\frac{${V2}}{${Rl}} = ${fixed(I2, 2)}\\text{ A}"></span>`,
+        ask === "I1"
+          ? `Current inverts through the ratio:<span class="math display" data-tex="I_1 = \\frac{I_2}{a} = \\frac{${fixed(I2, 2)}}{${fixed(a, 2)}} = ${fixed(I1, 2)}\\text{ A}"></span><b>${fixed(I1, 2)} A.</b> Check: ${T(`V_1I_1 = ${num(V1 * I1, 0)}`)} VA and ${T(`V_2I_2 = ${num(V2 * I2, 0)}`)} VA ✓`
+          : `<b>${fixed(I2, 2)} A.</b> Check the power both ways: ${T(`V_2I_2 = ${num(V2 * I2, 0)}`)} VA, and on the primary ${T(`V_1I_1 = ${num(V1 * I1, 0)}`)} VA ✓`,
+      ],
+    };
+  },
+});
+
+defineProblem("reflected-z", {
+  topic: "Reflected impedance",
+  lookup: "Electrical → Power → Transformers (reflected impedance)",
+  make(rng) {
+    const a = rng.pick([2, 3, 4, 5, 10, 20]);
+    const Z2 = rng.pick([4, 5, 8, 10, 25, 50]);
+    const Z1 = a * a * Z2;
+
+    return {
+      stem: `An ideal transformer has a turns ratio of ${a} : 1. A ${Z2} Ω load is connected to the secondary. ` +
+            `What impedance does the source on the primary side see?`,
+      choices: [
+        { text: `${num(Z1, 0)} Ω`, why: "" },
+        { text: `${num(a * Z2, 0)} Ω`, why: `Multiplied by <b>a</b>, not a². Voltage scales by a <em>and</em> current scales by 1/a, so their ratio scales by a².` },
+        { text: `${num(Z2 / (a * a), 4)} Ω`, why: "Divided instead of multiplied. Looking in from the <b>high-voltage</b> side, the load looks <em>larger</em>." },
+        { text: `${num(Z2, 0)} Ω`, why: "Unchanged. A transformer's most useful property is precisely that it does <b>not</b> leave impedance alone." },
+      ],
+      answer: 0,
+      steps: [
+        `Voltage is multiplied by <b>a</b> and current divided by <b>a</b>, so their ratio picks up both:`,
+        `<span class="math display" data-tex="Z_1 = \\frac{V_1}{I_1} = \\frac{aV_2}{I_2/a} = a^2\\frac{V_2}{I_2} = a^2 Z_2"></span>`,
+        `<span class="math display" data-tex="Z_1 = (${a})^2 \\times ${Z2} = ${num(Z1, 0)}\\ \\Omega"></span>`,
+        `<b>${num(Z1, 0)} Ω.</b> This is what impedance matching means: choosing <b>a</b> so that a fixed load looks like whatever the source wants to drive.`,
+      ],
+    };
+  },
+});
+
+defineProblem("xfmr-3ph", {
+  topic: "Three-phase transformer banks",
+  lookup: "Electrical → Power → Transformers (three-phase connections)",
+  make(rng) {
+    const conn = rng.pick(["dy", "yd", "yy", "dd"]);
+    const a = rng.pick([5, 10, 20]);
+    const VL1 = rng.pick([2400, 4160, 12470, 13800]);
+    const k = { dy: RT3, yd: 1 / RT3, yy: 1, dd: 1 }[conn];
+    const label = { dy: "delta–wye", yd: "wye–delta", yy: "wye–wye", dd: "delta–delta" }[conn];
+    const ratio = a / k;
+    const V2 = VL1 / ratio;
+
+    return {
+      stem: `Three single-phase transformers, each with a turns ratio of ${a} : 1, are connected ${label} ` +
+            `on a ${num(VL1, 0)} V (line-to-line) primary. What is the secondary line-to-line voltage, most nearly?`,
+      choices: [
+        { text: `${fixed(V2, 1)} V`, why: "" },
+        { text: `${fixed(VL1 / a, 1)} V`,
+          why: k === 1
+            ? ""
+            : `That treats the nameplate turns ratio as the line-to-line ratio. It only is when <b>both sides are connected the same way</b> — here the connections differ, so one √3 survives.` },
+        { text: `${fixed(VL1 / (a * RT3), 1)} V`, why: `Divided by √3 where you should ${k > 1 ? "have multiplied after dividing by the turns ratio" : "not have"}.` },
+        { text: `${fixed((VL1 / a) * RT3, 1)} V`, why: `Multiplied by √3 in the wrong direction for a ${label} bank.` },
+      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.5)),
+      answer: 0,
+      steps: [
+        k === 1
+          ? `Both sides use the same connection, so the √3 between line and phase appears on the primary <em>and</em> the secondary — and cancels:`
+          : `The two sides are connected differently, so the √3 appears on only one of them and survives into the overall ratio:`,
+        `<span class="math display" data-tex="\\frac{V_{L1}}{V_{L2}} = ${{ dy: "\\frac{a}{\\sqrt{3}}", yd: "a\\sqrt{3}", yy: "a", dd: "a" }[conn]} = ${fixed(ratio, 3)}"></span>`,
+        `<span class="math display" data-tex="V_{L2} = \\frac{${VL1}}{${fixed(ratio, 3)}} = ${fixed(V2, 1)}\\text{ V}"></span>`,
+        `<b>${fixed(V2, 1)} V.</b> ${k === 1 ? "Matched connections are the easy case — the line ratio is the turns ratio." : "The nameplate says " + a + " : 1; the bank does " + fixed(ratio, 2) + " : 1. That gap is the √3."}`,
+      ],
+    };
+  },
+});
+
+defineProblem("xfmr-rating", {
+  topic: "Transformer rating and loading",
+  lookup: "Electrical → Power → Transformers (rating, efficiency)",
+  make(rng) {
+    const kva = rng.pick([25, 50, 75, 100, 150, 500]);
+    const pf = rng.pick([0.7, 0.8, 0.85, 0.9]);
+    const V2 = rng.pick([240, 480, 208]);
+    const ask = rng.pick(["kw", "amps"]);
+
+    if (ask === "amps") {
+      const I = (kva * 1000) / V2;
+      return {
+        stem: `A ${kva} kVA single-phase transformer has a ${V2} V secondary. What is its rated secondary current?`,
+        choices: [
+          { text: `${fixed(I, 1)} A`, why: "" },
+          { text: `${fixed(I * pf, 1)} A`, why: "The power factor does not belong here. A transformer is rated in <b>kVA</b> precisely because its limit is current, whatever the angle." },
+          { text: `${fixed(I / RT3, 1)} A`, why: "The √3 is for three-phase. This is a single-phase transformer." },
+          { text: `${fixed(kva * 1000 * V2 / 1000, 0)} A`, why: "Multiplied where you should divide — current is VA over volts." },
+        ],
+        answer: 0,
+        steps: [
+          `Rated current is simply the rating divided by the voltage:`,
+          `<span class="math display" data-tex="I = \\frac{S}{V} = \\frac{${kva}{,}000}{${V2}} = ${fixed(I, 1)}\\text{ A}"></span>`,
+          `<b>${fixed(I, 1)} A.</b> Note the power factor never entered. <b>Transformers are rated in kVA</b> because both loss mechanisms — core loss from voltage, copper loss from current — are indifferent to the angle between them.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A ${kva} kVA transformer supplies a load at ${pf} power factor lagging. ` +
+            `What is the maximum real power it can deliver?`,
+      choices: [
+        { text: `${fixed(kva * pf, 1)} kW`, why: "" },
+        { text: `${fixed(kva, 1)} kW`, why: "That is the kVA rating. Only at unity power factor are the two numbers equal." },
+        { text: `${fixed(kva / pf, 1)} kW`, why: "Divided instead of multiplied — this exceeds the transformer's rating, which is impossible." },
+        { text: `${fixed(kva * Math.sqrt(1 - pf * pf), 1)} kW`, why: `That used ${T("\\sin\\theta")}, giving the reactive power in kVAR.` },
+      ],
+      answer: 0,
+      steps: [
+        `The transformer's limit is apparent power. Real power is that limit times the power factor:`,
+        `<span class="math display" data-tex="P = S\\cos\\theta = ${kva} \\times ${pf} = ${fixed(kva * pf, 1)}\\text{ kW}"></span>`,
+        `<b>${fixed(kva * pf, 1)} kW.</b> The remaining ${fixed(kva * Math.sqrt(1 - pf * pf), 1)} kVAR of capacity is consumed by the load's angle and does no work — the argument from Part 1, now costing transformer capacity instead of cable.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "transformers",
+    stem: "A 25 Ω load sits on the secondary of a 4 : 1 transformer. What does the source see?",
+    tool: "Z₁ = a² Z₂",
+    because: "Voltage scales by a and current by 1/a, so their ratio scales by a squared.",
+  },
+  {
+    part: "transformers",
+    stem: "Three 10 : 1 transformers in delta–wye on 4160 V. Secondary line voltage?",
+    tool: "V_L2 = V_L1 √3 / a",
+    because: "Mismatched connections leave one √3 uncancelled, so the bank ratio is not the nameplate ratio.",
+  },
+  {
+    part: "transformers",
+    stem: "A 75 kVA transformer feeds a 0.8 pf load. Most kilowatts it can carry?",
+    tool: "P = S × pf",
+    because: "The rating is apparent power; the power factor decides how much of it is real.",
+  },
+  {
+    part: "transformers",
+    stem: "At what load is a transformer's efficiency highest?",
+    tool: "where copper loss equals core loss",
+    because: "Core loss is constant and copper loss goes as load squared, so the sum per watt delivered is least where they match.",
+  },
+]);
