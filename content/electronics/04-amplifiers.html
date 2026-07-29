@@ -1,0 +1,164 @@
+<p class="eyebrow">
+  <span>Electronics · Part 4</span>
+  <span class="spec">NCEES 9.B</span>
+  <span>26 minute read</span>
+</p>
+
+<h1>Amplifiers</h1>
+
+<p class="lede">Part 3 gave a device that turns a small current into a large one.
+Turning that into a usable amplifier takes two more things: a bias point that
+stays where you put it, and a gain that does not depend on the transistor.</p>
+
+<h2>4.1 Bias first, signal second</h2>
+
+<p>An amplifier does two jobs at once, and they are analysed <b>separately</b>:</p>
+
+<ul>
+  <li><b>DC analysis</b> sets the quiescent operating point — the Q-point — with
+  the signal set to zero. Capacitors are open circuits.</li>
+  <li><b>AC analysis</b> finds the gain for small variations about that point.
+  Capacitors are short circuits and DC supplies are grounds.</li>
+</ul>
+
+<div class="note honest">
+  <span class="note-tag">Why supplies become grounds in AC analysis</span>
+  <p style="margin-bottom:0">A 12 V rail is a <em>constant</em> 12 V. Constant
+  means it does not vary, and AC analysis deals only in variations — so as far as
+  the signal is concerned, the rail and ground are the same node. This is not a
+  trick; it is what "small-signal" means. It is also why R<sub>C</sub> appears to
+  connect the collector to ground in the AC model.</p>
+</div>
+
+<h2>4.2 The Q-point problem</h2>
+
+<p>The obvious way to bias a transistor is a single resistor from the supply to
+the base — <span class="term">fixed bias</span>. It sets
+<span data-tex="I_B">IB</span> directly, so
+<span data-tex="I_C = \beta I_B">IC = βIB</span>.</p>
+
+<p>And that is exactly what is wrong with it. <b>β is not a design parameter.</b>
+It is whatever the part happens to have, it varies with temperature, and a single
+part number is routinely specified anywhere from 50 to 300. A bias scheme that
+multiplies by β inherits all of that.</p>
+
+<div data-figure="biasStability"></div>
+
+<f-plate no="9.7" title="Voltage-divider bias" stamp="know"
+  caption="<b>Thévenin from Circuit Analysis Part 4, doing real work.</b> Replace
+  the divider by its equivalent and the base loop becomes a single mesh.">
+  <f-row tex="V_{TH} = V_{CC}\frac{R_2}{R_1+R_2}, \qquad R_{TH} = R_1 \parallel R_2"
+         name="collapse the divider"
+         gloss="The two base resistors are a Thévenin source seen from the base. Nothing new — Part 4 of Circuit Analysis, applied."></f-row>
+  <f-row tex="I_B = \frac{V_{TH} - V_{BE}}{R_{TH} + (\beta+1)R_E}" name="the base loop"
+         gloss="The emitter resistor appears multiplied by (β+1), because the emitter carries that many times the base current."></f-row>
+  <f-row tex="I_C \approx \frac{V_{TH} - V_{BE}}{R_E} \quad \text{when } (\beta+1)R_E \gg R_{TH}"
+         name="the design approximation"
+         gloss="<b>β has vanished.</b> That is the whole point of the scheme, and the condition for it is the one worth remembering."></f-row>
+  <f-row tex="V_{CE} = V_{CC} - I_C(R_C + R_E)" name="the collector loop"
+         gloss="Both resistors are in the DC path, so both drop voltage. Forgetting R_E here is a common slip."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">How the emitter resistor does it</span>
+  <p style="margin-bottom:0">It is negative feedback, and the loop is short enough
+  to say in one sentence: <b>collector current rises → emitter voltage rises →
+  the base-emitter drive falls → collector current comes back down.</b> The base
+  is held near a fixed 2.4 V by the divider, so anything that lifts the emitter
+  necessarily reduces V<sub>BE</sub>. The transistor is correcting its own drift,
+  which is why β can wander by a factor of six and the current barely moves.</p>
+</div>
+
+<h2>4.3 Where the gain comes from</h2>
+
+<p>For small signals a BJT looks like a resistance <span data-tex="r_e">re</span>
+at its emitter, and that resistance is set entirely by the bias current:</p>
+
+<f-plate no="9.8" title="Small-signal gain" stamp="know">
+  <f-row tex="r_e = \frac{V_T}{I_E} \approx \frac{26\text{ mV}}{I_E}" name="the emitter resistance"
+         gloss="<b>Not a physical resistor.</b> It is the slope of the base-emitter diode's curve — Part 1's exponential, differentiated. At 1 mA it is 26 Ω."></f-row>
+  <f-row tex="A_v = -\frac{R_C}{r_e + R_E'}" name="common emitter"
+         gloss="<b>R_E′ is the <em>unbypassed</em> part</b> of the emitter resistance. The minus sign is real: a common-emitter stage inverts."></f-row>
+  <f-row tex="A_v \approx -\frac{R_C}{R_E'} \quad (R_E' \gg r_e)" name="the design form"
+         gloss="Two resistors, and no transistor parameter at all. <b>This is the gain you can actually quote.</b>"></f-row>
+  <f-row tex="Z_{in(base)} = (\beta+1)(r_e + R_E')" name="input impedance"
+         gloss="Degeneration raises input impedance in the same proportion it lowers gain — often the real reason for doing it."></f-row>
+</f-plate>
+
+<div data-figure="gainTradeoff"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · quoting the bypassed gain</span>
+  <p style="margin-bottom:0">A fully bypassed stage's gain of 133 is a real
+  measurement and a useless specification. It is
+  <span class="math" data-tex="R_C/r_e">RC/re</span>, and
+  <span class="math" data-tex="r_e">re</span> is
+  <span class="math" data-tex="26\text{ mV}/I_E">26 mV/IE</span> — which changes
+  with temperature, with supply voltage, and with the resistor tolerances that set
+  the bias. <b>Two boards off the same reel would not have the same gain.</b>
+  Exam questions ask for both forms; be sure which one the stem wants.</p>
+</div>
+
+<h2>4.4 The three configurations</h2>
+
+<f-plate no="9.9" title="Which terminal is common" stamp="handbook"
+  caption="Named for the terminal shared between input and output. <b>The
+  emitter follower has no voltage gain at all</b> and is used entirely for its
+  impedance transformation — high in, low out.">
+  <f-row tex="\text{Common emitter:} \quad A_v = -R_C/(r_e+R_E'), \quad Z_{in} \text{ medium}"
+         name="the workhorse"
+         gloss="High voltage gain, high current gain, <b>inverting</b>. What &ldquo;amplifier&rdquo; means unless stated otherwise."></f-row>
+  <f-row tex="\text{Common collector:} \quad A_v \approx +1, \quad Z_{in} \text{ high}, \ Z_{out} \text{ low}"
+         name="emitter follower"
+         gloss="A <b>buffer</b>. Gains no voltage and loses none, but turns a weak high-impedance source into one that can drive a load."></f-row>
+  <f-row tex="\text{Common base:} \quad A_v = +R_C/r_e, \quad Z_{in} \text{ very low}"
+         name="common base"
+         gloss="Non-inverting, low input impedance, good at high frequency. The rarest of the three on this exam."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">What an emitter follower is for</span>
+  <p style="margin-bottom:0">A stage with a gain of exactly one sounds pointless
+  until you remember Circuit Analysis Part 4. A source with a high Thévenin
+  resistance <b>collapses when you load it</b>. An emitter follower presents
+  <span class="math" data-tex="(\beta+1)R_E">(β+1)RE</span> to that source — so it
+  barely loads it — and offers
+  <span class="math" data-tex="r_e + R_{source}/(\beta+1)">re + Rs/(β+1)</span> to
+  whatever comes next. <b>It buys impedance, not voltage</b>, and that is exactly
+  what the op-amp in Part 5 is doing when it is wired as a follower.</p>
+</div>
+
+<h2>4.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="r_e = 26\text{ mV}/I_E">re = 26 mV / IE</span>.</li>
+    <li>Divider bias: Thévenin the base, then
+        <span data-tex="I_B = (V_{TH}-0.7)/(R_{TH}+(\beta+1)R_E)">IB = (VTH − 0.7)/(RTH + (β+1)RE)</span>.</li>
+    <li><span data-tex="V_{CE} = V_{CC} - I_C(R_C+R_E)">VCE = VCC − IC(RC + RE)</span>
+        — <b>both</b> resistors.</li>
+    <li><span data-tex="A_v = -R_C/(r_e+R_E')">Av = −RC/(re + RE′)</span>, using
+        only the <b>unbypassed</b> emitter resistance.</li>
+    <li>Common emitter inverts and amplifies; the follower has
+        <span data-tex="A_v \approx 1">Av ≈ 1</span> and exists for impedance.</li>
+    <li>DC and AC analyses are separate. In AC, supplies are grounds.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>An amplifier is a bias point with a signal riding on it, and the two are
+  designed separately. The bias must survive a transistor parameter nobody
+  controls, which is why every practical stage uses an emitter resistor and
+  negative feedback rather than trusting β.</p>
+  <p>The same feedback that stabilises the bias also stabilises the gain, and at
+  the same price. Trading raw gain for a gain that is merely a ratio of two
+  resistors is the central bargain of analogue design — and Part 5 is what happens
+  when a device has so much raw gain that the trade becomes free.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"amplifiers","title":"Part 4 · Bias and gain","topics":["bias-divider","q-point","ce-gain","amp-config"],"count":6}'></div>
+
+<div data-reflex='{"only":["transistors","amplifiers"],"count":6,"title":"Handbook Reflex · Parts 3–4"}'></div>

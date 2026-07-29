@@ -719,3 +719,199 @@ defineReflex([
     because: "Transconductance is the derivative of the square law, so it rises with the operating current.",
   },
 ]);
+
+/* ==========================================================================
+   Part 4 — amplifiers
+   ========================================================================== */
+
+defineProblem("bias-divider", {
+  topic: "Voltage-divider bias",
+  lookup: "Electrical → Electronics → Amplifiers (biasing)",
+  make(rng) {
+    const Vcc = rng.pick([10, 12, 15, 20]);
+    const R1 = rng.pick([40, 47, 68]) * 1000;
+    const R2 = rng.pick([10, 12, 15]) * 1000;
+    const Re = rng.pick([0.5, 1, 1.5, 2.2]) * 1000;
+    const beta = rng.pick([100, 150, 200]);
+    const Vth = (Vcc * R2) / (R1 + R2);
+    const Rth = (R1 * R2) / (R1 + R2);
+    const ib = (Vth - 0.7) / (Rth + (beta + 1) * Re);
+    const ic = beta * ib;
+    const icApprox = (Vth - 0.7) / Re;
+
+    return {
+      stem: `A BJT stage uses ${num(R1 / 1000, 0)} kΩ and ${num(R2 / 1000, 0)} kΩ as its base divider on a ${Vcc} V rail, ` +
+            `with ${num(Re / 1000, Re % 1000 ? 1 : 0)} kΩ in the emitter and β = ${beta}. What is the collector current, most nearly?`,
+      choices: [
+        { text: `${fixed(ic * 1000, 3)} mA`, why: "" },
+        { text: `${fixed(Vth / Re * 1000, 3)} mA`, why: "The 0.7 V base-emitter drop was not subtracted. The emitter sits <b>0.7 V below</b> the base, and only that difference appears across R<sub>E</sub>." },
+        { text: `${fixed(Vcc / (R1 + R2) * beta * 1000, 3)} mA`, why: "That multiplies the divider's own bleed current by β. The divider current is not the base current — the whole point of the scheme is that the base draws very little of it." },
+        { text: `${fixed(Vth * 1000 / Rth, 3)} mA`, why: "That is the Thévenin voltage across the Thévenin resistance, which is not any current in the circuit." },
+      ],
+      answer: 0,
+      steps: [
+        `Thévenin the base divider — Circuit Analysis Part 4, applied unchanged:`,
+        `<span class="math display" data-tex="V_{TH} = ${Vcc}\\times\\frac{${R2 / 1000}}{${R1 / 1000}+${R2 / 1000}} = ${fixed(Vth, 3)}\\text{ V}, \\qquad R_{TH} = ${num(R1 / 1000, 0)}\\parallel${num(R2 / 1000, 0)} = ${fixed(Rth / 1000, 2)}\\text{ k}\\Omega"></span>`,
+        `Walk the base loop, remembering that the emitter carries (β+1) times the base current:`,
+        `<span class="math display" data-tex="I_B = \\frac{${fixed(Vth, 3)} - 0.7}{${fixed(Rth, 0)} + (${beta + 1})(${num(Re, 0)})} = ${fixed(ib * 1e6, 2)}\\ \\mu\\text{A}"></span>`,
+        `<span class="math display" data-tex="I_C = \\beta I_B = ${fixed(ic * 1000, 3)}\\text{ mA}"></span>`,
+        `<b>${fixed(ic * 1000, 3)} mA.</b> The quick design estimate ignores R<sub>TH</sub> entirely — ${T(`(V_{TH}-0.7)/R_E = ${fixed(icApprox * 1000, 3)}`)} mA — and is within ${fixed(Math.abs(icApprox - ic) / ic * 100, 1)}% here. <b>β has almost vanished from the answer</b>, which is the whole reason for the scheme.`,
+      ],
+    };
+  },
+});
+
+defineProblem("q-point", {
+  topic: "Finding the Q-point",
+  lookup: "Electrical → Electronics → Amplifiers (Q-point)",
+  make(rng) {
+    const Vcc = rng.pick([12, 15, 20]);
+    const ic = rng.pick([1, 1.5, 2, 2.5]) * 1e-3;
+    const Rc = rng.pick([2, 2.2, 3.3, 4.7]) * 1000;
+    const Re = rng.pick([0.5, 1, 1.5]) * 1000;
+    const vce = Vcc - ic * (Rc + Re);
+
+    return {
+      stem: `A stage runs at ${fixed(ic * 1000, 1)} mA from a ${Vcc} V rail, with ${num(Rc / 1000, Rc % 1000 ? 1 : 0)} kΩ in the collector ` +
+            `and ${num(Re / 1000, Re % 1000 ? 1 : 0)} kΩ in the emitter. What is V_CE, most nearly?`,
+      choices: [
+        { text: `${fixed(vce, 2)} V`, why: "" },
+        { text: `${fixed(Vcc - ic * Rc, 2)} V`, why: "<b>R<sub>E</sub> was left out.</b> Both resistors carry the collector current and both drop voltage, so the collector loop has to include the emitter resistor too. This is the standard slip." },
+        { text: `${fixed(Vcc - ic * Re, 2)} V`, why: "Only the emitter resistor was counted." },
+        { text: `${fixed(ic * (Rc + Re), 2)} V`, why: "That is the total drop across the two resistors, not what is left across the transistor." },
+      ],
+      answer: 0,
+      steps: [
+        `Walk the collector loop from the rail to ground. Both resistors are in the DC path:`,
+        `<span class="math display" data-tex="V_{CE} = V_{CC} - I_C(R_C + R_E)"></span>`,
+        `<span class="math display" data-tex="V_{CE} = ${Vcc} - (${fixed(ic * 1000, 1)}\\text{ mA})(${num((Rc + Re) / 1000, 1)}\\text{ k}\\Omega) = ${fixed(vce, 2)}\\text{ V}"></span>`,
+        `<b>${fixed(vce, 2)} V.</b> ${vce > 0.2 ? `Comfortably in the active region, and roughly ${fixed(vce / Vcc * 100, 0)}% of the rail — near the middle is what you want, since that is what leaves the most room for the signal to swing.` : "That is below saturation, so this bias point is not viable."}`,
+      ],
+    };
+  },
+});
+
+defineProblem("ce-gain", {
+  topic: "Common-emitter gain",
+  lookup: "Electrical → Electronics → Amplifiers (small-signal gain)",
+  make(rng) {
+    const ie = rng.pick([0.5, 1, 1.3, 2, 2.6]) * 1e-3;
+    const re = 0.026 / ie;
+    const Rc = rng.pick([2, 2.2, 3.3, 4.7, 10]) * 1000;
+    const bypassed = rng.pick([true, false, false]);
+    const Rep = bypassed ? 0 : rng.pick([100, 220, 470]);
+    const av = -Rc / (re + Rep);
+
+    return {
+      stem: `A common-emitter stage runs at ${fixed(ie * 1000, 1)} mA with ${num(Rc / 1000, Rc % 1000 ? 1 : 0)} kΩ in the collector` +
+            `${bypassed ? " and its emitter resistor fully bypassed" : ` and ${Rep} Ω of emitter resistance left unbypassed`}. ` +
+            `What is the voltage gain, most nearly?`,
+      choices: [
+        { text: `${fixed(av, 1)}`, why: "" },
+        { text: `${fixed(-av, 1)}`, why: "<b>The sign.</b> A common-emitter stage <em>inverts</em> — rising input means falling output, because more collector current means a bigger drop across R<sub>C</sub>." },
+        { text: `${bypassed ? fixed(-Rc / (re + 470), 1) : fixed(-Rc / re, 1)}`,
+          why: bypassed
+            ? "That includes an unbypassed emitter resistance. With the emitter fully bypassed, the only resistance in the denominator is r<sub>e</sub>."
+            : "That ignores the unbypassed emitter resistance. <b>Only the bypassed part disappears</b>; whatever is left adds directly to r<sub>e</sub> in the denominator." },
+        { text: `${fixed(-Rc / 1000, 1)}`, why: "The denominator is r<sub>e</sub> plus any unbypassed emitter resistance, not 1 kΩ." },
+      ],
+      answer: 0,
+      steps: [
+        `The small-signal emitter resistance comes from the bias current — it is the slope of the base-emitter diode:`,
+        `<span class="math display" data-tex="r_e = \\frac{26\\text{ mV}}{I_E} = \\frac{26}{${fixed(ie * 1000, 1)}} = ${fixed(re, 1)}\\ \\Omega"></span>`,
+        `<span class="math display" data-tex="A_v = -\\frac{R_C}{r_e + R_E'} = -\\frac{${num(Rc, 0)}}{${fixed(re, 1)}${Rep ? ` + ${Rep}` : ""}} = ${fixed(av, 1)}"></span>`,
+        bypassed
+          ? `<b>${fixed(av, 1)}.</b> Large, and not a number to design around — r<sub>e</sub> moves with temperature and bias, so this gain is not reproducible.`
+          : `<b>${fixed(av, 1)}.</b> Note how close that is to ${T(`-R_C/R_E' = ${fixed(-Rc / Rep, 1)}`)}: with ${Rep} Ω unbypassed, r<sub>e</sub> is only ${fixed(re / (re + Rep) * 100, 0)}% of the denominator, so the gain is essentially two resistors and is stable.`,
+      ],
+    };
+  },
+});
+
+defineProblem("amp-config", {
+  topic: "Choosing a configuration",
+  lookup: "Electrical → Electronics → Amplifiers (configurations)",
+  make(rng) {
+    const q = rng.pick(["buffer", "invert", "zin", "bypass"]);
+    const Q = {
+      buffer: {
+        stem: "A sensor with a 100 kΩ source resistance must drive a 1 kΩ load without its signal collapsing. Which stage does the job?",
+        right: "Common collector (emitter follower)",
+        wrong: [
+          ["Common emitter", "It has voltage gain, but its input impedance is far too low to avoid loading a 100 kΩ source, and its output impedance is too high to drive 1 kΩ."],
+          ["Common base", "Its input impedance is the <b>lowest</b> of the three — it would short the sensor out entirely."],
+          ["No transistor stage can do this", "This is exactly what a follower exists for: high input impedance, low output impedance, unity gain."],
+        ],
+        why: "The problem is impedance, not amplitude. An emitter follower presents (β+1)R<sub>E</sub> to the source so it barely loads it, and offers a low output impedance to the load — <b>it buys impedance, not voltage</b>.",
+      },
+      invert: {
+        stem: "Which single-stage BJT amplifier inverts its input signal?",
+        right: "Common emitter",
+        wrong: [
+          ["Common collector", "The emitter follower's output follows the input in both amplitude <em>and</em> sign — that is why it is called a follower."],
+          ["Common base", "Non-inverting. Its gain is +R<sub>C</sub>/r<sub>e</sub>."],
+          ["All three invert", "Only the common emitter does. The other two are non-inverting."],
+        ],
+        why: "More base drive means more collector current, which means a <b>bigger</b> drop across R<sub>C</sub>, which pulls the collector <b>down</b>. The inversion is built into where the output is taken from.",
+      },
+      zin: {
+        stem: "Leaving part of the emitter resistor unbypassed in a common-emitter stage does what to the input impedance?",
+        right: "Raises it, by the same factor the gain falls",
+        wrong: [
+          ["Lowers it", "The opposite. Z<sub>in</sub> at the base is (β+1)(r<sub>e</sub> + R<sub>E</sub>′), so adding unbypassed resistance <b>increases</b> it."],
+          ["Leaves it unchanged", "Z<sub>in</sub> depends directly on the unbypassed emitter resistance."],
+          ["Raises it, and raises the gain too", "Gain and input impedance move in <b>opposite</b> directions here — that is precisely the trade being made."],
+        ],
+        why: "Both gain and input impedance have (r<sub>e</sub> + R<sub>E</sub>′) in them — gain divided by it, impedance multiplied. Degeneration therefore trades one for the other at a fixed exchange rate, and raising Z<sub>in</sub> is often the real motive.",
+      },
+      bypass: {
+        stem: "What is the emitter bypass capacitor in a common-emitter stage for?",
+        right: "To remove R_E from the AC path while leaving it in the DC path",
+        wrong: [
+          ["To block DC from reaching the load", "That is what the <em>coupling</em> capacitors at the input and output do."],
+          ["To filter noise from the supply rail", "That is a decoupling capacitor, which sits across the supply."],
+          ["To set the amplifier's low-frequency response only", "It does affect that, but the reason it is there is the gain."],
+        ],
+        why: "The emitter resistor must be present at DC to stabilise the bias, and absent at AC to keep the gain high. <b>A capacitor across it is exactly that: an open circuit to DC and a short to the signal.</b> One component, two different circuits.",
+      },
+    }[q];
+
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [
+        `<b>${Q.right}.</b>`,
+        Q.why,
+        `Worth holding the three side by side: <b>common emitter</b> amplifies and inverts, <b>common collector</b> buffers at unity gain, <b>common base</b> amplifies without inverting and has a very low input impedance.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "amplifiers",
+    stem: "A stage runs at 2 mA with 3.3 kΩ in the collector, emitter fully bypassed. Gain?",
+    tool: "r_e = 26 mV / I_E, then A_v = −R_C / r_e",
+    because: "With the emitter bypassed the only resistance left in the denominator is the transistor's own r_e.",
+  },
+  {
+    part: "amplifiers",
+    stem: "A 47 k / 12 k divider on 15 V with 1 kΩ in the emitter. Collector current?",
+    tool: "Thévenin the base, then I_C ≈ (V_TH − 0.7) / R_E",
+    because: "Divider bias exists so the answer does not depend on β, and the approximation says so explicitly.",
+  },
+  {
+    part: "amplifiers",
+    stem: "A 100 kΩ source has to drive a 1 kΩ load. What stage goes between?",
+    tool: "an emitter follower (common collector)",
+    because: "The problem is impedance, not amplitude — and a follower is bought for impedance alone.",
+  },
+  {
+    part: "amplifiers",
+    stem: "Bias current is 1.5 mA, R_C is 4.7 kΩ, R_E is 1 kΩ, rail is 15 V. V_CE?",
+    tool: "V_CE = V_CC − I_C(R_C + R_E)",
+    because: "Both resistors are in the DC collector path; leaving R_E out is the standard error.",
+  },
+]);
