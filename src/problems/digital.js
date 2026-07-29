@@ -1480,3 +1480,222 @@ defineReflex([
     because: "The next-state column *is* the D column, which is why D-based design skips the step every other flip-flop needs.",
   },
 ]);
+
+/* ==========================================================================
+   Part 6 — timing and hazards (15.H)
+   ========================================================================== */
+
+defineProblem("timing-window", {
+  topic: "Setup, hold, and metastability",
+  lookup: "Electrical → Digital → Timing",
+  make(rng) {
+    const q = rng.pick(["what", "violate", "meta", "which"]);
+    const Q = {
+      what: {
+        stem: "What do setup time and hold time specify?",
+        right: "How long the data must be steady before the clock edge, and how long after it",
+        wrong: [
+          ["How long the output takes to change after the clock edge", "That is <b>clock-to-Q</b> propagation delay, a different parameter and an output specification rather than an input requirement."],
+          ["The minimum and maximum clock period", "Those follow from setup and hold, but they are not what the two numbers <em>are</em>."],
+          ["How long the clock must stay high and low", "That is the minimum pulse width, which is a third specification again."],
+        ],
+        why: "The two numbers bracket the clock edge and define an <b>aperture</b> the data must not move inside. Setup is the run-up, hold is the follow-through, and the sum of them is the window a flip-flop is genuinely looking through.",
+      },
+      violate: {
+        stem: "A data signal changes inside a flip-flop's setup-and-hold window. What is the result?",
+        right: "The output may go metastable — neither 0 nor 1 — for an unbounded time",
+        wrong: [
+          ["The flip-flop captures the old value", "That is what happens when the data arrives <b>after</b> the window closes. Late is defined; inside is not."],
+          ["The flip-flop captures the new value", "That is what happens when the data settles <b>before</b> the window opens."],
+          ["The flip-flop output is briefly wrong and then correct on the next edge", "That understates it. The output is not wrong — it is <em>undefined</em>, and it may still be undefined when the next edge arrives."],
+        ],
+        why: "Both the defined outcomes are fine to design around: early captures the new value, late captures the old one. <b>Inside the window there is no defined outcome at all.</b> The output settles towards a rail eventually, but the time it takes has only a probability attached to it, not a bound.",
+      },
+      meta: {
+        stem: "How is metastability handled in practice?",
+        right: "Pass the asynchronous signal through two flip-flops in series before using it",
+        wrong: [
+          ["Use a faster flip-flop", "It helps — a smaller time constant resolves faster — but it does not remove the failure, only make it rarer. The two-stage synchroniser is the standard answer."],
+          ["Add a pull-up resistor to the data line", "Metastability is about <em>when</em> the input changes, not what level it sits at."],
+          ["Slow the clock down", "This does help, since it gives more time to resolve — but it slows the whole design to fix one input, where two flip-flops fix that input alone."],
+        ],
+        why: "The first flip-flop may go metastable; the second gives it <b>a whole extra clock period to resolve before anything reads it</b>. Because MTBF goes as e^(t/τ), that one extra period does not double the mean time between failures — it can turn days into geological time. <b>You cannot eliminate metastability, only make it improbable enough.</b>",
+      },
+      which: {
+        stem: "Which signals need a synchroniser?",
+        right: "Any signal that changes without reference to the receiving clock",
+        wrong: [
+          ["Only signals from a slower clock domain", "Speed is irrelevant. What matters is whether the two clocks are <b>related</b> — a slower unrelated clock is just as dangerous."],
+          ["Only mechanical inputs like switches", "Switches need one, but so does anything from another clock domain, and so does an interrupt line from another chip."],
+          ["All inputs, including those from the same clock domain", "Signals already synchronous with your clock are covered by static timing analysis. Synchronising them again just adds latency."],
+        ],
+        why: "A button, a signal from another oscillator, a reset released by hand — each can change at any moment, so <b>eventually one will change inside the aperture</b>. Anything already timed by the same clock is a different problem, solved by timing analysis rather than by extra flip-flops.",
+      },
+    }[q];
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [`<b>${Q.right}.</b>`, Q.why],
+    };
+  },
+});
+
+defineProblem("timing-fmax", {
+  topic: "Maximum clock frequency",
+  lookup: "Electrical → Digital → Timing",
+  make(rng) {
+    const q = rng.pick(["fmax", "fmax", "hold", "skew"]);
+    const tcq = rng.pick([2, 3, 4, 5]);
+    const tlog = rng.pick([6, 8, 10, 12, 15, 20]);
+    const tsu = rng.pick([2, 3, 4]);
+
+    if (q === "fmax") {
+      const Tmin = tcq + tlog + tsu;
+      const f = 1000 / Tmin;
+      return {
+        stem: `Two flip-flops are separated by combinational logic. Clock-to-Q is ${tcq} ns, the logic takes ${tlog} ns, and the setup time is ${tsu} ns. What is the maximum clock frequency?`,
+        choices: options(
+          { text: `${fixed(f, 1)} MHz`, why: "" },
+          [
+            { text: `${fixed(1000 / (tcq + tlog), 1)} MHz`, why: "The setup time is missing. The data must arrive <b>and be steady</b> before the next edge, so t<sub>su</sub> is part of the budget." },
+            { text: `${fixed(1000 / tlog, 1)} MHz`, why: "Only the logic. The launching flip-flop's clock-to-Q delay and the capturing one's setup time are both on the same path." },
+            { text: `${fixed(1000 / (tcq + tlog + tsu + tsu), 1)} MHz`, why: "The setup time is counted twice. There is one launching flip-flop and one capturing one." },
+          ]),
+        answer: 0,
+        steps: [
+          `The path runs from one flip-flop's clock edge, out through its Q, across the logic, and into the next flip-flop's D — where it must be steady <b>before</b> that flip-flop's setup window opens:`,
+          `<span class="math display" data-tex="T_{min} = t_{cq} + t_{logic} + t_{su} = ${tcq} + ${tlog} + ${tsu} = ${Tmin}\\text{ ns}"></span>`,
+          `<span class="math display" data-tex="f_{max} = \\frac{1}{${Tmin}\\text{ ns}} = ${fixed(f, 1)}\\text{ MHz}"></span>`,
+          `<b>${fixed(f, 1)} MHz.</b> All three terms belong to the same path, and the one people leave out is <b>t<sub>su</sub></b> — the data has to arrive early, not merely arrive.`,
+        ],
+      };
+    }
+
+    if (q === "hold") {
+      return {
+        stem: "A design has a hold-time violation: the shortest path between two flip-flops delivers new data before the capturing flip-flop's hold time has elapsed. Can it be fixed by slowing the clock?",
+        choices: [
+          { text: "No — the clock period does not appear in the hold inequality", why: "" },
+          { text: "Yes — halving the clock frequency doubles every timing margin",
+            why: "It doubles the <em>setup</em> margin. The hold check compares two delays measured from the <b>same</b> clock edge, so the period cancels out of it entirely." },
+          { text: "Yes, provided the period is made longer than the hold time",
+            why: "No value of the period helps, because the period is not in the inequality at any value." },
+          { text: "Only if the two flip-flops share a clock",
+            why: "They do share one — that is the case being described, and sharing it is precisely why the period cancels." },
+        ],
+        answer: 0,
+        steps: [
+          `Setup is a race against the <b>next</b> edge, so the period is in it: ${T(`T \\ge t_{cq} + t_{logic} + t_{su}`)}`,
+          `Hold is a race against the <b>same</b> edge. New data must not reach the capturing flip-flop until its hold time is over:`,
+          `<span class="math display" data-tex="t_{cq} + t_{logic,\\,min} \\ge t_{h}"></span>`,
+          `<b>No clock period appears.</b> A hold violation therefore cannot be clocked away — it has to be fixed in the circuit, usually by <em>adding</em> delay to the short path. That is one of the few occasions when deliberately slowing a signal down is the right answer.`,
+        ],
+      };
+    }
+
+    const skew = rng.pick([1, 2, 3]);
+    const Tmin = tcq + tlog + tsu;
+    const help = rng.pick([true, false]);
+    const Tnew = help ? Tmin - skew : Tmin + skew;
+    return {
+      stem: `The same path — ${tcq} ns clock-to-Q, ${tlog} ns of logic, ${tsu} ns setup — but the capturing flip-flop's clock arrives ${skew} ns <b>${help ? "later" : "earlier"}</b> than the launching one's. What is the minimum clock period now?`,
+      choices: options(
+        { text: `${Tnew} ns`, why: "" },
+        [
+          { text: `${Tmin} ns`, why: "That ignores the skew. A capture edge that arrives late gives the data more time; one that arrives early gives it less." },
+          { text: `${help ? Tmin + skew : Tmin - skew} ns`, why: `The skew has the wrong sign. Clock arriving <b>${help ? "later" : "earlier"}</b> at the capturing flip-flop ${help ? "lengthens" : "shortens"} the time available, so the minimum period ${help ? "falls" : "rises"}.` },
+          { text: `${Tmin + 2 * skew} ns`, why: "The skew is counted twice. It is one displacement between two edges." },
+        ]),
+      answer: 0,
+      steps: [
+        `Skew shifts the deadline rather than the path. Writing it into the setup inequality:`,
+        `<span class="math display" data-tex="T_{min} = t_{cq} + t_{logic} + t_{su} ${help ? "-" : "+"} t_{skew} = ${tcq} + ${tlog} + ${tsu} ${help ? "-" : "+"} ${skew} = ${Tnew}\\text{ ns}"></span>`,
+        `<b>${Tnew} ns.</b> A capture clock that arrives late is <em>useful</em> skew for setup — and it eats directly into the hold margin, which is the catch. <b>Skew helps one check exactly as much as it hurts the other</b>, which is why clock trees are built to have as little of it as possible rather than to have helpful amounts of it.`,
+      ],
+    };
+  },
+});
+
+defineProblem("hazard-type", {
+  topic: "Hazards and races",
+  lookup: "Electrical → Digital → Timing",
+  make(rng) {
+    const q = rng.pick(["static1", "fix", "why", "race"]);
+    const Q = {
+      static1: {
+        stem: "An output that the truth table says is constantly 1 dips briefly to 0 when one input changes. What is this called?",
+        right: "A static-1 hazard",
+        wrong: [
+          ["A static-0 hazard", "That is the mirror image: an output that should stay <b>0</b> pulsing briefly to 1."],
+          ["A dynamic hazard", "That is an output that <em>should</em> change once but changes three or more times on the way."],
+          ["A race condition", "Related, but a race is about two <b>state variables</b> changing at once and the outcome depending on which wins. A hazard is a momentary glitch in combinational output."],
+        ],
+        why: "Static means the output was supposed to hold still. The digit says which level it was holding: <b>static-1 dips to 0, static-0 pulses to 1</b>. A dynamic hazard is the third kind — a single intended transition that arrives as three.",
+      },
+      fix: {
+        stem: "How is a static-1 hazard in a sum-of-products expression removed?",
+        right: "Add the redundant consensus term that covers the handover",
+        wrong: [
+          ["Minimise the expression further", "<b>Backwards.</b> Minimisation is what removed the covering term in the first place — a minimal expression is exactly the one most likely to have hazards."],
+          ["Add an inverter to equalise the path delays", "Matching delays across every path is not achievable in practice, and it stops being true over temperature and process."],
+          ["Register the output with a flip-flop", "That hides the glitch from synchronous logic, and it is a perfectly good engineering answer — but it does not remove the hazard, and anything level-sensitive downstream still sees it."],
+        ],
+        why: "On a Karnaugh map, a hazard sits wherever two adjacent groups touch without overlapping — the output hands over from one term to the other, and if the timing is unequal it drops in between. <b>Add the group that spans the boundary</b>: it is logically redundant, so the truth table is unchanged, and it holds the output up during the handover.",
+      },
+      why: {
+        stem: "Why is a glitch on a combinational output often harmless?",
+        right: "Because synchronous logic only samples at the clock edge, by which time it has settled",
+        wrong: [
+          ["Because the glitch is too short to carry energy", "Duration has nothing to do with it. A 2 ns glitch into a latch enable is a fault however brief."],
+          ["Because gates filter out short pulses", "Some do, at the very short end — but this is not something a design may rely on."],
+          ["Because the redundant term always removes it automatically", "Only if somebody added it. Minimisation removes exactly those terms."],
+        ],
+        why: "Between clock edges the combinational logic may do whatever it likes, and normally does. <b>It matters the moment something level-sensitive is watching</b>: a latch enable, an asynchronous clear, a clock derived from logic. That last one is why deriving a clock from a gate output is a well-known way to build an unreliable circuit.",
+      },
+      race: {
+        stem: "What is a race condition in a sequential circuit?",
+        right: "Two or more state variables changing at once, with the result depending on which arrives first",
+        wrong: [
+          ["Two signals arriving at the same gate at the same time", "That is ordinary operation. A race needs the <b>outcome</b> to depend on the order."],
+          ["A clock that is too fast for the logic", "That is a setup violation, which is a timing failure with a defined cause and a defined fix."],
+          ["An output glitching while its inputs are stable", "That is a hazard — and inputs that are stable are precisely the case a hazard describes."],
+        ],
+        why: "If a transition asks two flip-flops to change together and one is faster, the circuit passes through a state the designer never drew — and may settle in the wrong one. A <span class=\"term\">critical race</span> is one where the final state actually differs. <b>This is the argument for Gray-coded state assignments</b>, where adjacent states differ in one bit and there is nothing to race.",
+      },
+    }[q];
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [`<b>${Q.right}.</b>`, Q.why],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "timing",
+    stem: "Data changes inside a flip-flop's setup-and-hold window. What happens?",
+    tool: "metastable — undefined for an unbounded time",
+    because: "Early captures the new value and late captures the old one; only inside the window is there no defined outcome at all.",
+  },
+  {
+    part: "timing",
+    stem: "t_cq 3 ns, logic 12 ns, t_su 3 ns. Maximum clock?",
+    tool: "1/(3+12+3) = 55.6 MHz",
+    because: "All three are on the same path, and the one usually left out is the setup time — the data must arrive early, not merely arrive.",
+  },
+  {
+    part: "timing",
+    stem: "A hold-time violation. Will slowing the clock fix it?",
+    tool: "no — the period is not in the hold inequality",
+    because: "Hold compares two delays from the same edge, so it must be fixed by adding delay to the short path.",
+  },
+  {
+    part: "timing",
+    stem: "An output that should stay at 1 dips to 0 when an input changes.",
+    tool: "static-1 hazard — add the consensus term",
+    because: "The redundant term covers the handover between two adjacent K-map groups, which is exactly what minimisation deleted.",
+  },
+]);

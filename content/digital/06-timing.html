@@ -1,0 +1,226 @@
+<p class="eyebrow">
+  <span>Digital Systems · Part 6</span>
+  <span class="spec">NCEES 15.H</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Timing and Hazards</h1>
+
+<p class="lede">Every part so far has assumed that logic is instantaneous and
+that a flip-flop samples at a point. Neither is true, and almost every digital
+failure mode in practice starts from the gap between those assumptions and the
+silicon.</p>
+
+<h2>6.1 The three delays</h2>
+
+<p>Three numbers off a datasheet do most of the work in this part. They are not
+interchangeable, and questions frequently swap two of them to see whether you
+noticed:</p>
+
+<f-plate no="15.13" title="What a datasheet promises" stamp="know"
+  caption="<b>Two are outputs and one is a requirement.</b> t<sub>pd</sub> and
+  t<sub>cq</sub> are things the part <em>does</em>; setup and hold are things
+  the part <em>demands</em>, and violating them is not a slow circuit but an
+  undefined one.">
+  <f-row tex="t_{pd}" name="propagation delay"
+         gloss="Input change to output change, through a gate. Delays along a path <b>add</b>, which is what makes the longest path the one that sets the clock rate."></f-row>
+  <f-row tex="t_{cq}" name="clock to Q"
+         gloss="Clock edge to the flip-flop's output changing. The <b>start</b> of every path in a synchronous design."></f-row>
+  <f-row tex="t_{su}" name="setup time"
+         gloss="How long the data must already be steady <b>before</b> the clock edge. This is the term most often left out of a maximum-frequency calculation."></f-row>
+  <f-row tex="t_{h}" name="hold time"
+         gloss="How long the data must stay steady <b>after</b> the edge. Small, often zero — and a violation of it cannot be fixed by slowing the clock."></f-row>
+</f-plate>
+
+<h2>6.2 The aperture</h2>
+
+<p>Setup and hold bracket the clock edge into a window, and the flip-flop's
+promise is conditional on the data not moving inside it. What happens when it
+does is the interesting part, and it is not simply "the wrong answer".</p>
+
+<div data-figure="aperture"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Metastability is a probability, not a bug</span>
+  <p style="margin-bottom:0">A flip-flop is two cross-coupled inverters with a
+  pencil balanced on end between them. Push it early or late and it falls one
+  way or the other. Push it at exactly the wrong moment and it stands there —
+  and while the balance decays exponentially, <b>there is no time by which it
+  is guaranteed to have fallen</b>. This is not a defect in a particular part;
+  it is a property of any circuit that must decide between two states in
+  bounded time, and no amount of engineering removes it. What engineering does
+  is make the probability small enough to ignore.</p>
+</div>
+
+<f-plate no="15.14" title="Metastability" stamp="know"
+  caption="<b>The exponent is where the leverage is.</b> Doubling the time
+  allowed to resolve does not double the MTBF — it squares it.">
+  <f-row tex="\text{MTBF} = \frac{e^{t_r / \tau}}{t_0 \cdot f_{clk} \cdot f_{data}}"
+         name="mean time between failures"
+         gloss="t<sub>r</sub> is how long the output is left alone before anything reads it; τ is the flip-flop's resolution time constant. Both come off the datasheet."></f-row>
+  <f-row tex="f_{clk} \cdot f_{data}" name="the denominator"
+         gloss="How often the two signals get a chance to collide. <b>Little can be done about it</b> — the rates are the design."></f-row>
+  <f-row tex="e^{t_r/\tau}" name="the numerator"
+         gloss="Exponential in the resolution time. One extra clock period of settling can turn a failure every few days into one every 10²⁰ years."></f-row>
+  <f-row tex="\text{two flip-flops in series}" name="the synchroniser"
+         gloss="The standard fix for <b>any</b> input not already timed by your clock. The first may go metastable; the second gives it a whole clock period to resolve unobserved."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · which signals need synchronising</span>
+  <p style="margin-bottom:0"><b>Any signal that changes without reference to
+  your clock</b> — a button, an interrupt line from another chip, anything from
+  another oscillator, a reset released by hand. Not just slow ones, and not just
+  mechanical ones: what matters is whether the two clocks are <em>related</em>,
+  never how fast they are. Signals already synchronous with your clock do not
+  need a synchroniser; they need timing analysis, which is §6.3.</p>
+</div>
+
+<h2>6.3 How fast can it run?</h2>
+
+<p>Every path in a synchronous design starts at one flip-flop's clock edge and
+ends at another's data input, and must complete before the next edge. Writing
+that sentence as an inequality gives the whole of static timing analysis:</p>
+
+<f-plate no="15.15" title="The two checks" stamp="know"
+  caption="<b>Setup races the next edge; hold races the same one.</b> That is
+  the entire difference, and it is why only one of the two involves the clock
+  period.">
+  <f-row tex="T \ge t_{cq} + t_{logic} + t_{su}" name="setup — the long path"
+         gloss="The slowest path sets the maximum clock frequency. <b>Slowing the clock always fixes a setup violation.</b>"></f-row>
+  <f-row tex="f_{max} = 1 / (t_{cq} + t_{logic} + t_{su})" name="and therefore"
+         gloss="Three terms, all on the same path. The one left out of wrong answers is almost always <b>t<sub>su</sub></b>."></f-row>
+  <f-row tex="t_{cq} + t_{logic,\,min} \ge t_{h}" name="hold — the short path"
+         gloss="<b>No clock period appears.</b> A hold violation cannot be clocked away; it is fixed by <em>adding</em> delay to the fast path."></f-row>
+  <f-row tex="T \ge t_{cq} + t_{logic} + t_{su} - t_{skew}" name="with clock skew"
+         gloss="A capture clock arriving late helps setup and hurts hold by the same amount. This is why clock trees aim for <b>no</b> skew rather than helpful skew."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>a maximum frequency, and why the answer is not the logic delay</em></h4>
+  <div class="worked-body">
+    <p>A pipeline stage has <span data-tex="t_{cq} = 3">t_cq = 3</span> ns,
+    <span data-tex="18">18</span> ns of combinational logic, and
+    <span data-tex="t_{su} = 4">t_su = 4</span> ns. How fast can it be clocked?</p>
+    <ol class="steps">
+      <li>Follow one path from edge to edge. The launching flip-flop takes 3 ns
+        to put its new value out. The logic takes 18 ns to compute with it. The
+        capturing flip-flop needs the answer steady 4 ns before its own edge.</li>
+      <li>All three are on the same path, so they add:
+        <span data-tex="T_{min} = 3 + 18 + 4 = 25\ \text{ns}" data-display>T_min = 25 ns</span></li>
+      <li>Invert:
+        <span data-tex="f_{max} = 1/25\ \text{ns} = 40\ \text{MHz}" data-display>f_max = 40 MHz</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Answering
+    <b>55.6 MHz</b> means using only the logic delay; answering <b>47.6 MHz</b>
+    means forgetting the setup time. Both appear as distractors because both are
+    what people actually do. <b>The clock period pays for the flip-flops as well
+    as the logic</b>, which is also why pipelining stops helping once the stages
+    get short enough that t<sub>cq</sub> + t<sub>su</sub> dominates.</p>
+  </div>
+</div>
+
+<h2>6.4 Hazards</h2>
+
+<p>Between clock edges, combinational logic is free to do whatever the delays
+make it do — including producing an output the truth table says is impossible.</p>
+
+<div data-figure="hazard"></div>
+
+<f-plate no="15.16" title="Three kinds of glitch" stamp="know">
+  <f-row tex="\text{static-1: } 1 \to 0 \to 1" name="a dip in a constant high"
+         gloss="Two product terms hand over and one lets go before the other takes hold. The commonest kind, and the one on the plate."></f-row>
+  <f-row tex="\text{static-0: } 0 \to 1 \to 0" name="a pulse in a constant low"
+         gloss="The mirror image, and the one to look for in a product-of-sums implementation."></f-row>
+  <f-row tex="\text{dynamic: } 0 \to 1 \to 0 \to 1" name="a transition that bounces"
+         gloss="One intended change arriving as three or more, from <b>three or more</b> paths of differing delay converging."></f-row>
+  <f-row tex="\text{consensus term}" name="the fix"
+         gloss="A redundant group spanning the boundary where two adjacent K-map groups touch. <b>It changes no truth-table entry</b> and holds the output up through the handover."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Where the hazard is, on the map</span>
+  <p style="margin-bottom:0">A static-1 hazard lives wherever <b>two adjacent
+  groups touch without overlapping</b>. Moving between those two cells changes
+  one input, the output hands over from one product term to the other, and if
+  the two paths have unequal delay it drops in between. So the hazard is
+  <em>visible on the Karnaugh map</em> before anything is built: look for a pair
+  of adjacent 1-cells covered by different groups and no group covering both.
+  <b>Draw the group that covers both</b> — it is redundant by construction,
+  which is exactly why Part 3's minimisation deleted it, and it is what removes
+  the glitch.</p>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">When a glitch does not matter, and when it does</span>
+  <p style="margin-bottom:0">Into a clocked input, a glitch is invisible: the
+  flip-flop looks only at the edge, by which time the logic has settled. That is
+  the usual case, and it is why synchronous design is worth its overhead. A
+  glitch becomes a fault the moment something <b>level-sensitive</b> is
+  watching: a latch enable, an asynchronous preset or clear, or — worst — a
+  clock derived from gates. <b>Never drive a clock from combinational logic</b>
+  is a rule with exactly this behind it.</p>
+</div>
+
+<h2>6.5 Races</h2>
+
+<p>A <span class="term">race</span> is the sequential relative of a hazard. When
+a transition asks two state flip-flops to change together and one is faster, the
+machine passes through a state nobody drew — and a <span class="term">critical
+race</span> is one where it then settles somewhere wrong.</p>
+
+<ul>
+  <li><b>The synchronous defence</b> is that every flip-flop is clocked by the
+  same edge, so the intermediate patterns are never sampled. This is most of
+  what synchronous design is <em>for</em>.</li>
+  <li><b>The assignment defence</b> is Gray coding: if adjacent states differ in
+  one bit, there is nothing to race. Part 5 noted this helps machines that walk
+  their states in order — <b>this is the reason why</b>.</li>
+  <li><b>Asynchronous designs have neither</b>, which is why they are hard, and
+  why the exam's sequential logic is synchronous throughout.</li>
+</ul>
+
+<h2>6.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="f_{max} = 1/(t_{cq} + t_{logic} + t_{su})">f_max = 1/(t_cq + t_logic + t_su)</span>.
+        <b>All three terms.</b></li>
+    <li>Hold check: <span data-tex="t_{cq} + t_{logic,\,min} \ge t_h">t_cq + t_logic,min ≥ t_h</span>.
+        <b>No clock period — slowing the clock cannot fix it.</b></li>
+    <li>Data changing inside the setup/hold window ⇒ <b>metastable</b>, for an
+        unbounded time.</li>
+    <li>Fix: <b>two flip-flops in series</b>, on every asynchronous input.
+        MTBF goes as <span data-tex="e^{t_r/\tau}">e^(t_r/τ)</span>.</li>
+    <li>Static-1 dips to 0; static-0 pulses to 1; dynamic bounces three times.</li>
+    <li>Remove a static hazard with the <b>redundant consensus term</b> — the
+        one minimisation deleted.</li>
+    <li>Glitches are harmless into clocked inputs and dangerous into
+        level-sensitive ones. <b>Never gate a clock.</b></li>
+    <li>Races: two state bits changing at once. Gray coding removes them.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Gates take time, and every idea in this part is a consequence. Delays add
+  along a path, so the slowest path sets the clock rate — and the budget pays
+  for the flip-flops at both ends, not just the logic between them. Delays
+  differ between paths, so an output can glitch while the truth table insists it
+  cannot, and the cure is the redundant term minimisation was designed to
+  remove.</p>
+  <p>The deepest of the three is metastability, because it is not a delay
+  problem at all: it is what happens when a circuit is asked to decide something
+  that has not yet finished happening. There is no fix, only an exponent — and
+  the practical consequence is that <b>two flip-flops on an asynchronous input
+  is not caution, it is arithmetic</b>. That is also a fair summary of why the
+  whole of digital design is synchronous: it is the discipline that turns
+  timing from something you reason about everywhere into something you check in
+  one place.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"timing","title":"Part 6 · Timing and hazards","topics":["timing-window","timing-fmax","hazard-type"],"count":6}'></div>
+
+<div data-reflex='{"only":["flipflops","state-machines","timing"],"count":6,"title":"Handbook Reflex · Parts 4–6"}'></div>

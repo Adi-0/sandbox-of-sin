@@ -31,6 +31,7 @@ import "./gates.js";         // 65 66
 import "./minimisation.js";  // 67 68
 import "./flipflops.js";     // 69 70
 import "./state-machines.js"; // 71 72
+import "./timing.js";        // 73 74
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
