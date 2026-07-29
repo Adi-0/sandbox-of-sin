@@ -11,10 +11,12 @@ This file is the durable memory across turns. Read it first.
 | **Circuit Analysis (DC and AC Steady State)** | 6 | 11–17 | 7 | 26–36 | complete |
 | **Power Systems** | 10 | 8–12 | 6 | 37–48 | complete |
 | **Electronics** | 9 | 7–11 | 7 | 49–62 | complete |
+| **Digital Systems** | 15 | 8–12 | 7 | 63–75 | complete |
 
-Four of seventeen areas; 37–57 of the 110 questions. A shared orientation part
+Five of seventeen areas; 45–69 of the 110 questions. A shared orientation part
 sits ahead of all of them. Plate numbers run in the order the modules were
-built, not in module order — Electronics was written after Power Systems.
+built, not in module order — Electronics was written after Power Systems, and
+Digital Systems after Electronics.
 
 ---
 
@@ -62,10 +64,21 @@ From the NCEES *FE Electrical and Computer CBT Exam Specifications*
 | 9.C | Operational amplifiers (ideal, nonideal) | Electronics 5 |
 | 9.D | Instrumentation (measurements, data acquisition, transducers) | Electronics 6 |
 | 9.E | Power electronics (rectifiers, inverters, converters) | Electronics 2 |
+| 15.A | Number systems | Digital 1 |
+| 15.B | Boolean logic | Digital 2 |
+| 15.C | Logic gates and circuits | Digital 2 |
+| 15.D | Logic minimization (SOP, POS, Karnaugh maps) | Digital 3 |
+| 15.E | Flip-flops and counters | Digital 4 |
+| 15.F | Programmable logic devices and gate arrays | Digital 3 |
+| 15.G | State machine design | Digital 5 |
+| 15.H | Timing (diagrams, asynchronous inputs, race conditions, hazards) | Digital 6 |
 
 **Checked against the PDF, not from memory:** area 10 has no per-unit and no
 symmetrical components. Those are PE topics. An earlier draft of this file
-listed them as planned work, and they would have been a wasted part.
+listed them as planned work, and they would have been a wasted part. Area 15
+is **8–12 questions with eight subtopics**, not the 7–11 an earlier turn of
+this file claimed — it is the third-largest area covered here, not the
+smallest.
 
 The order within each module is pedagogical, not the alphabetical order NCEES
 prints. Circuits 4 follows Circuits 3 because Thévenin is easiest to *prove*
@@ -209,6 +222,29 @@ is what happens when feedback can pin the operating point for nothing.
 FETs get equal billing with BJTs deliberately. The PPI benchmark asks more
 JFET/MOSFET questions than BJT ones and most FE resources under-weight them.
 
+### Module 15 — Digital Systems (area 15)
+
+| # | Part | Read | Why it comes here |
+|---|---|---|---|
+| 1 | Number Systems | 22 min | A bit pattern has no meaning until an interpretation is chosen |
+| 2 | Boolean Logic and Gates | 24 min | Maths 8's algebra given hardware — and Electronics 3's MOSFETs opened up |
+| 3 | Minimisation | 26 min | Computation acquires a price, and geometry pays as little of it as possible |
+| 4 | Flip-Flops and Counters | 26 min | The only genuinely new physical idea in the module: a circuit with a past |
+| 5 | State Machines | 24 min | Parts 3 and 4 in a loop, which is the general form of every digital system |
+| 6 | Timing and Hazards | 22 min | Where the abstraction the first five rest on stops being true |
+| 7 | Synthesis and mixed bench | 12 min | Two symbols, six steps |
+
+**Each part adds exactly one capability the part before it lacked** — meaning,
+computation, cost, memory, purpose — and Part 6 is different in kind, being the
+bill for the abstraction rather than another layer on it. That structure is the
+Part 7 plate.
+
+Two of this module's plates compute results the prose then had to be rewritten
+around, which is the rule about figures computing their own numbers earning its
+keep: the state-assignment search found Gray coding to be the *worst* of the
+three two-bit encodings for a sequence detector, and found a hand-picked
+"deliberately awkward" assignment beating binary.
+
 ## 5. Beyond a static guide
 
 1. **Generated problems, not a fixed bank.** Each problem type is a
@@ -315,7 +351,7 @@ them reading as drafting ink rather than highlighter. Do not nudge them by eye.
 
 ## 8. Status
 
-Thirty parts, 62 plates, 107 generators, 107 reflex items.
+Thirty-seven parts, 75 plates, 130 generators, 131 reflex items.
 
 | Module | Part | Plates | Generators |
 |---|---|---|---|
@@ -349,18 +385,35 @@ Thirty parts, 62 plates, 107 generators, 107 reflex items.
 | Electronics | 5 Operational Amplifiers | 58–59 | 4 |
 | Electronics | 6 Instrumentation | 60–61 | 4 |
 | Electronics | 7 Synthesis and mixed bench | 62 | (reuses 14) |
+| Digital | 1 Number Systems | 63–64 | 4 |
+| Digital | 2 Boolean Logic and Gates | 65–66 | 4 |
+| Digital | 3 Minimisation | 67–68 | 4 |
+| Digital | 4 Flip-Flops and Counters | 69–70 | 4 |
+| Digital | 5 State Machines | 71–72 | 4 |
+| Digital | 6 Timing and Hazards | 73–74 | 3 |
+| Digital | 7 Synthesis and mixed bench | 75 | (reuses 12) |
 
 ### Verified
 
 Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
 read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 30 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 37 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 62 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 75 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
+- `genall.mjs` — every one of the 130 generators run over 100 seeds, checking
+  that no question offers a duplicate option, fewer than three options, a bad
+  answer index, an unexpanded template literal or a NaN. **This one earned its
+  place immediately**: it found 58 faulty generators on its first run, and the
+  three root causes are written up under *Known limits* below.
+- `mathfit.mjs` — no display equation overflows its column, and no overbar is
+  clipped by the overflow box.
+- `texscan.mjs` — every TeX command used anywhere is one the renderer knows.
+  An unrecognised command renders as *nothing*, silently, so this is the only
+  defence against `\lceil` quietly turning a ceiling into a logarithm.
 - `bundle.mjs` — `dist/the-bench.html` runs from `file://` with no server and
   no network.
 - No horizontal scroll at 360 px or 768 px; both themes checked.
@@ -387,13 +440,39 @@ read the part list from `outline.js`, so they cannot drift as modules are added:
 - Electronics stops where area 9 stops. Semiconductor physics — doping,
   carrier concentrations — appears in the PPI benchmark but belongs to area 5
   (Properties of Electrical Materials) and is deliberately left there.
+- Plate 73's metastability MTBF uses the standard exponential model at stated
+  rates. τ and t₀ are representative datasheet figures, not measurements of a
+  particular part; the plate says which numbers it is using and why.
+- Plate 74 models a gate as a fixed delay. Real gates have different rise and
+  fall delays and a load-dependent one, which changes the glitch *width* but
+  not its existence — the consensus term removes it either way.
+- The state-assignment search on plate 72 is exhaustive over 24 assignments
+  because four states is small. It says so, and says that a real tool
+  heuristically searches a space that is not enumerable.
+
+### Three bugs worth remembering, from `genall.mjs`
+
+Each was invisible on the page and wrong in a way a reader would have paid for.
+
+1. **A duplicated option.** Distractors are computed from the same numbers as
+   the answer, so they coincide far more often than they look like they will.
+   A reader picking the second copy of the right answer was told they were
+   wrong. Fixed centrally in `generate()`, not in ninety generators.
+2. **`fixed()` writes U+2212, not a hyphen** — because a minus sign is not a
+   hyphen. So `parseFloat` returned NaN on every negative value, and fifteen
+   distractor filters of the shape `Math.abs(parseFloat(a) - parseFloat(b)) >
+   tol` silently deleted every option they examined. Every inverting op-amp
+   gain question was being served with a single choice. `fmt.unfmt()` now
+   exists so nothing parses a formatted number by hand again.
+3. **Degenerate parameter draws.** Two equal resistors, a singular matrix, a
+   square wave whose RMS is its peak — cases where the distractors collapse
+   because the physics collapses. `generate()` re-draws on a stepped seed
+   rather than inventing filler options with nothing to say.
 
 ## 9. Next turns
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- **Digital Systems** (7–11 q) — Maths 8's logic as gates and K-maps, and
-  Electronics 3's MOSFET as the thing they are built from.
 - **Linear Systems** (5–8 q) + **Control Systems** (6–9 q) — Maths 7 and
   Circuits 6 as transfer functions; the transient half of the RL/RC story.
 - **Signal Processing** (5–8 q) — Maths 6's integral as the Fourier transform.

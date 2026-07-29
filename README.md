@@ -3,7 +3,7 @@
 An interactive educator for the NCEES *Fundamentals of Engineering (Electrical
 and Computer)* exam, built one knowledge area at a time.
 
-**Covered so far — 37 to 57 of the 110 questions:**
+**Covered so far — 45 to 69 of the 110 questions:**
 
 | | Module | NCEES | Questions | Parts | Plates |
 |---|---|---|---|---|---|
@@ -11,9 +11,10 @@ and Computer)* exam, built one knowledge area at a time.
 | 6 | **Circuit Analysis (DC and AC Steady State)** | area 6 | 11–17 | 7 | 26–36 |
 | 9 | **Electronics** | area 9 | 7–11 | 7 | 49–62 |
 | 10 | **Power Systems** | area 10 | 8–12 | 6 | 37–48 |
+| 15 | **Digital Systems** | area 15 | 8–12 | 7 | 63–75 |
 
-Sixty-two live plates, one hundred and seven problem generators, and one right
-triangle followed from the first plate to the last.
+Seventy-five live plates, one hundred and thirty problem generators, and one
+right triangle followed from the first plate to the last.
 
 ## Run it
 
@@ -33,14 +34,14 @@ case there is a bundle:
 python3 build.py            # writes dist/the-bench.html
 ```
 
-One file, 725 KB, opens from disk with no server and no network. Put it on a
+One file, 1.5 MB, opens from disk with no server and no network. Put it on a
 tablet and read it on a train.
 
 ## The idea it is built around
 
 The FE exam is **closed book with an electronic reference** — the NCEES FE
 Reference Handbook, searchable, open in a second window. Almost every formula
-in these thirty parts is in it.
+in these thirty-seven parts is in it.
 
 So the usual approach — flashcard the formulas until they stick — spends your
 most expensive resource on the one thing the exam gives away. What the handbook
@@ -78,6 +79,7 @@ literature uses these numbers for the same reason.
 | Power 1 | one 120 V branch of a plant | 1728 W, 2304 VAR, 2880 VA — 576 × (3,4,5) |
 | Power 2–5 | the **whole plant** on 208Y/120 | 5184 W, 6912 VAR, 8640 VA — 1728 × (3,4,5) |
 | Electronics 5 | 1 kΩ and 4 kΩ around an op-amp | −4 inverting and **+5** non-inverting |
+| Digital 3 | **Σm(3, 4, 5)** on a Karnaugh map | an honest bad case — 3 has no neighbour |
 
 Electronics is where the numeric cast honestly thins out, and the module says so
 rather than forcing it. What carries the continuity there is **structural**:
@@ -133,6 +135,18 @@ numbers doing the work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 5 | **Motors and Generators** | 10.D | 26 min | 46–47 |
 | 6 | **Synthesis and the Mixed Bench** | 10.A–10.D | 12 min | 48 |
 
+### Module 15 — Digital Systems (NCEES area 15)
+
+| Part | | NCEES | Read | Plates |
+|---|---|---|---|---|
+| 1 | **Number Systems** — one quantity, four notations, and the trick that makes subtraction free | 15.A | 22 min | 63–64 |
+| 2 | **Boolean Logic and Gates** — the algebra, now made of transistors | 15.B · 15.C | 24 min | 65–66 |
+| 3 | **Minimisation** — the map that turns algebra into geometry | 15.D · 15.F | 26 min | 67–68 |
+| 4 | **Flip-Flops and Counters** — the moment a circuit acquires a memory | 15.E | 26 min | 69–70 |
+| 5 | **State Machines** — memory plus logic is a machine that knows where it has been | 15.G | 24 min | 71–72 |
+| 6 | **Timing and Hazards** — gates take time, and every digital failure starts there | 15.H | 22 min | 73–74 |
+| 7 | **Synthesis and the Mixed Bench** | 15.A–15.H | 12 min | 75 |
+
 ### Module 9 — Electronics (NCEES area 9)
 
 | Part | | NCEES | Read | Plates |
@@ -145,12 +159,12 @@ numbers doing the work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 6 | **Instrumentation** — measuring without disturbing | 9.D | 22 min | 60–61 |
 | 7 | **Synthesis and the Mixed Bench** | 9.A–9.E | 12 min | 62 |
 
-Every subtopic of all four published specifications is covered; the order within
+Every subtopic of all five published specifications is covered; the order within
 each module is pedagogical rather than the alphabetical order NCEES prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 107 types is a seeded
+- **Problems are generated, not stored.** Each of the 130 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
@@ -194,8 +208,9 @@ src/
     fmt.js          number formatting — no floating-point tails, ever
     rng.js          seeded RNG, so any problem set is reproducible
     circuit.js      schematic drawing on a grid, plus a network solver
-  figures/          one file per part, 62 plates
-  problems/         one file per part, 107 generators
+    boolean.js      exact minimal-SOP solver, shared by the plates and the bench
+  figures/          one file per part, 75 plates
+  problems/         one file per part, 130 generators
 
 content/
   start/            the orientation part
@@ -203,6 +218,7 @@ content/
   circuits/         Circuit Analysis, 7 parts
   electronics/      Electronics, 7 parts
   power/            Power Systems, 6 parts
+  digital/          Digital Systems, 7 parts
 ```
 
 Vanilla ES modules. No framework, no external JavaScript, no maths library.
@@ -231,9 +247,12 @@ Electronics the same three quantity tokens carry over as voltage, current and
 result.
 
 **Figures compute their own numbers.** `circuit.js` ships a Gaussian-elimination
-solver and every schematic figure runs the same node analysis the prose teaches.
-Nothing in a plate is a hand-computed constant, so a caption cannot drift out of
-agreement with the drawing when a slider moves.
+solver and every schematic figure runs the same node analysis the prose teaches;
+`boolean.js` ships an exact minimal-SOP solver, and the Karnaugh-map plate, the
+minimisation bench and the state-assignment plate all call it. Nothing in a plate
+is a hand-computed constant, so a caption cannot drift out of agreement with the
+drawing when a slider moves — and twice now the solver has contradicted something
+the prose asserted, which is the whole reason for the rule.
 
 ## Accessibility
 

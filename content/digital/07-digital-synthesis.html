@@ -1,0 +1,161 @@
+<p class="eyebrow">
+  <span>Digital Systems · Part 7</span>
+  <span class="spec">NCEES 15.A–15.H</span>
+  <span>12 minute read</span>
+</p>
+
+<h1>Synthesis and the Mixed Bench</h1>
+
+<p class="lede">Eight subtopics, two symbols. What looked like six unrelated
+skills was one escalation, each step adding exactly one thing the step before
+it could not do.</p>
+
+<h2>7.1 The module was one escalation</h2>
+
+<div data-figure="digitalMap"></div>
+
+<p>Start with a bit pattern. On its own it means nothing — Part 1 gave it
+meaning, and made the point that <b>the same pattern is a different number in
+every interpretation</b>, which is why 11111111 is either 255 or −1 and the
+question has to say which. Then:</p>
+
+<ul>
+  <li>Part 2 made patterns <b>computable</b>, and opened one gate to show that
+  the algebra is transistors.</li>
+  <li>Part 3 gave computation a <b>price</b>, and a geometric method for paying
+  as little of it as possible.</li>
+  <li>Part 4 gave the circuit a <b>past</b>, which is the only genuinely new
+  physical idea in the module.</li>
+  <li>Part 5 put logic and memory in a loop, which is a <b>machine</b> — and
+  the general form of every digital system there is.</li>
+  <li>Part 6 is different in kind. It is where the assumption underneath all
+  five — that logic is instant and a flip-flop samples at a point — stops being
+  true.</li>
+</ul>
+
+<h2>7.2 What carried over from earlier modules</h2>
+
+<div class="note payoff">
+  <span class="note-tag">Three debts collected</span>
+  <ul style="margin:0.4rem 0 0">
+    <li><b>Mathematics Part 8's Boolean algebra</b> → Part 2 in its entirety.
+    The identities were derived there; this module only gave them symbols and
+    De Morgan a pair of bubbles.</li>
+    <li><b>Electronics Part 3's MOSFETs</b> → what a gate <em>is</em>. Two
+    complementary networks, exactly one conducting, which is why CMOS burns
+    nothing at rest and <span class="math" data-tex="CV^2f">CV²f</span> when it
+    switches.</li>
+    <li><b>Mathematics Part 8's counting</b> → every "how many states" and "how
+    many flip-flops" question in Parts 4 and 5. It is
+    <span class="math" data-tex="2^n">2ⁿ</span> again, read in both directions.</li>
+  </ul>
+</div>
+
+<h2>7.3 How few relationships were doing the work</h2>
+
+<f-plate no="15.17" title="Digital Systems, complete" stamp="know"
+  caption="Every problem in this module's benches is one or two of these
+  composed. <b>The number-system rules and the counter arithmetic are worth the
+  most marks per minute</b> — they are pure recall, and they are the shortest
+  lines here.">
+  <f-row tex="\text{4 bits} = \text{1 hex digit}, \qquad \text{two's complement} = \text{invert} + 1"
+         name="number systems"
+         gloss="Range −2ⁿ⁻¹ to +2ⁿ⁻¹−1, which is <b>asymmetric</b>. Overflow is carry-in ≠ carry-out of the sign bit, and it is meaningless for unsigned."></f-row>
+  <f-row tex="\overline{A \cdot B} = \bar{A} + \bar{B}, \qquad \overline{A + B} = \bar{A} \cdot \bar{B}"
+         name="De Morgan"
+         gloss="Break the bar, change the sign. NAND and NOR are each universal; a CMOS NAND is 4 transistors and an AND is 6."></f-row>
+  <f-row tex="\text{literals} = n - \log_2(\text{group size})"
+         name="minimisation"
+         gloss="Gray-coded map, <b>edges wrap</b>, groups are powers of two and may overlap. Don't-cares are free — use them to grow a group."></f-row>
+  <f-row tex="Q^+ = D, \qquad Q^+ = T \oplus Q, \qquad Q^+ = J\bar{Q} + \bar{K}Q"
+         name="flip-flops"
+         gloss="<b>S = R = 1 is forbidden; J = K = 1 toggles.</b> Every JK excitation row has a don't-care."></f-row>
+  <f-row tex="n = \lceil \log_2 N \rceil, \qquad f_{out} = f_{in}/2^n"
+         name="counters"
+         gloss="Ripple settles in n·t<sub>pd</sub>; synchronous in one stage at any width. Trim a mod-N counter by decoding <b>N</b>, not N−1."></f-row>
+  <f-row tex="Z = g(S) \ \text{Moore}, \qquad Z = g(S, X) \ \text{Mealy}"
+         name="state machines"
+         gloss="Moore needs one more state and asserts one cycle later, registered and clean. A k-bit pattern needs k+1 Moore states."></f-row>
+  <f-row tex="f_{max} = \frac{1}{t_{cq} + t_{logic} + t_{su}}, \qquad t_{cq} + t_{logic,\,min} \ge t_h"
+         name="timing"
+         gloss="<b>No period in the hold check</b> — slowing the clock cannot fix it. Data changing inside the aperture goes metastable for an unbounded time."></f-row>
+</f-plate>
+
+<h2>7.4 The five mistakes that cost the most</h2>
+
+<div class="note trap">
+  <span class="note-tag">Worth one last look before the bench</span>
+  <ol style="margin:0.4rem 0 0;padding-left:1.2rem">
+    <li><b>Signed or unsigned?</b> 11111111 is 255 or −1, and there is no way to
+    tell from the bits. Read the stem for which it is, and remember the range is
+    <em>asymmetric</em> — one more negative than positive.</li>
+    <li><b>2ⁿ against 2n.</b> Counter stages multiply their divisions; they do
+    not add them. A 6-bit counter divides by 64, not 12.</li>
+    <li><b>Decoding N−1.</b> A mod-N counter shows 0 through N−1, so it must be
+    cleared <em>on reaching N</em>.</li>
+    <li><b>Forgetting t<sub>su</sub>.</b> The clock period pays for the
+    flip-flops at both ends of the path, not just the logic between them.</li>
+    <li><b>The complementing rule between SOP and POS.</b> SOP complements a
+    variable that is 0 in the row; POS reverses it. This is the single most
+    common error in minimisation.</li>
+  </ol>
+</div>
+
+<h2>7.5 Reading a stem quickly</h2>
+
+<p>Digital questions announce their method faster than any other area's. The
+classification worth practising:</p>
+
+<ol class="steps">
+  <li><b>A bit pattern and a base, or the word "signed"?</b> Part 1. Pure
+  arithmetic, and the fastest marks in the module.</li>
+  <li><b>A gate symbol, a truth table, or a bubbled input?</b> Part 2. Check
+  whether De Morgan turns it into something you recognise on sight.</li>
+  <li><b>A Karnaugh map, "minimal", or "sum of products"?</b> Part 3. Group the
+  largest, let them overlap, and <em>wrap the edges</em>.</li>
+  <li><b>A clock and a Q?</b> Part 4. Read the present Q first, then the inputs
+  — the characteristic equation needs both.</li>
+  <li><b>Circles with arrows, or the words "detect the sequence"?</b> Part 5. A
+  state means <em>how much progress has been made</em>, and that alone answers
+  most of these.</li>
+  <li><b>Nanoseconds anywhere in the stem?</b> Part 6. Decide first whether it
+  is a setup question (the period is in it) or a hold question (it is not).</li>
+</ol>
+
+<div class="note honest">
+  <span class="note-tag">Where the marks actually are</span>
+  <p style="margin-bottom:0">Digital Systems is <b>8 to 12 questions</b> of the
+  110, and it is the most recall-heavy area on the exam — which makes it the
+  cheapest to prepare well. Number systems and counter arithmetic are pure
+  recall with no derivation to get wrong; De Morgan and the characteristic
+  equations are four lines each. <b>An hour on those four things is worth more
+  than a week on Karnaugh maps</b>, which take longer per question and appear
+  less often. Timing is the one area where the reasoning is genuinely
+  conceptual, and it rewards knowing <em>which</em> check is being asked for
+  more than it rewards arithmetic.</p>
+</div>
+
+<h2>7.6 A set under exam conditions</h2>
+
+<p>Ten questions drawn from all six parts, at the real pace: 110 questions in
+six hours is <b>2 minutes 50 seconds each</b>. The clock below runs at that
+rate. Treat anything you cannot classify within fifteen seconds as a flag —
+on the day, that is the one you come back to.</p>
+
+<div data-bench='{"id":"digital-mixed","title":"Digital Systems · mixed set","topics":["base-convert","twos-comp","demorgan","kmap-group","ff-next","ff-excite","counter-mod","counter-timing","fsm-trace","fsm-states","timing-fmax","hazard-type"],"count":10}'></div>
+
+<div class="keyidea">
+  <p>Two symbols, one operator set, and one clock. Everything in this module is
+  those three things composed: a pattern given meaning, then computed with, then
+  priced, then remembered, then given a purpose. Each part is the previous one
+  plus exactly one new idea, and none of the ideas is difficult on its own.</p>
+  <p>What makes the subject work is the abstraction — that a wire is a 0 or a 1
+  and nothing in between, that logic happens instantly, that a flip-flop samples
+  at a point. Part 6 is the bill for that abstraction, and the reason digital
+  design is built around a clock: a clock does not make the timing problems go
+  away, it <b>collects them into one place where they can be checked</b>. That
+  is the same trade the module makes everywhere — accept a constraint, and get
+  a whole class of problems back as arithmetic.</p>
+</div>
+
+<div data-reflex='{"only":["numbers","gates","minimisation","flipflops","state-machines","timing"],"count":8,"title":"Handbook Reflex · the whole module"}'></div>
