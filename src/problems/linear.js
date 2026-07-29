@@ -922,3 +922,204 @@ defineReflex([
     because: "The pole is a point in polar coordinates: its radius is ωn and the cosine of its angle from the negative real axis is ζ.",
   },
 ]);
+
+/* ==========================================================================
+   Part 5 — frequency response (7.A)
+   ========================================================================== */
+
+defineProblem("corner-freq", {
+  topic: "Corner frequency and dB",
+  lookup: "Electrical → Linear Systems → Frequency response",
+  make(rng) {
+    const q = rng.pick(["corner", "corner", "db", "half"]);
+
+    if (q === "corner") {
+      const R = rng.pick([1, 2, 4.7, 10, 22]);          // kΩ
+      const Cnf = rng.pick([1, 10, 22, 47, 100]);       // nF
+      const wc = 1 / (R * 1000 * Cnf * 1e-9);
+      const fc = wc / (2 * Math.PI);
+      const asked = rng.pick(["w", "f"]);
+      const val = asked === "w" ? wc : fc;
+      const unit = asked === "w" ? "rad/s" : "Hz";
+      return {
+        stem: `An RC low-pass filter has R = ${num(R, 1)} kΩ and C = ${num(Cnf, 0)} nF. What is its corner frequency in ${asked === "w" ? "rad/s" : "Hz"}?`,
+        choices: options(
+          { text: `${num(val, 0)} ${unit}`, why: "" },
+          [
+            { text: `${num(asked === "w" ? fc : wc, 0)} ${unit}`,
+              why: asked === "w"
+                ? "That is in <b>hertz</b>. The question asks for rad/s, which is 2π times larger."
+                : "That is in <b>rad/s</b>. Divide by 2π for hertz." },
+            { text: `${num(R * 1000 * Cnf * 1e-9, 6)} ${unit}`, why: "That is RC — the time constant, in seconds. The corner frequency is its reciprocal." },
+            { text: `${num(val * 2, 0)} ${unit}`, why: "Twice too large; there is no factor of 2 in 1/RC." },
+          ]),
+        answer: 0,
+        steps: [
+          `The corner is where the reactance equals the resistance, which is the reciprocal of the time constant:`,
+          `<span class="math display" data-tex="\\omega_c = \\frac{1}{RC} = \\frac{1}{(${num(R, 1)}\\times10^3)(${num(Cnf, 0)}\\times10^{-9})} = ${num(wc, 0)}\\text{ rad/s}"></span>`,
+          `<span class="math display" data-tex="f_c = \\frac{\\omega_c}{2\\pi} = ${num(fc, 0)}\\text{ Hz}"></span>`,
+          `<b>${num(val, 0)} ${unit}.</b> The corner is the same number as the pole location, which is the same number as 1/τ — <b>three names for one quantity</b>, and knowing that they are one thing is most of what this topic asks.`,
+        ],
+      };
+    }
+
+    if (q === "db") {
+      const [ratio, db, why] = rng.pick([
+        [2, 6.02, "A factor of two in <b>voltage</b> is 6 dB. This is the one to anchor everything else to."],
+        [10, 20, "A factor of ten in voltage is 20 dB, by definition of the decade."],
+        [0.5, -6.02, "Half the voltage is −6 dB. Halving and doubling are symmetric in dB, which is the point of using them."],
+        [Math.SQRT1_2, -3.01, "1/√2 is <b>−3.01 dB</b>, the half-power point — the voltage is down by √2 and therefore the power by 2."],
+        [100, 40, "Two decades. dB add, so two factors of ten are 20 + 20."],
+      ]);
+      return {
+        stem: `A voltage gain of ${ratio === Math.SQRT1_2 ? "1/√2" : num(ratio, 2)} is how many decibels?`,
+        choices: options(
+          { text: `${fixed(db, 2)} dB`, why: "" },
+          [
+            { text: `${fixed(db / 2, 2)} dB`, why: "That is the <b>power</b> figure, 10·log₁₀. For a voltage ratio the multiplier is 20." },
+            { text: `${fixed(-db, 2)} dB`, why: "The sign. A gain greater than one is positive dB; less than one is negative." },
+            { text: `${fixed(db * 2, 2)} dB`, why: "Twice too many — 20·log₁₀, not 40." },
+          ]),
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="\\text{dB} = 20\\log_{10}\\left|\\frac{V_{out}}{V_{in}}\\right| = 20\\log_{10}(${ratio === Math.SQRT1_2 ? "1/\\sqrt{2}" : num(ratio, 2)}) = ${fixed(db, 2)}\\text{ dB}"></span>`,
+          why,
+          `<b>Three anchors carry almost every dB question: ×2 is 6 dB, ×10 is 20 dB, and 1/√2 is −3 dB.</b> Everything else is those added together, because dB turn multiplication into addition — which is the only reason the unit exists.`,
+        ],
+      };
+    }
+
+    return {
+      stem: "Why is the corner frequency also called the half-power point?",
+      choices: [
+        { text: "The gain there is 1/√2, so the power is half", why: "" },
+        { text: "The gain there is 1/2", why: "That would be −6 dB. The <b>voltage</b> is down by √2, not 2 — and power goes as voltage squared, so it is the power that halves." },
+        { text: "Half the input power is reflected", why: "Reflection is a transmission-line idea. Here the power is simply not delivered to the output." },
+        { text: "The phase has moved by half of 90°", why: "It has — the phase is exactly −45° there — but that is a separate coincidence of the same point, not what the name refers to." },
+      ],
+      answer: 0,
+      steps: [
+        `At the corner the reactance equals the resistance, so the magnitude of the divider is`,
+        `<span class="math display" data-tex="|H| = \\frac{1}{\\sqrt{1^2+1^2}} = \\frac{1}{\\sqrt{2}} = 0.707 \\quad \\Rightarrow \\quad -3.01\\text{ dB}"></span>`,
+        `Power goes as the square of voltage, so ${T("(1/\\sqrt2)^2 = 1/2")}: <b>half the power</b>.`,
+        `The same point also has the phase at exactly <b>−45°</b>, halfway through its 90° swing. Three facts at one frequency — 1/√2, −3 dB and −45° — and they are all worth recognising on sight.`,
+      ],
+    };
+  },
+});
+
+defineProblem("bode-sketch", {
+  topic: "Reading a Bode plot",
+  lookup: "Electrical → Linear Systems → Frequency response",
+  make(rng) {
+    const q = rng.pick(["slope", "slope", "phase", "which"]);
+
+    if (q === "slope") {
+      const np = rng.pick([1, 2, 3]);
+      const nz = rng.pick([0, 0, 1]);
+      const slope = -20 * np + 20 * nz;
+      return {
+        stem: `Well above all its corners, a transfer function has ${np} pole${np > 1 ? "s" : ""} and ${nz} zero${nz === 1 ? "" : "s"}. What is the slope of its Bode magnitude plot there?`,
+        choices: options(
+          { text: `${slope > 0 ? "+" : slope < 0 ? "−" : ""}${Math.abs(slope)} dB/decade`, why: "" },
+          [
+            { text: `${-slope > 0 ? "+" : "−"}${Math.abs(slope)} dB/decade`, why: "The sign is inverted. <b>Poles bend the plot down and zeros bend it up</b>, so an excess of poles gives a falling slope." },
+            { text: `−${20 * (np + nz)} dB/decade`, why: "The zeros have been added to the poles rather than subtracted. They pull in opposite directions." },
+            { text: `−${20 * np} dB/decade`, why: nz ? "The zero has been ignored. It contributes +20 dB/decade above its own corner." : "That is correct in magnitude — check the sign convention." },
+          ]),
+        answer: 0,
+        steps: [
+          `Each pole contributes <b>−20 dB/decade</b> above its corner, and each zero <b>+20</b>. Above every corner they all apply, and the slopes simply add:`,
+          `<span class="math display" data-tex="\\text{slope} = -20(${np}) + 20(${nz}) = ${slope}\\text{ dB/decade}"></span>`,
+          `<b>${slope} dB/decade.</b> This is the whole rule for sketching a Bode magnitude plot: <b>start flat, and at each corner add 20 dB/decade of slope — down for a pole, up for a zero.</b> The straight lines are never more than 3 dB from the truth, and only at the corners themselves.`,
+        ],
+      };
+    }
+
+    if (q === "phase") {
+      const kind = rng.pick(["single", "corner", "decade"]);
+      const Q = {
+        single: {
+          stem: "What is the total phase shift of a single-pole low-pass filter, from DC to very high frequency?",
+          right: "−90°",
+          wrong: [["−45°", "That is the phase <b>at the corner</b> — halfway through the swing, not the whole of it."],
+                  ["−180°", "That is two poles' worth. One pole contributes 90°."],
+                  ["0°", "The phase is 0° at DC, but it does not stay there."]],
+          why: "Each pole contributes 90° of lag in total, and each zero 90° of lead. <b>Count the poles and zeros and you know the phase at both ends</b> without drawing anything.",
+        },
+        corner: {
+          stem: "At its corner frequency, what is the phase of a single-pole low-pass filter?",
+          right: "−45°",
+          wrong: [["−90°", "That is the value it approaches at very high frequency, not the value at the corner."],
+                  ["0°", "That is the low-frequency value."],
+                  ["−3°", "−3 is the <b>magnitude</b> figure, in decibels. The phase is in degrees and is −45° there."]],
+          why: "The corner is the midpoint of the phase transition as well as the −3 dB point of the magnitude. <b>Three facts at one frequency: gain 1/√2, −3.01 dB, phase −45°.</b>",
+        },
+        decade: {
+          stem: "Over roughly what frequency range does a single pole's phase shift happen?",
+          right: "About a decade either side of the corner",
+          wrong: [["Entirely at the corner", "The magnitude asymptotes break sharply at the corner, but the phase is a gradual S — which is why phase margin is harder to estimate by eye than gain."],
+                  ["Over about an octave", "Too narrow. At one octave above the corner the phase is only about −63°, still well short of −90°."],
+                  ["Over the whole frequency axis", "Too wide. A decade either side gets it to within about 6° of both ends."]],
+          why: "At a tenth of the corner the phase is about −6°, and at ten times it is about −84°. <b>The magnitude turns at a point; the phase turns over two decades.</b> That difference is the reason a system can look comfortable on a magnitude plot and be close to instability on a phase one.",
+        },
+      }[kind];
+      return {
+        stem: Q.stem,
+        choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+        answer: 0,
+        steps: [`<b>${Q.right}.</b>`, Q.why],
+      };
+    }
+
+    const shape = rng.pick([
+      ["rises at 20 dB/decade, then flattens", "high-pass", "A zero at the origin gives the rising slope; the pole flattens it at the corner."],
+      ["is flat, then falls at 20 dB/decade", "low-pass", "One pole, and nothing else. The commonest shape there is."],
+      ["falls at 20 dB/decade everywhere, with no corner", "integrator", "A pole at the <b>origin</b>: it is already above its own corner at every frequency, so the slope never changes."],
+      ["rises, is flat over a band, then falls", "band-pass", "A zero at the origin, then two poles — one ending the rise and one starting the fall."],
+    ]);
+    return {
+      stem: `A Bode magnitude plot ${shape[0]}. What kind of filter is it?`,
+      choices: [
+        { text: shape[1].charAt(0).toUpperCase() + shape[1].slice(1), why: "" },
+        ...["low-pass", "high-pass", "band-pass", "integrator"].filter((k) => k !== shape[1])
+          .slice(0, 3).map((k) => ({
+            text: k.charAt(0).toUpperCase() + k.slice(1),
+            why: `A ${k} does not have that shape — sketch its asymptotes and compare.`,
+          })),
+      ],
+      answer: 0,
+      steps: [
+        `<b>${shape[1].charAt(0).toUpperCase() + shape[1].slice(1)}.</b> ${shape[2]}`,
+        `Reading a Bode plot backwards is the same rule run in reverse: <b>every downward break of 20 dB/decade is a pole, every upward break is a zero</b>, and the frequency of the break is where it sits.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "frequency",
+    stem: "An RC low-pass with R = 10 kΩ and C = 10 nF. Corner frequency?",
+    tool: "ωc = 1/RC = 10 krad/s (1.59 kHz)",
+    because: "The corner, the pole location and 1/τ are three names for one number.",
+  },
+  {
+    part: "frequency",
+    stem: "A voltage gain of 1/√2, in decibels?",
+    tool: "−3.01 dB — the half-power point",
+    because: "Power goes as voltage squared, so the voltage falls by √2 while the power halves.",
+  },
+  {
+    part: "frequency",
+    stem: "Two poles and one zero. Slope well above every corner?",
+    tool: "−20(2) + 20(1) = −20 dB/decade",
+    because: "Poles bend the plot down and zeros bend it up, and above every corner the slopes simply add.",
+  },
+  {
+    part: "frequency",
+    stem: "The phase of a single-pole low-pass at its corner?",
+    tool: "−45°, half of its total 90°",
+    because: "The magnitude turns at a point but the phase turns over two decades, which is why phase is the harder one to eyeball.",
+  },
+]);

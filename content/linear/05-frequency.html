@@ -1,0 +1,158 @@
+<p class="eyebrow">
+  <span>Linear Systems · Part 5</span>
+  <span class="spec">NCEES 7.A</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Frequency Response</h1>
+
+<p class="lede">Let s be jω and the transfer function stops describing
+transients and starts describing a filter. The substitution is one line; what
+it buys is a way of reading a circuit's whole behaviour off a straight-line
+sketch.</p>
+
+<h2>5.1 One substitution</h2>
+
+<p>Feed a linear system a sinusoid and — once the transient has died — the
+output is a sinusoid at the same frequency, changed only in amplitude and
+phase. That is Circuit Analysis Part 6's phasor argument, and it means the
+entire steady-state response at frequency ω is one complex number:</p>
+
+<p class="math" data-tex="H(j\omega) = H(s)\Big|_{s = j\omega}" data-display>H(jω) = H(s) with s = jω</p>
+
+<p>Its magnitude is the gain and its angle is the phase shift. <b>Nothing new
+has been defined</b> — jω is simply the imaginary axis of the plane Part 4
+drew, and asking for the frequency response is asking what happens along that
+one line.</p>
+
+<div data-figure="poleDistance"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The Bode plot's shape is one triangle</span>
+  <p style="margin-bottom:0">For a single pole at −a, the gain is
+  <span class="math" data-tex="a/|j\omega + a|">a / |jω + a|</span> — which is
+  <b>a over the distance from the pole to the point you are standing at</b>.
+  Below the corner the vertical leg is small, so the distance barely changes and
+  the response is flat. Above it the vertical leg dominates, so the distance is
+  essentially ω and the gain goes as 1/ω. <b>That is what −20 dB per decade
+  is</b>: ten times the frequency, one tenth the gain. And level with the pole
+  the two legs are equal, so the distance is √2·a — gain 1/√2, −3.01 dB, phase
+  exactly −45°.</p>
+</div>
+
+<h2>5.2 Decibels</h2>
+
+<f-plate no="7.9" title="dB, and the three anchors" stamp="handbook"
+  caption="<b>The unit exists to turn multiplication into addition</b>, which is
+  why cascaded stages add and why a Bode plot is made of straight lines.">
+  <f-row tex="\text{dB} = 20\log_{10}\left|\frac{V_{out}}{V_{in}}\right| = 10\log_{10}\frac{P_{out}}{P_{in}}"
+         name="the definition, twice"
+         gloss="<b>20 for voltage, 10 for power</b> — and they agree, because power goes as voltage squared. Using the wrong multiplier doubles or halves every answer."></f-row>
+  <f-row tex="\times 2 \ \rightarrow \ 6.02\text{ dB}" name="anchor one"
+         gloss="Double the voltage. Worth knowing to two decimals because it turns up constantly — an ADC gains 6 dB of dynamic range per bit, for the same reason."></f-row>
+  <f-row tex="\times 10 \ \rightarrow \ 20\text{ dB}" name="anchor two"
+         gloss="A decade. Exact by construction, and it is why slopes are quoted per decade."></f-row>
+  <f-row tex="\times \tfrac{1}{\sqrt2} \ \rightarrow \ -3.01\text{ dB}" name="anchor three"
+         gloss="The half-power point. <b>Voltage down by √2, power down by 2</b>, phase at −45°, and it is where every corner frequency is defined."></f-row>
+</f-plate>
+
+<h2>5.3 The straight-line sketch</h2>
+
+<p>The skill worth having under time pressure is not evaluating
+<span class="math" data-tex="H(j\omega)">H(jω)</span> at a frequency — a
+calculator does that. It is being able to draw the shape in fifteen seconds and
+read the answer off it.</p>
+
+<div data-figure="bodeSketch"></div>
+
+<f-plate no="7.10" title="Sketching rules" stamp="know"
+  caption="<b>Four lines, and every Bode magnitude plot in this exam.</b> The
+  approximation is never more than 3.01 dB wrong, and only at a corner.">
+  <f-row tex="\text{each pole: } -20\text{ dB/decade above its corner}"
+         name="poles bend it down"
+         gloss="And contribute −90° of phase in total, −45° of it at the corner itself."></f-row>
+  <f-row tex="\text{each zero: } +20\text{ dB/decade above its corner}"
+         name="zeros bend it up"
+         gloss="The mirror image, with +90° of phase. <b>A zero at the origin is what makes a high-pass.</b>"></f-row>
+  <f-row tex="\text{slopes add}" name="composing them"
+         gloss="Two poles above their corners give −40 dB/decade. Start flat at the DC gain and add each break as you pass it."></f-row>
+  <f-row tex="\text{error} = 3.01\text{ dB at the corner}, \ 1\text{ dB an octave away}"
+         name="what the straight lines cost"
+         gloss="Almost nothing, and it vanishes within a decade. <b>Phase is the sloppier one</b> — it takes two decades to swing, so it needs the curve."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>sketching from a transfer function</em></h4>
+  <div class="worked-body">
+    <p>Sketch <span data-tex="H(s) = \dfrac{100}{(1 + s/10)(1 + s/1000)}">H(s) = 100 / [(1 + s/10)(1 + s/1000)]</span>.</p>
+    <ol class="steps">
+      <li><b>DC gain.</b> Set s = 0: H = 100, which is
+        <span data-tex="20\log_{10}100 = 40">40</span> dB. Start the sketch flat
+        at 40 dB.</li>
+      <li><b>Find the corners.</b> Each factor
+        <span data-tex="(1 + s/\omega_c)">(1 + s/ωc)</span> is a pole at its own
+        ωc: here <b>10 and 1000 rad/s</b>.</li>
+      <li><b>Break at each one.</b> At 10 rad/s the slope goes to −20 dB/decade;
+        at 1000 rad/s it goes to −40.</li>
+      <li><b>Read anything you need off the lines.</b> From 10 to 1000 is two
+        decades at −20 dB/decade, so the gain falls 40 dB and the plot crosses
+        0 dB right at 1000 rad/s.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Four steps and no
+    arithmetic beyond a logarithm. The phase goes with it: starting at 0°,
+    heading for −90° through the first corner and −180° through the second,
+    passing −45° at 10 rad/s and −135° at 1000. <b>A question asking for the
+    gain at 100 rad/s is now a reading, not a calculation</b> — one decade past
+    the first corner, so 40 − 20 = 20 dB.</p>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the corner is a pole, not a coefficient</span>
+  <p style="margin-bottom:0">A factor written
+  <span class="math" data-tex="(1 + s/10)">(1 + s/10)</span> has its corner at
+  <b>10</b>. A factor written <span class="math" data-tex="(s + 10)">(s + 10)</span>
+  has its corner at 10 as well — but its DC value is 10, not 1, so it carries a
+  gain you must account for. <b>Always put each factor into the form
+  (1 + s/ωc) before reading a corner off it</b>, and collect the leftover
+  constants into the DC gain. Skipping that step is how a sketch ends up the
+  right shape at the wrong height.</p>
+</div>
+
+<h2>5.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>s → jω</b>: magnitude is gain, angle is phase.</li>
+    <li><span data-tex="\omega_c = 1/RC">ωc = 1/RC</span> — <b>corner, pole
+        location and 1/τ are one number</b>. Divide by 2π for hertz.</li>
+    <li><b>20 log for voltage, 10 log for power.</b> ×2 → 6 dB, ×10 → 20 dB,
+        1/√2 → −3 dB.</li>
+    <li>Pole: −20 dB/decade and −90°. Zero: +20 and +90°. <b>Slopes add.</b></li>
+    <li>At a corner: <b>−3.01 dB and −45°</b>, always.</li>
+    <li>Phase swings over about <b>a decade either side</b> of the corner; the
+        magnitude turns at a point.</li>
+    <li>Put every factor into <span data-tex="(1 + s/\omega_c)">(1 + s/ωc)</span>
+        form before reading corners.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Frequency response is the s-plane restricted to one line. Walk up the
+  imaginary axis and the gain at each point is set by how far you are from the
+  poles — near one, the response is large; far from all of them, it is small.
+  Every feature of a Bode plot is that distance changing, which is why the
+  shape can be sketched from pole positions alone.</p>
+  <p>What makes it a <em>tool</em> rather than a picture is the logarithm.
+  Multiplying transfer functions becomes adding decibels, and adding slopes
+  becomes drawing straight lines — so a cascade of stages is sketched by
+  superposition and read by eye. <b>Control Systems is built almost entirely on
+  that convenience</b>, and Part 6 finishes this module by looking at what
+  happens when a pole pair sits so close to the imaginary axis that the gain at
+  one frequency dwarfs everything else.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"frequency","title":"Part 5 · Frequency response","topics":["corner-freq","bode-sketch"],"count":6}'></div>
