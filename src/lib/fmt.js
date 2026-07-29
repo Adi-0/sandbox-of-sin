@@ -22,6 +22,18 @@ export function fixed(v, d = 2) {
   return (s === (0).toFixed(d) ? s : s).replace("-", "−");
 }
 
+/**
+ * Read a number back out of a string this module formatted.
+ *
+ * `fixed` writes a real minus sign (U+2212) because a hyphen is not one, and
+ * `num` inserts thousands separators — so `parseFloat` returns NaN on exactly
+ * the values most worth comparing. Anything deciding whether two choices are
+ * the same number must come through here.
+ */
+export function unfmt(s) {
+  return parseFloat(String(s).replace(/−/g, "-").replace(/[,\s]/g, ""));
+}
+
 /** Always shows a sign. Used wherever sign carries meaning. */
 export function signed(v, d = 2) {
   if (!Number.isFinite(v)) return "—";

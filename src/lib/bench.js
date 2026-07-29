@@ -38,14 +38,52 @@ export function getGenerator(id) { return generators.get(id); }
 export function hasGenerator(id) { return generators.has(id); }
 
 /** Build one problem, shuffling the choices so the answer is not always (A). */
+/* What a reader actually sees on a choice, and therefore what makes two of
+   them the same choice. */
+const choiceKey = (c) => c.tex ?? c.html ?? String(c.text ?? "");
+
+/**
+ * Collapse choices that render identically, letting the correct one win any
+ * slot it is involved in.
+ *
+ * Distractors are computed from the same numbers as the answer, so they
+ * collide far more often than they look like they will: halving and dividing
+ * by 2n agree at n = 4, a reactance and an impedance agree when the resistance
+ * is zero, and a square wave's RMS value is its peak. A duplicated option is
+ * worse than a missing one — a reader who picks the copy of the right answer
+ * is told they are wrong — so this happens centrally rather than in ninety
+ * generators.
+ */
+function distinct(choices, answer) {
+  const slots = new Map();
+  choices.forEach((c, i) => {
+    const k = choiceKey(c), right = i === answer;
+    if (!slots.has(k) || right) slots.set(k, { ...c, right });
+  });
+  return [...slots.values()];
+}
+
+/* Seeds are stepped by a prime so a retry lands somewhere unrelated rather
+   than one notch along a parameter list. */
+const SEED_STEP = 9973;
+
 export function generate(id, seed) {
   const gen = generators.get(id);
   if (!gen) throw new Error(`no problem generator "${id}"`);
-  const rng = makeRng(seed);
-  const p = gen.make(rng);
 
-  const tagged = p.choices.map((c, i) => ({ ...c, right: i === p.answer }));
-  rng.shuffle(tagged);
+  /* Some parameter draws are degenerate — two equal resistors, a singular
+     matrix, a square wave — and collapse the distractors along with them.
+     Rather than invent filler options with nothing to say, re-draw: a
+     question that cannot offer a real choice simply is not served. */
+  let use = seed, p = null, tagged = [];
+  for (let tries = 0; tries < 12; tries++) {
+    use = seed + tries * SEED_STEP;
+    p = gen.make(makeRng(use));
+    tagged = distinct(p.choices, p.answer);
+    if (tagged.length >= 3) break;
+  }
+
+  makeRng(use ^ 0x5f3a).shuffle(tagged);
   return {
     ...p,
     id, seed,

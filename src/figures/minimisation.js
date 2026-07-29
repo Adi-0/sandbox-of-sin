@@ -14,6 +14,7 @@
 import { el, svg, scenarios, readout, readouts } from "../lib/dom.js";
 import { register, plate } from "../lib/figure.js";
 import { Plot } from "../lib/plot.js";
+import { cover, termText, literals } from "../lib/boolean.js";
 
 const V = (n) => `var(--${n})`;
 const NS = "http://www.w3.org/2000/svg";
@@ -44,81 +45,6 @@ const FUNCS = {
     note: "<b>The map that cannot help.</b> No two on-cells are adjacent — this is a checkerboard — so every group is a single cell and the minimal SOP has eight four-literal terms. Parity is an XOR function, and XOR is precisely what sum-of-products is bad at.",
   },
 };
-
-/* -------------------------------------------------------------------------
-   The solver. Four variables, so brute force is instant and exact.
-   ------------------------------------------------------------------------- */
-
-/** Cells covered by a term, where `mask` marks the fixed bits. */
-const cellsOf = (mask, value) => {
-  const out = [];
-  for (let m = 0; m < 16; m++) if ((m & mask) === value) out.push(m);
-  return out;
-};
-
-/** Every prime implicant of the given on-set (don't-cares may be used). */
-function primeImplicants(on, dc) {
-  const allowed = new Set([...on, ...dc]);
-  const isImp = (mask, value) => cellsOf(mask, value).every((m) => allowed.has(m));
-  const imps = [];
-  for (let mask = 0; mask < 16; mask++) {
-    for (let value = 0; value < 16; value++) {
-      if ((value & ~mask & 15) !== 0) continue;          // value must lie inside mask
-      if (!isImp(mask, value)) continue;
-      // prime means no fixed variable can be dropped and still be an implicant
-      let prime = true;
-      for (let b = 0; b < 4; b++) {
-        if (!(mask & (1 << b))) continue;
-        const m2 = mask & ~(1 << b);
-        if (isImp(m2, value & m2)) { prime = false; break; }
-      }
-      if (prime) imps.push({ mask, value, cells: cellsOf(mask, value) });
-    }
-  }
-  return imps;
-}
-
-/** Essential-first, then greedy. Enough for four variables. */
-function cover(on, dc) {
-  if (on.length === 0) return [];
-  const pis = primeImplicants(on, dc);
-  if (pis.some((p) => p.mask === 0)) return [pis.find((p) => p.mask === 0)];  // always 1
-  const need = new Set(on);
-  const chosen = [];
-
-  // essential: an on-cell reachable by exactly one prime implicant
-  for (const m of on) {
-    const covering = pis.filter((p) => p.cells.includes(m));
-    if (covering.length === 1 && !chosen.includes(covering[0])) chosen.push(covering[0]);
-  }
-  chosen.forEach((p) => p.cells.forEach((m) => need.delete(m)));
-
-  while (need.size) {
-    let best = null, bestN = 0;
-    for (const p of pis) {
-      if (chosen.includes(p)) continue;
-      const n = p.cells.filter((m) => need.has(m)).length;
-      if (n > bestN) { best = p; bestN = n; }
-    }
-    if (!best) break;
-    chosen.push(best);
-    best.cells.forEach((m) => need.delete(m));
-  }
-  return chosen;
-}
-
-/** A product term as text: bit 3 is A, bit 0 is D. */
-function termText(mask, value) {
-  if (mask === 0) return "1";
-  let s = "";
-  for (let b = 3; b >= 0; b--) {
-    if (!(mask & (1 << b))) continue;
-    s += VARS[3 - b] + (value & (1 << b) ? "" : "̄");   // combining overbar
-  }
-  return s;
-}
-
-const literalCount = (mask) => [0, 1, 2, 3].filter((b) => mask & (1 << b)).length;
 
 /* ==========================================================================
    Plate 67 — the Karnaugh map
@@ -159,7 +85,7 @@ function kmap() {
     p.clear("curve", "label", "mark", "shade");
     const F = FUNCS[key];
     const onSet = new Set(F.on), dcSet = new Set(F.dc);
-    const groups = cover(F.on, F.dc);
+    const groups = cover(F.on, F.dc, 4);
 
     // headers
     p.text(X0 - 16, -Y0 + 16, "AB", { color: "muted", size: 11.5, weight: 600, anchor: "end" });
@@ -209,9 +135,9 @@ function kmap() {
       let lx = X0 - 40;
       groups.forEach((g, gi) => {
         rect(p, lx + 9, yLeg + 4, 18, 12, null, groupColour(gi), 2.2, 4);
-        p.text(lx + 26, yLeg, termText(g.mask, g.value),
+        p.text(lx + 26, yLeg, termText(g.mask, g.value, 4, VARS),
           { color: groupColour(gi), size: 13, weight: 600, anchor: "start" });
-        lx += 40 + termText(g.mask, g.value).length * 11;
+        lx += 40 + termText(g.mask, g.value, 4, VARS).length * 11;
       });
     } else {
       p.text(X0 + 2 * CW, yLeg, `${groups.length} single-cell groups — no adjacencies to exploit`,
@@ -219,9 +145,9 @@ function kmap() {
     }
 
     const sop = groups.length
-      ? groups.map((g) => termText(g.mask, g.value)).join("  +  ")
+      ? groups.map((g) => termText(g.mask, g.value, 4, VARS)).join("  +  ")
       : "0";
-    const lits = groups.reduce((s, g) => s + literalCount(g.mask), 0);
+    const lits = groups.reduce((s, g) => s + literals(g.mask, 4), 0);
     const canonical = F.on.length * 4;
 
     rdFn.set(F.name);
@@ -274,7 +200,7 @@ function plaArray() {
   function draw(key) {
     p.clear("curve", "label", "mark", "shade");
     const F = FUNCS[key];
-    const groups = cover(F.on, F.dc).slice(0, 6);     // the drawing holds six rows
+    const groups = cover(F.on, F.dc, 4).slice(0, 6);     // the drawing holds six rows
 
     const X0 = 130, DX = 46, Y0 = -70, DY = 34;
     const nCols = 8;                                   // A, ¬A, B, ¬B, C, ¬C, D, ¬D
@@ -301,7 +227,7 @@ function plaArray() {
         const col = vi * 2 + (g.value & (1 << b) ? 0 : 1);
         p.dot(X0 + col * DX, y, { color: "q-y", r: 5 });
       }
-      p.text(X0 - 22, y, termText(g.mask, g.value),
+      p.text(X0 - 22, y, termText(g.mask, g.value, 4, VARS),
         { color: "q-r", size: 11.5, weight: 600, anchor: "end", dy: 4 });
     });
 
@@ -318,7 +244,7 @@ function plaArray() {
     rdFn.set(F.name);
     rdRows.set(`${groups.length}`);
     rdCols.set(`${nCols}`, " — each variable and its complement");
-    rdDots.set(`${groups.reduce((s, g) => s + literalCount(g.mask), 0)}`);
+    rdDots.set(`${groups.reduce((s, g) => s + literals(g.mask, 4), 0)}`);
     rdNote.set(
       "Every dot is a programmed connection. <b>The rows are the products and the " +
       "column on the right is the sum</b>, which is why this structure implements " +

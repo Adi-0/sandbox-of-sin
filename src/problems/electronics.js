@@ -5,7 +5,7 @@
    ========================================================================== */
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
-import { num, fixed, sci } from "../lib/fmt.js";
+import { num, fixed, sci, unfmt } from "../lib/fmt.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 
@@ -94,7 +94,7 @@ defineProblem("diode-eq", {
           why: `A base-10 logarithm was used. The diode equation is a <b>natural</b> exponential, so its inverse is ${T("\\ln")}, not ${T("\\log_{10}")} — the two differ by a factor of 2.303.` },
         { text: `${fixed(Vd * 1000, 1)} V`, why: "Off by a factor of 1000 — the thermal voltage is in millivolts, and mixing units here is the usual slip." },
         { text: "0.700 V", why: "The rule-of-thumb value. It is close for milliamp currents on a typical diode, but this question is asking you to use the equation." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.005),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.005),
       answer: 0,
       steps: [
         `Invert the diode equation. The current is far above ${T("I_S")}, so the −1 can go:`,
@@ -278,7 +278,7 @@ defineProblem("rect-output", {
           why: `The RMS value was used where the <b>peak</b> belongs. The factor ${T(R.avgTex)} multiplies ${T("V_m")}, so convert first: ${T(`V_m = ${Vrms}\\sqrt{2} = ${fixed(Vm, 2)}`)} V.` },
         { text: `${fixed(Vpk * R.kRms, 2)} V`,
           why: `That is the <b>RMS</b> of the output, not its average. Only the average is what a DC voltmeter reads or a battery charger delivers.` },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.05),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.05),
       answer: 0,
       steps: [
         `Peak of the input first — the rectifier formulas are all written in terms of ${T("V_m")}:`,
@@ -333,7 +333,7 @@ defineProblem("rect-piv", {
             : `That is ${T("2V_m")}, which applies to the <b>centre-tapped</b> circuit. Here the off diode only ever sees one peak.` },
         { text: `${fixed(Vrms * R.piv, 1)} V`, why: `The RMS value was used. Reverse stress is a <b>peak</b> phenomenon — the diode has to survive the worst instant, not the average one.` },
         { text: `${fixed(piv / 2, 1)} V`, why: "Half the correct figure — a diode rated this low would fail on the first negative half cycle." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.05),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.05),
       answer: 0,
       steps: [
         `<span class="math display" data-tex="V_m = ${Vrms}\\sqrt{2} = ${fixed(Vm, 2)}\\text{ V}"></span>`,
@@ -374,7 +374,7 @@ defineProblem("ripple-calc", {
           { text: `${num(Il / (2 * f * target) * 1e6, 0)} µF`,
             why: full ? "" : "That doubles the ripple frequency, which is right for a <b>full-wave</b> rectifier. A half-wave circuit only recharges once per cycle." },
           { text: `${num(need * 1e6 * target * target, 0)} µF`, why: "The ripple target has been applied twice. It enters the formula once, linearly." },
-        ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text.replace(/,/g, "")) - parseFloat(all[0].text.replace(/,/g, ""))) > 1)),
+        ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(unfmt(c.text.replace(/,/g, "")) - unfmt(all[0].text.replace(/,/g, ""))) > 1)),
         answer: 0,
         steps: [
           `The capacitor supplies the load alone between peaks, so charge out equals ${T("I\\,\\Delta t")} and the sag is ${T("Q/C")}:`,
@@ -398,7 +398,7 @@ defineProblem("ripple-calc", {
         { text: `${fixed(Il / (2 * f * C), 3)} V`,
           why: full ? "" : "That doubles the frequency, which is right only for a full-wave circuit." },
         { text: `${fixed(Il * C * fr, 6)} V`, why: "Multiplied where you should divide. More capacitance gives <b>less</b> ripple." },
-      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 1e-4)),
+      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 1e-4)),
       answer: 0,
       steps: [
         `The capacitor alone holds the load up between peaks:`,
@@ -561,7 +561,7 @@ defineProblem("bjt-region", {
         { text: `${Vcc}.00 V`, why: `That is the cutoff value. The base current here is ${fixed(ib * 1e6, 1)} µA, which is not zero, so the transistor is conducting.` },
         { text: `${fixed(Vcc - icActive * Rc / beta, 2)} V`, why: "β was left out of the collector current." },
         { text: "0.00 V", why: `Even a fully saturated transistor holds about ${Vsat} V — its two junctions cannot both collapse to nothing.` },
-      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.02)).slice(0, 4),
+      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.02)).slice(0, 4),
       answer: 0,
       steps: [
         `<b>Assume the active region.</b> The base-emitter junction is a diode at 0.7 V, so:`,
@@ -943,7 +943,7 @@ defineProblem("opamp-gain", {
             : "That is the <b>inverting</b> gain. Here the signal goes straight to the + input, so it appears at the output <em>as well as</em> being amplified — hence the extra 1, and no sign inversion." },
         { text: `${fixed(-A * Vin, 2)} V`, why: `The sign. ${inv ? "An inverting amplifier inverts." : "A non-inverting amplifier does not."}` },
         { text: `${fixed((Ri / Rf) * Vin, 2)} V`, why: "The resistor ratio is upside down. Feedback resistor over input resistor — the feedback resistor is on top." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.005),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.005),
       answer: 0,
       steps: [
         inv
@@ -1145,7 +1145,7 @@ defineProblem("meter-load", {
         { text: `${fixed(vTrue, 3)} V`, why: `That is the <b>true</b> midpoint voltage, which is what would be there with no meter attached. The meter is a ${Rm >= 1e6 ? `${num(Rm / 1e6, 0)} MΩ` : `${num(Rm / 1000, 0)} kΩ`} resistor in parallel with the lower arm, and it pulls the node down.` },
         { text: `${fixed(Vs * Rm / (Rm + R), 3)} V`, why: "That treats the meter as being in series with one arm. It goes in <b>parallel</b> with the element being measured." },
         { text: `${fixed(vRead * 2, 3)} V`, why: "Twice the correct reading — the divider was left out." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.002),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.002),
       answer: 0,
       steps: [
         `The source seen from the measurement point has a Thévenin resistance of the two arms in parallel:`,
@@ -1177,7 +1177,7 @@ defineProblem("bridge-out", {
           { text: `${fixed((R1 * R3) / R2, 1)} Ω`, why: "The ratio is inverted. Balance means R<sub>1</sub>/R<sub>2</sub> = R<sub>3</sub>/R<sub>4</sub>, so R<sub>4</sub> = R<sub>2</sub>R<sub>3</sub>/R<sub>1</sub>." },
           { text: `${fixed(R1 + R2 - R3, 1)} Ω`, why: "Balance is a condition on <b>ratios</b>, not on sums." },
           { text: `${R3} Ω`, why: "That would balance the bridge only if the first pair were equal." },
-        ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.5),
+        ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.5),
         answer: 0,
         steps: [
           `A bridge is two dividers compared against each other, and it reads zero when their ratios match:`,
@@ -1304,7 +1304,7 @@ defineProblem("adc-snr", {
         { text: `${fixed(6.02 * bits, 1)} dB`, why: "The 1.76 dB was dropped. It comes from the difference between a full-scale sine's RMS value and its peak." },
         { text: `${fixed(20 * Math.log10(2 ** bits), 1)} dB`, why: `That is 20 log(2ⁿ), which is the same as 6.02n — again missing the 1.76.` },
         { text: `${fixed(bits * 3, 1)} dB`, why: "About 3 dB per bit would be right if each bit gained a factor of √2. Each bit gains a factor of <b>2</b>, and 20 log 2 ≈ 6." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.2),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.2),
       answer: 0,
       steps: [
         `Each extra bit halves the quantisation step, and halving an error improves the ratio by ${T("20\\log 2 = 6.02")} dB:`,

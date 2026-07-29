@@ -5,7 +5,7 @@
    ========================================================================== */
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
-import { num, fixed } from "../lib/fmt.js";
+import { num, fixed, unfmt } from "../lib/fmt.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 
@@ -127,7 +127,7 @@ defineProblem("pf-correct", {
           why: "That subtracts the power factors themselves. Correction works on <b>tangents</b>, because the tangent is VAR per watt — the cosines cannot be subtracted like that." },
         { text: f(Math.abs(P * (1 / pf1 - 1 / pf2))),
           why: "That is the change in <b>apparent</b> power. The capacitor is rated in VAR, not VA, and the two differ." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 1e-6),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 1e-6),
       answer: 0,
       steps: [
         `Convert both power factors to angles, then to tangents — the tangent is the reactive power <em>per watt</em>, which is what makes the subtraction work:`,
@@ -274,7 +274,7 @@ defineProblem("line-phase", {
               : "That divides by √3, which is the wye rule. In a <b>delta</b> each impedance is connected directly between two lines, so it sees the full line voltage." },
           { text: `${fixed(VL * RT3, 1)} V`, why: "Multiplied by √3 instead of divided. A phase voltage is never larger than the line voltage." },
           { text: `${fixed(VL / 3, 1)} V`, why: "Divided by 3 rather than √3. The factor comes from a vector subtraction of two phasors 120° apart, and it is √3 ≈ 1.732." },
-        ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.05),
+        ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.05),
         answer: 0,
         steps: [
           wye
@@ -298,7 +298,7 @@ defineProblem("line-phase", {
         { text: `${fixed(VL / Zm, 2)} A`,
           why: `That uses the full line voltage across the impedance${wye ? ", but a wye phase only sees V<sub>L</sub>/√3" : " and then stops — correct for the phase current in a delta, but the line current is √3 times it"}.` },
         { text: `${fixed(Il / 3, 2)} A`, why: "A factor of 3 where √3 belongs." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.02),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.02),
       answer: 0,
       steps: [
         `Phase voltage first — that is what decides the current through each impedance:`,
@@ -769,7 +769,7 @@ defineProblem("xfmr-3ph", {
             : `That treats the nameplate turns ratio as the line-to-line ratio. It only is when <b>both sides are connected the same way</b> — here the connections differ, so one √3 survives.` },
         { text: `${fixed(VL1 / (a * RT3), 1)} V`, why: `Divided by √3 where you should ${k > 1 ? "have multiplied after dividing by the turns ratio" : "not have"}.` },
         { text: `${fixed((VL1 / a) * RT3, 1)} V`, why: `Multiplied by √3 in the wrong direction for a ${label} bank.` },
-      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.5)),
+      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.5)),
       answer: 0,
       steps: [
         k === 1
@@ -898,7 +898,7 @@ defineProblem("sync-speed", {
         { text: `${num(nsyn(f, poles / 2), 0)} rpm`, why: "That treats the figure given as pole <b>pairs</b>. The formula wants poles." },
         { text: `${num(nsyn(f, poles * 2), 0)} rpm`, why: "The pole count has been doubled — that halves the speed." },
         { text: `${num(60 * f / poles, 0)} rpm`, why: "Used 60 rather than 120. The constant is 60 s/min × 2 poles per pair." },
-      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.5),
+      ].filter((c, i, all) => i === 0 || Math.abs(unfmt(c.text) - unfmt(all[0].text)) > 0.5),
       answer: 0,
       steps: [
         `<span class="math display" data-tex="n_s = \\frac{120f}{p} = \\frac{120(${f})}{${poles}} = ${num(ns, 0)}\\text{ rpm}"></span>`,
