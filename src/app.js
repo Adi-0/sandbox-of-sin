@@ -9,7 +9,7 @@
 import { MODULES, PARTS, byId, indexOfPart, contentPath, TOTAL_MINUTES } from "./outline.js";
 import { state, onStateChange } from "./state.js";
 import { el, clear, $ } from "./lib/dom.js";
-import { renderMathIn } from "./lib/tex.js";
+import { renderMathIn, fitDisplayMath, watchDisplayMath } from "./lib/tex.js";
 import { mountFigures, mountFormulas } from "./lib/figure.js";
 import { bench, reflexDrill } from "./lib/bench.js";
 
@@ -116,6 +116,7 @@ async function route() {
   try { renderMathIn(article); } catch (err) { console.error("math render failed", err); }
   try { mountFigures(article, teardowns); } catch (err) { console.error("figure mount failed", err); }
   try { mountBenches(article); } catch (err) { console.error("bench mount failed", err); }
+  try { fitDisplayMath(article); watchDisplayMath(); } catch (err) { console.error("math fit failed", err); }
 
   article.appendChild(partNav(id));
   document.title = `${part.n === 0 ? "" : `Part ${part.n} · `}${part.title} — The Bench`;

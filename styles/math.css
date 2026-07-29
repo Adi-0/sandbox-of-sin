@@ -28,6 +28,10 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 2px;   /* room for the scrollbar without clipping descenders */
+  /* An overbar is drawn on the *inline box* top, which sits above the line
+     box — without this, overflow-y clips it away and A̅ renders as A. Silent
+     and wrong, which is the worst kind of bug in a Boolean algebra module. */
+  padding-top: 0.26em;
 }
 .math.display > .mrow { white-space: nowrap; }
 
@@ -77,6 +81,9 @@
 }
 .math .frac > .fnum { padding: 0 0.3em 0.14em; }
 .math .frac > .fden { padding: 0.16em 0.3em 0; border-top: 1px solid currentColor; }
+/* \binom: the same stack with no rule, wrapped in tall parentheses. */
+.math .frac.open > .fden { border-top: 0; padding-top: 0.06em; }
+.math .bf { font-weight: 700; font-style: normal; }
 
 /* --- radical -------------------------------------------------------------- */
 

@@ -13,7 +13,7 @@
    ========================================================================== */
 
 import { el, clear } from "./dom.js";
-import { tex, renderMathIn } from "./tex.js";
+import { tex, renderMathIn, fitDisplayMath } from "./tex.js";
 import { clock } from "./fmt.js";
 import { makeRng, newSeed } from "./rng.js";
 import { state } from "../state.js";
@@ -190,7 +190,7 @@ export function bench({ id, title = "Bench", topics, count = 6, pace = 170 }) {
     );
     choicesEl.append(...buttons);
     bodyEl.appendChild(choicesEl);
-    renderMathIn(bodyEl);
+    renderMathIn(bodyEl); fitDisplayMath(bodyEl);
 
     function answer(i) {
       running = false;
@@ -208,7 +208,7 @@ export function bench({ id, title = "Bench", topics, count = 6, pace = 170 }) {
         el("span.why", { html: why })
       ));
       bodyEl.appendChild(solutionEl(p));
-      renderMathIn(bodyEl);
+      renderMathIn(bodyEl); fitDisplayMath(bodyEl);
       nextBtn.disabled = false;
       skipBtn.disabled = true;
       nextBtn.focus();
@@ -345,7 +345,7 @@ export function reflexDrill({ only = null, seconds = 15, count = 8, title = "Han
     const item = queue[at];
     countEl.textContent = `${at + 1} / ${queue.length}`;
     stemEl.innerHTML = item.stem;
-    renderMathIn(stemEl);
+    renderMathIn(stemEl); fitDisplayMath(stemEl);
 
     // three plausible neighbours plus the right tool
     const rng = makeRng(newSeed());
@@ -381,7 +381,7 @@ export function reflexDrill({ only = null, seconds = 15, count = 8, title = "Han
     });
     tally.innerHTML = `<b>${right}</b> of <b>${at + 1}</b>`;
     stemEl.innerHTML = `${item.stem}<br><span style="color:var(--muted);font-size:0.9em">${item.because}</span>`;
-    renderMathIn(stemEl);
+    renderMathIn(stemEl); fitDisplayMath(stemEl);
     setTimeout(next, ok ? 900 : 2600);
   }
 

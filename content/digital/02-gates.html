@@ -20,12 +20,18 @@ recap rather than a derivation.</p>
   caption="<b>The notation trap is worth stating once:</b> + means OR and · means
   AND. So 1 + 1 = 1, and the distributive law works in a direction ordinary
   algebra does not allow.">
-  <f-row tex="A + 0 = A, \quad A \cdot 1 = A, \quad A + 1 = 1, \quad A \cdot 0 = 0"
-         name="the constants"
-         gloss="<b>A + 1 = 1</b> is the one that surprises people. OR-ing with true is always true."></f-row>
-  <f-row tex="A + A = A, \qquad A \cdot A = A, \qquad A + \bar{A} = 1, \qquad A\bar{A} = 0"
-         name="idempotence and complements"
-         gloss="A term repeated adds nothing. This is what lets minimisation delete things in Part 3."></f-row>
+  <f-row tex="A + 0 = A, \qquad A + 1 = 1"
+         name="the OR constants"
+         gloss="<b>A + 1 = 1</b> is the one that surprises people. OR-ing with true is always true, whatever A is."></f-row>
+  <f-row tex="A \cdot 1 = A, \qquad A \cdot 0 = 0"
+         name="the AND constants"
+         gloss="The mirror image, and the one that behaves like ordinary algebra — which is exactly why the OR row catches people out."></f-row>
+  <f-row tex="A + A = A, \qquad A \cdot A = A"
+         name="idempotence"
+         gloss="A term repeated adds nothing. This is what lets groups overlap freely on a Karnaugh map in Part 3."></f-row>
+  <f-row tex="A + \bar{A} = 1, \qquad A\bar{A} = 0"
+         name="complements"
+         gloss="Something is either true or its negation is. This is the identity minimisation uses to <b>delete</b> a variable."></f-row>
   <f-row tex="\overline{A \cdot B} = \bar{A} + \bar{B}, \qquad \overline{A + B} = \bar{A} \cdot \bar{B}"
          name="De Morgan"
          gloss="<b>Break the bar and change the sign.</b> The single most used identity in this module, and the one every exam expects on sight."></f-row>

@@ -37,6 +37,9 @@ const RELOPS = {
   approx: "≈", equiv: "≡", sim: "∼", propto: "∝", cong: "≅",
   to: "→", rightarrow: "→", longrightarrow: "⟶", leftarrow: "←",
   Rightarrow: "⇒", Leftrightarrow: "⇔", mapsto: "↦",
+  gg: "≫", ll: "≪", Longrightarrow: "⟹", Longleftrightarrow: "⟺",
+  longleftrightarrow: "⟷", leftrightarrow: "↔", Leftarrow: "⇐",
+  longleftarrow: "⟵",
   in: "∈", notin: "∉", subset: "⊂", subseteq: "⊆", supset: "⊃",
   cup: "∪", cap: "∩", setminus: "∖", oplus: "⊕", otimes: "⊗",
   land: "∧", lor: "∨", wedge: "∧", vee: "∨", neg: "¬",
@@ -49,12 +52,14 @@ const SYMS = {
   circ: "∘", prime: "′", dots: "…", ldots: "…", cdots: "⋯", vdots: "⋮",
   forall: "∀", exists: "∃", emptyset: "∅", therefore: "∴", hbar: "ℏ",
   Re: "Re", Im: "Im", ell: "ℓ", aleph: "ℵ", lbrace: "{", rbrace: "}",
+  lceil: "⌈", rceil: "⌉", lfloor: "⌊", rfloor: "⌋",
+  langle: "⟨", rangle: "⟩", lVert: "‖", rVert: "‖",
 };
 
 const FUNCS = new Set([
   "sin", "cos", "tan", "csc", "sec", "cot", "sinh", "cosh", "tanh",
   "arcsin", "arccos", "arctan", "ln", "log", "exp", "max", "min",
-  "det", "dim", "gcd", "mod", "lcm", "adj", "tr", "rank", "arg",
+  "det", "dim", "gcd", "mod", "lcm", "adj", "tr", "rank", "arg", "deg",
 ]);
 
 const BIGOPS = { int: "∫", iint: "∬", oint: "∮", sum: "∑", prod: "∏" };
@@ -65,6 +70,29 @@ const ACCENTS = {
   dot: { mark: "˙", say: "d d t of" }, tilde: { mark: "~", say: "tilde" },
 };
 const COLORS = { qx: "qx", qy: "qy", qr: "qr", qb: "qb" };
+
+/* Everything the parser handles by name. An unrecognised command renders as
+   *nothing at all*, which is this renderer's worst failure mode: \lceil
+   vanishing turns a ceiling into a plain logarithm, \binom turns C(n,r) into
+   "nr", and the page looks perfectly fine. `unknownCommands` exists so the
+   verification pass can catch that instead of a reader catching it. */
+const STRUCTURAL = new Set([
+  "frac", "dfrac", "tfrac", "sqrt", "text", "mathrm", "operatorname",
+  "mathbf", "boldsymbol", "binom", "dbinom", "left", "right", "begin", "end",
+  "quad", "qquad", "big", "Big", "bigg", "Bigg",
+  "\\", ",", ";", ":", " ", "!", "{", "}", "|", "&", "%", "_", "#", "$",
+]);
+
+/** Every TeX command in `src` that this renderer would silently discard. */
+export function unknownCommands(src) {
+  const known = (v) =>
+    v in GREEK || v in RELOPS || v in SYMS || v in BIGOPS || v in ACCENTS ||
+    v in COLORS || FUNCS.has(v) || UNDEROPS.has(v) || STRUCTURAL.has(v);
+  const out = new Set();
+  for (const m of String(src).matchAll(/\\([A-Za-z]+|.)/g))
+    if (!known(m[1])) out.add(m[1]);
+  return [...out];
+}
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -202,6 +230,11 @@ function parse(tokens) {
     if (v in COLORS) return { k: "color", cls: COLORS[v], body: parseArg() };
     if (v === "text" || v === "mathrm" || v === "operatorname")
       return { k: v === "text" ? "text" : "up", body: parseTextArg() };
+    if (v === "mathbf" || v === "boldsymbol")
+      return { k: "bf", body: parseArg() };
+    if (v === "binom" || v === "dbinom")
+      return { k: "binom", top: parseArg(), bot: parseArg() };
+    if (v === "!") return { k: "space", w: "neg" };
     if (v === "left" || v === "right") {
       const d = eat();
       const ch = d ? (d.t === "cmd" ? (d.v === "|" ? "|" : SYMS[d.v] || d.v) : d.v) : ".";
@@ -292,6 +325,8 @@ function height(n) {
     case "row": return Math.max(1, ...n.items.map(height));
     case "raw": return 1;
     case "frac": return 1 + Math.max(height(n.num), height(n.den)) * 0.9;
+    case "binom": return 1 + Math.max(height(n.top), height(n.bot)) * 0.9;
+    case "bf": return height(n.body);
     case "sqrt": return height(n.rad) * 1.15;
     case "matrix": return Math.max(1.6, n.rows.length * 1.1);
     case "bigop": return 1.6;
@@ -347,6 +382,14 @@ function render(n) {
     case "frac":
       return `<span class="frac"><span class="fnum">${render(n.num)}</span>` +
              `<span class="fden">${render(n.den)}</span></span>`;
+
+    case "binom":
+      return `<span class="delim d2">(</span>` +
+             `<span class="frac open"><span class="fnum">${render(n.top)}</span>` +
+             `<span class="fden">${render(n.bot)}</span></span>` +
+             `<span class="delim d2">)</span>`;
+
+    case "bf": return `<span class="bf">${render(n.body)}</span>`;
 
     case "sqrt": {
       const idx = n.idx ? `<span class="idx">${render(n.idx)}</span>` : "";
@@ -441,6 +484,8 @@ function speak(n) {
     case "delim": return n.v === "(" ? "open bracket" : n.v === ")" ? "close bracket" : n.v;
     case "primed": return speak(n.base) + " prime".repeat(n.n);
     case "frac": return `the fraction ${speak(n.num)} over ${speak(n.den)},`;
+    case "binom": return `${speak(n.top)} choose ${speak(n.bot)},`;
+    case "bf": return speak(n.body);
     case "sqrt": {
       const i = n.idx ? speak(n.idx) : "";
       const name = i === "3" ? "cube root" : i ? `${i}th root` : "square root";
@@ -523,4 +568,51 @@ export function renderMathIn(root) {
     node.innerHTML = display ? `<span class="mrow">${html}</span>` : html;
     node.removeAttribute("data-tex");
   });
+}
+
+/* --------------------------------------------------------------------------
+   Fitting display maths to the column
+
+   A display equation sets on one line inside a fixed-width column, and a few
+   of them — a row of four Boolean identities, three machine formulas side by
+   side — are simply wider than it. `overflow-x: auto` keeps them reachable,
+   but a reader sees a truncated equation and has no reason to suspect there is
+   more of it off to the right. Shrinking the few that overflow is the honest
+   fix; below a floor the type would be too small to read, and there scrolling
+   really is the better answer.
+   -------------------------------------------------------------------------- */
+
+const FIT_FLOOR = 0.68;
+
+function fitOne(n) {
+  n.style.removeProperty("font-size");
+  const avail = n.clientWidth;
+  if (!avail || n.scrollWidth <= avail + 1) return;
+  const base = parseFloat(getComputedStyle(n).fontSize);
+  let k = Math.max(FIT_FLOOR, (avail / n.scrollWidth) * 0.99);
+  n.style.fontSize = `${(base * k).toFixed(2)}px`;
+  // Glyph advances do not scale perfectly linearly, so correct once.
+  if (n.scrollWidth > n.clientWidth + 1 && k > FIT_FLOOR) {
+    k = Math.max(FIT_FLOOR, k * (n.clientWidth / n.scrollWidth) * 0.99);
+    n.style.fontSize = `${(base * k).toFixed(2)}px`;
+  }
+}
+
+/** Shrink any display equation inside `root` that overflows its column. */
+export function fitDisplayMath(root = document) {
+  root.querySelectorAll?.(".math.display").forEach(fitOne);
+}
+
+/* Widths change with the viewport, so re-fit — once per settled resize, and
+   once more when the maths face has actually loaded. */
+let watching = false;
+export function watchDisplayMath() {
+  if (watching) return;
+  watching = true;
+  let t = 0;
+  addEventListener("resize", () => {
+    clearTimeout(t);
+    t = setTimeout(() => fitDisplayMath(document), 120);
+  });
+  document.fonts?.ready.then(() => fitDisplayMath(document));
 }
