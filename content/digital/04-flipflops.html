@@ -1,0 +1,266 @@
+<p class="eyebrow">
+  <span>Digital Systems · Part 4</span>
+  <span class="spec">NCEES 15.E</span>
+  <span>26 minute read</span>
+</p>
+
+<h1>Flip-Flops and Counters</h1>
+
+<p class="lede">Everything so far has been <em>combinational</em>: outputs depend
+only on the inputs present right now. This part adds the one ingredient that
+changes the subject entirely — a circuit that remembers.</p>
+
+<h2>4.1 The line that divides the module</h2>
+
+<p>A gate has no history. Put 1 and 0 into an AND gate and you get 0, and it will
+give you 0 every time regardless of what came before. That is the defining
+property of <span class="term">combinational</span> logic, and it is what Parts 2
+and 3 have been about.</p>
+
+<p><span class="term">Sequential</span> logic breaks that property deliberately,
+by feeding an output back to an input. Once a value can influence itself, the
+circuit's output depends on its own past — and past is memory.</p>
+
+<div class="note payoff">
+  <span class="note-tag">The whole idea, in one sentence</span>
+  <p style="margin-bottom:0">Cross-couple two NOR gates — each one's output
+  driving the other's input — and the pair has <b>two stable arrangements</b>.
+  Both are self-consistent, so once it is in one it stays there with no input at
+  all. That is a stored bit, built from nothing but Part 2's gates, and every
+  flip-flop and register on this exam is a refinement of it.</p>
+</div>
+
+<h2>4.2 Latch against flip-flop</h2>
+
+<p>The cross-coupled pair above is a <span class="term">latch</span>: it responds
+to its inputs whenever they change. That turns out to be inconvenient, because a
+circuit whose memory updates continuously is hard to reason about — the output
+feeds logic that feeds the input again, and the timing decides the answer.</p>
+
+<p>The fix is to give the memory a moment at which it is allowed to change, and
+to keep it deaf the rest of the time. That moment is a clock edge, and a memory
+that only listens on an edge is a <span class="term">flip-flop</span>.</p>
+
+<f-plate no="15.8" title="Latch, flip-flop, and the clock" stamp="know"
+  caption="<b>Edge-triggered is the default on this exam.</b> Unless a question
+  says &lsquo;latch&rsquo; or &lsquo;transparent&rsquo;, assume the device changes
+  only at an edge.">
+  <f-row tex="\text{latch: level-sensitive}" name="transparent while enabled"
+         gloss="Whatever the input does while the enable is high passes straight through to the output. Useful, but it makes a feedback loop's behaviour depend on gate delays."></f-row>
+  <f-row tex="\text{flip-flop: edge-triggered}" name="listens for an instant"
+         gloss="Samples its inputs on the <b>rising or falling edge</b> of the clock and ignores them entirely otherwise. This is what makes synchronous design possible."></f-row>
+  <f-row tex="\text{asynchronous preset / clear}" name="the override"
+         gloss="Most flip-flops also have direct set and reset pins that act <b>immediately, ignoring the clock</b>. Used to put a system into a known state at power-up — and to trim a counter's modulus, as in §4.5."></f-row>
+  <f-row tex="t_{su}, \ t_h" name="setup and hold"
+         gloss="The input must be steady for t<sub>su</sub> <b>before</b> the edge and t<sub>h</sub> <b>after</b> it. Violate either and the output is not merely wrong but temporarily undefined — Part 6 takes this apart."></f-row>
+</f-plate>
+
+<h2>4.3 The four types, and what separates them</h2>
+
+<p>Four flip-flops appear on the exam. They differ only in how their inputs
+decide the next value, so the honest way to learn them is to watch one edge at a
+time rather than memorise four tables.</p>
+
+<div data-figure="ffWaves"></div>
+
+<f-plate no="15.9" title="Characteristic equations" stamp="handbook"
+  caption="<b>Q⁺ means the value after the next clock edge.</b> Every one of these
+  needs the <em>present</em> Q as well as the inputs — reaching for the inputs
+  alone is the most common slip on this topic.">
+  <f-row tex="Q^+ = D" name="D — data"
+         gloss="Copies its input at the edge. No special combinations, no forbidden state. <b>Almost all real design uses D</b>, and every FPGA flip-flop is one."></f-row>
+  <f-row tex="Q^+ = T \oplus Q" name="T — toggle"
+         gloss="T = 1 flips, T = 0 holds. A T flip-flop with its input tied high divides its clock by two, which is a counter's whole mechanism."></f-row>
+  <f-row tex="Q^+ = J\bar{Q} + \bar{K}Q" name="JK — the general one"
+         gloss="J sets, K resets, both low holds, and <b>both high toggles</b>. That last row is the one to remember: it is what SR forbids."></f-row>
+  <f-row tex="Q^+ = S + \bar{R}Q, \quad SR = 0" name="SR — set / reset"
+         gloss="The side condition is not decoration. <b>S = R = 1 is forbidden</b>, and the equation is simply invalid there."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the forbidden state, and why JK exists</span>
+  <p style="margin-bottom:0">Driving an SR flip-flop with S = R = 1 tells it to
+  set and reset at once. Both outputs go to the same level — so Q and
+  <span class="math" data-tex="\bar{Q}">Q̄</span> are no longer complements, and the
+  device is not in a legal state at all. Worse is what follows: when the inputs
+  return to 0, whichever gate is fractionally faster decides where it lands, so
+  the settled value is <b>unpredictable</b>. Load SR on the plate and walk to
+  edge 5 to see both halves of that. The JK's entire contribution is to take
+  that same combination and <em>define</em> it as toggle — which, not
+  coincidentally, is also what makes a JK able to count.</p>
+</div>
+
+<h2>4.4 Excitation — the table read backwards</h2>
+
+<p>A characteristic table answers "given the inputs, what does Q do?" Designing a
+counter or a state machine asks the reverse: <b>given the transition I need,
+what must the inputs be?</b> That is an <span class="term">excitation
+table</span>, and it is the bridge into Part 5.</p>
+
+<div class="worked">
+  <h4>Worked · <em>the JK excitation table, derived rather than memorised</em></h4>
+  <div class="worked-body">
+    <p>Take the transition <span data-tex="Q: 1 \to 0">Q: 1 → 0</span>. Which J
+    and K produce it?</p>
+    <ol class="steps">
+      <li>Q must end at 0, and it is currently 1 — so the flip-flop must either
+        <b>reset</b> or <b>toggle</b>. Both are available.</li>
+      <li>Reset needs J = 0, K = 1. Toggle needs J = 1, K = 1.</li>
+      <li>K = 1 in both cases; J differs. So <b>K = 1 and J is a don't-care</b>:
+        <span data-tex="Q: 1 \to 0 \ \Rightarrow \ J = \times, \ K = 1" data-display>J = ×, K = 1</span></li>
+      <li>The same argument on the other three rows completes the table:</li>
+    </ol>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Transition</th><th class="num">J</th><th class="num">K</th><th>Because</th></tr></thead>
+      <tbody>
+        <tr><td>0 → 0</td><td class="num">0</td><td class="num">×</td><td>Must not set. Resetting a 0 changes nothing, so K is free.</td></tr>
+        <tr><td>0 → 1</td><td class="num">1</td><td class="num">×</td><td>Must set. With K = 1 it toggles to 1, with K = 0 it sets to 1 — either reaches 1.</td></tr>
+        <tr><td>1 → 0</td><td class="num">×</td><td class="num">1</td><td>Must reset. J = 1 toggles to 0, J = 0 resets to 0.</td></tr>
+        <tr><td>1 → 1</td><td class="num">×</td><td class="num">0</td><td>Must not reset. Setting a 1 changes nothing, so J is free.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="gloss" style="max-width:none;text-align:left"><b>Every row has a
+    don't-care</b>, and that is the point of the whole table. Those × entries go
+    straight into Part 3's Karnaugh maps and routinely halve the input logic —
+    which is the historical reason JK flip-flops were worth their extra pin.</p>
+  </div>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">Why modern design uses D anyway</span>
+  <p style="margin-bottom:0">A D flip-flop's excitation table is
+  <span class="math" data-tex="D = Q^+">D = Q⁺</span> and nothing else — the
+  excitation logic <em>is</em> the next-state logic, with no translation step and
+  no don't-cares to exploit or misplace. When gates were expensive the JK's
+  don't-cares were worth the extra design work; once they were free, the simpler
+  device won. <b>The exam still asks about JK</b>, because the excitation idea is
+  clearest there, but every flip-flop in an FPGA is a D.</p>
+</div>
+
+<h2>4.5 Counters</h2>
+
+<p>Tie a T flip-flop's input high and it toggles on every clock edge — one output
+transition per two input edges, which is a <b>divide by two</b>. Chain the
+divisions and you have a binary counter, because dividing by two repeatedly is
+what counting in binary <em>is</em>.</p>
+
+<f-plate no="15.10" title="Counter arithmetic" stamp="know">
+  <f-row tex="\text{states} = 2^n" name="what n flip-flops hold"
+         gloss="Four flip-flops count 0 through 15. The bits are independent, so the state counts <b>multiply</b>."></f-row>
+  <f-row tex="n = \lceil \log_2 N \rceil" name="flip-flops for a mod-N counter"
+         gloss="Mod-10 needs 4, giving 16 states — so <b>6 must be skipped</b>. Round up, always."></f-row>
+  <f-row tex="f_{out} = f_{in} / 2^n" name="the last stage's frequency"
+         gloss="Each stage halves, so the divisions compound. <b>2ⁿ, never 2n</b> — that substitution is the standard wrong answer."></f-row>
+  <f-row tex="\text{decode } N, \text{ not } N-1" name="trimming the modulus"
+         gloss="A mod-N counter shows 0 through N−1, so it must clear <b>on reaching N</b>. Decoding N−1 gives mod-(N−1)."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · 2ⁿ against 2n</span>
+  <p style="margin-bottom:0">A 6-bit counter clocked at 32 MHz gives
+  <span class="math" data-tex="32/2^6 = 0.5">32 / 64 = 0.5</span> MHz at its top
+  output — not <span class="math" data-tex="32/12">32 / 12</span>. Stages
+  <b>multiply</b> their divisions; they do not add them. Every distractor list on
+  this topic contains the addition.</p>
+</div>
+
+<h2>4.6 What a ripple counter costs</h2>
+
+<p>The chain described above is a <span class="term">ripple counter</span>: the
+clock reaches only the first flip-flop, and each stage clocks the next. It is the
+cheapest possible counter — no steering logic at all — and the plate below shows
+the bill.</p>
+
+<div data-figure="counters"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The glitch is the real problem, not the speed</span>
+  <p style="margin-bottom:0">Take a 4-bit ripple counter from 0111 to 1000. Q0
+  clears, and its edge clocks Q1, which clears and clocks Q2, and only then does
+  Q3 set. The output pins therefore read <b>0111 → 0110 → 0100 → 0000 →
+  1000</b>, and every one of those intermediate values is genuinely present and
+  genuinely decodable. A gate watching for 0100 will fire a spurious pulse on a
+  transition that never went anywhere near it. <b>This, more than the frequency
+  limit, is why decoded outputs need a synchronous counter</b> — or a strobe that
+  samples only after the count has settled.</p>
+</div>
+
+<p>A <span class="term">synchronous counter</span> clocks every flip-flop from
+the same edge and tells each stage whether to toggle: stage <em>k</em> toggles
+only when all the bits below it are 1, which is an AND of <em>k</em> inputs.
+Settling then takes one stage delay whatever the width, and the outputs move
+together, so the count is never briefly wrong. The trade is gates for time, and
+it goes the same way in almost every real design.</p>
+
+<h2>4.7 Registers</h2>
+
+<p>Flip-flops side by side, sharing one clock, are a <span class="term">register</span>
+— an <em>n</em>-bit value updated in a single edge. Wire each output into the
+next one's input instead, and it becomes a <span class="term">shift register</span>,
+moving its contents one place per clock. Three uses are worth recognising:</p>
+
+<ul>
+  <li><b>Serial to parallel</b> and back — the standard way a one-wire link
+  becomes a byte.</li>
+  <li><b>Multiply and divide by two</b> — a left shift doubles, a right shift
+  halves, which is why shifts are cheap instructions.</li>
+  <li><b>Ring and Johnson counters</b> — feed the last output back to the first.
+  A ring counter of <em>n</em> stages has <em>n</em> states with one bit set;
+  a Johnson counter feeds back the <em>complement</em> and gets 2<em>n</em>.
+  Both trade flip-flops for the decoding logic a binary counter needs.</li>
+</ul>
+
+<div class="note honest">
+  <span class="note-tag">Counting the states of a ring counter</span>
+  <p style="margin-bottom:0">A 4-stage ring counter has <b>4</b> states, not 16 —
+  it is deliberately using only the one-hot patterns. A 4-stage Johnson counter
+  has <b>8</b>. Both are wasteful of flip-flops and generous with everything else:
+  no decoding gate is ever needed, because each state is already a single wire.
+  Questions on this topic are testing whether you noticed that "n flip-flops give
+  2ⁿ states" describes a <em>binary</em> counter, not every counter.</p>
+</div>
+
+<h2>4.8 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>Latch is level-sensitive, flip-flop is edge-triggered.</b> Assume
+        edge-triggered unless told otherwise.</li>
+    <li><span data-tex="Q^+ = D">Q⁺ = D</span>;
+        <span data-tex="Q^+ = T \oplus Q">Q⁺ = T ⊕ Q</span>;
+        <span data-tex="Q^+ = J\bar{Q} + \bar{K}Q">Q⁺ = J·Q̄ + K̄·Q</span>.</li>
+    <li><b>S = R = 1 is forbidden; J = K = 1 toggles.</b> That single difference
+        is what the JK is for.</li>
+    <li>JK excitation: 0→0 is J=0,K=×; 0→1 is J=1,K=×; 1→0 is J=×,K=1; 1→1 is
+        J=×,K=0. <b>Every row has a don't-care.</b></li>
+    <li><span data-tex="n = \lceil \log_2 N \rceil">n = ⌈log₂N⌉</span> flip-flops
+        for mod-N, and <span data-tex="f_{out} = f_{in}/2^n">f_out = f_in / 2ⁿ</span>.</li>
+    <li>Ripple counter settles in <span data-tex="n \cdot t_{pd}">n · t_pd</span>;
+        synchronous settles in one stage <b>at any width</b>.</li>
+    <li>Trim a mod-N counter by decoding <b>N</b>, not N−1.</li>
+    <li>Ring counter: n states. Johnson counter: 2n.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Feed an output back to an input and the circuit acquires a past. Gate it
+  with a clock edge so that the past only updates at known instants, and the
+  result is a flip-flop — the entire content of this part, and the only structure
+  Part 5 will need to add to Part 3's combinational logic.</p>
+  <p>Everything else here is arithmetic on that one device. Chaining toggles
+  counts in binary, so <em>n</em> flip-flops give 2ⁿ states and the last one
+  divides by 2ⁿ. Letting each stage clock the next makes the counter free and
+  its delays cumulative; clocking them all together costs gates and buys a
+  settling time that no longer depends on how wide the counter is. <b>That trade
+  — hardware for timing certainty — is the shape of nearly every decision in
+  synchronous design</b>, and it is the same one again in Part 6.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"flipflops","title":"Part 4 · Flip-flops and counters","topics":["ff-next","ff-excite","counter-mod","counter-timing"],"count":6}'></div>
+
+<div data-reflex='{"only":["minimisation","flipflops"],"count":6,"title":"Handbook Reflex · Parts 3–4"}'></div>

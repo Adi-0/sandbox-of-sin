@@ -29,6 +29,7 @@ import "./electronics-synthesis.js"; // 62
 import "./numbers.js";       // 63 64
 import "./gates.js";         // 65 66
 import "./minimisation.js";  // 67 68
+import "./flipflops.js";     // 69 70
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

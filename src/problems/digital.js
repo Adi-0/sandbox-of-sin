@@ -836,3 +836,363 @@ defineReflex([
     because: "Both rules are the reverse of the SOP ones, which is where nearly every error in this topic comes from.",
   },
 ]);
+
+/* ==========================================================================
+   Part 4 — flip-flops and counters (15.E)
+   ========================================================================== */
+
+/* Characteristic behaviour, in the same order the plate walks it. */
+const FF = {
+  D:  { ins: ["D"],      next: (q, [d]) => d },
+  T:  { ins: ["T"],      next: (q, [t]) => (t ? 1 - q : q) },
+  JK: { ins: ["J", "K"], next: (q, [j, k]) => (j && k ? 1 - q : j ? 1 : k ? 0 : q) },
+  SR: { ins: ["S", "R"], next: (q, [s, r]) => (s && r ? -1 : s ? 1 : r ? 0 : q) },
+};
+
+defineProblem("ff-next", {
+  topic: "Characteristic tables",
+  lookup: "Electrical → Digital → Flip-flops and counters",
+  make(rng) {
+    const type = rng.pick(["D", "T", "JK", "JK", "SR"]);   // JK twice: it is the examinable one
+    const F = FF[type];
+    const q = rng.pick([0, 1]);
+    const ins = F.ins.map(() => rng.pick([0, 1]));
+    const nq = F.next(q, ins);
+    const shown = F.ins.map((n, i) => `${n} = ${ins[i]}`).join(", ");
+
+    if (nq < 0) {
+      return {
+        stem: `An SR flip-flop is holding Q = ${q}. A clock edge arrives with S = 1, R = 1. What is Q afterwards?`,
+        choices: [
+          { text: "Undefined — this input combination is forbidden", why: "" },
+          { text: "0", why: "Nothing guarantees 0. Both outputs are driven the same way, and which one wins when the inputs are released is a race between two gate delays." },
+          { text: "1", why: "Nothing guarantees 1 either, for the same reason." },
+          { text: `${q} — it holds`, why: "Hold is S = R = <b>0</b>. Driving both high is the opposite instruction: set and reset at once." },
+        ],
+        answer: 0,
+        steps: [
+          `<b>Undefined.</b> S = R = 1 tells the latch to set and reset simultaneously, so both Q and Q̄ go to the same level — they are no longer complements, and the device is not in a legal state.`,
+          `Worse than the moment itself is what follows: when the inputs return to 0, whichever gate is fractionally faster wins, so the settled value is <b>unpredictable</b>.`,
+          `This forbidden corner is the whole reason the JK exists. The JK takes the same combination and <em>defines</em> it as <b>toggle</b> — which is also what makes a JK able to count.`,
+        ],
+      };
+    }
+
+    const wrong = [];
+    const push = (v, w) => { if (v !== nq && !wrong.some((x) => x[0] === v)) wrong.push([v, w]); };
+    if (type === "JK") {
+      push(1 - nq, ins[0] && ins[1]
+        ? "J = K = 1 is <b>toggle</b>, not hold. That is the one combination that separates JK from SR."
+        : "Check the table again: J sets, K resets, both low holds, both high toggles.");
+      push(q, "That is the hold result, which needs J = K = 0.");
+    } else if (type === "T") {
+      push(1 - nq, ins[0] ? "T = 1 toggles — the output must change." : "T = 0 holds — the output must not change.");
+      push(ins[0], "T is not copied to Q; that is what a <b>D</b> flip-flop does. T says whether to flip.");
+    } else if (type === "D") {
+      push(1 - nq, "D is copied straight through at the edge, so Q takes D's value.");
+      push(q, "That would be a hold, but a D flip-flop has no hold input — every edge loads D.");
+    } else {
+      push(1 - nq, "S sets to 1, R resets to 0, and both low holds. Re-read which is which.");
+      push(q, "That is the hold result, which needs S = R = 0.");
+    }
+    const choices = [{ text: `${nq}`, why: "" }, ...wrong.map(([v, w]) => ({ text: `${v}`, why: w }))];
+    choices.push({ text: "Undefined", why: type === "SR"
+      ? "Only S = R = 1 is forbidden on an SR flip-flop. This combination is perfectly legal."
+      : `A ${type} flip-flop has no forbidden combination — that is a property of <b>SR</b> alone.` });
+
+    const rule = {
+      D: "Q⁺ = D. The edge copies D across; nothing else can happen.",
+      T: `Q⁺ = T ⊕ Q. T = 1 toggles, T = 0 holds.`,
+      JK: "Q⁺ = J·Q̄ + K̄·Q. J alone sets, K alone resets, both low holds, <b>both high toggles</b>.",
+      SR: "Q⁺ = S + R̄·Q, valid only while S·R = 0. S sets, R resets, both low holds.",
+    }[type];
+
+    return {
+      stem: `A ${type} flip-flop is holding Q = ${q}. A clock edge arrives with ${shown}. What is Q afterwards?`,
+      choices,
+      answer: 0,
+      steps: [
+        rule,
+        `With Q = ${q} and ${shown}, that gives <b>Q⁺ = ${nq}</b>.`,
+        type === "JK" && ins[0] && ins[1]
+          ? "J = K = 1 is the combination SR forbids and JK puts to work. A JK wired this way is a T flip-flop, and a chain of them is a counter."
+          : "Read the current Q first, then the inputs — the characteristic equation needs both, and reaching for the inputs alone is the usual slip.",
+      ],
+    };
+  },
+});
+
+defineProblem("ff-excite", {
+  topic: "Excitation tables",
+  lookup: "Electrical → Digital → Flip-flops and counters",
+  make(rng) {
+    const type = rng.pick(["JK", "JK", "D", "T"]);
+    const q = rng.pick([0, 1]);
+    const nq = rng.pick([0, 1]);
+    const label = `${q} → ${nq}`;
+
+    if (type === "D") {
+      return {
+        stem: `A D flip-flop must make the transition Q = ${label} at the next edge. What must D be?`,
+        choices: [
+          { text: `D = ${nq}`, why: "" },
+          { text: `D = ${1 - nq}`, why: "D is copied to Q, so D must equal the value you <b>want</b>, not the one you have." },
+          { text: `D = ${q}`, why: "That is the present value of Q. D must carry the <em>next</em> one." },
+          { text: "D = ×, either works", why: "A D flip-flop never has a don't-care — every edge loads D, so D is always fully determined." },
+        ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+        answer: 0,
+        steps: [
+          `The excitation table for a D flip-flop is trivial: <b>D = Q⁺</b>, always.`,
+          `So for ${label}, D = <b>${nq}</b>.`,
+          `<b>This is why D is the flip-flop state machines are designed with.</b> The excitation logic <em>is</em> the next-state logic — no translation step, and no don't-cares to exploit or get wrong.`,
+        ],
+      };
+    }
+
+    if (type === "T") {
+      const t = q === nq ? 0 : 1;
+      return {
+        stem: `A T flip-flop must make the transition Q = ${label} at the next edge. What must T be?`,
+        choices: [
+          { text: `T = ${t}`, why: "" },
+          { text: `T = ${1 - t}`, why: q === nq ? "The output must <b>not</b> change, so it must not be told to toggle." : "The output must change, and toggling is the only way a T flip-flop can change it." },
+          { text: `T = ${nq}`, why: "T is not the value you want; it is <b>whether to flip</b>. Copying the target value is what a D flip-flop does." },
+          { text: "T = ×, either works", why: "T is fully determined by the transition — a T flip-flop has no don't-cares." },
+        ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+        answer: 0,
+        steps: [
+          `<b>T = Q ⊕ Q⁺</b> — toggle when the value must change, hold when it must not.`,
+          `${label} is ${q === nq ? "no change" : "a change"}, so T = <b>${t}</b>.`,
+          `T flip-flops make counters cheap for exactly this reason: a bit that must flip every time simply gets T tied high.`,
+        ],
+      };
+    }
+
+    // JK — the one with don't-cares, and the reason excitation tables are worth a page
+    const JK = { "0->0": ["0", "×"], "0->1": ["1", "×"], "1->0": ["×", "1"], "1->1": ["×", "0"] };
+    const [j, k] = JK[`${q}->${nq}`];
+    const right = `J = ${j}, K = ${k}`;
+    const flip = `J = ${k}, K = ${j}`;
+    const explain = {
+      "0->0": "From 0, staying at 0 needs J = 0 (do not set). K is irrelevant — resetting an output that is already 0 changes nothing.",
+      "0->1": "From 0, reaching 1 needs J = 1 (set). K is irrelevant: with J = 1 and K = 1 the flip-flop toggles to 1, and with K = 0 it sets to 1.",
+      "1->0": "From 1, reaching 0 needs K = 1 (reset). J is irrelevant: with J = 1 it toggles to 0, with J = 0 it resets to 0.",
+      "1->1": "From 1, staying at 1 needs K = 0 (do not reset). J is irrelevant — setting an output that is already 1 changes nothing.",
+    }[`${q}->${nq}`];
+
+    return {
+      stem: `A JK flip-flop must make the transition Q = ${label} at the next edge. What must J and K be? (× is a don't-care.)`,
+      choices: [
+        { text: right, why: "" },
+        { text: flip, why: "J and K are swapped. <b>J sets and K resets</b> — take the transition's destination first and ask which one it needs." },
+        { text: `J = ${nq}, K = ${1 - nq}`, why: "That is the fully-specified answer you would write for an <b>SR</b> flip-flop. A JK has a don't-care in every row, and throwing it away costs you the simplification it was there to buy." },
+        { text: "J = ×, K = ×", why: "Only one of the two is free. The other is what actually forces the transition." },
+      ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+      answer: 0,
+      steps: [
+        explain,
+        `So ${label} needs <b>${right}</b>.`,
+        `<b>Every JK row has a don't-care</b>, which is the whole reason the JK excitation table is worth memorising: those × entries drop into the Karnaugh map from Part 3 and routinely halve the input logic. That is the trade — a D flip-flop is simpler to design with, a JK is cheaper once designed.`,
+      ],
+    };
+  },
+});
+
+defineProblem("counter-mod", {
+  topic: "Counter modulus and frequency division",
+  lookup: "Electrical → Digital → Flip-flops and counters",
+  make(rng) {
+    const q = rng.pick(["bits", "states", "divide", "mod"]);
+
+    if (q === "bits") {
+      const mod = rng.pick([10, 12, 24, 60, 100, 1000]);
+      const n = Math.ceil(Math.log2(mod));
+      return {
+        stem: `How many flip-flops does a mod-${mod} counter need?`,
+        choices: [
+          { text: `${n}`, why: "" },
+          { text: `${n - 1}`, why: `${n - 1} flip-flops reach only ${2 ** (n - 1)} states, which is fewer than ${mod}.` },
+          { text: `${n + 1}`, why: `More than needed — ${n} already gives ${2 ** n} states, and ${mod} of them are enough.` },
+          { text: `${mod}`, why: "That is one flip-flop per count, which is a <b>ring counter</b> — legal, but far more hardware than a binary counter needs." },
+        ],
+        answer: 0,
+        steps: [
+          `n flip-flops give 2ⁿ states, so you need the smallest n with ${T(`2^n \\ge ${mod}`)}.`,
+          `<span class="math display" data-tex="n = \\lceil \\log_2 ${mod} \\rceil = ${n} \\quad (2^{${n}} = ${2 ** n})"></span>`,
+          `<b>${n} flip-flops.</b> ${2 ** n > mod ? `That leaves ${2 ** n - mod} unused states, which the counter must be forced to skip — usually by decoding the count of ${mod} and using it to clear every stage.` : `${mod} is a power of two, so the count wraps on its own with no decoding at all.`}`,
+        ],
+      };
+    }
+
+    if (q === "states") {
+      const n = rng.pick([3, 4, 5, 6, 8]);
+      return {
+        stem: `A binary ripple counter is built from ${n} flip-flops. How many distinct states does it pass through before repeating?`,
+        choices: [
+          { text: `${2 ** n}`, why: "" },
+          { text: `${2 ** n - 1}`, why: "All-zeros is a state like any other. The count runs 0 through " + (2 ** n - 1) + ", which is 2ⁿ values." },
+          { text: `${2 * n}`, why: "Two <em>per</em> flip-flop would be right only if they counted independently. They compound, so the states multiply: 2 × 2 × … = 2ⁿ." },
+          { text: `${n}`, why: "That is the number of flip-flops, not the number of states." },
+        ],
+        answer: 0,
+        steps: [
+          `Each flip-flop contributes an independent bit, so ${n} of them hold ${T(`2^{${n}} = ${2 ** n}`)} distinct patterns.`,
+          `<b>${2 ** n} states</b>, counting 0 to ${2 ** n - 1}.`,
+          `The same arithmetic backwards is the more common exam question: a mod-N counter needs ⌈log₂N⌉ flip-flops.`,
+        ],
+      };
+    }
+
+    if (q === "divide") {
+      const n = rng.pick([3, 4, 5, 6]);
+      const fin = rng.pick([1, 2, 4, 8, 16, 32]);   // MHz
+      const fout = fin / 2 ** n;
+      const fmt = (f) => (f >= 1 ? `${num(f)} MHz` : `${num(f * 1000)} kHz`);
+      return {
+        stem: `A ${n}-bit binary counter is clocked at ${num(fin)} MHz. What is the frequency at its most significant output?`,
+        choices: [
+          { text: fmt(fout), why: "" },
+          { text: fmt(fin / 2 ** (n - 1)), why: `That divides by 2^${n - 1}. Count the stages again — the last of ${n} divides by 2^${n}.` },
+          { text: fmt(fin / (2 * n)), why: "That divides by 2n instead of 2ⁿ. Each stage <b>halves</b> the one before it, so the divisions multiply rather than add." },
+          { text: fmt(fin / 2), why: "That is the <b>first</b> stage's output. Every further stage halves it again." },
+        ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+        answer: 0,
+        steps: [
+          `Every flip-flop in a binary counter toggles once per two edges of the stage before it, so <b>each stage divides by 2</b>.`,
+          `<span class="math display" data-tex="f_{out} = \\frac{f_{in}}{2^n} = \\frac{${num(fin)}\\ \\text{MHz}}{2^{${n}}} = ${fout >= 1 ? num(fout) + "\\ \\text{MHz}" : num(fout * 1000) + "\\ \\text{kHz}"}"></span>`,
+          `<b>${fmt(fout)}.</b> This is why counters are called dividers — the last stage of an n-bit counter is a divide-by-2ⁿ, and the trap is adding the stages instead of multiplying them.`,
+        ],
+      };
+    }
+
+    const n = rng.pick([3, 4, 5]);
+    const mod = rng.pick([5, 6, 10, 12]);
+    const dec = mod.toString(2).padStart(n, "0");
+    return {
+      stem: `A ${n}-bit binary counter is to be made mod-${mod}. Which count must be decoded to reset it?`,
+      choices: [
+        { text: `${mod} (binary ${dec})`, why: "" },
+        { text: `${mod - 1} (binary ${(mod - 1).toString(2).padStart(n, "0")})`, why: `${mod - 1} is the <b>last count you want to keep</b>. Decoding it would clear the counter before that count was ever displayed, giving mod-${mod - 1}.` },
+        { text: `${mod + 1} (binary ${(mod + 1).toString(2).padStart(n, "0")})`, why: `One count too late — the counter would show ${mod} as well, making it mod-${mod + 1}.` },
+        { text: `0 (binary ${"0".repeat(n)})`, why: "The counter is already at 0 after a reset; decoding it would hold the counter there permanently." },
+      ],
+      answer: 0,
+      steps: [
+        `A mod-${mod} counter shows the counts 0 through ${mod - 1} — that is ${mod} states — and must return to 0 <b>on reaching ${mod}</b>.`,
+        `So decode ${mod} = ${T(`${dec}_2`)} with an AND of the bits that are 1 there, and feed that into the asynchronous clear.`,
+        `<b>Decode ${mod}, not ${mod - 1}.</b> Off-by-one here is the classic error: you decode the first count you do <em>not</em> want. The count of ${mod} does appear, for a few nanoseconds, which is exactly the glitch this technique is known for.`,
+      ],
+    };
+  },
+});
+
+defineProblem("counter-timing", {
+  topic: "Ripple against synchronous",
+  lookup: "Electrical → Digital → Flip-flops and counters",
+  make(rng) {
+    const q = rng.pick(["fmax", "skew", "glitch", "compare"]);
+    const n = rng.pick([4, 6, 8]);
+    const tpd = rng.pick([5, 10, 15, 20, 25]);
+
+    if (q === "fmax") {
+      const worst = n * tpd;
+      const f = 1000 / worst;
+      return {
+        stem: `A ${n}-bit ripple counter uses flip-flops with ${tpd} ns propagation delay. What is the highest clock frequency at which every output is settled before the next edge?`,
+        choices: [
+          { text: `${fixed(f, 1)} MHz`, why: "" },
+          { text: `${fixed(1000 / tpd, 1)} MHz`, why: `That uses one stage's delay. In a ripple counter the stages are <b>in series</b> — each clocks the next — so the delays add across all ${n}.` },
+          { text: `${fixed(1000 / (2 * tpd), 1)} MHz`, why: `That counts two stages. All ${n} of them contribute.` },
+          { text: `${fixed(1000 / (tpd * 2 ** n), 2)} MHz`, why: "Delay accumulates once <b>per stage</b>, not once per state. It is n × t<sub>pd</sub>, not 2ⁿ × t<sub>pd</sub>." },
+        ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+        answer: 0,
+        steps: [
+          `Each flip-flop clocks the next, so the top bit does not move until the delay has propagated through all ${n} stages:`,
+          `<span class="math display" data-tex="t_{worst} = n \\cdot t_{pd} = ${n} \\times ${tpd}\\ \\text{ns} = ${worst}\\ \\text{ns}"></span>`,
+          `<span class="math display" data-tex="f_{max} = \\frac{1}{t_{worst}} = \\frac{1}{${worst}\\ \\text{ns}} = ${fixed(f, 1)}\\ \\text{MHz}"></span>`,
+          `<b>${fixed(f, 1)} MHz.</b> Note what this says: <b>widening a ripple counter makes it slower</b>. A synchronous counter built from the same parts would not care about n at all.`,
+        ],
+      };
+    }
+
+    if (q === "skew") {
+      const worst = n * tpd;
+      return {
+        stem: `In a ${n}-bit ripple counter with ${tpd} ns per stage, how long after the clock edge is the most significant bit valid?`,
+        choices: [
+          { text: `${worst} ns`, why: "" },
+          { text: `${tpd} ns`, why: "That is the first stage. The MSB is at the end of the chain and waits for every stage ahead of it." },
+          { text: `${(n - 1) * tpd} ns`, why: `Off by one stage — the count is ${n} flip-flops from the clock input to the MSB, not ${n - 1}.` },
+          { text: "0 ns — all outputs change together", why: "That describes a <b>synchronous</b> counter. In a ripple counter only the first stage sees the clock." },
+        ],
+        answer: 0,
+        steps: [
+          `The clock reaches only the first flip-flop. Its output clocks the second, whose output clocks the third, and so on.`,
+          `<span class="math display" data-tex="t_{MSB} = ${n} \\times ${tpd}\\ \\text{ns} = ${worst}\\ \\text{ns}"></span>`,
+          `<b>${worst} ns.</b> For that whole window the counter's pins carry values it never actually counted, which is why a ripple counter's output must not be decoded directly.`,
+        ],
+      };
+    }
+
+    if (q === "glitch") {
+      return {
+        stem: "A 4-bit ripple counter goes from 0111 to 1000. What appears on its outputs in between?",
+        choices: [
+          { text: "0110, 0100, 0000 — each in turn, as the carry ripples", why: "" },
+          { text: "Nothing; all four bits change simultaneously", why: "Only in a <b>synchronous</b> counter. Here each stage waits for the one before it." },
+          { text: "1111, briefly", why: "No stage is ever set on the way down. The bits clear one at a time from the least significant end." },
+          { text: "The outputs float until the count settles", why: "They are driven throughout — that is the problem. They are driven to <em>wrong</em> values." },
+        ],
+        answer: 0,
+        steps: [
+          `Q0 clears first, then its falling edge clocks Q1, which clears and clocks Q2, and only then does Q3 set:`,
+          `<span class="math display" data-tex="0111 \\to 0110 \\to 0100 \\to 0000 \\to 1000"></span>`,
+          `<b>Every one of those intermediate values is present on the output pins.</b> A decoder watching for, say, 0100 would fire a spurious pulse on this transition — which is why decoded outputs from a ripple counter need either a synchronous counter instead, or a strobe that samples only after the count has settled.`,
+        ],
+      };
+    }
+
+    return {
+      stem: "What does a synchronous counter buy over a ripple counter, and what does it cost?",
+      choices: [
+        { text: "Buys a settling time independent of width; costs steering logic on every stage", why: "" },
+        { text: "Buys fewer flip-flops; costs a faster clock", why: "Both counters use one flip-flop per bit. Neither needs a faster clock — the synchronous one <b>tolerates</b> a faster clock." },
+        { text: "Buys lower power; costs area", why: "A synchronous counter clocks <b>every</b> flip-flop on every edge, so it generally burns <em>more</em> power, not less." },
+        { text: "Buys glitch-free outputs; costs nothing", why: "It does buy glitch-free outputs, but the steering logic is real hardware — an AND of all lower bits at each stage." },
+      ],
+      answer: 0,
+      steps: [
+        `In a synchronous counter every flip-flop sees the same clock edge, so the whole count settles in <b>one</b> stage delay no matter how many bits there are — where a ripple counter needs n of them.`,
+        `The price is that each stage now needs to be told whether to toggle: stage k toggles only when all bits below it are 1, which is an AND of k inputs.`,
+        `<b>Settling time independent of width, paid for in gates.</b> That trade is the reason ripple counters survive at all — for a slow divider where nobody decodes the intermediate outputs, the ripple version is free.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "flipflops",
+    stem: "A JK flip-flop with J = K = 1 receives a clock edge. What does Q do?",
+    tool: "toggle — Q⁺ = Q̄",
+    because: "It is the combination SR forbids, and defining it as toggle is what makes a JK able to count.",
+  },
+  {
+    part: "flipflops",
+    stem: "You need Q to go 1 → 0 on a JK flip-flop. What must J and K be?",
+    tool: "K = 1, J = don't-care",
+    because: "K resets; J is free because with J = 1 the flip-flop toggles to 0 and with J = 0 it resets to 0. Every JK excitation row has a don't-care.",
+  },
+  {
+    part: "flipflops",
+    stem: "How many flip-flops does a mod-10 counter need?",
+    tool: "⌈log₂10⌉ = 4",
+    because: "Four flip-flops give 16 states; the six unused ones are skipped by decoding the count of 10 and clearing.",
+  },
+  {
+    part: "flipflops",
+    stem: "A 6-bit ripple counter, 10 ns per stage. When is the MSB valid?",
+    tool: "n × t_pd = 60 ns after the edge",
+    because: "The stages are in series, so widening a ripple counter directly slows it — a synchronous one settles in one stage delay at any width.",
+  },
+]);
