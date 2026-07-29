@@ -18,6 +18,7 @@ import "./circuits-ac.js";   // 32 33 34 35 36
 
 /* --- Electronics --- */
 import "./diode.js";         // 49 50
+import "./rectifiers.js";    // 51 52
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

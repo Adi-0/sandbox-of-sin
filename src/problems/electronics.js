@@ -237,3 +237,236 @@ defineReflex([
     because: "A conducting diode needs positive current; an off one needs reverse bias. The surviving assumption is the answer.",
   },
 ]);
+
+/* ==========================================================================
+   Part 2 — rectifiers and power conversion
+   ========================================================================== */
+
+const RECT = {
+  half: { name: "half-wave", kAvg: 1 / Math.PI, kRms: 0.5, drops: 1, piv: 1, fr: 1,
+          avgTex: "V_m/\\pi", rmsTex: "V_m/2" },
+  bridge: { name: "full-wave bridge", kAvg: 2 / Math.PI, kRms: 1 / Math.SQRT2, drops: 2, piv: 1, fr: 2,
+            avgTex: "2V_m/\\pi", rmsTex: "V_m/\\sqrt{2}" },
+  ct: { name: "centre-tapped full-wave", kAvg: 2 / Math.PI, kRms: 1 / Math.SQRT2, drops: 1, piv: 2, fr: 2,
+        avgTex: "2V_m/\\pi", rmsTex: "V_m/\\sqrt{2}" },
+};
+
+defineProblem("rect-output", {
+  topic: "Rectifier output voltage",
+  lookup: "Electrical → Electronics → Rectifiers",
+  make(rng) {
+    const key = rng.pick(["half", "bridge", "bridge", "ct"]);
+    const R = RECT[key];
+    const Vrms = rng.pick([12.6, 24, 120, 240]);
+    const Vm = Vrms * Math.SQRT2;
+    const ideal = rng.pick([true, true, false]);
+    const Vpk = ideal ? Vm : Vm - 0.7 * R.drops;
+    const avg = Vpk * R.kAvg;
+    const other = key === "half" ? RECT.bridge : RECT.half;
+
+    return {
+      stem: `A ${R.name} rectifier is driven from a ${Vrms} V RMS sinusoid` +
+            `${ideal ? " and its diodes are treated as ideal" : ", with silicon diodes"}. ` +
+            `What is the average (DC) output voltage, most nearly?`,
+      choices: [
+        { text: `${fixed(avg, 2)} V`, why: "" },
+        { text: `${fixed(Vpk * other.kAvg, 2)} V`,
+          why: key === "half"
+            ? "That is the <b>full-wave</b> average. A half-wave rectifier throws away half the cycle, so its average is half as large."
+            : "That is the <b>half-wave</b> average. This circuit uses both halves of the input, so its average is twice that." },
+        { text: `${fixed(Vrms * R.kAvg, 2)} V`,
+          why: `The RMS value was used where the <b>peak</b> belongs. The factor ${T(R.avgTex)} multiplies ${T("V_m")}, so convert first: ${T(`V_m = ${Vrms}\\sqrt{2} = ${fixed(Vm, 2)}`)} V.` },
+        { text: `${fixed(Vpk * R.kRms, 2)} V`,
+          why: `That is the <b>RMS</b> of the output, not its average. Only the average is what a DC voltmeter reads or a battery charger delivers.` },
+      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.05),
+      answer: 0,
+      steps: [
+        `Peak of the input first — the rectifier formulas are all written in terms of ${T("V_m")}:`,
+        `<span class="math display" data-tex="V_m = ${Vrms}\\sqrt{2} = ${fixed(Vm, 2)}\\text{ V}"></span>`,
+        ideal
+          ? `The diodes are ideal, so the output peak is the input peak.`
+          : `${R.drops} diode${R.drops > 1 ? "s are" : " is"} in the load path, so the output peak is ${T(`${fixed(Vm, 2)} - ${fixed(0.7 * R.drops, 1)} = ${fixed(Vpk, 2)}`)} V.`,
+        `<span class="math display" data-tex="V_{avg} = ${R.avgTex.replace("V_m", `(${fixed(Vpk, 2)})`)} = ${fixed(avg, 2)}\\text{ V}"></span>`,
+        `<b>${fixed(avg, 2)} V.</b> This is the <em>unfiltered</em> average — add a smoothing capacitor and the output climbs towards the peak instead.`,
+      ],
+    };
+  },
+});
+
+defineProblem("rect-piv", {
+  topic: "Peak inverse voltage and topology",
+  lookup: "Electrical → Electronics → Rectifiers (PIV)",
+  make(rng) {
+    const key = rng.pick(["half", "bridge", "ct"]);
+    const R = RECT[key];
+    const Vrms = rng.pick([12.6, 24, 48, 120]);
+    const Vm = Vrms * Math.SQRT2;
+    const piv = Vm * R.piv;
+    const ask = rng.pick(["piv", "count"]);
+
+    if (ask === "count") {
+      return {
+        stem: `Which rectifier uses four diodes but needs no centre-tapped transformer?`,
+        choices: [
+          { text: "The full-wave bridge", why: "" },
+          { text: "The centre-tapped full-wave rectifier", why: "That one uses only <b>two</b> diodes — but it needs the centre tap, which is exactly the trade the bridge avoids." },
+          { text: "The half-wave rectifier", why: "One diode, and it only uses half the input." },
+          { text: "All three use four diodes", why: "Half-wave uses one, centre-tap uses two, bridge uses four. The count is the quickest way to tell them apart in a figure." },
+        ],
+        answer: 0,
+        steps: [
+          `Half-wave: <b>one</b> diode. Centre-tap: <b>two</b> diodes plus a tapped transformer. Bridge: <b>four</b> diodes, ordinary transformer.`,
+          `The bridge trades two extra diodes for a simpler transformer, which is almost always the cheaper side of the deal — hence <b>the bridge is the default</b>.`,
+          `The cost is that <b>two</b> diode drops sit in the load path instead of one, so at low output voltages the centre-tap can still win.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A ${R.name} rectifier runs from a ${Vrms} V RMS supply. ` +
+            `What peak inverse voltage must its diodes withstand, most nearly?`,
+      choices: [
+        { text: `${fixed(piv, 1)} V`, why: "" },
+        { text: `${fixed(Vm * (R.piv === 2 ? 1 : 2), 1)} V`,
+          why: R.piv === 2
+            ? `That is ${T("V_m")}, right for a bridge or half-wave circuit. In a <b>centre-tapped</b> rectifier the off diode sees <em>both</em> halves of the secondary, so it withstands ${T("2V_m")}.`
+            : `That is ${T("2V_m")}, which applies to the <b>centre-tapped</b> circuit. Here the off diode only ever sees one peak.` },
+        { text: `${fixed(Vrms * R.piv, 1)} V`, why: `The RMS value was used. Reverse stress is a <b>peak</b> phenomenon — the diode has to survive the worst instant, not the average one.` },
+        { text: `${fixed(piv / 2, 1)} V`, why: "Half the correct figure — a diode rated this low would fail on the first negative half cycle." },
+      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.05),
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="V_m = ${Vrms}\\sqrt{2} = ${fixed(Vm, 2)}\\text{ V}"></span>`,
+        R.piv === 2
+          ? `In a centre-tapped rectifier the non-conducting diode has the <b>whole secondary</b> across it — the conducting half plus the reverse half:`
+          : `The non-conducting diode sees at most one peak of the supply:`,
+        `<span class="math display" data-tex="\\text{PIV} = ${R.piv === 2 ? "2V_m" : "V_m"} = ${fixed(piv, 1)}\\text{ V}"></span>`,
+        `<b>${fixed(piv, 1)} V.</b> In practice a designer would specify a diode rated well above this, since line transients routinely exceed nominal peaks.`,
+      ],
+    };
+  },
+});
+
+defineProblem("ripple-calc", {
+  topic: "Ripple with a filter capacitor",
+  lookup: "Electrical → Electronics → Rectifiers (filtering)",
+  make(rng) {
+    const full = rng.pick([true, true, false]);
+    const f = rng.pick([50, 60]);
+    const fr = full ? 2 * f : f;
+    const Il = rng.pick([0.05, 0.1, 0.25, 0.5, 1]);
+    const C = rng.pick([470, 1000, 2200, 4700]) * 1e-6;
+    const Vr = Il / (fr * C);
+    const ask = rng.pick(["ripple", "cap"]);
+
+    if (ask === "cap") {
+      const target = rng.pick([0.5, 1, 2]);
+      const need = Il / (fr * target);
+      return {
+        stem: `A ${full ? "full-wave" : "half-wave"} rectifier on a ${f} Hz line supplies ${Il >= 1 ? `${Il} A` : `${fixed(Il * 1000, 0)} mA`}. ` +
+              `What filter capacitance keeps the peak-to-peak ripple below ${target} V, most nearly?`,
+        choices: [
+          { text: `${num(need * 1e6, 0)} µF`, why: "" },
+          { text: `${num(Il / (f * target) * 1e6, 0)} µF`,
+            why: full
+              ? "The <b>line</b> frequency was used. A full-wave rectifier recharges the capacitor <b>twice</b> per cycle, so f<sub>r</sub> = 2f and only half this capacitance is needed."
+              : "" },
+          { text: `${num(Il / (2 * f * target) * 1e6, 0)} µF`,
+            why: full ? "" : "That doubles the ripple frequency, which is right for a <b>full-wave</b> rectifier. A half-wave circuit only recharges once per cycle." },
+          { text: `${num(need * 1e6 * target * target, 0)} µF`, why: "The ripple target has been applied twice. It enters the formula once, linearly." },
+        ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text.replace(/,/g, "")) - parseFloat(all[0].text.replace(/,/g, ""))) > 1)),
+        answer: 0,
+        steps: [
+          `The capacitor supplies the load alone between peaks, so charge out equals ${T("I\\,\\Delta t")} and the sag is ${T("Q/C")}:`,
+          `<span class="math display" data-tex="V_r = \\frac{I_L}{f_r C} \\quad\\Longrightarrow\\quad C = \\frac{I_L}{f_r V_r}"></span>`,
+          `A ${full ? "full-wave" : "half-wave"} rectifier gives ${T(`f_r = ${full ? "2f = " : "f = "}${fr}`)} Hz.`,
+          `<span class="math display" data-tex="C = \\frac{${Il}}{(${fr})(${target})} = ${fixed(need * 1e6, 0)}\\ \\mu\\text{F}"></span>`,
+          `<b>${num(need * 1e6, 0)} µF</b>, so the next standard value up would be specified.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A ${full ? "full-wave" : "half-wave"} rectifier on a ${f} Hz line supplies ${Il >= 1 ? `${Il} A` : `${fixed(Il * 1000, 0)} mA`} ` +
+            `through a ${num(C * 1e6, 0)} µF filter capacitor. What is the peak-to-peak ripple, most nearly?`,
+      choices: [
+        { text: `${fixed(Vr, 3)} V`, why: "" },
+        { text: `${fixed(Il / (f * C), 3)} V`,
+          why: full
+            ? "That uses the <b>line</b> frequency. A full-wave rectifier tops the capacitor up twice per cycle, so f<sub>r</sub> = 2f and the ripple is half this."
+            : "" },
+        { text: `${fixed(Il / (2 * f * C), 3)} V`,
+          why: full ? "" : "That doubles the frequency, which is right only for a full-wave circuit." },
+        { text: `${fixed(Il * C * fr, 6)} V`, why: "Multiplied where you should divide. More capacitance gives <b>less</b> ripple." },
+      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 1e-4)),
+      answer: 0,
+      steps: [
+        `The capacitor alone holds the load up between peaks:`,
+        `<span class="math display" data-tex="V_{r(p\\text{-}p)} = \\frac{I_L}{f_r C}"></span>`,
+        `${full ? "Full-wave, so the capacitor is recharged twice per cycle" : "Half-wave, so it is recharged once per cycle"}: ${T(`f_r = ${fr}`)} Hz.`,
+        `<span class="math display" data-tex="V_r = \\frac{${Il}}{(${fr})(${fixed(C * 1e6, 0)}\\times10^{-6})} = ${fixed(Vr, 3)}\\text{ V}"></span>`,
+        `<b>${fixed(Vr, 3)} V peak to peak.</b> The DC output sits about half that below the peak.`,
+      ],
+    };
+  },
+});
+
+defineProblem("converter-duty", {
+  topic: "Switching converters",
+  lookup: "Electrical → Electronics → Power electronics (converters)",
+  make(rng) {
+    const buck = rng.pick([true, true, false]);
+    const Vin = rng.pick([12, 24, 48]);
+    const D = rng.pick([0.25, 0.3, 0.4, 0.5, 0.6, 0.75]);
+    const Vout = buck ? Vin * D : Vin / (1 - D);
+
+    return {
+      stem: `A ${buck ? "buck" : "boost"} converter operates from ${Vin} V at a duty cycle of ${D}. ` +
+            `What is its output voltage, most nearly?`,
+      choices: [
+        { text: `${fixed(Vout, 2)} V`, why: "" },
+        { text: `${fixed(buck ? Vin / (1 - D) : Vin * D, 2)} V`,
+          why: buck
+            ? "That is the <b>boost</b> relation. A buck converter steps <em>down</em>, so its output can never exceed the input."
+            : "That is the <b>buck</b> relation. A boost converter steps <em>up</em>, so its output must exceed the input." },
+        { text: `${fixed(buck ? Vin * (1 - D) : Vin / D, 2)} V`, why: `The duty cycle was complemented. ${buck ? "For a buck, output is D times input directly." : "For a boost, the denominator is (1 − D)."}` },
+        { text: `${Vin}.00 V`, why: "Unchanged. A converter that did not change the voltage would have no purpose." },
+      ],
+      answer: 0,
+      steps: [
+        buck
+          ? `A buck converter connects the input to the inductor for a fraction D of each cycle, so the average voltage delivered is:`
+          : `A boost converter stores energy in the inductor for a fraction D of each cycle and releases it in series with the source, giving:`,
+        `<span class="math display" data-tex="V_{out} = ${buck ? "D\\,V_{in}" : "\\frac{V_{in}}{1-D}"} = ${buck ? `(${D})(${Vin})` : `\\frac{${Vin}}{${fixed(1 - D, 2)}}`} = ${fixed(Vout, 2)}\\text{ V}"></span>`,
+        `<b>${fixed(Vout, 2)} V.</b> Sanity check before anything else: <b>a buck output is always below its input and a boost output always above.</b> An answer on the wrong side of ${Vin} V is wrong no matter what the arithmetic said.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "rectifiers",
+    stem: "A bridge rectifier on 24 V rms. What DC voltage does an unfiltered load see?",
+    tool: "V_avg = 2V_m/π, with V_m = √2 × V_rms",
+    because: "The full-wave average came out of the RMS integral in Circuit Analysis Part 5.",
+  },
+  {
+    part: "rectifiers",
+    stem: "A centre-tapped rectifier on 120 V rms. What must the diodes withstand?",
+    tool: "PIV = 2V_m for a centre-tap",
+    because: "The off diode sees the whole secondary, both halves — twice what a bridge diode endures.",
+  },
+  {
+    part: "rectifiers",
+    stem: "A full-wave supply delivers 250 mA through 2200 µF on a 60 Hz line. Ripple?",
+    tool: "V_r = I_L / (f_r C), with f_r = 120 Hz",
+    because: "Ripple is a discharge between peaks, and a full-wave rectifier recharges twice per cycle.",
+  },
+  {
+    part: "rectifiers",
+    stem: "A buck converter runs at 40% duty from 24 V. Output?",
+    tool: "V_out = D V_in",
+    because: "Buck steps down, boost steps up — check which side of the input your answer lands on.",
+  },
+]);

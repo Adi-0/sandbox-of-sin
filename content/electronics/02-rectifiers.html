@@ -1,0 +1,194 @@
+<p class="eyebrow">
+  <span>Electronics · Part 2</span>
+  <span class="spec">NCEES 9.E</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Rectifiers and Power Conversion</h1>
+
+<p class="lede">The diode's main job in the world. This part also collects a debt:
+the arithmetic it needs was already done in Circuit Analysis Part 5, from the
+definition, and has been waiting ever since.</p>
+
+<h2>2.1 The chain, end to end</h2>
+
+<p>Almost every mains-powered device contains the same four stages, and by now
+three of them have already been taught:</p>
+
+<ol class="steps">
+  <li><b>Transform</b> — 120 V down to something safe. Power Systems Part 4: a
+  turns ratio of about 9.5 : 1 gives 12.6 V RMS.</li>
+  <li><b>Rectify</b> — diodes turn alternating into one-directional. This part.</li>
+  <li><b>Filter</b> — a capacitor smooths the lumps into near-DC. This part.</li>
+  <li><b>Regulate</b> — a Zener or an IC pins the output exactly. Part 1.</li>
+</ol>
+
+<p>So the only genuinely new content here is stages 2 and 3, and half of stage 2
+is already on a plate the reader has seen.</p>
+
+<h2>2.2 The debt from Circuit Analysis Part 5</h2>
+
+<p>Part 5 of Circuit Analysis defined RMS as
+<span data-tex="\sqrt{\frac{1}{T}\int_0^T v^2\,dt}">√((1/T)∫v² dt)</span> and
+then evaluated it for four shapes — including a half-wave rectified sinusoid,
+which it described as "what one rectifier diode produces." Those results are the
+rectifier formulas:</p>
+
+<f-plate no="9.3" title="Rectifier output values" stamp="handbook"
+  caption="<b>Nothing here was derived in this part.</b> Every factor came out of
+  the RMS integral in Circuit Analysis Part 5. What is new is only which physical
+  arrangement produces which shape.">
+  <f-row tex="\text{Half-wave:}\quad V_{avg} = \frac{V_m}{\pi} = 0.318V_m, \qquad V_{rms} = \frac{V_m}{2}"
+         name="one diode"
+         gloss="Half the cycle is missing, so both figures are half of the full-wave values."></f-row>
+  <f-row tex="\text{Full-wave:}\quad V_{avg} = \frac{2V_m}{\pi} = 0.637V_m, \qquad V_{rms} = \frac{V_m}{\sqrt{2}}"
+         name="bridge or centre-tap"
+         gloss="<b>The RMS is the same as the original sinusoid's</b> — flipping the negative half up changes nothing about the square."></f-row>
+  <f-row tex="V_{m,\text{out}} = V_m - n V_D" name="the diode drops"
+         gloss="<b>n is how many diodes are in the load path</b>: two for a bridge, one for half-wave or centre-tap. Negligible at 170 V, an 8% error at 17 V."></f-row>
+</f-plate>
+
+<div data-figure="rectifierShapes"></div>
+
+<div class="note honest">
+  <span class="note-tag">What actually distinguishes the three</span>
+  <p style="margin-bottom:0">The bridge and the centre-tap produce an
+  <em>identical</em> waveform, so no formula can tell them apart. The differences
+  are practical and they are what gets examined:</p>
+  <ul style="margin:0.4rem 0 0">
+    <li><b>Bridge</b> — four diodes, ordinary transformer, <b>two</b> drops in the
+    path, PIV = <span class="math" data-tex="V_m">Vm</span>.</li>
+    <li><b>Centre-tap</b> — two diodes, centre-tapped transformer, <b>one</b> drop,
+    PIV = <span class="math" data-tex="2V_m">2Vm</span>.</li>
+    <li><b>Half-wave</b> — one diode, half the output, and ripple at the line
+    frequency instead of twice it, which makes it the hardest to filter.</li>
+  </ul>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · peak inverse voltage</span>
+  <p style="margin-bottom:0">When a diode is off, it has to <em>withstand</em> the
+  reverse voltage across it, and exceeding that rating destroys it. For a
+  centre-tapped rectifier the non-conducting diode sees the full secondary — both
+  halves — so <b>PIV = 2V<sub>m</sub></b>, twice what the bridge's diodes endure.
+  This is the most commonly asked and most commonly missed fact about rectifiers,
+  because the two circuits look so similar on paper.</p>
+</div>
+
+<h2>2.3 The capacitor, and where ripple comes from</h2>
+
+<p>A rectified sinusoid is one-directional but it is not DC — it drops to zero
+twice per cycle. Adding a capacitor across the load changes the mechanism
+completely: the capacitor charges to the peak, and then <em>it</em> supplies the
+load while the input falls away.</p>
+
+<p>So ripple is not a filter response to be computed with impedances. It is a
+<b>discharge</b>, and the arithmetic is charge conservation:</p>
+
+<f-plate no="9.4" title="Ripple" stamp="know">
+  <f-row tex="V_{r(p\text{-}p)} = \frac{I_L}{f_r C}" name="ripple voltage"
+         gloss="From <span class='math'>Q = CV</span> and <span class='math'>Q = I\Delta t</span>. <b>Load current, ripple frequency, capacitance.</b> Nothing else."></f-row>
+  <f-row tex="f_r = 2f \ \text{(full-wave)}, \qquad f_r = f \ \text{(half-wave)}"
+         name="ripple frequency"
+         gloss="<b>120 Hz for a full-wave rectifier on a 60 Hz line.</b> Using 60 there is the single most common error in this topic, and it doubles your answer."></f-row>
+  <f-row tex="V_{DC} \approx V_m - \frac{V_{r(p\text{-}p)}}{2}" name="the DC level"
+         gloss="The average sits halfway down the sawtooth. Good enough whenever the ripple is small, which is the same condition the formula above needs."></f-row>
+  <f-row tex="r = \frac{V_{r(rms)}}{V_{DC}} \approx \frac{V_{r(p\text{-}p)}}{2\sqrt{3}\,V_{DC}}"
+         name="ripple factor"
+         gloss="A sawtooth's RMS is its peak-to-peak over 2√3 — the triangular-wave factor from Circuit Analysis Part 5, once again."></f-row>
+</f-plate>
+
+<div data-figure="ripple"></div>
+
+<div class="worked">
+  <h4>Worked · <em>designing the filter</em></h4>
+  <div class="worked-body">
+    <p>A bridge rectifier runs from a 12.6 V RMS, 60 Hz secondary and supplies
+    100 mA. What capacitor keeps the ripple below 1 V peak-to-peak, and what is
+    the resulting DC output?</p>
+    <ol class="steps">
+      <li>Peak at the secondary, then subtract the bridge's two drops:
+        <span data-tex="V_m = 12.6\sqrt{2} = 17.82\text{ V}, \qquad V_{pk} = 17.82 - 1.4 = 16.42\text{ V}" data-display>Vm = 17.82 V, Vpk = 16.42 V</span></li>
+      <li>A bridge is full-wave, so the ripple frequency is
+        <span data-tex="2 \times 60 = 120">120</span> Hz — <b>not 60</b>.</li>
+      <li>Rearrange the ripple formula for C:
+        <span data-tex="C = \frac{I_L}{f_r V_r} = \frac{0.1}{(120)(1)} = 833\ \mu\text{F}" data-display>C = 833 µF</span>
+        so a standard 1000 µF part will do.</li>
+      <li>At 1000 µF the actual ripple is
+        <span data-tex="V_r = \frac{0.1}{(120)(1000\times10^{-6})} = 0.833\text{ V}" data-display>Vr = 0.833 V</span>
+        and the DC output sits halfway down it:
+        <span data-tex="V_{DC} = 16.42 - 0.42 = 16.0\text{ V}" data-display>VDC = 16.0 V</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Note how far this is
+    from the unfiltered average of 10.45 V. <b>A capacitor does not smooth the
+    average — it raises the output towards the peak</b>, because the load now sees
+    the peak minus a small sag rather than the mean of a lumpy waveform. Students
+    who filter and then apply 2V<sub>m</sub>/π get an answer 35% low.</p>
+  </div>
+</div>
+
+<h2>2.4 The rest of power electronics</h2>
+
+<p>Rectifiers are 9.E's main content, but the subtopic also names inverters and
+converters. In outline, and at the depth this exam asks:</p>
+
+<ul>
+  <li><b>Inverter</b> — DC to AC, by switching the polarity across the load at the
+  wanted frequency. Output is a square or stepped wave, filtered towards a sine.
+  This is what a solar installation or a motor drive contains.</li>
+  <li><b>Buck converter</b> — DC to <em>lower</em> DC by switching, with
+  <span class="math" data-tex="V_{out} = D\,V_{in}">Vout = D·Vin</span> where
+  <span class="math" data-tex="D">D</span> is the duty cycle.</li>
+  <li><b>Boost converter</b> — DC to <em>higher</em> DC, with
+  <span class="math" data-tex="V_{out} = V_{in}/(1-D)">Vout = Vin/(1 − D)</span>.</li>
+  <li><b>Controlled rectifier</b> — a thyristor (SCR) instead of a diode, fired
+  partway through each half cycle so the average output is adjustable.</li>
+</ul>
+
+<div class="note honest">
+  <span class="note-tag">Why switching beat the Zener</span>
+  <p style="margin-bottom:0">A Zener regulator or a linear IC drops the excess
+  voltage across a resistance and turns it into heat: taking 16 V down to 5 V at
+  1 A wastes <b>11 watts</b>. A buck converter with a 31% duty cycle does the same
+  job by switching, and wastes a fraction of a watt. <b>Efficiency is why every
+  modern supply switches</b> — and switching is why they also emit interference
+  and need filtering.</p>
+</div>
+
+<h2>2.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Half-wave: <span data-tex="V_{avg} = V_m/\pi">Vavg = Vm/π</span>,
+        <span data-tex="V_{rms} = V_m/2">Vrms = Vm/2</span>.
+        Full-wave: <span data-tex="2V_m/\pi">2Vm/π</span> and
+        <span data-tex="V_m/\sqrt{2}">Vm/√2</span>.</li>
+    <li><b>PIV</b>: <span data-tex="V_m">Vm</span> for half-wave and bridge,
+        <span data-tex="2V_m">2Vm</span> for centre-tap.</li>
+    <li>Drops in the path: <b>2 for a bridge</b>, 1 for the other two.</li>
+    <li><span data-tex="V_r = I_L/(f_rC)">Vr = IL/(fr C)</span>, with
+        <b>fr = 2f for full-wave</b>.</li>
+    <li>With a filter capacitor the output is near the <b>peak</b>, not near
+        <span data-tex="2V_m/\pi">2Vm/π</span>.</li>
+    <li>Buck: <span data-tex="V_{out} = DV_{in}">DVin</span>. Boost:
+        <span data-tex="V_{in}/(1-D)">Vin/(1 − D)</span>.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A rectifier's output values were already determined in Circuit Analysis
+  Part 5 by the RMS integral; this part only says which circuit makes which shape,
+  and adds the two practical facts formulas cannot give — how many diode drops sit
+  in the load path, and how much reverse voltage the off diodes must survive.</p>
+  <p>The smoothing capacitor changes the question entirely. Once it is present the
+  load runs off a discharging capacitor between peaks, so the ripple is set by
+  charge, and the DC output climbs from the rectified average up to nearly the
+  peak.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"rectifiers","title":"Part 2 · Rectifiers and ripple","topics":["rect-output","rect-piv","ripple-calc","converter-duty"],"count":6}'></div>
+
+<div data-reflex='{"only":["diode","rectifiers"],"count":6,"title":"Handbook Reflex · Parts 1–2"}'></div>
