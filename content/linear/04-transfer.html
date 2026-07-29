@@ -1,0 +1,162 @@
+<p class="eyebrow">
+  <span>Linear Systems · Part 4</span>
+  <span class="spec">NCEES 7.D</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Transfer Functions and the s-Plane</h1>
+
+<p class="lede">One ratio holds everything a linear system can do. And once you
+have it, the behaviour is not in the algebra — it is in the positions of a
+handful of points on a plane.</p>
+
+<h2>4.1 The definition, and why it is worth having</h2>
+
+<p class="math" data-tex="H(s) = \frac{\text{output}}{\text{input}} = \frac{Y(s)}{X(s)} \quad \text{with all initial conditions zero}" data-display>H(s) = Y(s)/X(s), initial conditions zero</p>
+
+<p>The "initial conditions zero" is not a limitation, it is the point:
+<span class="math" data-tex="H(s)">H(s)</span> describes <em>the system</em>,
+with nothing of the particular situation in it. Whatever you drive it with,
+the output is one multiplication:
+<span class="math" data-tex="Y(s) = H(s)X(s)">Y(s) = H(s)X(s)</span>.</p>
+
+<f-plate no="7.7" title="Three substitutions and Circuit Analysis still works" stamp="know"
+  caption="<b>This is the whole bridge from a circuit to H(s).</b> Series,
+  parallel, dividers and node analysis all work unchanged with s in place of
+  numbers.">
+  <f-row tex="Z_R = R" name="resistor"
+         gloss="No s at all, which is why resistors <b>do not add order</b> and a purely resistive circuit has no transient."></f-row>
+  <f-row tex="Z_L = sL" name="inductor"
+         gloss="v = L·di/dt, and differentiating is multiplying by s. The inductor carries the s."></f-row>
+  <f-row tex="Z_C = \dfrac{1}{sC}" name="capacitor"
+         gloss="Integration is division by s. <b>The capacitor's 1/s is what puts poles in the denominator</b> of nearly every transfer function you will write."></f-row>
+  <f-row tex="\text{order} = \text{number of storage elements}" name="counting poles"
+         gloss="One pole per capacitor or inductor. <b>A one-capacitor circuit cannot ring</b>, whatever the resistors do — ringing needs two stores to pass energy between."></f-row>
+</f-plate>
+
+<div data-figure="circuitToH"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Why swapping the components does not move the pole</span>
+  <p style="margin-bottom:0">An RC low-pass and a CR high-pass have exactly the
+  same pole, at −1/RC. <b>The pole comes from the loop</b>, and there is one
+  loop either way. What changes is the <em>numerator</em>: the high-pass has a
+  zero at the origin, which is what kills the response at DC. That division of
+  labour is worth carrying: <b>poles are what the circuit does on its own,
+  zeros are what your particular choice of output does to it.</b> Stability
+  depends only on poles, for exactly this reason.</p>
+</div>
+
+<h2>4.2 The s-plane</h2>
+
+<p>Every claim this module has made now becomes a statement about where a point
+is:</p>
+
+<div data-figure="splane"></div>
+
+<f-plate no="7.8" title="Reading a pole" stamp="know"
+  caption="<b>Four facts, one point.</b> Any second-order specification is
+  really a region of this plane, which is what makes design graphical.">
+  <f-row tex="\text{Re}(s) < 0 \ \text{for every pole}" name="stability"
+         gloss="The <b>only</b> condition, and it takes just one pole in the right half-plane to break it. Zeros are irrelevant to it."></f-row>
+  <f-row tex="\sigma = |\text{Re}(s)| \ \Rightarrow \ \tau = 1/\sigma, \ t_s \approx 4/\sigma"
+         name="how far left"
+         gloss="Distance from the imaginary axis is decay rate. <b>Vertical lines are lines of constant settling time.</b>"></f-row>
+  <f-row tex="\omega_d = |\text{Im}(s)|" name="how high"
+         gloss="The ringing frequency, and nothing else. A tall pole rings fast; it does not ring for longer."></f-row>
+  <f-row tex="\omega_n = |s|, \qquad \zeta = \cos\theta" name="distance and angle"
+         gloss="θ measured from the <b>negative real axis</b>. <b>Circles about the origin are constant ω_n; radial lines are constant ζ, and therefore constant overshoot.</b>"></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · a pole <em>on</em> the axis is not stable</span>
+  <p style="margin-bottom:0">"Negative real part" means <b>strictly</b>
+  negative. A pole at exactly s = 0 is a pure integrator whose output
+  accumulates without limit; a pair at exactly ±jω is an oscillation that never
+  dies. Both are <span class="term">marginally stable</span>, which on this exam
+  counts as <b>not stable</b>. And a pole with a very small negative real part —
+  −0.1 ± j50, say — <em>is</em> stable, however long it rings. <b>Slow is not
+  unstable.</b></p>
+</div>
+
+<h2>4.3 Poles are the characteristic roots</h2>
+
+<p>Nothing new has been introduced. The denominator of
+<span class="math" data-tex="H(s)">H(s)</span> set to zero <em>is</em> the
+characteristic equation from Mathematics Part 7 — the same polynomial, reached
+by a different route:</p>
+
+<div class="worked">
+  <h4>Worked · <em>the cast, one more time</em></h4>
+  <div class="worked-body">
+    <p>Find H(s) for a series RLC with the output taken across the capacitor,
+    and locate its poles for R = 120 Ω, L = 10 mH, C = 1 µF.</p>
+    <ol class="steps">
+      <li>It is a divider, in s:
+        <span data-tex="H(s) = \frac{1/sC}{R + sL + 1/sC}" data-display></span></li>
+      <li>Multiply top and bottom by
+        <span data-tex="sC">sC</span>:
+        <span data-tex="H(s) = \frac{1}{LCs^2 + RCs + 1} = \frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}" data-display></span></li>
+      <li>The second form is the standard one, and reading it off gives
+        <span data-tex="\omega_n = 1/\sqrt{LC} = 10^4">ωn = 10⁴</span> and
+        <span data-tex="2\zeta\omega_n = R/L = 1.2\times10^4 \Rightarrow \zeta = 0.6">ζ = 0.6</span>.</li>
+      <li>So the poles are
+        <span data-tex="s = -\zeta\omega_n \pm j\omega_n\sqrt{1-\zeta^2} = -6000 \pm j8000" data-display>s = −6000 ± j8000</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Which is
+    <b>Mathematics Part 7's −3 ± 4j at 2000 times the scale</b>, and Part 2's
+    circuit, and the 3-4-5 triangle. Three routes to the same two numbers: the
+    characteristic equation of a differential equation, the roots of a
+    denominator, and a point in a plane 53.13° up from the negative real axis.
+    <b>They were never different things.</b></p>
+  </div>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">Memorise the standard second-order form</span>
+  <p style="margin-bottom:0"><span class="math" data-tex="H(s) = \frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}">H(s) = ωn² / (s² + 2ζωn s + ωn²)</span>
+  is worth knowing on sight, because exam questions hand you a denominator and
+  expect ζ and ωn back. <b>Match coefficients:</b> the constant term is ωn², and
+  the s coefficient is 2ζωn. Two lines, no derivation, and it works for any
+  second-order system — mechanical, thermal or electrical — because none of them
+  knows what its own components are.</p>
+</div>
+
+<h2>4.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>Z<sub>R</sub> = R, Z<sub>L</sub> = sL, Z<sub>C</sub> = 1/sC.</b>
+        Then it is Circuit Analysis, unchanged.</li>
+    <li>Order = number of storage elements. <b>Resistors add none.</b></li>
+    <li><b>Stable ⟺ every pole strictly in the left half-plane.</b> Zeros never
+        affect it; a pole <em>on</em> the axis is not stable.</li>
+    <li>Real pole at −a: <span data-tex="\tau = 1/a">τ = 1/a</span>.</li>
+    <li>Complex pair: <b>distance is ωn, cosine of the angle from the negative
+        real axis is ζ</b>, imaginary part is ωd, real part sets t<sub>s</sub>.</li>
+    <li><span data-tex="H(s) = \frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}">standard second-order form</span>
+        — match coefficients to read off ζ and ωn.</li>
+    <li>Poles come from the loop; <b>zeros come from where you take the
+        output</b>.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A transfer function is the system with the situation taken out of it, and
+  the price of that abstraction is nothing: three impedance substitutions and
+  every technique from Circuit Analysis still applies. What you get back is that
+  a circuit's entire behaviour has collapsed into the positions of a few points.</p>
+  <p>And those positions are readable. <b>Left is decay, up is ringing,
+  distance is ωn, angle is ζ</b> — so a specification written as "under 5%
+  overshoot, settled in 20 ms" is a <em>region</em>: to the left of a vertical
+  line, and inside a wedge from the origin. That is the picture Control Systems
+  is built on entirely, and Part 5 opens the door to it by asking what happens
+  when s is not any old complex number but specifically jω.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"transfer","title":"Part 4 · Transfer functions","topics":["s-impedance","pole-read","laplace-pair"],"count":6}'></div>
+
+<div data-reflex='{"only":["laplace","transfer"],"count":6,"title":"Handbook Reflex · Parts 3–4"}'></div>

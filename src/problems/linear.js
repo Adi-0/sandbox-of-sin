@@ -713,3 +713,212 @@ defineReflex([
     because: "That is how the damped-sine table entry is built from the plain-sine one, so there is one fewer line to memorise.",
   },
 ]);
+
+/* ==========================================================================
+   Part 4 — transfer functions and the s-plane (7.D)
+   ========================================================================== */
+
+defineProblem("s-impedance", {
+  topic: "Impedances in the s-domain",
+  lookup: "Electrical → Linear Systems → Transfer functions",
+  make(rng) {
+    const q = rng.pick(["which", "divider", "divider", "order"]);
+
+    if (q === "which") {
+      const [el, z, why] = rng.pick([
+        ["a resistor", "R", "No frequency dependence at all, which is why a purely resistive circuit has no poles and no transient."],
+        ["an inductor", "sL", "Differentiation is multiplication by s, and v = L·di/dt — so the inductor's impedance carries the s."],
+        ["a capacitor", "1/sC", "Integration is division by s, and v = (1/C)∫i dt. <b>The capacitor's 1/s is what puts poles in the denominator</b> of nearly every transfer function you will write."],
+      ]);
+      const all = ["R", "sL", "1/sC", "sC"];
+      return {
+        stem: `In the s-domain, what is the impedance of ${el}?`,
+        choices: [
+          { text: z, why: "" },
+          ...all.filter((a) => a !== z).map((a) => ({
+            text: a,
+            why: a === "sC"
+              ? "<b>Upside down.</b> sC is the capacitor's <em>admittance</em>; its impedance is the reciprocal, and confusing the two inverts the whole transfer function."
+              : `That is ${a === "R" ? "a resistor" : a === "sL" ? "an inductor" : "a capacitor"}.`,
+          })),
+        ],
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="Z_R = R, \\qquad Z_L = sL, \\qquad Z_C = \\frac{1}{sC}"></span>`,
+          why,
+          `<b>These three lines are the whole bridge from a circuit to a transfer function.</b> Substitute them and every technique from Circuit Analysis — series, parallel, dividers, node analysis — works unchanged, with s in place of numbers.`,
+        ],
+      };
+    }
+
+    if (q === "divider") {
+      const lowpass = rng.pick([true, false]);
+      const rc = lowpass
+        ? { name: "a resistor in series and a capacitor to ground, output across the capacitor",
+            H: "\\frac{1}{1+sRC}", kind: "low-pass",
+            why: "At DC (s = 0) the capacitor is an open circuit and all the input appears at the output; at high frequency it is a short and the output vanishes." }
+        : { name: "a capacitor in series and a resistor to ground, output across the resistor",
+            H: "\\frac{sRC}{1+sRC}", kind: "high-pass",
+            why: "At DC the capacitor blocks and nothing gets through — which is what the <b>zero at the origin</b> in the numerator says; at high frequency it is a short and everything does." };
+      return {
+        stem: `A circuit is ${rc.name}. What is H(s) = V_out/V_in?`,
+        choices: [
+          { tex: rc.H, why: "" },
+          { tex: lowpass ? "\\frac{sRC}{1+sRC}" : "\\frac{1}{1+sRC}",
+            why: `That is the other one — the ${lowpass ? "high" : "low"}-pass. Check the behaviour at DC: ${lowpass ? "here the capacitor is an <b>open circuit</b>, so the output should equal the input, and this expression gives 0." : "here the capacitor <b>blocks</b>, so the output should be 0, and this expression gives 1."}` },
+          { tex: "\\frac{1+sRC}{sRC}", why: "Inverted. A passive divider cannot have a magnitude greater than one." },
+          { tex: "\\frac{1}{sRC}", why: "That is a pure integrator, with its pole at the origin. A passive RC has its pole at −1/RC, not at 0." },
+        ],
+        answer: 0,
+        steps: [
+          `Substitute the s-domain impedances and it is the divider from Circuit Analysis Part 2, unchanged:`,
+          lowpass
+            ? `<span class="math display" data-tex="H(s) = \\frac{1/sC}{R + 1/sC} = \\frac{1}{1+sRC}"></span>`
+            : `<span class="math display" data-tex="H(s) = \\frac{R}{R + 1/sC} = \\frac{sRC}{1+sRC}"></span>`,
+          `Multiply top and bottom by s to clear the fraction — that is the whole derivation.`,
+          `<b>${rc.kind}.</b> ${rc.why} Note that <b>both circuits have the same pole</b>, at −1/RC: the pole comes from the loop, and swapping which element you measure across changes only the numerator.`,
+        ],
+      };
+    }
+
+    const n = rng.pick([1, 2, 2, 3]);
+    const parts = { 1: "one capacitor", 2: "one inductor and one capacitor", 3: "two capacitors and one inductor" }[n];
+    return {
+      stem: `A passive circuit contains ${parts} (and any number of resistors). What is the order of its transfer function?`,
+      choices: options(
+        { text: `${n}`, why: "" },
+        [
+          { text: `${n + 1}`, why: "One too many. <b>Resistors do not add order</b> — they have no s in their impedance, so they cannot contribute a pole." },
+          { text: `${Math.max(1, n - 1)}`, why: "One too few. Count every independent energy-storage element: each capacitor and each inductor contributes one." },
+          { text: `${2 * n}`, why: "Each storage element contributes <b>one</b> pole, not two. A second-order system needs two elements, which is why an RLC circuit rings and an RC one cannot." },
+        ]),
+      answer: 0,
+      steps: [
+        `The order of a system is the number of <b>independent energy-storage elements</b> — capacitors and inductors. Resistors dissipate; they do not store, and their impedance has no s in it.`,
+        `${parts.charAt(0).toUpperCase() + parts.slice(1)} gives <b>order ${n}</b>, so the denominator of H(s) is a polynomial of degree ${n} and there are ${n} poles.`,
+        `<b>This is worth checking before doing any algebra.</b> A circuit with one capacitor cannot ring, whatever the resistors do — ringing needs two stores to pass energy between, which is exactly Part 2's argument counted rather than reasoned.`,
+      ],
+    };
+  },
+});
+
+defineProblem("pole-read", {
+  topic: "Reading a pole",
+  lookup: "Electrical → Linear Systems → Transfer functions",
+  make(rng) {
+    const q = rng.pick(["tau", "stable", "ring", "geom"]);
+
+    if (q === "tau") {
+      const a = rng.pick([2, 4, 5, 10, 20, 50, 100]);
+      const tau = 1 / a;
+      return {
+        stem: `A system has a single pole at s = −${a}. What is its time constant?`,
+        choices: options(
+          { text: `${num(tau, 3)} s`, why: "" },
+          [
+            { text: `${num(a, 0)} s`, why: "That is the pole location, which is a <b>rate</b> in s⁻¹. The time constant is its reciprocal." },
+            { text: `${num(tau * 2, 3)} s`, why: "Doubled. There is no factor of 2 between a pole and a time constant." },
+            { text: `${num(2 * Math.PI / a, 3)} s`, why: "That converts a frequency to a period, which is the right instinct for a pole on the imaginary axis and the wrong one for a pole on the real axis." },
+          ]),
+        answer: 0,
+        steps: [
+          `A pole at −a means a term ${T("e^{-at}")} in the response, and a decaying exponential's time constant is the reciprocal of its rate:`,
+          `<span class="math display" data-tex="\\tau = \\frac{1}{a} = \\frac{1}{${a}} = ${num(tau, 3)}\\text{ s}"></span>`,
+          `<b>${num(tau, 3)} s</b>, so it settles in about 5τ = ${num(5 * tau, 3)} s. <b>The pole's distance from the origin along the negative real axis is 1/τ</b> — the further left, the faster. That single reading is what makes the s-plane worth drawing.`,
+        ],
+      };
+    }
+
+    if (q === "stable") {
+      const poles = rng.pick([
+        ["−2, −5", true, "Both in the left half-plane, so both terms decay."],
+        ["−1 ± j4", true, "The <b>real part</b> is what matters, and it is negative. A large imaginary part means fast ringing, not instability."],
+        ["+3, −8", false, "One pole in the <b>right half-plane</b>. It only takes one: that term grows as e^(3t) and eventually dominates everything."],
+        ["0, −4", false, "A pole exactly <b>on</b> the imaginary axis. It neither grows nor decays, so the response never settles — <em>marginally</em> stable, which is not stable."],
+        ["−0.1 ± j50", true, "Barely damped and it rings for a very long time, but the real part is negative, so it does settle. <b>Slow is not the same as unstable.</b>"],
+      ]);
+      return {
+        stem: `A system has poles at s = ${poles[0]}. Is it stable?`,
+        choices: [
+          { text: poles[1] ? "Yes" : "No", why: "" },
+          { text: poles[1] ? "No" : "Yes", why: poles[2] },
+          { text: "Only for some inputs", why: "Stability in this sense is a property of the <b>system</b>, not of the input — it is decided entirely by where the poles are." },
+          { text: "Not enough information — the zeros are needed", why: "Zeros shape the response and can make it look strange, but <b>they cannot make it grow</b>. Only poles decide stability." },
+        ],
+        answer: 0,
+        steps: [
+          `<b>Every pole must have a strictly negative real part.</b> Nothing else matters: not the zeros, not the gain, not the input.`,
+          poles[2],
+          `The rule is worth stating as a picture rather than an inequality: <b>the left half-plane is stable, the imaginary axis is the boundary, and anything to the right of it grows.</b> A pole <em>on</em> the axis is the marginal case — an undamped oscillation or, at the origin, a pure integrator.`,
+        ],
+      };
+    }
+
+    if (q === "ring") {
+      const sig = rng.pick([2, 5, 10, 20]);
+      const om = rng.pick([20, 50, 100, 200]);
+      const wn = Math.hypot(sig, om);
+      const z = sig / wn;
+      return {
+        stem: `A second-order system has poles at s = −${sig} ± j${om}. What are ωn and ζ?`,
+        choices: options(
+          { text: `ωn = ${fixed(wn, 1)}, ζ = ${fixed(z, 3)}`, why: "" },
+          [
+            { text: `ωn = ${om}, ζ = ${fixed(z, 3)}`, why: "ωn is the pole's <b>distance from the origin</b>, √(σ² + ω²) — not its imaginary part. The imaginary part is ωd, which is always the smaller of the two." },
+            { text: `ωn = ${fixed(wn, 1)}, ζ = ${fixed(om / wn, 3)}`, why: "ζ is the cosine of the angle from the <b>negative real axis</b>, which is σ/ωn. You have used the sine." },
+            { text: `ωn = ${sig + om}, ζ = ${fixed(sig / om, 3)}`, why: "The parts have been added rather than combined as a hypotenuse." },
+          ]),
+        answer: 0,
+        steps: [
+          `The pole is a point, and both answers are its polar coordinates:`,
+          `<span class="math display" data-tex="\\omega_n = \\sqrt{\\sigma^2 + \\omega_d^2} = \\sqrt{${sig}^2 + ${om}^2} = ${fixed(wn, 2)}"></span>`,
+          `<span class="math display" data-tex="\\zeta = \\frac{\\sigma}{\\omega_n} = \\frac{${sig}}{${fixed(wn, 2)}} = ${fixed(z, 3)} = \\cos ${fixed(Math.acos(z) * 180 / Math.PI, 1)}^\\circ"></span>`,
+          `<b>Distance is ωn, and the cosine of the angle is ζ.</b> That is the whole conversion, and it goes both ways — given ωn and ζ you can place the pole without writing an equation.`,
+        ],
+      };
+    }
+
+    return {
+      stem: "Two poles have the same distance from the imaginary axis but different heights. What do they have in common?",
+      choices: [
+        { text: "The same settling time", why: "" },
+        { text: "The same ringing frequency", why: "That is set by the <b>height</b>, which is precisely what differs here." },
+        { text: "The same ωn", width: "", why: "ωn is the distance from the <b>origin</b>, so it differs when the heights do." },
+        { text: "The same damping ratio", why: "ζ is the cosine of the angle from the negative real axis, so it changes as soon as the height does." },
+      ].map(({ text, why }) => ({ text, why })),
+      answer: 0,
+      steps: [
+        `Settling time depends on the envelope, which decays as ${T("e^{-\\sigma t}")} — and σ is the <b>horizontal</b> distance from the imaginary axis.`,
+        `<span class="math display" data-tex="t_s \\approx \\frac{4}{\\sigma}"></span>`,
+        `<b>Vertical lines in the s-plane are lines of constant settling time.</b> The companion facts are worth holding together: <b>radial lines</b> through the origin are constant ζ (and therefore constant overshoot), and <b>circles</b> about the origin are constant ωn. Three families of curves, three specifications.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "transfer",
+    stem: "s-domain impedance of an inductor and a capacitor?",
+    tool: "sL and 1/sC",
+    because: "With those substitutions every Circuit Analysis technique works unchanged, with s in place of numbers.",
+  },
+  {
+    part: "transfer",
+    stem: "A system has poles at −2 and +3. Stable?",
+    tool: "no — one pole in the right half-plane",
+    because: "It takes only one: that term grows without limit and eventually dominates everything else.",
+  },
+  {
+    part: "transfer",
+    stem: "A single pole at s = −25. Time constant?",
+    tool: "1/25 = 40 ms",
+    because: "A pole's distance from the origin along the real axis is 1/τ, so further left is faster.",
+  },
+  {
+    part: "transfer",
+    stem: "Poles at −3 ± j4. ωn and ζ?",
+    tool: "ωn = 5 (the distance), ζ = 3/5 = 0.6 (the cosine)",
+    because: "The pole is a point in polar coordinates: its radius is ωn and the cosine of its angle from the negative real axis is ζ.",
+  },
+]);

@@ -40,6 +40,16 @@
 }
 .plate-stage > svg { display: block; width: 100%; height: auto; }
 
+/* Some plates carry two drawings that only mean anything together — a
+   schematic above its response, or an s-plane beside the step it produces.
+   `duo` sits them side by side and folds to a column when there is no room;
+   `stack` is always a column. */
+.plate-stage .stack,
+.plate-stage .duo { display: grid; gap: var(--s4); align-items: center; }
+.plate-stage .duo { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.plate-stage .stack > svg,
+.plate-stage .duo > svg { display: block; width: 100%; height: auto; }
+
 /* Formula plates hold type, not drawings — no ruling, more air. */
 .plate.formula .plate-stage {
   background-image: none;

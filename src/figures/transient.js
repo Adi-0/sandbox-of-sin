@@ -175,7 +175,7 @@ function threeStep() {
   });
 
   const sch = new Schematic({
-    w: 15, h: 6, unit: 26,
+    w: 13, h: 6, unit: 26,
     label: "A 12 volt source behind a 4 kilohm resistor, feeding a capacitor " +
            "with a second resistor in parallel with it.",
   });
@@ -189,22 +189,27 @@ function threeStep() {
   const rdNote = readout({ key: "", value: "" });
   rdNote.root.classList.add("wide");
 
+  /* Elements span one grid unit either side of their centre, so wires must
+     abut those lead ends exactly — there is no length option. */
   function drawSchematic() {
-    sch.wire([[1, 5], [1, 1], [5, 1]]);
-    sch.resistor([5, 1], "h", { label: "R₁ = 4 kΩ", len: 3 });
-    sch.wire([[8, 1], [11, 1]]);
-    sch.wire([[1, 5], [11, 5]]);
-    sch.source([1, 3], "v", { kind: "dc", label: "12 V" });
-    sch.capacitor([8, 3], "v", { label: "C = 100 µF" });
+    sch.wire([[1, 5], [1, 1], [4, 1]]);
+    sch.resistor([5, 1], "h", { label: "R₁ = 4 kΩ", at: "n" });
+    sch.wire([[6, 1], [11, 1]]);
+    sch.source([1, 3], "v", { kind: "dc", label: "12 V", at: "w", color: "q-x" });
+
     sch.wire([[8, 1], [8, 2]]);
+    sch.capacitor([8, 3], "v", { label: "C = 100 µF", at: "w" });
     sch.wire([[8, 4], [8, 5]]);
-    sch.resistor([11, 2], "v", { label: "R₂", len: 2 });
+
     sch.wire([[11, 1], [11, 2]]);
+    sch.resistor([11, 3], "v", { label: "R₂", at: "e" });
     sch.wire([[11, 4], [11, 5]]);
+
+    sch.wire([[1, 5], [11, 5]]);
     sch.node([8, 1]);
     sch.node([8, 5]);
     sch.ground([1, 5]);
-    sch.label([8, 3], "v(t)", { at: "w", color: "q-y", size: 12, weight: 600, gap: 24 });
+    sch.label([8, 3], "v(t)", { at: "w", color: "q-y", size: 12, weight: 600 });
   }
   drawSchematic();
 
