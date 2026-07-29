@@ -1,0 +1,180 @@
+<p class="eyebrow">
+  <span>Digital Systems · Part 3</span>
+  <span class="spec">NCEES 15.D · 15.F</span>
+  <span>26 minute read</span>
+</p>
+
+<h1>Minimisation</h1>
+
+<p class="lede">Any truth table can be written down as an expression
+mechanically. Making that expression <em>small</em> is a different problem, and
+the Karnaugh map solves it by turning algebra into geometry.</p>
+
+<h2>3.1 From table to expression, mechanically</h2>
+
+<p>Two canonical forms exist, and both are read straight off a truth table with
+no thought at all:</p>
+
+<f-plate no="15.5" title="Canonical forms" stamp="know"
+  caption="<b>Neither form is minimal</b> — they are simply guaranteed. SOP is
+  almost always the one to use, because it maps directly onto the AND-OR
+  structure hardware is built from.">
+  <f-row tex="\text{SOP} = \sum m(\ldots)" name="sum of products"
+         gloss="One AND term per row where the output is <b>1</b>. A variable appears complemented if it is 0 in that row. OR the terms together."></f-row>
+  <f-row tex="\text{POS} = \prod M(\ldots)" name="product of sums"
+         gloss="One OR term per row where the output is <b>0</b>, and the complementing rule <em>reverses</em>. AND the terms together."></f-row>
+  <f-row tex="m_i \ \text{is a minterm}, \quad M_i = \overline{m_i}" name="the numbering"
+         gloss="Minterm i is the row whose input reads as binary i. <b>Every minterm index that is not in the SOP list is a maxterm index in the POS list.</b>"></f-row>
+  <f-row tex="\text{a 4-variable function has } 2^{16} \text{ possible truth tables}"
+         name="the scale of the problem"
+         gloss="65 536 of them, so minimisation cannot be done by inspection or by trying things — it needs a method."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the complementing rule flips between forms</span>
+  <p style="margin-bottom:0">In <b>SOP</b>, a variable that is <b>0</b> in the row
+  appears complemented. In <b>POS</b>, a variable that is <b>1</b> in the row
+  appears complemented. The rules are opposite, and writing the SOP rule onto a
+  POS problem is the single most common error in this topic. If it helps: POS
+  terms describe the rows you want to <em>exclude</em>, so everything reverses.</p>
+</div>
+
+<h2>3.2 The map</h2>
+
+<p>Boolean algebra simplifies by
+<span data-tex="AB + A\bar{B} = A">AB + A¬B = A</span> — two terms that differ in
+exactly one variable collapse, and that variable disappears. Finding those pairs
+by staring at an expression is unreliable. <b>Arranging the truth table so that
+the pairs are physically adjacent</b> makes them impossible to miss, and that is
+all a Karnaugh map is.</p>
+
+<p>The arrangement is <span class="term">Gray code</span> — 00, 01, <b>11</b>, 10
+— introduced in Part 1. Neighbouring cells differ in exactly one bit, so
+<em>every</em> adjacency is a legal simplification.</p>
+
+<div data-figure="kmap"></div>
+
+<f-plate no="15.6" title="Reading a map" stamp="know">
+  <f-row tex="\text{group size} = 1, 2, 4, 8, 16" name="powers of two only"
+         gloss="A group of 3 is not a valid term. <b>Each doubling of a group deletes one variable</b>, so a group of 4 in a 4-variable map is a 2-literal term."></f-row>
+  <f-row tex="\text{literals} = n - \log_2(\text{group size})" name="what a group costs"
+         gloss="A group of 8 in a 4-variable map leaves 1 literal. Bigger groups are always better."></f-row>
+  <f-row tex="\text{edges wrap}" name="the map is a torus"
+         gloss="Left joins right and top joins bottom, so <b>the four corners are adjacent</b>. This is the most commonly missed grouping on the exam."></f-row>
+  <f-row tex="\times \ \text{may be 0 or 1, whichever helps}" name="don't-cares"
+         gloss="Input combinations that cannot occur. <b>Use them to enlarge groups and ignore them otherwise</b> — treating them as 0 by default throws the advantage away."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">Overlapping groups are correct</span>
+  <p style="margin-bottom:0">Groups may overlap freely, because
+  <span class="math" data-tex="A + A = A">A + A = A</span> — covering a cell twice
+  costs nothing. What you are minimising is the number of <em>groups</em> and
+  their size, not the tidiness of the picture. <b>Always take the largest legal
+  group, even if it overlaps one you have already drawn.</b> The only rule is that
+  every 1 must end up inside at least one group, and no group may contain a 0.</p>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>the corners</em></h4>
+  <div class="worked-body">
+    <p>Minimise <span data-tex="F = \sum m(0, 2, 8, 10)">F = Σm(0, 2, 8, 10)</span>.</p>
+    <ol class="steps">
+      <li>Canonically, that is four four-literal terms:
+        <span data-tex="\bar{A}\bar{B}\bar{C}\bar{D} + \bar{A}\bar{B}C\bar{D} + A\bar{B}\bar{C}\bar{D} + A\bar{B}C\bar{D}" data-display>16 literals in total</span></li>
+      <li>On the map those four land in the <b>four corners</b>. Because the edges
+        wrap, they are mutually adjacent and form a single group of four.</li>
+      <li>A group of 4 in a 4-variable map leaves
+        <span data-tex="4 - \log_2 4 = 2">2</span> literals. Which two? The ones
+        that are constant across all four cells: B is 0 throughout and D is 0
+        throughout.
+        <span data-tex="F = \bar{B}\bar{D}" data-display>F = ¬B·¬D</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left"><b>Sixteen literals
+    down to two.</b> Read the plate's outline to see the group; the wrap is the
+    whole trick, and a map drawn without it would have found four groups of one.</p>
+  </div>
+</div>
+
+<h2>3.3 Where the map stops</h2>
+
+<p>Two honest limits, both worth knowing before exam day:</p>
+
+<ul>
+  <li><b>Above five variables it becomes unusable.</b> Six variables is 64 cells
+  across four maps, and adjacency stops being visual. Real tools use
+  Quine-McCluskey or heuristics; the exam stays at three or four.</li>
+  <li><b>Some functions do not simplify at all.</b> Parity is a checkerboard —
+  no two on-cells adjacent — so the minimal SOP is as long as the canonical one.
+  Load "Odd parity" on the plate to see it. The right answer there is not a
+  sum of products; it is a tree of XOR gates.</li>
+</ul>
+
+<h2>3.4 The expression, as silicon</h2>
+
+<p>Having minimised, what do you build it with? Below a certain size, gates. Above
+it, a <span class="term">programmable logic device</span> — and the commonest kind
+is a sum-of-products array, which is why minimisation and implementation are the
+same conversation.</p>
+
+<div data-figure="plaArray"></div>
+
+<f-plate no="15.7" title="Programmable logic" stamp="handbook">
+  <f-row tex="\text{PLA: AND array programmable, OR array programmable}"
+         name="the general case"
+         gloss="Most flexible, and the structure on the plate. Every product row can feed any output."></f-row>
+  <f-row tex="\text{PAL: AND array programmable, OR array fixed}"
+         name="the cheap variant"
+         gloss="Each output gets a fixed allocation of product rows. Less flexible, faster and cheaper — and far more common in practice."></f-row>
+  <f-row tex="\text{ROM: AND array fixed (full decoder), OR array programmable}"
+         name="the third combination"
+         gloss="A full decoder generates <b>every</b> minterm, so a ROM implements any function of its address bits — at the cost of 2ⁿ rows."></f-row>
+  <f-row tex="\text{FPGA: lookup tables + programmable routing}"
+         name="the modern answer"
+         gloss="An n-input LUT is a small memory holding the truth table directly. <b>It does not care whether your expression was minimised</b>, which is why K-maps matter far less in FPGA design than in discrete logic."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Why the ROM entry is interesting</span>
+  <p style="margin-bottom:0">A ROM's AND array is a full decoder, so it produces
+  every one of the <span class="math" data-tex="2^n">2ⁿ</span> minterms whether you
+  want them or not. That makes it able to implement <em>any</em> function of its
+  inputs with no minimisation whatever — <b>you just store the truth table</b>.
+  It is the brute-force end of the same spectrum the K-map sits at, and an FPGA's
+  lookup table is exactly the same idea shrunk to four or six inputs.</p>
+</div>
+
+<h2>3.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>SOP</b>: one AND term per 1-row, variable complemented when it is 0.
+        <b>POS reverses that rule.</b></li>
+    <li>K-map rows and columns are in <b>Gray code</b>, and the <b>edges wrap</b>.</li>
+    <li>Groups are powers of two; a group of size
+        <span data-tex="2^k">2ᵏ</span> leaves
+        <span data-tex="n-k">n − k</span> literals.</li>
+    <li><b>Take the largest groups, and let them overlap.</b></li>
+    <li>Don't-cares may be 1 or 0 — use whichever enlarges a group.</li>
+    <li>PLA both arrays programmable; PAL fixed OR; ROM fixed AND; FPGA uses
+        LUTs and needs no minimisation.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Minimisation is the single algebraic identity
+  <span class="math" data-tex="AB + A\bar{B} = A">AB + A¬B = A</span>, applied as
+  often as possible. The Karnaugh map's only contribution is to arrange the truth
+  table in Gray code so that every pair the identity applies to is physically
+  adjacent — and then to wrap the edges, so the adjacency is complete.</p>
+  <p>The reason to bother is downstream. A sum of products maps directly onto an
+  AND array feeding an OR array, so fewer terms is fewer rows of silicon. That
+  stops being true the moment you reach an FPGA, where the truth table is simply
+  stored — which is a fair summary of why this topic matters less than it used
+  to, and still appears on the exam.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"minimisation","title":"Part 3 · Minimisation and PLDs","topics":["sop-write","kmap-group","kmap-size","pld-type"],"count":6}'></div>

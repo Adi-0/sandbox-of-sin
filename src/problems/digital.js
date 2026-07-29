@@ -558,3 +558,281 @@ defineReflex([
     because: "Select lines are always the exponent, never the base.",
   },
 ]);
+
+/* ==========================================================================
+   Part 3 — minimisation
+   ========================================================================== */
+
+const KVARS = ["A", "B", "C", "D"];
+const kcells = (mask, val, n) => {
+  const out = [];
+  for (let m = 0; m < 2 ** n; m++) if ((m & mask) === val) out.push(m);
+  return out;
+};
+function kprimes(on, dc, n) {
+  const ok = new Set([...on, ...dc]);
+  const full = 2 ** n - 1;
+  const imp = (mask, val) => kcells(mask, val, n).every((m) => ok.has(m));
+  const out = [];
+  for (let mask = 0; mask <= full; mask++) {
+    for (let val = 0; val <= full; val++) {
+      if (val & ~mask & full) continue;
+      if (!imp(mask, val)) continue;
+      let prime = true;
+      for (let b = 0; b < n; b++) {
+        if (!(mask & (1 << b))) continue;
+        const m2 = mask & ~(1 << b);
+        if (imp(m2, val & m2)) { prime = false; break; }
+      }
+      if (prime) out.push({ mask, val, cells: kcells(mask, val, n) });
+    }
+  }
+  return out;
+}
+function kcover(on, dc, n) {
+  if (!on.length) return [];
+  const pis = kprimes(on, dc, n);
+  if (pis.some((p) => p.mask === 0)) return [pis.find((p) => p.mask === 0)];
+  const need = new Set(on);
+  const chosen = [];
+  for (const m of on) {
+    const c = pis.filter((p) => p.cells.includes(m));
+    if (c.length === 1 && !chosen.includes(c[0])) chosen.push(c[0]);
+  }
+  chosen.forEach((p) => p.cells.forEach((m) => need.delete(m)));
+  while (need.size) {
+    let best = null, bn = 0;
+    for (const p of pis) {
+      if (chosen.includes(p)) continue;
+      const k = p.cells.filter((m) => need.has(m)).length;
+      if (k > bn) { best = p; bn = k; }
+    }
+    if (!best) break;
+    chosen.push(best);
+    best.cells.forEach((m) => need.delete(m));
+  }
+  return chosen;
+}
+function kterm(mask, val, n) {
+  if (mask === 0) return "1";
+  let s = "";
+  for (let b = n - 1; b >= 0; b--) {
+    if (!(mask & (1 << b))) continue;
+    s += KVARS[n - 1 - b] + (val & (1 << b) ? "" : "'");
+  }
+  return s;
+}
+const kliterals = (mask, n) => {
+  let c = 0;
+  for (let b = 0; b < n; b++) if (mask & (1 << b)) c++;
+  return c;
+};
+
+defineProblem("sop-write", {
+  topic: "Canonical SOP and POS",
+  lookup: "Electrical → Digital → Logic minimization",
+  make(rng) {
+    const n = 3;
+    const on = rng.sample([0, 1, 2, 3, 4, 5, 6, 7], rng.int(3, 4)).sort((a, b) => a - b);
+    const off = [0, 1, 2, 3, 4, 5, 6, 7].filter((m) => !on.includes(m));
+    const wantSop = rng.pick([true, false]);
+
+    const sopTerm = (m) => [0, 1, 2].map((i) => KVARS[i] + ((m >> (2 - i)) & 1 ? "" : "'")).join("");
+    const posTerm = (m) => "(" + [0, 1, 2].map((i) => KVARS[i] + ((m >> (2 - i)) & 1 ? "'" : "")).join(" + ") + ")";
+
+    const right = wantSop ? on.map(sopTerm).join(" + ") : off.map(posTerm).join("");
+    const swapped = wantSop ? off.map(sopTerm).join(" + ") : on.map(posTerm).join("");
+    const flipped = wantSop
+      ? on.map((m) => [0, 1, 2].map((i) => KVARS[i] + ((m >> (2 - i)) & 1 ? "'" : "")).join("")).join(" + ")
+      : off.map((m) => "(" + [0, 1, 2].map((i) => KVARS[i] + ((m >> (2 - i)) & 1 ? "" : "'")).join(" + ") + ")").join("");
+
+    return {
+      stem: `A three-variable function is 1 for minterms ${on.join(", ")} and 0 elsewhere. ` +
+            `Write its canonical ${wantSop ? "sum of products" : "product of sums"}.`,
+      choices: [
+        { text: right, why: "" },
+        { text: swapped, why: wantSop ? "Those are the rows where the function is <b>0</b>. SOP uses the 1-rows." : "Those are the rows where the function is <b>1</b>. POS uses the <b>0</b>-rows." },
+        { text: flipped, why: `The complementing rule is reversed. In <b>${wantSop ? "SOP a variable is complemented when it is 0" : "POS a variable is complemented when it is 1"}</b> in that row — and the two forms use opposite rules, which is where most errors in this topic come from.` },
+        { text: wantSop ? off.map(posTerm).join("") : on.map(sopTerm).join(" + "), why: `That is the ${wantSop ? "POS" : "SOP"} form of the same function — correct, but not what was asked for.` },
+      ],
+      answer: 0,
+      steps: [
+        wantSop
+          ? `Take one AND term for each row where the output is <b>1</b>. Within a term, a variable appears <b>complemented if it is 0</b> in that row.`
+          : `Take one OR term for each row where the output is <b>0</b>. Within a term, a variable appears <b>complemented if it is 1</b> in that row — the opposite of the SOP rule.`,
+        `<span class="math display" data-tex="${wantSop ? on.join(",\\ ") : off.join(",\\ ")} \\ \\Rightarrow \\ \\text{${right}}"></span>`,
+        `<b>${right}.</b> This is canonical, not minimal — every term has all three variables. Part 3's map is what shortens it.`,
+      ],
+    };
+  },
+});
+
+defineProblem("kmap-group", {
+  topic: "Minimising with a Karnaugh map",
+  lookup: "Electrical → Digital → Karnaugh maps",
+  make(rng) {
+    const sets = [
+      { on: [0, 2, 8, 10], dc: [], hint: "the four corners — the edges wrap, so they are one group of four" },
+      { on: [0, 1, 4, 5], dc: [], hint: "two pairs of adjacent cells forming one group of four" },
+      { on: [10, 11, 12, 13, 14, 15], dc: [], hint: "two overlapping groups of four" },
+      { on: [0, 1, 2, 3, 4, 5, 6, 7], dc: [], hint: "an entire half of the map — one variable" },
+      { on: [5, 7, 13, 15], dc: [], hint: "a group of four spanning both halves" },
+      { on: [1, 3, 5, 7, 9, 11, 13, 15], dc: [], hint: "every odd minterm — one variable again" },
+    ];
+    const s = rng.pick(sets);
+    const g = kcover(s.on, s.dc, 4);
+    const answer = g.map((t) => kterm(t.mask, t.val, 4)).join(" + ");
+    const lits = g.reduce((a, t) => a + kliterals(t.mask, 4), 0);
+
+    return {
+      stem: `Minimise ${T(`F = \\sum m(${s.on.join(", ")})`)} for variables A, B, C, D.`,
+      choices: [
+        { text: answer, why: "" },
+        { text: s.on.map((m) => kterm(15, m, 4)).join(" + "),
+          why: `That is the <b>canonical</b> SOP — one four-literal term per minterm, ${s.on.length * 4} literals in all. It is correct but not minimised; the map exists to collapse it to ${lits}.` },
+        { text: g.length > 1 ? kterm(g[0].mask, g[0].val, 4) : `${answer} + ${kterm(15, s.on[0], 4)}`,
+          why: g.length > 1 ? "Only one group. Every 1 on the map has to end up inside some group, and this leaves some uncovered." : "That adds a redundant term already covered by the group." },
+        { text: answer.split(" + ").map((t) => t.replace(/'/g, "")).join(" + "),
+          why: "The complements were dropped. A variable stays in the term with a bar when it is <b>0</b> throughout the group." },
+      ].filter((c, i, all) => i === 0 || c.text !== all[0].text),
+      answer: 0,
+      steps: [
+        `Plot the on-set and look for the largest legal groups — ${s.hint}.`,
+        `Each doubling of a group size deletes one variable: a group of ${T("2^k")} in a four-variable map leaves ${T("4-k")} literals.`,
+        `<span class="math display" data-tex="F = \\text{${answer}}"></span>`,
+        `<b>${answer}</b> — ${g.length} term${g.length === 1 ? "" : "s"}, ${lits} literal${lits === 1 ? "" : "s"}, down from ${s.on.length * 4}.`,
+      ],
+    };
+  },
+});
+
+defineProblem("kmap-size", {
+  topic: "Group size and literals",
+  lookup: "Electrical → Digital → Karnaugh maps (grouping)",
+  make(rng) {
+    const n = rng.pick([3, 4]);
+    const k = rng.int(1, n - 1);
+    const size = 2 ** k;
+    const lits = n - k;
+    const ask = rng.pick(["lits", "valid"]);
+
+    if (ask === "valid") {
+      const bad = rng.pick([3, 5, 6, 7]);
+      return {
+        stem: `On a Karnaugh map, can ${bad} adjacent 1-cells be grouped as a single term?`,
+        choices: [
+          { text: "No — groups must be a power of two", why: "" },
+          { text: `Yes, giving a term with ${n - Math.log2(bad) | 0} literals`, why: "Group sizes are 1, 2, 4, 8, 16 and nothing else. A group of a non-power-of-two size does not correspond to any product term." },
+          { text: "Yes, but only if they include a don't-care", why: "A don't-care could <em>pad</em> the group up to a power of two — but the group itself must still end up at 1, 2, 4, 8 or 16 cells." },
+          { text: "Only on maps of four variables or more", why: "The rule is the same on every size of map." },
+        ],
+        answer: 0,
+        steps: [
+          `Every doubling of a group deletes exactly one variable, which is why sizes go 1, 2, 4, 8, 16.`,
+          `A group of ${bad} does not correspond to any product term — there is no way to fix some variables and leave others free that yields ${bad} cells.`,
+          `<b>No.</b> Cover those cells with overlapping power-of-two groups instead; overlap is free, because ${T("A + A = A")}.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `On a ${n}-variable Karnaugh map, how many literals does a group of ${size} cells produce?`,
+      choices: [
+        { text: `${lits}`, why: "" },
+        { text: `${n}`, why: "That is a group of <b>one</b> cell — the canonical case, where no variable has been eliminated." },
+        { text: `${k}`, why: `That is ${T("\\log_2")} of the group size, which is the number of variables <b>eliminated</b>, not the number left.` },
+        { text: `${size}`, why: "That is the number of cells, not literals. Bigger groups give <em>shorter</em> terms." },
+      ].filter((c, i, all) => i === 0 || c.text !== all[0].text),
+      answer: 0,
+      steps: [
+        `Each doubling of a group means one more variable takes both values inside it, so that variable drops out:`,
+        `<span class="math display" data-tex="\\text{literals} = n - \\log_2(\\text{size}) = ${n} - ${k} = ${lits}"></span>`,
+        `<b>${lits}.</b> Which is why the rule is always <b>take the largest group you legally can</b>, even if it overlaps one already drawn.`,
+      ],
+    };
+  },
+});
+
+defineProblem("pld-type", {
+  topic: "Programmable logic devices",
+  lookup: "Electrical → Digital → Programmable logic devices",
+  make(rng) {
+    const q = rng.pick(["pla", "rom", "fpga", "why"]);
+    const Q = {
+      pla: {
+        stem: "In a PLA, which arrays are programmable?",
+        right: "Both the AND array and the OR array",
+        wrong: [
+          ["Only the AND array", "That is a <b>PAL</b> — cheaper and faster, with each output allocated a fixed set of product rows."],
+          ["Only the OR array", "That is a <b>ROM</b>, whose AND array is a fixed full decoder generating every minterm."],
+          ["Neither — a PLA is fixed logic", "Programmability is what the P stands for."],
+        ],
+        why: "The general case: any product term can be formed, and any output can sum any subset of them. That flexibility is what distinguishes it from the PAL, which fixes the OR plane to make the part cheaper.",
+      },
+      rom: {
+        stem: "Why can a ROM implement any Boolean function of its address inputs without minimisation?",
+        right: "Its decoder generates every minterm, so the stored data selects which ones to OR",
+        wrong: [
+          ["ROMs contain a general-purpose processor", "A ROM is a decoder and a memory array, nothing more."],
+          ["Because the function is minimised automatically when programmed", "No minimisation happens. The full truth table is simply stored."],
+          ["It cannot — a ROM only stores data, not logic", "Storing a truth table <b>is</b> implementing the function; address in, result out."],
+        ],
+        why: "A full decoder on n address lines produces all 2ⁿ minterms, so the OR plane is just a table of which minterms belong to each output. You store the truth table and are done — at the cost of 2ⁿ rows whether you need them or not.",
+      },
+      fpga: {
+        stem: "What does an FPGA use in place of AND-OR arrays?",
+        right: "Lookup tables holding truth tables directly, plus programmable routing",
+        wrong: [
+          ["A larger PLA on the same die", "FPGAs abandoned the array structure; LUTs and routing scale far better."],
+          ["Fixed gates selected by fuses", "That describes early PALs, not FPGAs."],
+          ["A microprocessor executing the logic in software", "That is a very different device. An FPGA's logic is genuinely parallel hardware."],
+        ],
+        why: "A 4- or 6-input LUT is a tiny memory storing the function's truth table — so <b>it does not care whether your expression was minimised</b>. That is why Karnaugh maps matter far less in FPGA design than in discrete logic, and it is worth knowing which world a question is set in.",
+      },
+      why: {
+        stem: "Why minimise an expression before implementing it in a PLA?",
+        right: "Fewer terms means fewer product rows, and fewer literals means fewer connections",
+        wrong: [
+          ["It makes the circuit faster in every case", "Propagation delay through a PLA is largely fixed by the array structure, not by how many rows are used."],
+          ["An unminimised expression would give the wrong answer", "It would give the <b>right</b> answer, just using more silicon than necessary."],
+          ["PLAs cannot implement unminimised expressions", "They can, up to the number of rows the part provides."],
+        ],
+        why: "The array structure maps a sum of products onto physical rows, so the term count is literally the row count. Minimisation is a silicon-area argument, and it evaporates the moment you move to an FPGA's lookup tables.",
+      },
+    }[q];
+
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [`<b>${Q.right}.</b>`, Q.why],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "minimisation",
+    stem: "A 4-variable map has 1s in all four corners. What is the minimal term?",
+    tool: "group all four — the edges wrap",
+    because: "The map is a torus, so left joins right and top joins bottom; the corners are one group of four.",
+  },
+  {
+    part: "minimisation",
+    stem: "A group of eight cells on a 4-variable map. How many literals?",
+    tool: "literals = n − log₂(size) = 4 − 3 = 1",
+    because: "Every doubling of a group deletes one variable, which is why bigger groups are always better.",
+  },
+  {
+    part: "minimisation",
+    stem: "The map has three cells marked ×. What do you do with them?",
+    tool: "use them to enlarge groups, ignore them otherwise",
+    because: "Don't-cares are free — treating them as 0 by default throws away the only advantage they offer.",
+  },
+  {
+    part: "minimisation",
+    stem: "Writing a POS from a truth table: which rows and which sign?",
+    tool: "the 0-rows, complementing variables that are 1",
+    because: "Both rules are the reverse of the SOP ones, which is where nearly every error in this topic comes from.",
+  },
+]);
