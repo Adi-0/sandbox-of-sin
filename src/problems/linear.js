@@ -512,3 +512,204 @@ defineReflex([
     because: "Settling goes with the real part of the roots, so it is the product ζωn that matters, not either one alone.",
   },
 ]);
+
+/* ==========================================================================
+   Part 3 — the Laplace transform (7.C)
+   ========================================================================== */
+
+const PAIRS_T = [
+  ["\\delta(t)", "1", "the impulse — flat in s, which is what makes it the test signal that excites every frequency at once"],
+  ["u(t)", "\\frac{1}{s}", "the unit step. A pole at the origin, which is why a step input puts one there in every problem"],
+  ["t", "\\frac{1}{s^2}", "the ramp. Each extra power of t adds another 1/s, because integrating in t is dividing by s"],
+  ["e^{-at}", "\\frac{1}{s+a}", "<b>the most useful line in the table.</b> A pole at −a is an exponential decaying at rate a"],
+  ["\\sin\\omega t", "\\frac{\\omega}{s^2+\\omega^2}", "poles at ±jω — on the imaginary axis, so nothing decays"],
+  ["\\cos\\omega t", "\\frac{s}{s^2+\\omega^2}", "the same poles; only the numerator distinguishes it from the sine"],
+  ["e^{-at}\\sin\\omega t", "\\frac{\\omega}{(s+a)^2+\\omega^2}", "poles at −a ± jω. Part 2's ringing, written down"],
+];
+
+defineProblem("laplace-pair", {
+  topic: "Transform pairs",
+  lookup: "Electrical → Linear Systems → Laplace transforms",
+  make(rng) {
+    const i = rng.int(0, PAIRS_T.length - 1);
+    const [ft, fs, why] = PAIRS_T[i];
+    const forward = rng.pick([true, false]);
+    const others = PAIRS_T.filter((_, j) => j !== i);
+    const picks = rng.sample(others, 3);
+
+    if (forward) {
+      return {
+        stem: `What is the Laplace transform of ${T(ft)}?`,
+        choices: [
+          { tex: fs, why: "" },
+          ...picks.map(([oft, ofs]) => ({
+            tex: ofs, why: `That is the transform of ${oft.replace(/\\\\/g, "")} — read the table the other way and check.`,
+          })),
+        ],
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="${ft} \\ \\longleftrightarrow \\ ${fs}"></span>`,
+          `In words: ${why}.`,
+          `<b>The table is in the handbook</b>, so this is a recognition question, not a recall one. What is worth memorising is not the entries but the <em>pattern</em> — poles on the negative real axis are decays, poles on the imaginary axis are oscillations, and a pair off to the left of the imaginary axis is a decaying oscillation.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `What is the inverse Laplace transform of ${T(fs)}?`,
+      choices: [
+        { tex: ft, why: "" },
+        ...picks.map(([oft, ofs]) => ({
+          tex: oft, why: `That transforms to ${ofs.replace(/\\\\frac/g, "").replace(/[{}]/g, " ")} — a different entry.`,
+        })),
+      ],
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="${fs} \\ \\longleftrightarrow \\ ${ft}"></span>`,
+        `In words: ${why}.`,
+        `Inverting is the same table read backwards, and the only skill it needs is <b>getting an expression into a form the table contains</b> — which is what partial fractions are for.`,
+      ],
+    };
+  },
+});
+
+defineProblem("laplace-theorem", {
+  topic: "The theorems worth knowing",
+  lookup: "Electrical → Linear Systems → Laplace transforms",
+  make(rng) {
+    const q = rng.pick(["final", "initial", "deriv", "shift"]);
+
+    if (q === "final" || q === "initial") {
+      const a = rng.pick([2, 4, 5, 10]);
+      const K = rng.pick([3, 6, 12, 20]);
+      // F(s) = K / (s(s + a)) — a step through a first-order lag
+      const fin = K / a, init = 0;
+      const asked = q === "final";
+      return {
+        stem: `A response has ${T(`F(s) = \\frac{${K}}{s(s+${a})}`)}. What is its ${asked ? "final" : "initial"} value?`,
+        choices: options(
+          { text: asked ? `${num(fin, 2)}` : "0", why: "" },
+          [
+            { text: asked ? "0" : `${num(fin, 2)}`, why: asked
+                ? "That is the initial value — multiply by s and let s → ∞ instead."
+                : "That is the final value — multiply by s and let s → 0 instead." },
+            { text: `${num(K, 0)}`, why: "That is the numerator alone. Both theorems require multiplying by s first, which cancels the pole at the origin." },
+            { text: `${num(a, 0)}`, why: "That is the pole location, which sets how <em>fast</em> the response gets there — not where it ends up." },
+          ]),
+        answer: 0,
+        steps: [
+          asked
+            ? `<span class="math display" data-tex="\\lim_{t\\to\\infty} f(t) = \\lim_{s\\to 0} sF(s)"></span>`
+            : `<span class="math display" data-tex="\\lim_{t\\to 0^+} f(t) = \\lim_{s\\to\\infty} sF(s)"></span>`,
+          `<span class="math display" data-tex="sF(s) = \\frac{${K}}{s+${a}} \\quad\\Rightarrow\\quad ${asked ? `\\text{at } s=0: \\ \\frac{${K}}{${a}} = ${num(fin, 2)}` : `\\text{as } s\\to\\infty: \\ 0`}"></span>`,
+          `<b>${asked ? num(fin, 2) : "0"}.</b> Both theorems answer a question about the time domain <em>without inverting anything</em>, which is why they are worth the two lines they take. ${asked ? "<b>The final value theorem is only valid if the response actually settles</b> — if any pole of sF(s) is in the right half-plane or on the imaginary axis, it gives a number for something that never arrives." : "Note that s·F(s) → 0 here, which is a first-order lag starting from rest, exactly as expected."}`,
+        ],
+      };
+    }
+
+    const Q = {
+      deriv: {
+        stem: "What is the Laplace transform of a derivative, f′(t)?",
+        right: "sF(s) − f(0⁻)",
+        wrong: [
+          ["sF(s)", "That is the transform when the initial condition is zero. <b>Dropping f(0⁻) is dropping the initial condition</b>, and it is the single most common error in this topic."],
+          ["F(s)/s", "That is <b>integration</b>, not differentiation. Differentiating multiplies by s; integrating divides."],
+          ["F(s) − f(0⁻)", "The factor of s is missing. Each derivative brings one down."],
+        ],
+        why: "<b>This is the whole reason the transform is useful.</b> Differentiation becomes multiplication by s, so a differential equation becomes a polynomial one — and the initial condition arrives as an ordinary algebraic term rather than as a constant to be fitted at the end. For a second derivative it is s²F(s) − sf(0⁻) − f′(0⁻), which is the same pattern applied twice.",
+      },
+      shift: {
+        stem: "If f(t) transforms to F(s), what does e^(−at)f(t) transform to?",
+        right: "F(s + a)",
+        wrong: [
+          ["F(s − a)", "The sign. Multiplying by a <b>decaying</b> exponential shifts the poles <em>left</em>, which means replacing s with s + a."],
+          ["e^(−as)F(s)", "That is the transform of a <b>delayed</b> f(t − a) — shifting in time rather than in s. The two shift theorems are duals and are routinely swapped."],
+          ["F(s)/(s + a)", "That would be a convolution with an exponential, not a multiplication by one."],
+        ],
+        why: "Multiplying by e^(−at) in time shifts everything in s by a. That single fact turns sin ωt into e^(−at)sin ωt by replacing s with s + a everywhere — <b>which is exactly how the damped-sine line in the table is built from the plain-sine one</b>, and why you do not have to memorise it separately.",
+      },
+    }[q];
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [`<b>${Q.right}.</b>`, Q.why],
+    };
+  },
+});
+
+defineProblem("laplace-solve", {
+  topic: "Transforming a circuit equation",
+  lookup: "Electrical → Linear Systems → Laplace transforms",
+  make(rng) {
+    const R = rng.pick([2, 4, 5, 10]);
+    const Lmh = rng.pick([1, 2, 5, 10]);
+    const I0 = rng.pick([0, 1, 2, 3]);
+    const a = (R * 1000) / (Lmh * 1e-3);         // R/L, in s⁻¹
+    const kr = `${num(a / 1000, 0)}\\,000`;
+
+    if (I0 === 0) {
+      const Vs = rng.pick([5, 10, 12, 24]);
+      return {
+        stem: `An RL circuit with R = ${R} kΩ and L = ${Lmh} mH, starting from zero current, has a ${Vs} V step applied. What is I(s)?`,
+        choices: [
+          { tex: `\\frac{${Vs}}{s(Ls+R)}`, why: "" },
+          { tex: `\\frac{${Vs}}{Ls+R}`, why: "The step's own 1/s is missing. A step input is not a constant in the s-domain — it is <b>V/s</b>." },
+          { tex: `\\frac{${Vs}\\,s}{Ls+R}`, why: "That multiplies by s rather than dividing, which would be the transform of the step's <em>derivative</em> — an impulse." },
+          { tex: `\\frac{${Vs}}{s(L+Rs)}`, why: "L and R have swapped places. The inductor's impedance is sL, so s multiplies the inductance." },
+        ],
+        answer: 0,
+        steps: [
+          `In the s-domain the inductor is an impedance and Ohm's law works again:`,
+          `<span class="math display" data-tex="Z_L = sL, \\qquad V(s) = \\frac{${Vs}}{s}"></span>`,
+          `<span class="math display" data-tex="I(s) = \\frac{V(s)}{R + sL} = \\frac{${Vs}}{s(Ls + R)}"></span>`,
+          `<b>The pole at s = 0 comes from the step and the pole at s = −R/L comes from the circuit.</b> Inverting gives a constant minus an exponential — which is Part 1's answer, arrived at without solving anything.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `An RL circuit with R = ${R} kΩ and L = ${Lmh} mH is carrying ${I0} A when its source is removed at t = 0. Transform the loop equation L·i′ + Ri = 0.`,
+      choices: [
+        { tex: `L\\big(sI(s) - ${I0}\\big) + RI(s) = 0`, why: "" },
+        { tex: `LsI(s) + RI(s) = 0`, why: `The initial condition has been dropped. <b>ℒ{i′} = sI(s) − i(0⁻)</b>, and here i(0⁻) = ${I0} A — an inductor's current cannot jump.` },
+        { tex: `L\\big(sI(s) + ${I0}\\big) + RI(s) = 0`, why: "The sign. The initial value is <b>subtracted</b> inside the derivative's transform." },
+        { tex: `\\frac{L\\,I(s)}{s} + RI(s) = ${I0}`, why: "Differentiation multiplies by s; dividing by s would be integration." },
+      ],
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="\\mathcal{L}\\{i'\\} = sI(s) - i(0^-)"></span>`,
+        `The inductor's current is continuous, so ${T(`i(0^-) = i(0^+) = ${I0}\\text{ A}`)} — Part 1's rule, doing its job in the algebra:`,
+        `<span class="math display" data-tex="L\\big(sI(s) - ${I0}\\big) + RI(s) = 0 \\quad\\Rightarrow\\quad I(s) = \\frac{${I0}}{s + R/L}"></span>`,
+        `<b>The initial condition never had to be fitted.</b> It walked into the algebra at the transform step and came out in the answer, ${T(`i(t) = ${I0}e^{-t/\\tau}`)}. For a second-order problem that would have saved solving two simultaneous equations for two unknown constants.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "laplace",
+    stem: "ℒ{f′(t)} = ?",
+    tool: "sF(s) − f(0⁻)",
+    because: "Differentiation becomes multiplication by s, and the initial condition arrives as an algebraic term instead of a constant to fit at the end.",
+  },
+  {
+    part: "laplace",
+    stem: "A response has F(s) = 12/[s(s+4)]. Final value?",
+    tool: "lim s→0 of sF(s) = 3",
+    because: "Multiplying by s cancels the step's pole at the origin; the theorem is only valid if the response actually settles.",
+  },
+  {
+    part: "laplace",
+    stem: "What does a pole at s = −5 correspond to in time?",
+    tool: "e^(−5t) — a decay with τ = 0.2 s",
+    because: "A pole's distance from the origin along the negative real axis is 1/τ, which is the reading the whole s-plane rests on.",
+  },
+  {
+    part: "laplace",
+    stem: "f(t) transforms to F(s). What does e^(−at)f(t) transform to?",
+    tool: "F(s + a) — the poles shift left by a",
+    because: "That is how the damped-sine table entry is built from the plain-sine one, so there is one fewer line to memorise.",
+  },
+]);

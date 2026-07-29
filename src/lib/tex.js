@@ -71,6 +71,12 @@ const ACCENTS = {
 };
 const COLORS = { qx: "qx", qy: "qy", qr: "qr", qb: "qb" };
 
+/* \mathcal{X}, for the handful of letters that are conventionally script. */
+const SCRIPT = {
+  B: "ℬ", E: "ℰ", F: "ℱ", H: "ℋ", I: "ℐ", L: "ℒ",
+  M: "ℳ", R: "ℛ", e: "ℯ", g: "ℊ", o: "ℴ",
+};
+
 /* Everything the parser handles by name. An unrecognised command renders as
    *nothing at all*, which is this renderer's worst failure mode: \lceil
    vanishing turns a ceiling into a plain logarithm, \binom turns C(n,r) into
@@ -78,7 +84,8 @@ const COLORS = { qx: "qx", qy: "qy", qr: "qr", qb: "qb" };
    verification pass can catch that instead of a reader catching it. */
 const STRUCTURAL = new Set([
   "frac", "dfrac", "tfrac", "sqrt", "text", "mathrm", "operatorname",
-  "mathbf", "boldsymbol", "binom", "dbinom", "left", "right", "begin", "end",
+  "mathbf", "boldsymbol", "mathcal", "mathscr", "binom", "dbinom",
+  "left", "right", "begin", "end",
   "quad", "qquad", "big", "Big", "bigg", "Bigg",
   "\\", ",", ";", ":", " ", "!", "{", "}", "|", "&", "%", "_", "#", "$",
 ]);
@@ -230,6 +237,13 @@ function parse(tokens) {
     if (v in COLORS) return { k: "color", cls: COLORS[v], body: parseArg() };
     if (v === "text" || v === "mathrm" || v === "operatorname")
       return { k: v === "text" ? "text" : "up", body: parseTextArg() };
+    /* Script capitals. Unicode has these as single code points with good font
+       coverage, which beats faking a calligraphic face — and ℒ is the one
+       this subject actually needs. */
+    if (v === "mathcal" || v === "mathscr") {
+      const arg = parseTextArg();
+      return { k: "raw", v: String(arg.v).replace(/[A-Z]/g, (c) => SCRIPT[c] || c) };
+    }
     if (v === "mathbf" || v === "boldsymbol")
       return { k: "bf", body: parseArg() };
     if (v === "binom" || v === "dbinom")

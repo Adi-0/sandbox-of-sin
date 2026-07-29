@@ -1,0 +1,167 @@
+<p class="eyebrow">
+  <span>Linear Systems · Part 3</span>
+  <span class="spec">NCEES 7.C</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>The Laplace Transform</h1>
+
+<p class="lede">Parts 1 and 2 solved differential equations by recognising them.
+That stops working as soon as the input is anything but a step. The transform
+replaces the recognition with a procedure — and the procedure has no calculus
+in it.</p>
+
+<h2>3.1 What it is for</h2>
+
+<p>The definition is one line and you will not use it:</p>
+
+<p class="math" data-tex="F(s) = \int_0^\infty f(t)\,e^{-st}\,dt" data-display>F(s) = ∫₀^∞ f(t)e^(−st) dt</p>
+
+<p>Nobody evaluates that integral on an exam, and the handbook does not expect
+you to. What matters is the <em>property</em> it buys, which is this: because
+<span class="math" data-tex="e^{-st}">e^(−st)</span> differentiates to a multiple
+of itself, integrating by parts turns
+<span class="math" data-tex="f'(t)">f′(t)</span> into
+<span class="math" data-tex="sF(s)">sF(s)</span>. <b>Differentiation becomes
+multiplication.</b> A differential equation becomes a polynomial one.</p>
+
+<div data-figure="detour"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Where the initial conditions go</span>
+  <p style="margin-bottom:0">The full statement is
+  <span class="math" data-tex="\mathcal{L}\{f'\} = sF(s) - f(0^-)">ℒ{f′} = sF(s) − f(0⁻)</span>,
+  and that trailing term is the reason engineers use this and mathematicians
+  argue about it. <b>The initial condition enters the algebra at the transform
+  step.</b> Solve the ordinary way and you get a general solution with two
+  arbitrary constants, then set up and solve two simultaneous equations to pin
+  them down. In s, the constants were never arbitrary — they walked in with the
+  problem.</p>
+</div>
+
+<h2>3.2 The table</h2>
+
+<p>The handbook has a long transform table. Five entries carry nearly every FE
+question, and they are worth reading as <em>one</em> idea rather than five.</p>
+
+<div data-figure="transformPairs"></div>
+
+<f-plate no="7.5" title="The pairs that matter" stamp="handbook"
+  caption="<b>All in the handbook</b> — so this is recognition, not recall. What
+  is worth memorising is the pattern the right-hand column makes, not the
+  entries.">
+  <f-row tex="\delta(t) \ \longleftrightarrow \ 1" name="impulse"
+         gloss="Flat in s: an impulse contains every frequency equally, which is what makes it the natural test signal."></f-row>
+  <f-row tex="u(t) \ \longleftrightarrow \ \frac{1}{s}, \qquad t \ \longleftrightarrow \ \frac{1}{s^2}"
+         name="step and ramp"
+         gloss="Poles at the origin. <b>Each extra power of t adds another 1/s</b>, because integrating in t is dividing by s."></f-row>
+  <f-row tex="e^{-at} \ \longleftrightarrow \ \frac{1}{s+a}" name="the important one"
+         gloss="<b>A pole at −a is an exponential decaying at rate a.</b> Everything in Part 4 grows out of this single line."></f-row>
+  <f-row tex="\sin\omega t \ \longleftrightarrow \ \frac{\omega}{s^2+\omega^2}, \qquad \cos\omega t \ \longleftrightarrow \ \frac{s}{s^2+\omega^2}"
+         name="the sinusoids"
+         gloss="Poles at ±jω — on the imaginary axis, no real part, so nothing decays. Only the numerator tells sine from cosine."></f-row>
+  <f-row tex="e^{-at}\sin\omega t \ \longleftrightarrow \ \frac{\omega}{(s+a)^2+\omega^2}"
+         name="Part 2's ringing"
+         gloss="Poles at −a ± jω. <b>Built from the line above by the shift theorem</b>, so it is not a separate thing to remember."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">Read the right-hand column, not the left</span>
+  <p style="margin-bottom:0">Every entry above is characterised by where its
+  denominator is zero. A pole on the <b>negative real axis</b> is a decaying
+  exponential. A pair on the <b>imaginary axis</b> is an oscillation that never
+  dies. A pair to the <b>left</b> of the imaginary axis is a decaying
+  oscillation. That is the entire table in three sentences, and it is why Part 4
+  can throw the table away and just look at a picture.</p>
+</div>
+
+<h2>3.3 The four properties</h2>
+
+<f-plate no="7.6" title="Everything else you need" stamp="handbook">
+  <f-row tex="\mathcal{L}\{f'\} = sF(s) - f(0^-)" name="differentiation"
+         gloss="Twice over: <b>ℒ{f″} = s²F(s) − sf(0⁻) − f′(0⁻)</b>. The pattern extends, and the initial conditions come along."></f-row>
+  <f-row tex="\mathcal{L}\left\{\int_0^t f\right\} = \frac{F(s)}{s}" name="integration"
+         gloss="The mirror image. <b>Differentiate, multiply by s; integrate, divide by s.</b>"></f-row>
+  <f-row tex="\mathcal{L}\{e^{-at}f(t)\} = F(s+a)" name="shift in s"
+         gloss="Multiplying by a decaying exponential moves every pole <b>left</b> by a. This is how the damped-sine entry is built from the sine one."></f-row>
+  <f-row tex="\lim_{t\to\infty} f = \lim_{s\to 0} sF(s), \qquad \lim_{t\to 0^+} f = \lim_{s\to\infty} sF(s)"
+         name="final and initial value"
+         gloss="Two answers about the time domain <b>without inverting anything</b>. The final value theorem is only valid if the response actually settles."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the final value theorem lies about unstable systems</span>
+  <p style="margin-bottom:0">Apply it to
+  <span class="math" data-tex="F(s) = \frac{1}{s(s-2)}">F(s) = 1/[s(s−2)]</span>
+  and it cheerfully returns −0.5. The actual response grows without limit,
+  because of that pole at <b>+2</b>. The theorem is only valid when every pole
+  of <span class="math" data-tex="sF(s)">sF(s)</span> lies strictly in the left
+  half-plane — so <b>check where the poles are before using it</b>, which takes
+  two seconds and is the difference between a right answer and a confidently
+  wrong one.</p>
+</div>
+
+<h2>3.4 Getting back: partial fractions</h2>
+
+<p>Inverting is the same table read backwards, and the only work is arranging
+the expression into forms the table contains. For distinct real poles that is
+mechanical:</p>
+
+<div class="worked">
+  <h4>Worked · <em>a step through a first-order lag</em></h4>
+  <div class="worked-body">
+    <p>Invert <span data-tex="F(s) = \frac{12}{s(s+4)}">F(s) = 12/[s(s+4)]</span>.</p>
+    <ol class="steps">
+      <li>Split it over its poles, one term each:
+        <span data-tex="\frac{12}{s(s+4)} = \frac{A}{s} + \frac{B}{s+4}" data-display></span></li>
+      <li><b>Cover-up rule.</b> For A, cover the s and evaluate the rest at s = 0:
+        <span data-tex="A = \frac{12}{0+4} = 3">A = 3</span>. For B, cover the
+        (s+4) and evaluate at s = −4:
+        <span data-tex="B = \frac{12}{-4} = -3">B = −3</span>.</li>
+      <li>Both terms are now table entries:
+        <span data-tex="F(s) = \frac{3}{s} - \frac{3}{s+4} \quad\Longrightarrow\quad f(t) = 3 - 3e^{-4t}" data-display>f(t) = 3 − 3e^(−4t)</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Sanity-check it
+    against the theorems without inverting: initial value
+    <span class="math" data-tex="sF|_{s\to\infty} = 0">sF → 0</span> ✓, final
+    value <span class="math" data-tex="sF|_{s\to 0} = 3">sF → 3</span> ✓. And
+    check it against Part 1: this is a rise from 0 to 3 with τ = ¼ s, which is
+    the three-step method's answer. <b>Two routes, one answer</b> — and the
+    transform did not need to know it was a first-order circuit.</p>
+  </div>
+</div>
+
+<h2>3.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>ℒ{f′} = sF(s) − f(0⁻).</b> The reason the whole method exists.</li>
+    <li><span data-tex="e^{-at} \leftrightarrow 1/(s+a)">e^(−at) ↔ 1/(s+a)</span>
+        — <b>a pole at −a is a decay at rate a</b>.</li>
+    <li>Step is 1/s; a step input always puts a pole at the origin.</li>
+    <li>Sinusoid poles sit at <b>±jω</b>; damped ones at −a ± jω.</li>
+    <li>Shift: <span data-tex="e^{-at}f(t) \leftrightarrow F(s+a)">e^(−at)f(t) ↔ F(s+a)</span>.</li>
+    <li>Final value <span data-tex="\lim_{s\to 0} sF(s)">lim s→0 sF(s)</span>,
+        <b>only if the poles are all in the left half-plane</b>.</li>
+    <li>Partial fractions by the <b>cover-up rule</b>.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>The transform is a detour that turns out to be shorter. Three sides of the
+  rectangle — transform, rearrange, invert — and none of them is calculus,
+  against one side that is. The initial conditions come along for free, which is
+  what turns a convenience into a method.</p>
+  <p>But the real payoff is not the arithmetic. It is that
+  <b>a system's behaviour has become a set of numbers: the values of s where a
+  denominator is zero.</b> A pole on the negative real axis is a decay, a pair on
+  the imaginary axis is an oscillation, a pair to the left is Part 2's ringing.
+  Part 4 stops inverting anything and reads the answer straight off a picture of
+  where those numbers are — and that picture is the single most useful object in
+  this module and the next one.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"laplace","title":"Part 3 · The Laplace transform","topics":["laplace-pair","laplace-theorem","laplace-solve"],"count":6}'></div>
