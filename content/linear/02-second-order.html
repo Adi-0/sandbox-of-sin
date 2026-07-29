@@ -1,0 +1,173 @@
+<p class="eyebrow">
+  <span>Linear Systems · Part 2</span>
+  <span class="spec">NCEES 7.A</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Second-Order Response</h1>
+
+<p class="lede">One store of energy runs down. Two stores can hand energy back
+and forth — and a circuit that does that <em>rings</em>. This is where
+Mathematics Part 7's characteristic roots stop being algebra and become
+components you could buy.</p>
+
+<h2>2.1 Why a second store changes everything</h2>
+
+<p>An RC circuit has one place to put energy, so the only thing it can do is
+fill up or empty. Add an inductor and there are two, with opposite habits: the
+capacitor wants to hold its voltage and the inductor wants to hold its current.
+When the capacitor reaches its target the inductor is still pushing current into
+it, so it <b>overshoots</b> — and then the capacitor pushes back.</p>
+
+<p>Whether that argument settles quietly or rings depends on one thing: how much
+resistance there is to take energy out of the exchange.</p>
+
+<f-plate no="7.3" title="The two numbers that describe any second-order system" stamp="know"
+  caption="<b>ζ decides the shape and ωn decides the speed.</b> Every question in
+  this part is one of these four lines, or a consequence of them.">
+  <f-row tex="\omega_n = \frac{1}{\sqrt{LC}}" name="undamped natural frequency"
+         gloss="Where it would ring with no resistance. <b>R does not appear</b> — resistance kills the amplitude, and barely moves the frequency."></f-row>
+  <f-row tex="\zeta = \frac{R}{2}\sqrt{\frac{C}{L}} = \frac{R}{2\sqrt{L/C}}" name="damping ratio, series RLC"
+         gloss="The second form reads better: <b>√(L/C) is the circuit's characteristic impedance</b>, and ζ is R measured against it. Dimensionless, so only the ratio matters."></f-row>
+  <f-row tex="\zeta = \frac{1}{2R}\sqrt{\frac{L}{C}}" name="damping ratio, parallel RLC"
+         gloss="<b>Inverted.</b> In a parallel circuit a bigger resistor damps <em>less</em>, because it draws less of the circulating current away."></f-row>
+  <f-row tex="s = -\zeta\omega_n \pm j\omega_n\sqrt{1-\zeta^2}" name="the roots"
+         gloss="Real part is the decay rate; imaginary part is the ringing frequency ω_d. Distance from the origin is ω_n and the angle encodes ζ."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · series and parallel invert ζ</span>
+  <p style="margin-bottom:0">In a <b>series</b> RLC the resistor is in the path
+  of the circulating current, so more resistance means more damping. In a
+  <b>parallel</b> RLC it is a bypass, so more resistance means <em>less</em>
+  damping — an open circuit removes it entirely. The formulas are reciprocals
+  of each other and questions are built on exactly this. <b>Read which topology
+  you have been handed before writing anything down.</b></p>
+</div>
+
+<h2>2.2 Three cases, one resistor</h2>
+
+<div data-figure="damping"></div>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>ζ</th><th>Roots</th><th>Response</th><th>When it is what you want</th></tr></thead>
+  <tbody>
+    <tr><td>&lt; 1</td><td>complex pair</td><td><b>underdamped</b> — overshoots and rings</td><td>Almost always, if a little overshoot is tolerable. Fastest to arrive.</td></tr>
+    <tr><td>= 1</td><td>real and equal</td><td><b>critically damped</b></td><td>The fastest approach with <em>no</em> overshoot. One exact value of R.</td></tr>
+    <tr><td>&gt; 1</td><td>two real</td><td><b>overdamped</b> — two exponentials</td><td>Rarely on purpose. Slower than critical and no better behaved.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note payoff">
+  <span class="note-tag">The cast arrives, made of components</span>
+  <p style="margin-bottom:0">Mathematics Part 7 solved
+  <span class="math" data-tex="y'' + 6y' + 25y = 0">y″ + 6y′ + 25y = 0</span>
+  and got roots <span class="math" data-tex="-3 \pm 4j">−3 ± 4j</span>: ωn = 5,
+  ωd = 4, ζ = cos 53.13° = 0.6. Multiply everything by 2000 and it is
+  <b>R = 120 Ω, L = 10 mH, C = 1 µF</b> — roots at −6000 ± j8000, ωn = 10
+  krad/s, and <b>the same 3-4-5 triangle</b>. Set the plate above to 120 Ω to
+  see it. The characteristic equation you solved as algebra was this circuit all
+  along, and the ringing on the screen is what those imaginary parts <em>are</em>.</p>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">More damping is not more safety</span>
+  <p style="margin-bottom:0">Past ζ = 1, adding resistance makes the response
+  <b>slower</b> and buys nothing — there is no overshoot left to remove. People
+  reliably expect heavily overdamped to be the "safe" choice, and it is simply
+  the sluggish one. Critical damping is a boundary, not a compromise: it is the
+  <em>fastest</em> response that never overshoots, and it exists at exactly one
+  value of R.</p>
+</div>
+
+<h2>2.3 The two numbers a specification is written in</h2>
+
+<p>Nobody specifies a circuit by its damping ratio. They specify how far it may
+overshoot and how quickly it must settle — and both come off the same decaying
+envelope.</p>
+
+<div data-figure="overshoot"></div>
+
+<f-plate no="7.4" title="Performance, from ζ and ωn" stamp="handbook"
+  caption="<b>Overshoot has no ωn in it and settling has no ωd.</b> That
+  separation is what makes second-order design tractable: choose ζ from the
+  overshoot limit, then raise ωn for speed.">
+  <f-row tex="\%OS = 100\,e^{-\pi\zeta/\sqrt{1-\zeta^2}}" name="overshoot"
+         gloss="<b>ζ alone.</b> Worth recognising: 0.5 → 16.3%, 0.6 → 9.5%, 0.707 → 4.3%."></f-row>
+  <f-row tex="t_p = \frac{\pi}{\omega_d}" name="time to the first peak"
+         gloss="Half a period of the ringing, which is exactly what it looks like on the plate."></f-row>
+  <f-row tex="t_s \approx \frac{4}{\zeta\omega_n}" name="settling time, 2%"
+         gloss="The <b>product</b> ζω_n — the real part of the roots. Use 3 in the numerator for the 5% criterion."></f-row>
+  <f-row tex="\zeta \approx 0.707 \ \Rightarrow \ 4.3\%" name="the usual compromise"
+         gloss="Close to the shortest settling time available, with overshoot small enough for most specifications. A great many real designs sit here deliberately."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>designing to a specification</em></h4>
+  <div class="worked-body">
+    <p>A system must overshoot by no more than 5% and settle within 20 ms.
+    What ζ and ωn are needed?</p>
+    <ol class="steps">
+      <li><b>Overshoot fixes ζ, and only ζ.</b> Solving
+        <span data-tex="0.05 = e^{-\pi\zeta/\sqrt{1-\zeta^2}}">0.05 = e^(−πζ/√(1−ζ²))</span>
+        gives <span data-tex="\zeta = 0.69">ζ = 0.69</span> — so take the
+        familiar 0.707, which gives 4.3% and leaves margin.</li>
+      <li><b>Settling then fixes ωn.</b>
+        <span data-tex="t_s = \frac{4}{\zeta\omega_n} \le 0.020 \quad\Rightarrow\quad \omega_n \ge \frac{4}{(0.707)(0.020)} = 283\ \text{rad/s}" data-display>ωn ≥ 283 rad/s</span></li>
+      <li>Check: at ζ = 0.707 and ωn = 283, the roots are −200 ± j200 and the
+        overshoot is 4.3%. Both specifications met.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left"><b>The two
+    requirements never fight</b>, because they depend on different things —
+    which is the whole reason second-order systems are described by ζ and ωn
+    rather than by R, L and C. Note also that the answer is an
+    <em>inequality</em>: any faster system also meets it, so the real limit is
+    whatever the hardware can do.</p>
+  </div>
+</div>
+
+<h2>2.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="\omega_n = 1/\sqrt{LC}">ωn = 1/√(LC)</span>, and
+        <b>R is not in it</b>.</li>
+    <li>Series: <span data-tex="\zeta = \frac{R}{2}\sqrt{C/L}">ζ = (R/2)√(C/L)</span>.
+        <b>Parallel inverts it.</b></li>
+    <li>Critical resistance <span data-tex="R = 2\sqrt{L/C}">R = 2√(L/C)</span> —
+        compare R against it to name the case on sight.</li>
+    <li>Roots <span data-tex="-\zeta\omega_n \pm j\omega_d">−ζωn ± jωd</span>,
+        with <span data-tex="\omega_d = \omega_n\sqrt{1-\zeta^2}">ωd = ωn√(1−ζ²)</span>.</li>
+    <li><b>%OS depends on ζ alone</b>: 0.5 → 16.3%, 0.6 → 9.5%, 0.707 → 4.3%.</li>
+    <li><span data-tex="t_p = \pi/\omega_d">tp = π/ωd</span>,
+        <span data-tex="t_s \approx 4/\zeta\omega_n">ts ≈ 4/ζωn</span>.</li>
+    <li>ζ = 1 is the <b>fastest with no overshoot</b>; beyond it is slower for
+        nothing.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Two energy stores with opposite habits produce an argument, and the
+  resistance decides whether it is settled quietly or has to be rung out. All of
+  the behaviour is in two numbers — <b>ζ for the shape, ωn for the speed</b> —
+  and the fact that they are separable is what makes design possible: overshoot
+  is a function of ζ alone, so the two specifications a system is written to
+  never compete.</p>
+  <p>Underneath, this is Mathematics Part 7 with units attached. The roots are
+  the same roots, ζ is the same cosine of the same angle, and the reason a
+  circuit rings at ωd rather than ωn is the same reason
+  <span class="math" data-tex="e^{(-3+4j)t}">e^((−3+4j)t)</span> oscillates at
+  4 and decays at 3. <b>Part 3 takes the last step and stops solving the
+  differential equation at all</b> — because a transform exists that turns it
+  into algebra, and once you have that, the roots are simply where a
+  denominator is zero.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"second-order","title":"Part 2 · Second-order response","topics":["damping-case","wn-zeta","overshoot-calc"],"count":6}'></div>
+
+<div data-reflex='{"only":["transient","second-order"],"count":6,"title":"Handbook Reflex · Parts 1–2"}'></div>

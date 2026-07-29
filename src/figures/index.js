@@ -36,6 +36,7 @@ import "./digital-synthesis.js"; // 75
 
 /* --- Linear Systems --- */
 import "./transient.js";     // 76 77
+import "./second-order.js";  // 78 79
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

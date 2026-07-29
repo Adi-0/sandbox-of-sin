@@ -280,3 +280,235 @@ defineReflex([
     because: "The general form covers both special cases, so there is only one thing to remember.",
   },
 ]);
+
+/* ==========================================================================
+   Part 2 — second-order response (7.A)
+   ========================================================================== */
+
+const OS = (z) => Math.exp(-Math.PI * z / Math.sqrt(1 - z * z));
+
+defineProblem("damping-case", {
+  topic: "Which damping case",
+  lookup: "Electrical → Linear Systems → Transient response",
+  make(rng) {
+    const Lmh = rng.pick([1, 4, 10, 25, 100]);
+    const Cuf = rng.pick([0.1, 0.25, 1, 4, 10]);
+    const Lv = Lmh * 1e-3, Cv = Cuf * 1e-6;
+    const wn = 1 / Math.sqrt(Lv * Cv);
+    const Rcrit = 2 * Math.sqrt(Lv / Cv);
+    const R = rng.pick([0.25, 0.5, 1, 1, 2, 4]) * Rcrit;
+    const z = (R / 2) * Math.sqrt(Cv / Lv);
+    const kind = z < 0.999 ? "Underdamped" : z < 1.001 ? "Critically damped" : "Overdamped";
+    const why = {
+      Underdamped: "ζ < 1, so the roots are a complex conjugate pair and the response overshoots and rings before settling.",
+      "Critically damped": "ζ = 1 exactly, so the two roots are real and equal. This is the <b>fastest response with no overshoot</b>, and it happens at exactly one value of R.",
+      Overdamped: "ζ > 1, so the roots are two distinct real negatives and the response is the sum of two decaying exponentials — no ringing, and <em>slower</em> than critical.",
+    }[kind];
+
+    return {
+      stem: `A series RLC circuit has R = ${num(R, 0)} Ω, L = ${num(Lmh, 0)} mH and C = ${num(Cuf, 2)} µF. Which damping case is it in?`,
+      choices: [
+        { text: kind, why: "" },
+        ...["Underdamped", "Critically damped", "Overdamped"].filter((k) => k !== kind)
+          .map((k) => ({
+            text: k,
+            why: `That would need ζ ${k === "Underdamped" ? "< 1" : k === "Overdamped" ? "> 1" : "= 1 exactly"}, and here ζ = ${fixed(z, 2)}.`,
+          })),
+        { text: "Undamped — it oscillates forever", why: "That needs R = 0. Any resistance at all dissipates the stored energy and the oscillation dies." },
+      ],
+      answer: 0,
+      steps: [
+        `Two numbers decide it, and neither needs the response solved:`,
+        `<span class="math display" data-tex="\\omega_n = \\frac{1}{\\sqrt{LC}} = ${num(wn, 0)}\\text{ rad/s}, \\qquad \\zeta = \\frac{R}{2}\\sqrt{\\frac{C}{L}} = ${fixed(z, 2)}"></span>`,
+        `<b>${kind}.</b> ${why}`,
+        `The critical resistance here is ${T(`R_{crit} = 2\\sqrt{L/C} = ${num(Rcrit, 0)}\\ \\Omega`)}, so <b>comparing R against 2√(L/C) answers this question on sight</b> — which is worth doing before reaching for ζ.`,
+      ],
+    };
+  },
+});
+
+defineProblem("wn-zeta", {
+  topic: "Natural frequency and damping ratio",
+  lookup: "Electrical → Linear Systems → Transient response",
+  make(rng) {
+    const q = rng.pick(["wn", "zeta", "wd", "roots"]);
+    const Lmh = rng.pick([1, 4, 10, 25, 100]);
+    const Cuf = rng.pick([0.1, 0.25, 1, 4, 10]);
+    const Lv = Lmh * 1e-3, Cv = Cuf * 1e-6;
+    const wn = 1 / Math.sqrt(Lv * Cv);
+    const R = rng.pick([0.2, 0.4, 0.6, 0.8]) * 2 * Math.sqrt(Lv / Cv);
+    const z = (R / 2) * Math.sqrt(Cv / Lv);
+    const wd = wn * Math.sqrt(1 - z * z);
+    const kr = (v) => `${num(v / 1000, 2)} krad/s`;
+
+    if (q === "wn") {
+      return {
+        stem: `A series RLC circuit has L = ${num(Lmh, 0)} mH and C = ${num(Cuf, 2)} µF. What is its undamped natural frequency?`,
+        choices: options(
+          { text: kr(wn), why: "" },
+          [
+            { text: kr(Math.sqrt(Lv * Cv) * 1e6), why: "That is √(LC) rather than its reciprocal. A bigger L or C makes a circuit <b>slower</b>, so they belong on the bottom." },
+            { text: kr(1 / (Lv * Cv) / 1e6), why: "The square root is missing." },
+            { text: kr(wn / (2 * Math.PI)), why: "That is in hertz, not radians per second — and the question asks for ω. Divide by 2π only if the answer is wanted in Hz." },
+          ]),
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="\\omega_n = \\frac{1}{\\sqrt{LC}} = \\frac{1}{\\sqrt{(${num(Lmh, 0)}\\times10^{-3})(${num(Cuf, 2)}\\times10^{-6})}}"></span>`,
+          `<span class="math display" data-tex="\\omega_n = ${num(wn, 0)}\\text{ rad/s} = ${num(wn / 1000, 2)}\\text{ krad/s}"></span>`,
+          `<b>${kr(wn)}</b>, which is ${num(wn / (2 * Math.PI * 1000), 2)} kHz. Note that <b>R does not appear</b> — ωn is what the circuit <em>would</em> ring at with no resistance, and resistance only lowers the frequency slightly and kills the amplitude.`,
+        ],
+      };
+    }
+
+    if (q === "zeta") {
+      return {
+        stem: `A series RLC circuit has R = ${num(R, 0)} Ω, L = ${num(Lmh, 0)} mH and C = ${num(Cuf, 2)} µF. What is its damping ratio?`,
+        choices: options(
+          { text: fixed(z, 3), why: "" },
+          [
+            { text: fixed(1 / z, 3), why: "Inverted. A <b>larger</b> resistor means more damping, so R belongs on top." },
+            { text: fixed((R / 2) * Math.sqrt(Lv / Cv), 3), why: "L and C are the wrong way round. It is √(C/L), which is the reciprocal of the circuit's characteristic impedance." },
+            { text: fixed(z * 2, 3), why: "The factor of 2 has been dropped." },
+          ]),
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="\\zeta = \\frac{R}{2}\\sqrt{\\frac{C}{L}} = \\frac{R}{2\\sqrt{L/C}}"></span>`,
+          `<span class="math display" data-tex="\\zeta = \\frac{${num(R, 0)}}{2\\sqrt{${num(Lmh, 0)}\\times10^{-3} / ${num(Cuf, 2)}\\times10^{-6}}} = ${fixed(z, 3)}"></span>`,
+          `<b>${fixed(z, 3)}</b> — underdamped. The second form is worth preferring: <b>√(L/C) is the circuit's characteristic impedance</b>, so ζ is just R measured against it, halved. That reading makes it obvious that only the <em>ratio</em> matters, not the absolute size of anything.`,
+        ],
+      };
+    }
+
+    if (q === "wd") {
+      return {
+        stem: `A second-order circuit has ωn = ${kr(wn)} and ζ = ${fixed(z, 2)}. At what frequency does it actually ring?`,
+        choices: options(
+          { text: kr(wd), why: "" },
+          [
+            { text: kr(wn), why: "That is the <b>undamped</b> natural frequency — what it would ring at with no resistance. Damping always lowers it." },
+            { text: kr(wn * z), why: "That is the decay rate σ = ζωn, the real part of the roots, not the frequency." },
+            { text: kr(wn * (1 - z * z)), why: "The square root is missing from √(1 − ζ²)." },
+          ]),
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="\\omega_d = \\omega_n\\sqrt{1-\\zeta^2} = ${num(wn / 1000, 2)}\\sqrt{1-${fixed(z, 2)}^2} = ${num(wd / 1000, 2)}\\text{ krad/s}"></span>`,
+          `<b>${kr(wd)}.</b> Note how little damping costs in frequency: even at ζ = 0.5 the ringing is still 87% of ωn. <b>Damping mostly removes amplitude, not frequency</b> — which is why ωn is a usable estimate of the ringing frequency for any lightly damped circuit.`,
+          `Geometrically, ωn, ωd and ζωn are the hypotenuse and two sides of a right triangle: <b>ζ is the cosine of the angle from the negative real axis</b>. At ζ = 0.6 that angle is 53.13°, and the triangle is 3-4-5.`,
+        ],
+      };
+    }
+
+    const sig = z * wn;
+    return {
+      stem: `A second-order system has ωn = ${kr(wn)} and ζ = ${fixed(z, 2)}. Where are its roots?`,
+      choices: options(
+        { text: `−${num(sig, 0)} ± j${num(wd, 0)}`, why: "" },
+        [
+          { text: `−${num(wd, 0)} ± j${num(sig, 0)}`, why: "The real and imaginary parts are swapped. <b>The real part is the decay rate ζωn</b> and the imaginary part is the ringing frequency ωd." },
+          { text: `−${num(sig, 0)} ± j${num(wn, 0)}`, why: "That uses ωn as the imaginary part. The ringing is at ωd = ωn√(1−ζ²), which is always smaller." },
+          { text: `+${num(sig, 0)} ± j${num(wd, 0)}`, why: "A <b>positive</b> real part would mean a response that grows without limit. Any passive circuit has roots in the left half-plane." },
+        ]),
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="s = -\\zeta\\omega_n \\pm j\\omega_n\\sqrt{1-\\zeta^2}"></span>`,
+        `<span class="math display" data-tex="s = -${num(sig, 0)} \\pm j${num(wd, 0)}"></span>`,
+        `<b>The two parts mean different things and are worth separating.</b> The real part, −ζωn, is how fast the envelope decays — it alone sets the settling time. The imaginary part, ωd, is how fast it oscillates inside that envelope. A root's <em>distance</em> from the origin is ωn, and its <em>angle</em> encodes ζ.`,
+      ],
+    };
+  },
+});
+
+defineProblem("overshoot-calc", {
+  topic: "Overshoot and settling time",
+  lookup: "Electrical → Linear Systems → Transient response",
+  make(rng) {
+    const q = rng.pick(["os", "os", "ts", "which"]);
+    const z = rng.pick([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
+    const wn = rng.pick([100, 500, 1000, 2000, 5000]);
+    const os = OS(z);
+
+    if (q === "os") {
+      return {
+        stem: `A second-order system has ζ = ${fixed(z, 1)}. What is its percentage overshoot to a step input?`,
+        choices: options(
+          { text: `${fixed(os * 100, 1)}%`, why: "" },
+          [
+            { text: `${fixed((1 - z) * 100, 0)}%`, why: "That is a linear guess. Overshoot falls far faster than linearly with ζ — the relationship is exponential." },
+            { text: `${fixed(OS(z) * 100 * 2, 1)}%`, why: "Twice the correct value. There is no factor of 2 in the overshoot formula." },
+            { text: `${fixed(Math.exp(-Math.PI * z) * 100, 1)}%`, why: "The <b>√(1 − ζ²)</b> is missing from the denominator of the exponent. It matters more as ζ grows." },
+          ]),
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="\\%OS = 100\\,e^{-\\pi\\zeta/\\sqrt{1-\\zeta^2}}"></span>`,
+          `<span class="math display" data-tex="= 100\\,e^{-\\pi(${fixed(z, 1)})/\\sqrt{1-${fixed(z, 1)}^2}} = ${fixed(os * 100, 1)}\\%"></span>`,
+          `<b>${fixed(os * 100, 1)}%.</b> Note what is <em>not</em> in the formula: ωn. <b>Overshoot depends on ζ alone</b>, so changing the speed of a system does not change how far it overshoots — which is why a specification is written as a percentage and a time rather than as two times.`,
+          `Three worth recognising: <b>ζ = 0.5 gives 16.3%, ζ = 0.6 gives 9.5%, ζ = 0.707 gives 4.3%.</b>`,
+        ],
+      };
+    }
+
+    if (q === "ts") {
+      const ts = 4 / (z * wn);
+      return {
+        stem: `A second-order system has ζ = ${fixed(z, 1)} and ωn = ${num(wn, 0)} rad/s. What is its 2% settling time?`,
+        choices: options(
+          { text: ms(ts), why: "" },
+          [
+            { text: ms(4 / wn), why: "That leaves out ζ. Settling depends on the <b>product</b> ζωn — the real part of the roots — because that is what the decaying envelope goes as." },
+            { text: ms(4 * z / wn), why: "ζ is multiplying where it should divide. More damping settles <em>faster</em>, up to a point." },
+            { text: ms(Math.PI / (wn * Math.sqrt(1 - z * z))), why: "That is the <b>peak time</b>, π/ωd — when the first overshoot happens, not when the response settles." },
+          ]),
+        answer: 0,
+        steps: [
+          `The envelope decays as e^(−ζωn·t), and 2% is reached when that exponent is about −4:`,
+          `<span class="math display" data-tex="t_s \\approx \\frac{4}{\\zeta\\omega_n} = \\frac{4}{(${fixed(z, 1)})(${num(wn, 0)})} = ${fixed(ts * 1000, 2)}\\text{ ms}"></span>`,
+          `<b>${ms(ts)}.</b> The numerator is a convention: use <b>4 for the 2% criterion and 3 for 5%</b>. Note that ζωn is the real part of the roots, so this is really the statement that <b>how fast a system settles is decided by how far left its poles are</b> — a fact Part 4 will make geometric.`,
+        ],
+      };
+    }
+
+    return {
+      stem: "A design must overshoot by no more than 5% and settle as quickly as possible. What should be adjusted?",
+      choices: [
+        { text: "ζ sets the overshoot; then raise ωn to settle faster", why: "" },
+        { text: "Raise ωn until the overshoot is acceptable", why: "ωn does not affect overshoot at all. Raising it makes everything happen sooner, overshoot included — the peak stays exactly as high." },
+        { text: "Lower ζ to settle faster", why: "Lower ζ means <b>more</b> overshoot, and past about ζ = 0.7 it also makes settling worse, because the ringing takes longer to die." },
+        { text: "Raise ζ above 1 to eliminate overshoot entirely", why: "That does remove overshoot, and it makes the response <em>slower</em> than critical damping. It is the answer when overshoot is unacceptable at any cost, not when 5% is allowed." },
+      ],
+      answer: 0,
+      steps: [
+        `The two specifications separate cleanly, which is the useful structure here:`,
+        `<span class="math display" data-tex="\\%OS = f(\\zeta) \\ \\text{alone}, \\qquad t_s = 4/(\\zeta\\omega_n)"></span>`,
+        `So pick ζ from the overshoot limit — <b>5% needs about ζ = 0.69</b> — and then raise ωn as far as the hardware allows, which shrinks the settling time without touching the overshoot.`,
+        `<b>This is why ζ ≈ 0.7 appears so often.</b> It gives roughly 4.3% overshoot and sits close to the minimum settling time, so it is the default compromise unless a specification says otherwise.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "second-order",
+    stem: "A series RLC. How do you tell which damping case without solving anything?",
+    tool: "compare R against 2√(L/C)",
+    because: "That is the critical resistance; below it the roots are complex and the circuit rings, above it they are real and it cannot.",
+  },
+  {
+    part: "second-order",
+    stem: "ωn = 10 krad/s and ζ = 0.6. Where are the roots?",
+    tool: "−ζωn ± jωn√(1−ζ²) = −6000 ± j8000",
+    because: "The real part is the decay rate and sets settling; the imaginary part is the ringing frequency. Distance from the origin is ωn.",
+  },
+  {
+    part: "second-order",
+    stem: "A step response overshoots by 9.5%. What is ζ?",
+    tool: "0.6 — from %OS = e^(−πζ/√(1−ζ²))",
+    because: "Overshoot depends on ζ and nothing else, so it identifies the damping ratio no matter how fast the system is.",
+  },
+  {
+    part: "second-order",
+    stem: "ζ = 0.5, ωn = 200 rad/s. Settling time to 2%?",
+    tool: "4/ζωn = 40 ms",
+    because: "Settling goes with the real part of the roots, so it is the product ζωn that matters, not either one alone.",
+  },
+]);
