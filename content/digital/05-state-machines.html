@@ -1,0 +1,239 @@
+<p class="eyebrow">
+  <span>Digital Systems · Part 5</span>
+  <span class="spec">NCEES 15.G</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>State Machines</h1>
+
+<p class="lede">Part 3 built logic with no memory. Part 4 built memory with no
+logic. Put the two in a loop — flip-flops feeding gates feeding the flip-flops
+back — and you have the general form of every digital system there is.</p>
+
+<h2>5.1 The loop</h2>
+
+<p>A synchronous state machine is three blocks and one loop:</p>
+
+<ul>
+  <li>A <span class="term">state register</span> — Part 4's flip-flops, holding
+  the machine's entire memory as a bit pattern.</li>
+  <li><span class="term">Next-state logic</span> — Part 3's combinational
+  gates, computing what the register should hold after the next edge, from what
+  it holds now and what the inputs are doing.</li>
+  <li><span class="term">Output logic</span> — more gates, decoding the state
+  into whatever the machine is supposed to drive.</li>
+</ul>
+
+<p>That is the whole architecture. Everything difficult about state machines is
+deciding <em>what the states should be</em>, and this part is mostly about that
+decision.</p>
+
+<f-plate no="15.11" title="The general form" stamp="know"
+  caption="<b>Two functions and a register.</b> Every synchronous digital
+  system, from a traffic light to a processor, is this diagram with a larger
+  register.">
+  <f-row tex="S^+ = f(S, X)" name="next-state logic"
+         gloss="Combinational. Its output is loaded into the register at the next clock edge, which is what makes the machine advance one step per edge."></f-row>
+  <f-row tex="Z = g(S)" name="Moore output"
+         gloss="Depends on the state alone. It changes only at a clock edge, so it is <b>registered and clean</b> — and it lags the input that caused it by one cycle."></f-row>
+  <f-row tex="Z = g(S, X)" name="Mealy output"
+         gloss="Depends on the state <em>and</em> the input. It responds in the same cycle, and it <b>follows every twitch of the input</b>, glitches included."></f-row>
+  <f-row tex="\text{states} \le 2^n" name="the register's width"
+         gloss="n flip-flops hold 2ⁿ patterns, so a machine with N states needs ⌈log₂N⌉ of them — the same arithmetic as a counter, because a counter <em>is</em> a state machine."></f-row>
+</f-plate>
+
+<h2>5.2 What a state is</h2>
+
+<p>The hard step is not drawing the diagram. It is realising what has to be
+remembered — and the answer is almost always <b>less than you think</b>.</p>
+
+<p>Take the standard exam machine: detect the pattern <span class="term">1011</span>
+in a serial bit stream. A naive design remembers the last four bits, which needs
+16 states. But the machine does not need the last four bits. It needs only
+<b>how much of 1011 the input currently ends with</b> — nothing, one bit, two
+bits, three, or all four. Five possibilities, five states, and the entire
+diagram falls out of that one sentence.</p>
+
+<div data-figure="stateMachine"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Why the backward arrows are not arbitrary</span>
+  <p style="margin-bottom:0">Read the states as <em>amounts of progress</em> and
+  every arrow becomes derivable rather than memorised. From S3 (the input ends
+  <b>101</b>) a 0 arrives, so the input now ends 1010 — and the longest prefix of
+  1011 that 1010 ends with is <b>10</b>, which is S2. Not S0: throwing away all
+  the progress would miss the pattern in 101<b>011</b>. The same reasoning gives
+  the arrow out of the accepting state: after a match, the trailing 1 is already
+  the first bit of a possible next one, so it goes to S1. <b>That is what
+  "overlaps counted" means in hardware</b>, and it is the detail exam questions
+  are usually built around.</p>
+</div>
+
+<h2>5.3 Moore and Mealy</h2>
+
+<p>The two forms differ in one line, and everything else follows from it:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th></th><th>Moore</th><th>Mealy</th></tr></thead>
+  <tbody>
+    <tr><td>Output depends on</td><td>the state</td><td>the state <b>and</b> the input</td></tr>
+    <tr><td>Drawn</td><td>inside the state circle</td><td>on the arrow, as <em>in / out</em></td></tr>
+    <tr><td>States needed</td><td>usually one more</td><td>fewer, never more</td></tr>
+    <tr><td>Output timing</td><td>one clock <b>later</b></td><td>same cycle</td></tr>
+    <tr><td>Output quality</td><td>registered, glitch-free</td><td>combinational, can glitch</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the one-cycle offset</span>
+  <p style="margin-bottom:0">A Moore output is decoded from the state register,
+  and the machine does not <em>enter</em> the accepting state until the clock
+  edge — so its output appears in the cycle <b>after</b> the bit that completed
+  the pattern. Step the plate above through both forms and watch the Z row: the
+  same input, the same detections, one column apart. Questions asking "in which
+  clock cycle does the output assert" are testing exactly this, and the answer
+  depends on which machine you were handed.</p>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">Which one should you build?</span>
+  <p style="margin-bottom:0">In practice, <b>Moore</b> — unless you need the
+  answer a cycle early. A registered output is one you can route anywhere without
+  worrying about what it does mid-cycle, and Part 6 is a catalogue of what goes
+  wrong when you cannot make that assumption. The usual compromise is a Mealy
+  machine with its output put through one flip-flop, which is clean again but
+  has given back the timing advantage — at which point you have built a Moore
+  machine with extra steps. <b>Mealy is never larger; Moore is never faster.</b></p>
+</div>
+
+<h2>5.4 The design procedure</h2>
+
+<p>Six steps, each consuming the one before it. Written out, it is completely
+mechanical — which is the point, because the only creative step is the first.</p>
+
+<div class="worked">
+  <h4>Worked · <em>from behaviour to gates</em></h4>
+  <div class="worked-body">
+    <ol class="steps">
+      <li><b>State diagram.</b> Decide what has to be remembered, and name each
+        state by its <em>meaning</em>. This is the only step requiring thought,
+        and the only one where a real mistake can be made.</li>
+      <li><b>State table.</b> The same information as rows: present state, input,
+        next state, output. Mechanical, and it is where a missing transition
+        becomes visible.</li>
+      <li><b>State assignment.</b> Give each state a bit pattern.
+        <span data-tex="\lceil \log_2 N \rceil">⌈log₂N⌉</span> flip-flops for a
+        binary assignment, or one per state for one-hot. §5.5 is about this
+        choice.</li>
+      <li><b>Excitation table.</b> Translate each transition into flip-flop
+        inputs, using Part 4's tables. <b>With D flip-flops there is nothing to
+        do</b> — the next-state column <em>is</em> the D column.</li>
+      <li><b>Minimise.</b> One Karnaugh map per flip-flop input and one per
+        output, over the state bits and the machine's inputs. Part 3, unchanged.</li>
+      <li><b>Draw the gates.</b> Nothing is left to decide.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">An exam question
+    typically hands you step 2 or 3 and asks for step 5. <b>Knowing the whole
+    sequence is what tells you what you have been given</b> — a table headed
+    "next state" needs no excitation step if it says D flip-flops, and needs
+    Part 4's JK table if it does not.</p>
+  </div>
+</div>
+
+<h2>5.5 State assignment</h2>
+
+<p>Step 3 looks like bookkeeping and is not. The machine's <em>behaviour</em>
+does not depend on which pattern you give which state; the amount of hardware
+very much does.</p>
+
+<div data-figure="assignment"></div>
+
+<f-plate no="15.12" title="Encodings" stamp="know">
+  <f-row tex="\text{binary}: \ 00, 01, 10, 11" name="minimum flip-flops"
+         gloss="⌈log₂N⌉ of them. The textbook default, and the answer an exam question wants unless it says otherwise."></f-row>
+  <f-row tex="\text{Gray}: \ 00, 01, 11, 10" name="one bit at a time"
+         gloss="Helps when the machine <em>walks</em> its states in order, as a counter does — fewer bits changing means fewer chances of a race. <b>Buys nothing for a machine that jumps around.</b>"></f-row>
+  <f-row tex="\text{one-hot}: \ 0001, 0010, 0100, 1000" name="one flip-flop per state"
+         gloss="No minimisation at all: D for a state is the OR of the transitions entering it. <b>Terms stay two literals wide however many states you add.</b>"></f-row>
+  <f-row tex="2^n - N \ \text{codes are unused}" name="and must be handled"
+         gloss="Power-up is undefined and noise happens. <b>Route the unused codes back to the reset state</b> or the machine can hang in one."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">There is no rule, and that is the finding</span>
+  <p style="margin-bottom:0">The plate above tries <b>all 24 ways</b> of dealing
+  four codes to four states and minimises each. The binary assignment costs 9
+  literals, Gray costs 18 — worse, for this machine — and the best of the 24
+  costs 7. No heuristic predicts which one wins, because the answer depends on
+  the machine's transition structure rather than on any property of the codes.
+  <b>This is why synthesis tools search rather than follow a rule</b>, and why
+  "state assignment is arbitrary" is the one wrong answer: it is <em>free</em>,
+  in that any assignment works, but it is not without consequence.</p>
+</div>
+
+<h2>5.6 Reset, and the states you did not draw</h2>
+
+<p>Two failure modes that questions like, and that a careful design closes:</p>
+
+<ul>
+  <li><b>Power-up is undefined.</b> Each flip-flop settles wherever it settles,
+  so a machine without a reset spends its first cycles in a state nobody chose.
+  Every real design has a reset for this reason alone.</li>
+  <li><b>Unused codes are reachable.</b> Five states in three flip-flops leaves
+  three codes unaccounted for. Treating them as don't-cares gives the smallest
+  equations — and leaves their behaviour to whatever the gates happen to do,
+  which can be a loop the machine never escapes. A
+  <span class="term">self-starting</span> design gives every unused code an
+  explicit route back.</li>
+</ul>
+
+<div class="note honest">
+  <span class="note-tag">Both answers are correct, to different questions</span>
+  <p style="margin-bottom:0">A minimisation question wants the unused states
+  treated as don't-cares, because that is what makes the Karnaugh map smaller
+  and it is the standard exercise. A design question wants them routed to reset.
+  <b>Read which one is being asked</b> — the giveaway is whether the question
+  says "minimise" or says "self-starting" / "fault-tolerant".</p>
+</div>
+
+<h2>5.7 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>The architecture: <b>state register + next-state logic + output
+        logic</b>, in a loop closed by the clock.</li>
+    <li><b>Moore: Z = g(S). Mealy: Z = g(S, X).</b> Everything else follows.</li>
+    <li>Moore needs one more state and asserts <b>one cycle later</b>; its
+        output is registered and clean.</li>
+    <li>A state records <b>how much progress has been made</b>, not the input
+        history. A k-bit pattern needs k+1 Moore states, k Mealy.</li>
+    <li>Design order: diagram → table → assignment → excitation → minimise →
+        gates.</li>
+    <li><b>D flip-flops need no excitation step</b>, because D = Q⁺.</li>
+    <li>Binary: <span data-tex="\lceil \log_2 N \rceil">⌈log₂N⌉</span>
+        flip-flops. One-hot: <span data-tex="N">N</span>, with trivial logic.</li>
+    <li>Unused codes must be routed somewhere, and every machine needs a
+        reset.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A state machine is Part 3's gates and Part 4's flip-flops wired into a
+  loop, and the only genuinely difficult step is deciding what a state
+  <em>means</em>. Get that right — "how much of the pattern the input currently
+  ends with" — and the diagram, the table, and every backward arrow follow
+  without invention.</p>
+  <p>Everything after that is mechanical, and the one place judgement returns is
+  the state assignment. The plate's search says the same machine costs anywhere
+  from 7 to 18 literals depending on nothing but which pattern you gave which
+  state, with no rule predicting the winner. <b>That is a fair picture of
+  digital design in general</b>: the structure is forced, the encoding is free,
+  and the free choices are where all the remaining cost lives.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"state-machines","title":"Part 5 · State machines","topics":["fsm-type","fsm-trace","fsm-states","fsm-design"],"count":6}'></div>

@@ -6,8 +6,30 @@
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
 import { num, fixed } from "../lib/fmt.js";
+import { cover, termText, literals } from "../lib/boolean.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
+
+/**
+ * Build a choice list with the right answer first, dropping any distractor
+ * whose text has already appeared and topping up from `spare` if that leaves
+ * too few. Generated numeric distractors collide more often than they look
+ * like they will — halving and dividing by 2n agree at n = 4 — and a question
+ * offering the same answer twice is worse than one with three options.
+ */
+function options(right, wrong, spare = []) {
+  const norm = (c) => (typeof c === "string" ? { text: c, why: "" } : c);
+  const seen = new Set();
+  const out = [];
+  for (const c of [right, ...wrong, ...spare]) {
+    const n = norm(c);
+    if (seen.has(n.text)) continue;
+    seen.add(n.text);
+    out.push(n);
+    if (out.length === 4) break;
+  }
+  return out;
+}
 
 const bin = (v, n = 8) => (v >>> 0).toString(2).padStart(n, "0");
 const hex = (v, n = 2) => (v >>> 0).toString(16).toUpperCase().padStart(n, "0");
@@ -30,13 +52,21 @@ defineProblem("base-convert", {
       const shown = fromHex ? `0x${hex(v)}` : `0b${bin(v)}`;
       return {
         stem: `What is ${shown} in decimal?`,
-        choices: [
+        /* The "forgot the base" distractor gives each digit its place value in
+           ten instead of sixteen — 0xD6 read as 13×10 + 6. Parsing the string
+           with parseInt(…, 10) would look equivalent and returns NaN the
+           moment a hex digit is a letter, which is most of the time. */
+        choices: options(
           { text: `${v}`, why: "" },
-          { text: `${fromHex ? parseInt(hex(v), 10) : parseInt(bin(v), 10)}`,
-            why: `That reads the digits as if they were already decimal. ${fromHex ? "Each hex digit is worth 16 times the one to its right." : "Each binary digit is worth twice the one to its right."}` },
-          { text: `${v * 2}`, why: "Doubled — a place-value slip of one position." },
-          { text: `${Math.floor(v / 2)}`, why: "Halved — a place-value slip the other way." },
-        ].filter((c, i, all) => i === 0 || c.text !== all[0].text),
+          [
+            { text: `${fromHex
+                ? hex(v).split("").reduce((a, d) => a * 10 + parseInt(d, 16), 0)
+                : parseInt(bin(v), 10)}`,
+              why: `That gives each digit its place value in <b>ten</b> instead of ${fromHex ? "sixteen" : "two"}. ${fromHex ? "Each hex digit is worth 16 times the one to its right." : "Each binary digit is worth twice the one to its right."}` },
+            { text: `${v * 2}`, why: "Doubled — a place-value slip of one position." },
+            { text: `${Math.floor(v / 2)}`, why: "Halved — a place-value slip the other way." },
+          ],
+          [{ text: `${v + 1}`, why: "Off by one. Count the place values again." }]),
         answer: 0,
         steps: [
           fromHex
@@ -564,69 +594,14 @@ defineReflex([
    ========================================================================== */
 
 const KVARS = ["A", "B", "C", "D"];
-const kcells = (mask, val, n) => {
-  const out = [];
-  for (let m = 0; m < 2 ** n; m++) if ((m & mask) === val) out.push(m);
-  return out;
-};
-function kprimes(on, dc, n) {
-  const ok = new Set([...on, ...dc]);
-  const full = 2 ** n - 1;
-  const imp = (mask, val) => kcells(mask, val, n).every((m) => ok.has(m));
-  const out = [];
-  for (let mask = 0; mask <= full; mask++) {
-    for (let val = 0; val <= full; val++) {
-      if (val & ~mask & full) continue;
-      if (!imp(mask, val)) continue;
-      let prime = true;
-      for (let b = 0; b < n; b++) {
-        if (!(mask & (1 << b))) continue;
-        const m2 = mask & ~(1 << b);
-        if (imp(m2, val & m2)) { prime = false; break; }
-      }
-      if (prime) out.push({ mask, val, cells: kcells(mask, val, n) });
-    }
-  }
-  return out;
-}
-function kcover(on, dc, n) {
-  if (!on.length) return [];
-  const pis = kprimes(on, dc, n);
-  if (pis.some((p) => p.mask === 0)) return [pis.find((p) => p.mask === 0)];
-  const need = new Set(on);
-  const chosen = [];
-  for (const m of on) {
-    const c = pis.filter((p) => p.cells.includes(m));
-    if (c.length === 1 && !chosen.includes(c[0])) chosen.push(c[0]);
-  }
-  chosen.forEach((p) => p.cells.forEach((m) => need.delete(m)));
-  while (need.size) {
-    let best = null, bn = 0;
-    for (const p of pis) {
-      if (chosen.includes(p)) continue;
-      const k = p.cells.filter((m) => need.has(m)).length;
-      if (k > bn) { best = p; bn = k; }
-    }
-    if (!best) break;
-    chosen.push(best);
-    best.cells.forEach((m) => need.delete(m));
-  }
-  return chosen;
-}
-function kterm(mask, val, n) {
-  if (mask === 0) return "1";
-  let s = "";
-  for (let b = n - 1; b >= 0; b--) {
-    if (!(mask & (1 << b))) continue;
-    s += KVARS[n - 1 - b] + (val & (1 << b) ? "" : "'");
-  }
-  return s;
-}
-const kliterals = (mask, n) => {
-  let c = 0;
-  for (let b = 0; b < n; b++) if (mask & (1 << b)) c++;
-  return c;
-};
+
+/* The solver lives in lib/boolean.js, shared with the Karnaugh-map plate and
+   the state-assignment plate, so a bench answer can never drift from the
+   grouping a reader just watched being drawn. Bench text uses A' rather than
+   an overbar, since answer strings are set in plain type. */
+const kcover = (on, dc, n) => cover(on, dc, n).map((t) => ({ ...t, val: t.value }));
+const kterm = (mask, val, n) => termText(mask, val, n, KVARS, "'");
+const kliterals = (mask, n) => literals(mask, n);
 
 defineProblem("sop-write", {
   topic: "Canonical SOP and POS",
@@ -934,12 +909,13 @@ defineProblem("ff-excite", {
     if (type === "D") {
       return {
         stem: `A D flip-flop must make the transition Q = ${label} at the next edge. What must D be?`,
-        choices: [
+        choices: options(
           { text: `D = ${nq}`, why: "" },
-          { text: `D = ${1 - nq}`, why: "D is copied to Q, so D must equal the value you <b>want</b>, not the one you have." },
-          { text: `D = ${q}`, why: "That is the present value of Q. D must carry the <em>next</em> one." },
-          { text: "D = ×, either works", why: "A D flip-flop never has a don't-care — every edge loads D, so D is always fully determined." },
-        ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+          [
+            { text: `D = ${1 - nq}`, why: "D is copied to Q, so D must equal the value you <b>want</b>, not the one you have." },
+            { text: "D = Q — hold the present value", why: "A D flip-flop has no hold input. Every edge loads whatever D is showing." },
+            { text: "D = ×, either works", why: "A D flip-flop never has a don't-care — every edge loads D, so D is always fully determined." },
+          ]),
         answer: 0,
         steps: [
           `The excitation table for a D flip-flop is trivial: <b>D = Q⁺</b>, always.`,
@@ -953,12 +929,13 @@ defineProblem("ff-excite", {
       const t = q === nq ? 0 : 1;
       return {
         stem: `A T flip-flop must make the transition Q = ${label} at the next edge. What must T be?`,
-        choices: [
+        choices: options(
           { text: `T = ${t}`, why: "" },
-          { text: `T = ${1 - t}`, why: q === nq ? "The output must <b>not</b> change, so it must not be told to toggle." : "The output must change, and toggling is the only way a T flip-flop can change it." },
-          { text: `T = ${nq}`, why: "T is not the value you want; it is <b>whether to flip</b>. Copying the target value is what a D flip-flop does." },
-          { text: "T = ×, either works", why: "T is fully determined by the transition — a T flip-flop has no don't-cares." },
-        ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+          [
+            { text: `T = ${1 - t}`, why: q === nq ? "The output must <b>not</b> change, so it must not be told to toggle." : "The output must change, and toggling is the only way a T flip-flop can change it." },
+            { text: "T = Q⁺ — copy the target value", why: "That is what a <b>D</b> flip-flop does. T says <em>whether to flip</em>, not what to become." },
+            { text: "T = ×, either works", why: "T is fully determined by the transition — a T flip-flop has no don't-cares." },
+          ]),
         answer: 0,
         steps: [
           `<b>T = Q ⊕ Q⁺</b> — toggle when the value must change, hold when it must not.`,
@@ -982,12 +959,13 @@ defineProblem("ff-excite", {
 
     return {
       stem: `A JK flip-flop must make the transition Q = ${label} at the next edge. What must J and K be? (× is a don't-care.)`,
-      choices: [
+      choices: options(
         { text: right, why: "" },
-        { text: flip, why: "J and K are swapped. <b>J sets and K resets</b> — take the transition's destination first and ask which one it needs." },
-        { text: `J = ${nq}, K = ${1 - nq}`, why: "That is the fully-specified answer you would write for an <b>SR</b> flip-flop. A JK has a don't-care in every row, and throwing it away costs you the simplification it was there to buy." },
-        { text: "J = ×, K = ×", why: "Only one of the two is free. The other is what actually forces the transition." },
-      ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+        [
+          { text: flip, why: "J and K are swapped. <b>J sets and K resets</b> — take the transition's destination first and ask which one it needs." },
+          { text: `J = ${nq}, K = ${1 - nq}`, why: "That is the fully-specified answer you would write for an <b>SR</b> flip-flop. A JK has a don't-care in every row, and throwing it away costs you the simplification it was there to buy." },
+          { text: "J = ×, K = ×", why: "Only one of the two is free. The other is what actually forces the transition." },
+        ]),
       answer: 0,
       steps: [
         explain,
@@ -1050,12 +1028,18 @@ defineProblem("counter-mod", {
       const fmt = (f) => (f >= 1 ? `${num(f)} MHz` : `${num(f * 1000)} kHz`);
       return {
         stem: `A ${n}-bit binary counter is clocked at ${num(fin)} MHz. What is the frequency at its most significant output?`,
-        choices: [
+        choices: options(
           { text: fmt(fout), why: "" },
-          { text: fmt(fin / 2 ** (n - 1)), why: `That divides by 2^${n - 1}. Count the stages again — the last of ${n} divides by 2^${n}.` },
-          { text: fmt(fin / (2 * n)), why: "That divides by 2n instead of 2ⁿ. Each stage <b>halves</b> the one before it, so the divisions multiply rather than add." },
-          { text: fmt(fin / 2), why: "That is the <b>first</b> stage's output. Every further stage halves it again." },
-        ].filter((c, i, a) => i === 0 || c.text !== a[0].text),
+          [
+            { text: fmt(fin / 2 ** (n - 1)), why: `That divides by 2^${n - 1}. Count the stages again — the last of ${n} divides by 2^${n}.` },
+            { text: fmt(fin / (2 * n)), why: "That divides by 2n instead of 2ⁿ. Each stage <b>halves</b> the one before it, so the divisions multiply rather than add." },
+            { text: fmt(fin / 2), why: "That is the <b>first</b> stage's output. Every further stage halves it again." },
+          ],
+          [
+            { text: fmt(fin / 2 ** (n + 1)), why: `One stage too many — there are ${n}, not ${n + 1}.` },
+            { text: fmt(fin), why: "That is the clock going in. Every stage divides it." },
+            { text: fmt(fin / n), why: "That divides by the number of stages rather than by 2 per stage." },
+          ]),
         answer: 0,
         steps: [
           `Every flip-flop in a binary counter toggles once per two edges of the stage before it, so <b>each stage divides by 2</b>.`,
@@ -1194,5 +1178,305 @@ defineReflex([
     stem: "A 6-bit ripple counter, 10 ns per stage. When is the MSB valid?",
     tool: "n × t_pd = 60 ns after the edge",
     because: "The stages are in series, so widening a ripple counter directly slows it — a synchronous one settles in one stage delay at any width.",
+  },
+]);
+
+/* ==========================================================================
+   Part 5 — state machines (15.G)
+   ========================================================================== */
+
+/* The same 1011 detector the plate runs, so a bench answer and the diagram a
+   reader just stepped through can never disagree. */
+const DET = {
+  states: ["S0", "S1", "S2", "S3"],
+  seen: ["nothing useful", "1", "10", "101"],
+  next: [[0, 1], [2, 1], [0, 3], [2, 1]],
+  emit: [[0, 0], [0, 0], [0, 0], [0, 1]],
+};
+
+defineProblem("fsm-type", {
+  topic: "Moore against Mealy",
+  lookup: "Electrical → Digital → State machine design",
+  make(rng) {
+    const q = rng.pick(["where", "timing", "states", "glitch"]);
+    const Q = {
+      where: {
+        stem: "In a Moore machine, what does the output depend on?",
+        right: "The present state alone",
+        wrong: [
+          ["The present state and the present input", "That is a <b>Mealy</b> machine. The distinction is exactly this."],
+          ["The present input alone", "Then it would not be a state machine at all — it would be combinational logic."],
+          ["The next state", "The output is decoded from the state the machine is <em>in</em>, not the one it is heading for."],
+        ],
+        why: "Moore: output = f(state). Mealy: output = f(state, input). Everything else about the two — the state count, the output timing, the glitch behaviour — follows from that one line.",
+      },
+      timing: {
+        stem: "A Moore and a Mealy machine detect the same pattern. When does each assert its output?",
+        right: "Mealy in the same cycle as the final bit; Moore one cycle later",
+        wrong: [
+          ["Both in the same cycle as the final bit", "The Moore output is decoded from the state, and the machine does not <em>enter</em> the accepting state until the next clock edge."],
+          ["Both one cycle after the final bit", "The Mealy output is combinational on the input, so it appears immediately."],
+          ["Moore first, Mealy one cycle later", "Backwards. Mealy sees the input directly; Moore has to be clocked into the accepting state first."],
+        ],
+        why: "The Mealy output is a function of the input, so it responds within the cycle. The Moore output is a function of the state, and the state only changes at the edge — so it is <b>registered, one cycle late, and clean</b>. Which you want depends on whether you need the answer early or need it glitch-free.",
+      },
+      states: {
+        stem: "A Mealy machine needs N states for some task. What can be said about the Moore machine for the same task?",
+        right: "It needs N or more states — often exactly one more",
+        wrong: [
+          ["It needs exactly N states as well", "Sometimes, but not in general. A Moore machine must have a distinct state for each distinct output, which frequently forces an extra one."],
+          ["It needs fewer states", "Never. Moore is the more constrained of the two."],
+          ["It needs 2N states", "Far too many. The usual penalty is one extra state, not a doubling."],
+        ],
+        why: "A Moore machine's output is a property of the state, so two situations that need different outputs cannot share a state. A Mealy machine can put the difference on the arrow instead. <b>Mealy is never larger; Moore is never faster.</b>",
+      },
+      glitch: {
+        stem: "Why can a Mealy machine's output glitch when a Moore machine's cannot?",
+        right: "The Mealy output is combinational on the input, so it follows every change the input makes",
+        wrong: [
+          ["Mealy machines use asynchronous flip-flops", "Both are ordinary synchronous machines. The flip-flops are the same."],
+          ["Mealy machines have fewer states, so less time to settle", "State count does not set settling time. The output path does."],
+          ["Moore machines have a separate output register", "They do not need one — the state register <em>is</em> the output register, which is the point."],
+        ],
+        why: "A Moore output is decoded from flip-flop outputs, which change only at the clock edge. A Mealy output is decoded from those <b>and the raw input</b>, so if the input twitches mid-cycle the output twitches with it. Registering a Mealy output fixes the glitch and gives away the speed advantage — at which point you have built a Moore machine.",
+      },
+    }[q];
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [`<b>${Q.right}.</b>`, Q.why],
+    };
+  },
+});
+
+defineProblem("fsm-trace", {
+  topic: "Tracing a state machine",
+  lookup: "Electrical → Digital → State machine design",
+  make(rng) {
+    const bits = Array.from({ length: rng.int(4, 6) }, () => rng.pick([0, 1]));
+    let s = 0;
+    const path = [0];
+    const outs = [];
+    for (const x of bits) { outs.push(DET.emit[s][x]); s = DET.next[s][x]; path.push(s); }
+    const asked = rng.pick(["state", "out"]);
+    const seq = bits.join("");
+
+    const table =
+      `<div class="table-scroll"><table><thead><tr><th>state</th><th>meaning</th>` +
+      `<th class="num">on 0</th><th class="num">on 1</th></tr></thead><tbody>` +
+      DET.states.map((n, i) =>
+        `<tr><td><b>${n}</b></td><td>has seen ${DET.seen[i]}</td>` +
+        `<td class="num">${DET.states[DET.next[i][0]]}</td>` +
+        `<td class="num">${DET.states[DET.next[i][1]]}${DET.emit[i][1] ? " · Z=1" : ""}</td></tr>`
+      ).join("") + "</tbody></table></div>";
+
+    if (asked === "state") {
+      const end = path[path.length - 1];
+      const wrong = [0, 1, 2, 3].filter((i) => i !== end);
+      return {
+        stem: `A Mealy machine detects the pattern <b>1011</b> in a serial stream, overlaps counted. Starting in S0, it receives <b>${seq}</b>. Which state is it in afterwards?${table}`,
+        choices: [
+          { text: DET.states[end], why: "" },
+          { text: DET.states[wrong[0]], why: `Re-trace it: ${path.map((i) => DET.states[i]).join(" → ")}.` },
+          { text: DET.states[wrong[1]], why: "One transition off somewhere. The state names mean <em>how much of 1011 the input currently ends with</em> — check the last few bits against that." },
+          { text: DET.states[wrong[2]], why: "Not reachable from that sequence. Walk the table one bit at a time rather than pattern-matching the whole string." },
+        ],
+        answer: 0,
+        steps: [
+          `Walk it one bit at a time: <b>${path.map((i) => DET.states[i]).join(" → ")}</b>`,
+          `Each state means "the longest prefix of 1011 that the input currently ends with", so the answer is readable directly: the stream ends <b>${seq.slice(-3)}</b>, and the longest prefix of 1011 that is a suffix of that is <b>${DET.seen[end] === "nothing useful" ? "empty" : DET.seen[end]}</b>.`,
+          `<b>${DET.states[end]}.</b> Reading the state names as meanings rather than as labels turns this from bookkeeping into a one-line check — and it is how you catch a tracing slip under time pressure.`,
+        ],
+      };
+    }
+
+    const n1 = outs.filter(Boolean).length;
+    return {
+      stem: `The same Mealy 1011 detector receives <b>${seq}</b> from S0. How many times does its output Z go to 1?${table}`,
+      choices: options(
+        { text: `${n1}`, why: "" },
+        [
+          { text: `${n1 + 1}`, why: "One too many. Z is asserted only on the transition <b>out of S3 on a 1</b> — no other arrow carries an output." },
+          { text: `${n1 - 1}`, why: "One too few — remember that overlaps count, so a match can begin inside the previous one." },
+          { text: `${(seq.match(/1/g) || []).length}`, why: "That counts the 1 bits in the input, not the completed patterns." },
+        ],
+        [
+          { text: `${n1 + 2}`, why: "Far too many. Only one arrow in the whole machine carries an output." },
+          { text: `${bits.length}`, why: "That is the length of the input, not the number of matches." },
+        ]).filter((c) => Number(c.text) >= 0),
+      answer: 0,
+      steps: [
+        `Trace: <b>${path.map((i) => DET.states[i]).join(" → ")}</b>`,
+        `Z rises only on <b>S3 with input 1</b> — the arrow labelled 1 / 1. That happens ${n1 === 1 ? "once" : `${n1} times`} here.`,
+        `<b>${n1}.</b> Note that the machine goes S3 → S1 rather than S3 → S0 on that arrow: the trailing 1 of a completed match is already the first bit of a possible next one, which is what "overlaps counted" means in hardware.`,
+      ],
+    };
+  },
+});
+
+defineProblem("fsm-states", {
+  topic: "Sizing a machine",
+  lookup: "Electrical → Digital → State machine design",
+  make(rng) {
+    const q = rng.pick(["ff", "onehot", "unused", "detector"]);
+
+    if (q === "ff") {
+      const n = rng.pick([5, 6, 9, 12, 20]);
+      const b = Math.ceil(Math.log2(n));
+      return {
+        stem: `A state machine has ${n} states. Using a binary state assignment, how many flip-flops does it need?`,
+        choices: [
+          { text: `${b}`, why: "" },
+          { text: `${b - 1}`, why: `${b - 1} flip-flops encode only ${2 ** (b - 1)} states, which is fewer than ${n}.` },
+          { text: `${n}`, why: `That is <b>one-hot</b>, which is a legitimate choice but not a binary assignment — and it uses ${n} flip-flops to do what ${b} can.` },
+          { text: `${b + 1}`, why: "More than needed. Round up from log₂, do not add a safety margin." },
+        ],
+        answer: 0,
+        steps: [
+          `A binary assignment gives 2ᵇ distinct codes, so you need the smallest b with ${T(`2^b \\ge ${n}`)}.`,
+          `<span class="math display" data-tex="b = \\lceil \\log_2 ${n} \\rceil = ${b}"></span>`,
+          `<b>${b} flip-flops</b>, leaving ${2 ** b - n} unused codes. Those unused states are not harmless — <b>noise or a bad power-up can land the machine in one</b>, and a design that does not route them back to a known state can hang there.`,
+        ],
+      };
+    }
+
+    if (q === "onehot") {
+      const n = rng.pick([4, 5, 6, 8]);
+      return {
+        stem: `The same ${n}-state machine is given a one-hot assignment instead. How many flip-flops, and what happens to the logic?`,
+        choices: [
+          { text: `${n} flip-flops, and the next-state logic becomes much simpler`, why: "" },
+          { text: `${Math.ceil(Math.log2(n))} flip-flops, and the logic becomes simpler`, why: "That is the flip-flop count for a <b>binary</b> assignment. One-hot spends one flip-flop per state — that is the trade it is making." },
+          { text: `${n} flip-flops, and the logic becomes more complex`, why: "Backwards. Spending the flip-flops is what <em>buys</em> the simple logic: each next-state equation is just an OR of the transitions entering that state." },
+          { text: `${n} flip-flops, and the logic is unchanged`, why: "The encoding is exactly what determines the logic, so it cannot be unchanged." },
+        ],
+        answer: 0,
+        steps: [
+          `One-hot uses one flip-flop per state with exactly one set, so ${n} states means <b>${n} flip-flops</b>.`,
+          `In exchange, <b>no minimisation is needed</b>: D for state j is simply the OR of every transition arriving at j, and each of those terms is a two-input AND of a state bit and an input condition.`,
+          `<b>${n} flip-flops, far simpler logic.</b> On an FPGA, where flip-flops come free inside every logic block and routing is the scarce resource, this is usually what the synthesis tool picks — which is why the "minimum flip-flops" answer is a textbook answer rather than a modern one.`,
+        ],
+      };
+    }
+
+    if (q === "unused") {
+      return {
+        stem: "A 5-state machine is encoded in 3 flip-flops. What should be done about the 3 unused codes?",
+        choices: [
+          { text: "Route them to a known state, so a stray entry recovers", why: "" },
+          { text: "Nothing — the machine can never reach them", why: "It can. <b>Power-up is undefined, and a noise glitch or a setup violation can drop the register into any pattern.</b> A machine with no recovery path can hang there permanently." },
+          { text: "Treat them as don't-cares to simplify the logic", why: "Tempting, and it is what a naive minimisation does — but the resulting transitions are then whatever the gates happen to produce, which may be a loop among the unused states." },
+          { text: "Add three more states so none are unused", why: "That needs a fourth flip-flop and eight codes, so it does not remove the problem — it enlarges it." },
+        ],
+        answer: 0,
+        steps: [
+          `<b>Give them an explicit destination</b> — usually the reset state. The cost is a little extra logic; the benefit is that the machine cannot hang.`,
+          `The alternative, treating them as don't-cares, does produce smaller equations, and it is what an exam question on minimisation will usually intend. But it leaves the unused states' behaviour to whatever the simplified gates happen to do.`,
+          `A design is called <span class="term">fault-tolerant</span> or <b>self-starting</b> when every unreachable code leads back into the working set. It is worth knowing both answers and which question is being asked.`,
+        ],
+      };
+    }
+
+    const pat = rng.pick(["101", "1101", "0110", "111"]);
+    const n = pat.length + 1;
+    return {
+      stem: `A Moore machine detects the pattern <b>${pat}</b> in a serial stream. What is the minimum number of states?`,
+      choices: [
+        { text: `${n}`, why: "" },
+        { text: `${pat.length}`, why: `That is the Mealy count. A <b>Moore</b> machine needs one more, because "the pattern has just completed" has to be a state of its own for the output to live in.` },
+        { text: `${2 ** pat.length}`, why: "That would be remembering the whole history. You only need to remember <b>how much of the pattern the input currently ends with</b>, which is far less." },
+        { text: `${n + 1}`, why: `One too many. There are only ${pat.length} + 1 useful amounts of progress: none, one bit, two bits, and so on up to the whole pattern.` },
+      ],
+      answer: 0,
+      steps: [
+        `The state must record <b>how much of ${pat} the input currently ends with</b>. For a ${pat.length}-bit pattern the possibilities are none, 1 bit, 2 bits, … up to all ${pat.length} — that is ${n} states.`,
+        `A <b>Mealy</b> machine gets away with ${pat.length}, because the completed match can be signalled on the arrow rather than stored in a state.`,
+        `<b>${n} states</b>, needing ${T(`\\lceil \\log_2 ${n} \\rceil = ${Math.ceil(Math.log2(n))}`)} flip-flops. The "how much of the pattern I currently end with" reading is worth internalising — it makes the backward arrows obvious instead of something to be worked out.`,
+      ],
+    };
+  },
+});
+
+defineProblem("fsm-design", {
+  topic: "The design procedure",
+  lookup: "Electrical → Digital → State machine design",
+  make(rng) {
+    const q = rng.pick(["order", "excite", "assign", "reset"]);
+    const Q = {
+      order: {
+        stem: "What is the correct order of steps in synchronous state machine design?",
+        right: "State diagram → state table → state assignment → excitation table → minimise → gates",
+        wrong: [
+          ["State diagram → state assignment → minimise → state table → gates", "The state table has to exist before you can assign codes to its rows or minimise anything."],
+          ["Truth table → Karnaugh map → state diagram → gates", "That is combinational design with a state diagram bolted on. Sequential design starts from the <em>behaviour</em>."],
+          ["State assignment → state diagram → excitation table → gates", "You cannot assign codes to states you have not identified yet."],
+        ],
+        why: "Every step consumes the one before it. The diagram captures the behaviour, the table makes it mechanical, the assignment turns states into bit patterns, the excitation table turns transitions into flip-flop inputs, and minimisation turns those into gates. <b>Skipping the table is where most errors get in.</b>",
+      },
+      excite: {
+        stem: "Which flip-flop makes the excitation step trivial, and why?",
+        right: "D, because its excitation table is simply D = Q⁺",
+        wrong: [
+          ["JK, because its excitation table has don't-cares", "The don't-cares make the <em>minimisation</em> cheaper, but they add a translation step that D does not need."],
+          ["T, because it toggles", "T = Q ⊕ Q⁺ is easy, but still a translation. D needs none at all."],
+          ["SR, because it has a forbidden state", "A forbidden state is a liability in state machine design, not an advantage — one that has to be designed around."],
+        ],
+        why: "With a D flip-flop the excitation logic <b>is</b> the next-state logic: whatever you want Q to become, that is what D must be. Every other type needs the next-state column translated into inputs first. That is why almost all modern design is D-based, and why every FPGA flip-flop is a D.",
+      },
+      assign: {
+        stem: "Two designs of the same machine differ only in which bit pattern is given to which state. What changes?",
+        right: "The amount of combinational logic, but not the behaviour",
+        wrong: [
+          ["The number of states", "The states are the same states; only their names in binary have changed."],
+          ["The behaviour, since the outputs are encoded differently", "The output logic is re-derived from the new assignment, so the machine behaves identically."],
+          ["Nothing — the assignment is arbitrary", "It is <b>free</b>, in the sense that any assignment works. It is not <em>arbitrary</em>: the gate count can easily vary by a factor of two."],
+        ],
+        why: "State assignment is a genuine optimisation problem with no simple rule — which is exactly why synthesis tools search it. Gray coding helps when the machine walks its states in order, one-hot helps when flip-flops are cheaper than routing, and for anything else the only honest answer is to try.",
+      },
+      reset: {
+        stem: "Why does a synchronous state machine need a reset?",
+        right: "Flip-flops power up in an undefined state, so the machine must be put into a known one",
+        wrong: [
+          ["To clear the output register between patterns", "Nothing needs clearing between patterns — the state already encodes everything the machine remembers."],
+          ["To synchronise the clock", "Reset has no effect on the clock. Those are separate problems."],
+          ["Only asynchronous machines need one", "Synchronous machines need it just as much. The power-up state is undefined either way."],
+        ],
+        why: "On power-up each flip-flop settles wherever it settles, which may be a valid state, an unused code, or — with more than two flip-flops — anything at all. Without a reset the machine's first few cycles are undefined, and if the unused codes form a loop it may never reach a working state. <b>This is the same argument as designing the unused codes to be self-starting</b>, and a careful design does both.",
+      },
+    }[q];
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [`<b>${Q.right}.</b>`, Q.why],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "state-machines",
+    stem: "A machine's output depends on the state and the current input. Which kind is it?",
+    tool: "Mealy — output on the arrow",
+    because: "Moore's output is a function of the state alone, which is why it needs one more state and arrives a cycle later.",
+  },
+  {
+    part: "state-machines",
+    stem: "A Moore machine detects a 4-bit pattern. Minimum states?",
+    tool: "5 — one per amount of progress, plus the match",
+    because: "The state records how much of the pattern the input currently ends with: none, 1, 2, 3, or all 4.",
+  },
+  {
+    part: "state-machines",
+    stem: "A 9-state machine, one-hot encoded. How many flip-flops?",
+    tool: "9 — one per state",
+    because: "One-hot spends flip-flops to buy logic that needs no minimisation at all, which is the trade FPGAs prefer.",
+  },
+  {
+    part: "state-machines",
+    stem: "Designing with D flip-flops: how do you get the excitation table?",
+    tool: "you do not — D = Q⁺",
+    because: "The next-state column *is* the D column, which is why D-based design skips the step every other flip-flop needs.",
   },
 ]);
