@@ -915,3 +915,208 @@ defineReflex([
     because: "Both resistors are in the DC collector path; leaving R_E out is the standard error.",
   },
 ]);
+
+/* ==========================================================================
+   Part 5 — operational amplifiers
+   ========================================================================== */
+
+defineProblem("opamp-gain", {
+  topic: "Inverting and non-inverting gain",
+  lookup: "Electrical → Electronics → Operational amplifiers",
+  make(rng) {
+    const inv = rng.pick([true, false]);
+    const Ri = rng.pick([1, 2, 4, 5, 10]) * 1000;
+    const Rf = rng.pick([1, 2, 4, 8, 20, 40, 80]) * 1000;
+    const Vin = rng.pick([0.1, 0.25, 0.5, 1, 2]);
+    const A = inv ? -Rf / Ri : 1 + Rf / Ri;
+    const Vo = A * Vin;
+
+    return {
+      stem: `An ideal op-amp is wired as a${inv ? "n inverting" : " non-inverting"} amplifier with ` +
+            `${T(`R_i = ${num(Ri / 1000, 0)}`)} kΩ and ${T(`R_f = ${num(Rf / 1000, 0)}`)} kΩ. ` +
+            `With ${Vin} V at the input, what is the output, most nearly?`,
+      choices: [
+        { text: `${fixed(Vo, 2)} V`, why: "" },
+        { text: `${fixed((inv ? 1 + Rf / Ri : -Rf / Ri) * Vin, 2)} V`,
+          why: inv
+            ? "That is the <b>non-inverting</b> gain, 1 + R<sub>f</sub>/R<sub>i</sub>. Here the signal enters through R<sub>i</sub> to the − input, so the gain is −R<sub>f</sub>/R<sub>i</sub> with no added 1."
+            : "That is the <b>inverting</b> gain. Here the signal goes straight to the + input, so it appears at the output <em>as well as</em> being amplified — hence the extra 1, and no sign inversion." },
+        { text: `${fixed(-A * Vin, 2)} V`, why: `The sign. ${inv ? "An inverting amplifier inverts." : "A non-inverting amplifier does not."}` },
+        { text: `${fixed((Ri / Rf) * Vin, 2)} V`, why: "The resistor ratio is upside down. Feedback resistor over input resistor — the feedback resistor is on top." },
+      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.005),
+      answer: 0,
+      steps: [
+        inv
+          ? `<b>Rule 2</b> puts the − input at a virtual ground, so the input current is ${T(`V_{in}/R_i`)}. <b>Rule 1</b> says none of it enters the op-amp, so all of it flows on through ${T("R_f")}:`
+          : `<b>Rule 2</b> makes the − input equal the + input, which is ${Vin} V. The two resistors divide the output down to that value:`,
+        `<span class="math display" data-tex="A = ${inv ? `-\\frac{R_f}{R_i} = -\\frac{${num(Rf / 1000, 0)}}{${num(Ri / 1000, 0)}}` : `1 + \\frac{R_f}{R_i} = 1 + \\frac{${num(Rf / 1000, 0)}}{${num(Ri / 1000, 0)}}`} = ${fixed(A, 2)}"></span>`,
+        `<span class="math display" data-tex="V_{out} = (${fixed(A, 2)})(${Vin}) = ${fixed(Vo, 2)}\\text{ V}"></span>`,
+        `<b>${fixed(Vo, 2)} V.</b> Note that no property of the op-amp entered the answer — only two resistors.`,
+      ],
+    };
+  },
+});
+
+defineProblem("opamp-sum", {
+  topic: "Summing and difference amplifiers",
+  lookup: "Electrical → Electronics → Operational amplifiers (summing)",
+  make(rng) {
+    const diff = rng.pick([true, false]);
+    const Rf = rng.pick([10, 20, 40]) * 1000;
+    const R = rng.pick([5, 10, 20]) * 1000;
+    const V1 = rng.pick([0.5, 1, 2, 3]);
+    const V2 = rng.pick([1, 2, 4, 5]);
+
+    if (diff) {
+      const Vo = (Rf / R) * (V2 - V1);
+      return {
+        stem: `An ideal op-amp difference amplifier has matched ${num(R / 1000, 0)} kΩ input resistors and ${num(Rf / 1000, 0)} kΩ feedback resistors. ` +
+              `With ${V1} V on the inverting input and ${V2} V on the non-inverting input, what is the output?`,
+        choices: [
+          { text: `${fixed(Vo, 2)} V`, why: "" },
+          { text: `${fixed((Rf / R) * (V1 - V2), 2)} V`, why: "The inputs are the wrong way round. The output is proportional to (V<sub>+</sub> − V<sub>−</sub>) — the non-inverting input minus the inverting one." },
+          { text: `${fixed((Rf / R) * (V1 + V2), 2)} V`, why: "That sums the inputs. A <b>difference</b> amplifier subtracts — summing needs both inputs on the same terminal." },
+          { text: `${fixed(V2 - V1, 2)} V`, why: "The gain was left out. The difference is multiplied by R<sub>f</sub>/R<sub>i</sub>." },
+        ],
+        answer: 0,
+        steps: [
+          `With both resistor pairs matched, the difference amplifier's output is:`,
+          `<span class="math display" data-tex="V_{out} = \\frac{R_f}{R_i}(V_2 - V_1) = \\frac{${num(Rf / 1000, 0)}}{${num(R / 1000, 0)}}(${V2} - ${V1}) = ${fixed(Vo, 2)}\\text{ V}"></span>`,
+          `<b>${fixed(Vo, 2)} V.</b> Anything present on <em>both</em> inputs cancels here — that common-mode rejection is why this circuit is used to read sensors at the end of a long cable.`,
+        ],
+      };
+    }
+
+    const Vo = -(Rf / R) * (V1 + V2);
+    return {
+      stem: `An ideal op-amp summing amplifier has two ${num(R / 1000, 0)} kΩ input resistors and a ${num(Rf / 1000, 0)} kΩ feedback resistor. ` +
+            `With ${V1} V and ${V2} V at the two inputs, what is the output?`,
+      choices: [
+        { text: `${fixed(Vo, 2)} V`, why: "" },
+        { text: `${fixed(-Vo, 2)} V`, why: "The sign. A summing amplifier is built on the <b>inverting</b> configuration, so its output is negative for positive inputs." },
+        { text: `${fixed(-(Rf / R) * Math.max(V1, V2), 2)} V`, why: "Only one input was counted. Each contributes its own current into the virtual ground, and the currents add." },
+        { text: `${fixed(-(Rf / (2 * R)) * (V1 + V2), 2)} V`, why: "The two input resistors were treated as being in parallel. They are not — the virtual ground <b>isolates</b> the inputs from each other, so each acts alone." },
+      ],
+      answer: 0,
+      steps: [
+        `The − node is a virtual ground, so each input drives its own resistor into zero volts and knows nothing of the other:`,
+        `<span class="math display" data-tex="I_1 = \\frac{${V1}}{${num(R, 0)}}, \\qquad I_2 = \\frac{${V2}}{${num(R, 0)}}"></span>`,
+        `Rule 1 sends the whole of both currents through ${T("R_f")}:`,
+        `<span class="math display" data-tex="V_{out} = -R_f(I_1 + I_2) = -\\frac{${num(Rf / 1000, 0)}}{${num(R / 1000, 0)}}(${V1}+${V2}) = ${fixed(Vo, 2)}\\text{ V}"></span>`,
+        `<b>${fixed(Vo, 2)} V.</b> Changing one input resistor changes only that input's weight, which is what makes this an analogue mixer and a DAC.`,
+      ],
+    };
+  },
+});
+
+defineProblem("opamp-rail", {
+  topic: "Saturation against the supply",
+  lookup: "Electrical → Electronics → Operational amplifiers (nonideal)",
+  make(rng) {
+    const rail = rng.pick([12, 15, 18]);
+    const Ri = rng.pick([1, 2]) * 1000;
+    const Rf = rng.pick([50, 100, 220]) * 1000;
+    const Vin = rng.pick([0.2, 0.5, 1]);
+    const ideal = -(Rf / Ri) * Vin;
+    const clipped = Math.abs(ideal) > rail - 1;
+    const out = clipped ? -Math.sign(ideal) * -(rail - 1) : ideal;
+
+    return {
+      stem: `An op-amp running from ±${rail} V rails is wired as an inverting amplifier with ` +
+            `${num(Ri / 1000, 0)} kΩ and ${num(Rf / 1000, 0)} kΩ. With ${Vin} V at the input, what is the output, most nearly?`,
+      choices: [
+        { text: clipped ? `−${rail - 1} V (saturated)` : `${fixed(ideal, 2)} V`, why: "" },
+        { text: `${fixed(ideal, 1)} V`,
+          why: clipped
+            ? `That is what the gain formula gives, and <b>it is outside the supply rails</b>. No amplifier can put out more than it is fed — the output clips at roughly ${rail - 1} V.`
+            : "" },
+        { text: `+${rail - 1} V (saturated)`, why: `${clipped ? "Right magnitude, wrong sign — this is an <b>inverting</b> amplifier, so a positive input drives the output negative." : "The output is not saturated here, and an inverting stage would go negative anyway."}` },
+        { text: `${fixed(Vin * (1 + Rf / Ri), 1)} V`, why: "That is the non-inverting gain applied to an inverting circuit." },
+      ].filter((c, i, all) => i === 0 || c.why !== ""),
+      answer: 0,
+      steps: [
+        `Compute the ideal output first:`,
+        `<span class="math display" data-tex="V_{out} = -\\frac{R_f}{R_i}V_{in} = -\\frac{${num(Rf / 1000, 0)}}{${num(Ri / 1000, 0)}}(${Vin}) = ${fixed(ideal, 1)}\\text{ V}"></span>`,
+        clipped
+          ? `<b>Now check it against the rails.</b> The supply is ±${rail} V, and ${fixed(Math.abs(ideal), 1)} V is well beyond that. The output <b>saturates</b> at about ${rail - 1} V — real op-amps get within a volt or so of their supply, not all the way.<br><b>−${rail - 1} V.</b> The gain formula is not wrong; it simply stopped applying.`
+          : `<b>Check it against the rails:</b> ${fixed(Math.abs(ideal), 2)} V is inside ±${rail} V, so the output is not clipped and the ideal answer stands. <b>${fixed(ideal, 2)} V.</b>`,
+      ],
+    };
+  },
+});
+
+defineProblem("opamp-gbw", {
+  topic: "Gain-bandwidth product",
+  lookup: "Electrical → Electronics → Operational amplifiers (bandwidth)",
+  make(rng) {
+    const gbw = rng.pick([1e6, 3e6, 10e6]);
+    const A = rng.pick([10, 20, 50, 100, 200]);
+    const bw = gbw / A;
+    const ask = rng.pick(["bw", "gain"]);
+
+    if (ask === "gain") {
+      const need = rng.pick([20e3, 50e3, 100e3]);
+      const maxA = gbw / need;
+      return {
+        stem: `An op-amp has a gain-bandwidth product of ${fixed(gbw / 1e6, 0)} MHz. ` +
+              `What is the greatest closed-loop gain it can provide across a bandwidth of ${fixed(need / 1000, 0)} kHz?`,
+        choices: [
+          { text: `${fixed(maxA, 0)}`, why: "" },
+          { text: `${fixed(gbw * need / 1e9, 0)}`, why: "Multiplied instead of divided. Gain and bandwidth trade <b>against</b> each other, so more bandwidth means less available gain." },
+          { text: `${fixed(need / gbw * 1000, 3)}`, why: "The ratio is upside down." },
+          { text: "unlimited — feedback sets the gain", why: "Feedback can only spend gain the device actually has. Above the open-loop curve there is nothing left to spend." },
+        ],
+        answer: 0,
+        steps: [
+          `The product of closed-loop gain and bandwidth is fixed by the part:`,
+          `<span class="math display" data-tex="A_{cl} = \\frac{\\text{GBW}}{\\text{BW}} = \\frac{${fixed(gbw / 1e6, 0)}\\times10^6}{${fixed(need / 1000, 0)}\\times10^3} = ${fixed(maxA, 0)}"></span>`,
+          `<b>${fixed(maxA, 0)}.</b> Wanting more gain <em>and</em> that bandwidth means choosing a faster op-amp — no arrangement of resistors will do it.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `An op-amp with a gain-bandwidth product of ${fixed(gbw / 1e6, 0)} MHz is used at a closed-loop gain of ${A}. ` +
+            `What is its bandwidth, most nearly?`,
+      choices: [
+        { text: `${bw >= 1000 ? `${fixed(bw / 1000, 0)} kHz` : `${fixed(bw, 0)} Hz`}`, why: "" },
+        { text: `${fixed(gbw * A / 1e6, 0)} MHz`, why: "Multiplied by the gain rather than divided. Higher gain always means <b>less</b> bandwidth." },
+        { text: `${fixed(gbw / 1e6, 0)} MHz`, why: "That is the gain-bandwidth product itself, which is the bandwidth only at unity gain." },
+        { text: `${fixed(bw / 1000 / 2, 1)} kHz`, why: "A stray factor of two — no such factor appears in GBW = A × BW." },
+      ],
+      answer: 0,
+      steps: [
+        `Gain-bandwidth product is a constant for the device:`,
+        `<span class="math display" data-tex="\\text{BW} = \\frac{\\text{GBW}}{A_{cl}} = \\frac{${fixed(gbw / 1e6, 0)}\\times10^6}{${A}} = ${num(bw, 0)}\\text{ Hz}"></span>`,
+        `<b>${bw >= 1000 ? `${fixed(bw / 1000, 0)} kHz` : `${fixed(bw, 0)} Hz`}.</b> On a log-log plot the closed-loop shelf slides up and its corner slides left by the same factor — the two always meet on the open-loop line.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "opamps",
+    stem: "An op-amp with 2 kΩ in and 20 kΩ feedback, signal on the − input. Gain?",
+    tool: "A = −R_f / R_i",
+    because: "The virtual ground makes the input current V_in/R_i, and all of it must continue through R_f.",
+  },
+  {
+    part: "opamps",
+    stem: "Gain of 100 on a 0.5 V input, op-amp running from ±15 V rails. Output?",
+    tool: "compute the ideal output, then check the rails",
+    because: "50 V is impossible from a 15 V supply — the output saturates near 14 V, and this is the most-missed op-amp question.",
+  },
+  {
+    part: "opamps",
+    stem: "Three signals must be combined with different weights into one output.",
+    tool: "a summing amplifier: V_out = −R_f Σ(V_k/R_k)",
+    because: "The virtual ground isolates the inputs, so each resistor sets its own weight independently.",
+  },
+  {
+    part: "opamps",
+    stem: "A 1 MHz op-amp is used at a gain of 50. How much bandwidth is left?",
+    tool: "BW = GBW / A_cl",
+    because: "Gain and bandwidth are one fixed budget; spending on one takes from the other.",
+  },
+]);

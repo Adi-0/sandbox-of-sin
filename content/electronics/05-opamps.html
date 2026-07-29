@@ -1,0 +1,155 @@
+<p class="eyebrow">
+  <span>Electronics · Part 5</span>
+  <span class="spec">NCEES 9.C</span>
+  <span>26 minute read</span>
+</p>
+
+<h1>Operational Amplifiers</h1>
+
+<p class="lede">Part 4 ended on a bargain: trade raw gain for a gain you can
+predict. An op-amp has so much raw gain that the trade becomes free — and the
+result is the easiest arithmetic in this module.</p>
+
+<h2>5.1 Two rules, and everything follows</h2>
+
+<p>An ideal op-amp has infinite gain, infinite input impedance, zero output
+impedance and infinite bandwidth. Wire negative feedback around it and those
+assumptions collapse into two statements that solve every circuit in this part:</p>
+
+<f-plate no="9.10" title="The two golden rules" stamp="know"
+  caption="<b>The second rule needs negative feedback to be true.</b> With no
+  feedback path the output simply slams to a supply rail, which is what a
+  comparator is for.">
+  <f-row tex="I_+ = I_- = 0" name="rule 1 — no input current"
+         gloss="Input impedance is infinite, so the inputs are pure voltage sensors. Whatever current arrives at a node <b>must</b> go on through the feedback path."></f-row>
+  <f-row tex="V_+ = V_-" name="rule 2 — the inputs match"
+         gloss="The gain is infinite, so any difference at all would drive the output to a rail. With feedback, the output settles wherever it takes to make the difference zero."></f-row>
+  <f-row tex="V_- = 0 \quad \text{when } V_+ \text{ is grounded}" name="virtual ground"
+         gloss="Rule 2, in the commonest case. The inverting node is <b>held</b> at zero volts without being connected to zero volts — which is what makes summing circuits possible."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">Why the rules work</span>
+  <p style="margin-bottom:0">They look like cheating. They are not — they are the
+  limit of Part 4's argument. A real op-amp has an open-loop gain around
+  <b>100 000</b>. To produce a 10 V output it needs an input difference of
+  <span class="math" data-tex="10/100\,000 = 0.1">0.1</span> mV. Compared with the
+  volts everywhere else in the circuit, that is zero, and calling it zero
+  introduces an error of about 0.001%. <b>Rule 2 is not an idealisation so much as
+  a rounding.</b></p>
+</div>
+
+<div data-figure="opampConfigs"></div>
+
+<h2>5.2 Deriving one, to show they are all the same</h2>
+
+<div class="worked">
+  <h4>Worked · <em>the inverting amplifier, from the rules only</em></h4>
+  <div class="worked-body">
+    <p>Input <span data-tex="V_{in}">Vin</span> through
+    <span data-tex="R_i">Ri</span> to the − input; <span data-tex="R_f">Rf</span>
+    from the − input to the output; + input grounded.</p>
+    <ol class="steps">
+      <li><b>Rule 2:</b> the + input is at 0 V, so the − input is too. Virtual
+        ground.</li>
+      <li>The current arriving through <span data-tex="R_i">Ri</span> is therefore
+        <span data-tex="I = \frac{V_{in} - 0}{R_i} = \frac{V_{in}}{R_i}" data-display>I = Vin / Ri</span></li>
+      <li><b>Rule 1:</b> none of it enters the op-amp, so all of it continues
+        through <span data-tex="R_f">Rf</span>.</li>
+      <li>Walking from the virtual ground to the output through
+        <span data-tex="R_f">Rf</span>:
+        <span data-tex="V_{out} = 0 - IR_f = -\frac{R_f}{R_i}V_{in}" data-display>Vout = −(Rf/Ri) Vin</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Four lines, and no
+    property of the op-amp appears in the answer. <b>Every other configuration is
+    the same four lines with a different node grounded</b> — which is why this
+    topic is worth far more marks per minute than any other in Electronics.</p>
+  </div>
+</div>
+
+<f-plate no="9.11" title="The standard configurations" stamp="handbook">
+  <f-row tex="A = -\frac{R_f}{R_i}" name="inverting"
+         gloss="Input impedance is only <b>R<sub>i</sub></b> — the virtual ground means the source drives a resistor to ground, not the op-amp."></f-row>
+  <f-row tex="A = 1 + \frac{R_f}{R_i}" name="non-inverting"
+         gloss="<b>Never less than 1</b>, and the input impedance is essentially infinite. The +1 is the input passing through in addition to being amplified."></f-row>
+  <f-row tex="V_{out} = -R_f\left(\frac{V_1}{R_1} + \frac{V_2}{R_2} + \cdots\right)"
+         name="summing"
+         gloss="Each input is isolated by the virtual ground, so the currents simply add. Equal resistors give a plain sum; unequal ones give weights."></f-row>
+  <f-row tex="V_{out} = \frac{R_f}{R_i}(V_2 - V_1)" name="difference"
+         gloss="Only when the two resistor pairs are matched. It rejects whatever is common to both inputs, which is why it fronts every instrumentation amplifier."></f-row>
+  <f-row tex="V_{out} = -\frac{1}{RC}\int v_{in}\,dt, \qquad V_{out} = -RC\frac{dv_{in}}{dt}"
+         name="integrator and differentiator"
+         gloss="Replace R<sub>f</sub> with a capacitor to integrate; replace R<sub>i</sub> with one to differentiate. <b>A square wave into an integrator gives a triangle out.</b>"></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the non-inverting +1</span>
+  <p style="margin-bottom:0">With
+  <span class="math" data-tex="R_f = 4">Rf = 4</span> kΩ and
+  <span class="math" data-tex="R_i = 1">Ri = 1</span> kΩ, the inverting circuit
+  gives <b>−4</b> and the non-inverting one gives <b>+5</b>. They differ by
+  exactly one because the non-inverting input arrives at the output <em>as well
+  as</em> being amplified. Both −5 and +4 will be on offer, and only one reading
+  of the circuit tells you which terminal the signal entered.</p>
+</div>
+
+<h2>5.3 Where the ideal model stops</h2>
+
+<p>The specification says "ideal, nonideal", and three departures matter:</p>
+
+<div data-figure="gainBandwidth"></div>
+
+<f-plate no="9.12" title="Real op-amp limits" stamp="know">
+  <f-row tex="\text{GBW} = A_{cl} \times \text{BW}" name="gain-bandwidth product"
+         gloss="A constant for the part. <b>Every factor of gain costs the same factor of bandwidth.</b> A 1 MHz part at a gain of 100 reaches 10 kHz."></f-row>
+  <f-row tex="\text{SR} = \left.\frac{dv_{out}}{dt}\right|_{max}" name="slew rate"
+         gloss="A <b>large-signal</b> limit, in V/µs, and separate from bandwidth. It is what turns a fast square wave into a ramp no matter how small the gain."></f-row>
+  <f-row tex="\text{CMRR} = 20\log\frac{A_d}{A_{cm}}" name="common-mode rejection"
+         gloss="How well a difference amplifier ignores what both inputs share. 80 to 120 dB is typical, and it is what makes distant sensor measurements possible."></f-row>
+  <f-row tex="V_{out} \le V_{supply}" name="saturation"
+         gloss="<b>The limit that catches people.</b> A gain of 100 on a 1 V input does not give 100 V from a ±15 V supply — it gives about 14 V and a clipped waveform."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Check the rails before you answer</span>
+  <p style="margin-bottom:0">An op-amp question that supplies a rail voltage is
+  usually testing this. <b>Compute the ideal output, then compare it with the
+  supply.</b> If the arithmetic says 40 V and the part runs from ±15 V, the answer
+  is the rail — about 14 V, since real outputs do not quite reach the supply. This
+  is the most frequently missed op-amp question on the exam, and it is missed by
+  people whose arithmetic was perfect.</p>
+</div>
+
+<h2>5.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>The two rules:</b> no input current, and the inputs match.</li>
+    <li>Inverting <span data-tex="-R_f/R_i">−Rf/Ri</span>; non-inverting
+        <span data-tex="1 + R_f/R_i">1 + Rf/Ri</span>; follower
+        <span data-tex="+1">+1</span>.</li>
+    <li>Summing: <span data-tex="-R_f\sum V_k/R_k">−Rf Σ(Vk/Rk)</span>.
+        Difference: <span data-tex="(R_f/R_i)(V_2-V_1)">(Rf/Ri)(V2 − V1)</span>.</li>
+    <li>Integrator <span data-tex="-\frac{1}{RC}\int">−(1/RC)∫</span>,
+        differentiator <span data-tex="-RC\,d/dt">−RC d/dt</span>.</li>
+    <li><span data-tex="\text{GBW} = A \times \text{BW}">GBW = A × BW</span>,
+        a constant.</li>
+    <li><b>Always check the output against the supply rails.</b></li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Two rules — no input current, and the inputs equal — solve every standard
+  op-amp circuit in four lines, and no device parameter survives into the answer.
+  That is the payoff of the trade Part 4 introduced: with enough raw gain, feedback
+  buys total predictability for nothing.</p>
+  <p>What the ideal model cannot tell you is where it stops. Gain and bandwidth
+  are one fixed budget, slew rate limits large fast signals independently, and the
+  output can never leave the supply rails — which is the limit that decides more
+  exam questions than the other two together.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"opamps","title":"Part 5 · Op-amp circuits","topics":["opamp-gain","opamp-sum","opamp-rail","opamp-gbw"],"count":6}'></div>
