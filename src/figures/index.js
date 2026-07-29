@@ -27,6 +27,7 @@ import "./electronics-synthesis.js"; // 62
 
 /* --- Digital Systems --- */
 import "./numbers.js";       // 63 64
+import "./gates.js";         // 65 66
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

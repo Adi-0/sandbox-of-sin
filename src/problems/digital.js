@@ -271,3 +271,290 @@ defineReflex([
     because: "A reading caught mid-transition can only be one of its two neighbours, never a wild value.",
   },
 ]);
+
+/* ==========================================================================
+   Part 2 — Boolean logic and gates
+   ========================================================================== */
+
+const GFN = {
+  AND: (a, b) => a & b, OR: (a, b) => a | b,
+  NAND: (a, b) => 1 - (a & b), NOR: (a, b) => 1 - (a | b),
+  XOR: (a, b) => a ^ b, XNOR: (a, b) => 1 - (a ^ b),
+};
+
+defineProblem("truth-eval", {
+  topic: "Evaluating a logic expression",
+  lookup: "Electrical → Digital → Boolean logic",
+  make(rng) {
+    const form = rng.pick(["gate", "expr"]);
+
+    if (form === "gate") {
+      const g = rng.pick(Object.keys(GFN));
+      const a = rng.int(0, 1), b = rng.int(0, 1);
+      const y = GFN[g](a, b);
+      const opp = { AND: "NAND", NAND: "AND", OR: "NOR", NOR: "OR", XOR: "XNOR", XNOR: "XOR" }[g];
+      return {
+        stem: `A two-input ${g} gate has A = ${a} and B = ${b}. What is its output?`,
+        choices: [
+          { text: `${y}`, why: "" },
+          { text: `${1 - y}`, why: `That is what a <b>${opp}</b> would give — the bubble was added or dropped. ${g.startsWith("N") ? `A ${g} is an ${opp} with its output inverted.` : `A ${g} has no output bubble.`}` },
+          { text: "high impedance", why: "A normal logic gate always drives its output. Only a tri-state buffer can float." },
+          { text: "undefined", why: "Every input combination of a combinational gate has a defined output — that is what the truth table is." },
+        ],
+        answer: 0,
+        steps: [
+          `${g === "AND" ? "AND is true only when every input is true." : g === "OR" ? "OR is true when any input is true." : g === "NAND" ? "NAND is AND with the output inverted — false only when every input is true." : g === "NOR" ? "NOR is OR inverted — true only when every input is false." : g === "XOR" ? "XOR is true when the inputs <b>differ</b>." : "XNOR is true when the inputs <b>match</b>."}`,
+          `<span class="math display" data-tex="A = ${a}, \\ B = ${b} \\ \\Rightarrow \\ Y = ${y}"></span>`,
+          `<b>${y}.</b>`,
+        ],
+      };
+    }
+
+    // a three-variable SOP expression, evaluated at one point
+    const A = rng.int(0, 1), B = rng.int(0, 1), C = rng.int(0, 1);
+    const kind = rng.pick(["sop", "absorb"]);
+    const y = kind === "sop"
+      ? ((A & ~B & 1) | (B & C)) & 1
+      : (A | ((1 - A) & B)) & 1;
+    const tex = kind === "sop" ? "Y = A\\bar{B} + BC" : "Y = A + \\bar{A}B";
+    const plain = kind === "sop" ? "Y = A·¬B + B·C" : "Y = A + ¬A·B";
+
+    return {
+      stem: `Evaluate ${T(tex)} at A = ${A}, B = ${B}${kind === "sop" ? `, C = ${C}` : ""}.`,
+      choices: [
+        { text: `${y}`, why: "" },
+        { text: `${1 - y}`, why: kind === "sop" ? "Check the complement bar — <span class='math'>\\bar{B}</span> is 1 when B is <b>0</b>." : "Check the bar on the second term." },
+        { text: "cannot be evaluated without C", why: kind === "sop" ? "C is given." : "C does not appear in this expression." },
+        { text: "2", why: "Boolean values are only ever 0 or 1. <b>+ is OR, not addition</b> — 1 + 1 = 1." },
+      ],
+      answer: 0,
+      steps: kind === "sop"
+        ? [
+            `Take the terms one at a time, remembering the bar inverts:`,
+            `<span class="math display" data-tex="A\\bar{B} = (${A})(${1 - B}) = ${A & (1 - B)}, \\qquad BC = (${B})(${C}) = ${B & C}"></span>`,
+            `OR them together — and <b>OR saturates</b>, so any 1 makes the whole thing 1:`,
+            `<span class="math display" data-tex="Y = ${A & (1 - B)} + ${B & C} = ${y}"></span>`,
+            `<b>${y}.</b>`,
+          ]
+        : [
+            `<span class="math display" data-tex="Y = A + \\bar{A}B = ${A} + (${1 - A})(${B}) = ${A} + ${(1 - A) & B} = ${y}"></span>`,
+            `<b>${y}.</b> Worth noticing: this expression simplifies to ${T("A + B")} by absorption — if A is true the output is true regardless, and if A is false the second term reduces to B. <b>Check that against your answer: A + B = ${A | B}</b> ✓`,
+          ],
+    };
+  },
+});
+
+defineProblem("demorgan", {
+  topic: "De Morgan's theorem",
+  lookup: "Electrical → Digital → Boolean logic (De Morgan)",
+  make(rng) {
+    const form = rng.pick(["apply", "identify"]);
+
+    if (form === "identify") {
+      const which = rng.pick(["nand", "nor"]);
+      const right = which === "nand"
+        ? "An OR gate with bubbles on both inputs and no output bubble"
+        : "An AND gate with bubbles on both inputs and no output bubble";
+      return {
+        stem: `Which symbol is equivalent to a two-input ${which.toUpperCase()} gate?`,
+        choices: [
+          { text: right, why: "" },
+          { text: which === "nand"
+              ? "An AND gate with bubbles on both inputs and no output bubble"
+              : "An OR gate with bubbles on both inputs and no output bubble",
+            why: `The gate body must <b>change</b> when the bubbles move. De Morgan turns AND into OR and back — moving bubbles without swapping the body gives a different function entirely.` },
+          { text: "The same gate with the output bubble removed", why: `That is a plain ${which === "nand" ? "AND" : "OR"}, which is the complement of what was asked for.` },
+          { text: "An XOR gate", why: "XOR is not related to either by De Morgan." },
+        ],
+        answer: 0,
+        steps: [
+          which === "nand"
+            ? `<span class="math display" data-tex="\\overline{A \\cdot B} = \\bar{A} + \\bar{B}"></span>`
+            : `<span class="math display" data-tex="\\overline{A + B} = \\bar{A} \\cdot \\bar{B}"></span>`,
+          `Read the right-hand side as a drawing: ${which === "nand" ? "an <b>OR</b> of two inverted inputs" : "an <b>AND</b> of two inverted inputs"}.`,
+          `<b>${right}.</b> The rule to carry: <b>break the bar, change the operator, and every bubble moves to the other side.</b>`,
+        ],
+      };
+    }
+
+    const cases = [
+      { q: "\\overline{A \\cdot B \\cdot C}", a: "\\bar{A} + \\bar{B} + \\bar{C}", w: "\\bar{A}\\bar{B}\\bar{C}" },
+      { q: "\\overline{A + B + C}", a: "\\bar{A}\\bar{B}\\bar{C}", w: "\\bar{A} + \\bar{B} + \\bar{C}" },
+      { q: "\\overline{\\bar{A} + B}", a: "A\\bar{B}", w: "\\bar{A}B" },
+      { q: "\\overline{A\\bar{B}}", a: "\\bar{A} + B", w: "\\bar{A}B" },
+    ];
+    const c = rng.pick(cases);
+    return {
+      stem: `Simplify ${T(c.q)} using De Morgan's theorem.`,
+      choices: [
+        { text: T(c.a), why: "" },
+        { text: T(c.w), why: "<b>The operator was not changed.</b> De Morgan does two things at once: it distributes the bar onto each variable <em>and</em> swaps AND for OR." },
+        { text: T(c.q.replace("\\overline{", "").replace(/\}$/, "")), why: "The complement was simply dropped." },
+        { text: T(`\\overline{${c.a}}`), why: "Complemented twice — the result is back where it started." },
+      ],
+      answer: 0,
+      steps: [
+        `De Morgan: <b>break the bar and change the sign.</b>`,
+        `<span class="math display" data-tex="${c.q} = ${c.a}"></span>`,
+        `Each variable picks up its own complement, and every AND becomes an OR (or the reverse). <b>Applying it to a whole expression means doing this at every level of the bar.</b>`,
+      ],
+    };
+  },
+});
+
+defineProblem("gate-count", {
+  topic: "Universal gates and CMOS cost",
+  lookup: "Electrical → Digital → Logic gates and circuits",
+  make(rng) {
+    const q = rng.pick(["universal", "transistors", "inverter", "static"]);
+    const Q = {
+      universal: {
+        stem: "Which statement about NAND gates is correct?",
+        right: "Any Boolean function can be built from NAND gates alone",
+        wrong: [
+          ["NAND can build AND and OR but not NOT", "NOT is the easy one — <b>tie both NAND inputs together</b> and ¬(A·A) = ¬A."],
+          ["NAND is universal only when combined with NOR", "Either one alone is universal. Mixing them is unnecessary."],
+          ["Only XOR is universal", "XOR is <b>not</b> universal — no arrangement of XOR gates alone can produce a constant 0 or an AND."],
+        ],
+        why: "Build NOT by tying the inputs, AND as NAND-then-NOT, and OR by inverting both inputs before NANDing — which is De Morgan. With those three, every function follows.",
+      },
+      transistors: {
+        stem: "How many transistors does a two-input CMOS NAND gate use?",
+        right: "4",
+        wrong: [
+          ["2", "That is an inverter — one PMOS and one NMOS."],
+          ["6", "That is a CMOS <b>AND</b>: a NAND (4) plus an inverter (2). There is no direct AND in CMOS."],
+          ["8", "More than needed. Each input drives exactly one PMOS and one NMOS."],
+        ],
+        why: "Two PMOS in parallel pulling up and two NMOS in series pulling down — one pair per input. <b>An AND needs six</b>, because CMOS builds it as a NAND with an inverter on the end, which is why silicon is mostly NAND.",
+      },
+      inverter: {
+        stem: "How do you make an inverter from a single two-input NAND gate?",
+        right: "Tie both inputs together",
+        wrong: [
+          ["Tie one input low", "That forces the output permanently <b>high</b>, since NAND is false only when both inputs are true."],
+          ["Tie the output back to an input", "That creates a feedback loop, not an inverter — and an unstable one."],
+          ["It cannot be done with one gate", "It can, and it is the first step in proving NAND is universal."],
+        ],
+        why: "With both inputs at A, the gate computes ¬(A·A) = ¬A. Tying an input <b>high</b> works too, giving ¬(1·A) = ¬A — but tying it <b>low</b> pins the output high instead.",
+      },
+      static: {
+        stem: "Why does a CMOS gate consume almost no power while holding a steady value?",
+        right: "The pull-up and pull-down networks are complements, so they never conduct at once",
+        wrong: [
+          ["MOSFETs have no resistance", "They have plenty when conducting; the point is that a complete path never exists."],
+          ["The supply voltage is very low", "Lower voltage reduces <b>switching</b> power, but a bipolar gate at the same voltage would still draw standing current."],
+          ["Its capacitance stores the energy", "Capacitance is what costs power when the gate <em>switches</em>, not what saves it at rest."],
+        ],
+        why: "Exactly one network conducts for any input, so there is never a path from supply to ground. Power is spent only in <b>switching</b>, which is why it goes as CV²f and why clock frequency and supply voltage are the two knobs on a chip's power budget.",
+      },
+    }[q];
+
+    return {
+      stem: Q.stem,
+      choices: [{ text: Q.right, why: "" }, ...Q.wrong.map(([t, w]) => ({ text: t, why: w }))],
+      answer: 0,
+      steps: [`<b>${Q.right}.</b>`, Q.why],
+    };
+  },
+});
+
+defineProblem("logic-block", {
+  topic: "Combinational building blocks",
+  lookup: "Electrical → Digital → Logic gates and circuits",
+  make(rng) {
+    const q = rng.pick(["mux", "decoder", "adder", "which"]);
+
+    if (q === "mux" || q === "decoder") {
+      const n = rng.pick([2, 3, 4, 5]);
+      const isMux = q === "mux";
+      const right = isMux ? `${2 ** n} data inputs and 1 output` : `${n} inputs and ${2 ** n} outputs`;
+      return {
+        stem: isMux
+          ? `A multiplexer has ${n} select lines. How many data inputs and outputs does it have?`
+          : `A decoder has ${n} input lines. How many outputs does it have?`,
+        choices: [
+          { text: isMux ? right : `${2 ** n}`, why: "" },
+          { text: isMux ? `${n} data inputs and 1 output` : `${n}`, why: "That is the number of <b>select or address</b> lines, not the number of lines they address. The relationship is exponential: n lines select among 2ⁿ things." },
+          { text: isMux ? `${2 ** n} data inputs and ${2 ** n} outputs` : `${2 * n}`, why: isMux ? "A multiplexer has exactly <b>one</b> output — choosing one of many is its whole job." : "Doubling is not the rule; each extra input line <b>doubles</b> the outputs." },
+          { text: isMux ? `${2 * n} data inputs and 1 output` : `${2 ** n - 1}`, why: isMux ? "The count is 2ⁿ, not 2n." : "All 2ⁿ combinations get an output, including the all-zeros one." },
+        ],
+        answer: 0,
+        steps: [
+          `${n} binary lines take ${T(`2^{${n}} = ${2 ** n}`)} distinct values.`,
+          isMux
+            ? `A multiplexer uses them to pick <b>one of ${2 ** n}</b> data inputs and route it to its single output.`
+            : `A decoder asserts <b>exactly one of ${2 ** n}</b> outputs, one for each input combination.`,
+          `<b>${isMux ? right : `${2 ** n} outputs`}.</b> A multiplexer and a decoder are mirror images, and the select lines are always the <em>exponent</em>.`,
+        ],
+      };
+    }
+
+    if (q === "adder") {
+      const which = rng.pick(["sum", "carry"]);
+      return {
+        stem: `What gate produces the ${which} output of a half adder?`,
+        choices: [
+          { text: which === "sum" ? "XOR" : "AND", why: "" },
+          { text: which === "sum" ? "AND" : "XOR", why: which === "sum" ? "AND gives the <b>carry</b>. The sum bit is 1 when exactly one input is 1, which is XOR." : "XOR gives the <b>sum</b>. A carry only happens when both inputs are 1, which is AND." },
+          { text: "OR", why: "OR would give 1 for the 1+1 case as well as the single-1 cases, which is right for neither output." },
+          { text: "NAND", why: "Universal, so it could be built from NANDs — but the direct answer is a single gate." },
+        ],
+        answer: 0,
+        steps: [
+          `Write the one-bit addition out: 0+0 = 0 carry 0, 0+1 = 1 carry 0, 1+0 = 1 carry 0, 1+1 = <b>0 carry 1</b>.`,
+          `The sum column is 0,1,1,0 — true when the inputs <b>differ</b>, which is ${T("A \\oplus B")}.`,
+          `The carry column is 0,0,0,1 — true only when both are 1, which is ${T("A \\cdot B")}.`,
+          `<b>${which === "sum" ? "XOR" : "AND"}.</b> A full adder adds a carry-in and becomes ${T("A \\oplus B \\oplus C_{in}")} for the sum.`,
+        ],
+      };
+    }
+
+    const jobs = [
+      ["route one of eight sensor signals to a single ADC input", "multiplexer", "It selects one of many inputs — that is exactly what a MUX does."],
+      ["activate exactly one of sixteen memory chips from a 4-bit address", "decoder", "One output active per input combination is a decoder's definition."],
+      ["turn a set of push-button lines into a binary code", "priority encoder", "An encoder converts one-hot inputs to binary; the priority version also resolves simultaneous presses."],
+      ["compare two 4-bit words for equality", "XNOR gates and an AND", "XNOR is a one-bit equality test, and ANDing four of them checks the whole word."],
+    ];
+    const [job, right, why] = rng.pick(jobs);
+    return {
+      stem: `Which block would you use to ${job}?`,
+      choices: [
+        { text: right, why: "" },
+        ...jobs.filter((j) => j[1] !== right).slice(0, 3).map((j) => ({
+          text: j[1], why: `That block ${j[1] === "multiplexer" ? "selects one of many inputs" : j[1] === "decoder" ? "activates one output per input code" : j[1] === "priority encoder" ? "converts one-hot inputs into binary" : "compares words bit by bit"}, which is not what this task asks for.`,
+        })),
+      ],
+      answer: 0,
+      steps: [`<b>${right}.</b>`, why,
+        `The four blocks worth recognising on sight: <b>MUX</b> selects, <b>decoder</b> activates one of many, <b>encoder</b> compresses one-hot to binary, and <b>XNOR</b> compares.`],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "gates",
+    stem: "A schematic shows an OR gate with bubbles on both inputs. What is it?",
+    tool: "De Morgan — that is a NAND",
+    because: "Break the bar and change the operator; the two drawings are the same circuit.",
+  },
+  {
+    part: "gates",
+    stem: "You have only NAND gates and need an inverter.",
+    tool: "tie both inputs together",
+    because: "¬(A·A) = ¬A, which is the first step in proving NAND universal.",
+  },
+  {
+    part: "gates",
+    stem: "How many transistors in a two-input CMOS NAND?",
+    tool: "four — two PMOS in parallel, two NMOS in series",
+    because: "AND takes six, because CMOS builds it as a NAND plus an inverter.",
+  },
+  {
+    part: "gates",
+    stem: "A multiplexer has 4 select lines. How many data inputs?",
+    tool: "2ⁿ = 16",
+    because: "Select lines are always the exponent, never the base.",
+  },
+]);

@@ -1,0 +1,159 @@
+<p class="eyebrow">
+  <span>Digital Systems · Part 2</span>
+  <span class="spec">NCEES 15.B · 15.C</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Boolean Logic and Gates</h1>
+
+<p class="lede">Mathematics Part 8 already built the algebra. This part gives it
+hardware — and then opens one gate to show that the hardware is Electronics
+Part 3's transistors, arranged so that exactly one half ever conducts.</p>
+
+<h2>2.1 The algebra you already have</h2>
+
+<p>Boolean algebra was Part 8 of the Mathematics module: two values, three
+operators, and a set of identities. Nothing about it changes here, so this is a
+recap rather than a derivation.</p>
+
+<f-plate no="15.3" title="Boolean identities" stamp="handbook"
+  caption="<b>The notation trap is worth stating once:</b> + means OR and · means
+  AND. So 1 + 1 = 1, and the distributive law works in a direction ordinary
+  algebra does not allow.">
+  <f-row tex="A + 0 = A, \quad A \cdot 1 = A, \quad A + 1 = 1, \quad A \cdot 0 = 0"
+         name="the constants"
+         gloss="<b>A + 1 = 1</b> is the one that surprises people. OR-ing with true is always true."></f-row>
+  <f-row tex="A + A = A, \qquad A \cdot A = A, \qquad A + \bar{A} = 1, \qquad A\bar{A} = 0"
+         name="idempotence and complements"
+         gloss="A term repeated adds nothing. This is what lets minimisation delete things in Part 3."></f-row>
+  <f-row tex="\overline{A \cdot B} = \bar{A} + \bar{B}, \qquad \overline{A + B} = \bar{A} \cdot \bar{B}"
+         name="De Morgan"
+         gloss="<b>Break the bar and change the sign.</b> The single most used identity in this module, and the one every exam expects on sight."></f-row>
+  <f-row tex="A + AB = A, \qquad A + \bar{A}B = A + B" name="absorption"
+         gloss="The second is less obvious and very useful: if A is true the term is true anyway, so the A inside the second product is redundant."></f-row>
+</f-plate>
+
+<h2>2.2 The gates</h2>
+
+<div data-figure="gateExplorer"></div>
+
+<div class="note honest">
+  <span class="note-tag">Reading a bubble</span>
+  <p style="margin-bottom:0">Every small circle on a logic symbol means exactly
+  one thing: <b>invert here</b>. A NAND is an AND with a bubble on its output; an
+  OR with bubbles on both inputs <em>and</em> its output is also a NAND. Those two
+  drawings are the same circuit, and De Morgan is the statement that they are.
+  <b>Fluency with bubbles is worth more on this exam than the ability to quote the
+  theorem</b>, because schematics are drawn in whichever form makes the signal
+  flow readable.</p>
+</div>
+
+<h2>2.3 Universal gates</h2>
+
+<p>NAND and NOR are each <span class="term">universal</span>: any Boolean
+function whatever can be built from copies of one of them alone. The proof is
+short — build the three basic operations and you are done:</p>
+
+<ul>
+  <li><b>NOT</b> — tie both NAND inputs together.
+  <span class="math" data-tex="\overline{A \cdot A} = \bar{A}">¬(A·A) = ¬A</span></li>
+  <li><b>AND</b> — a NAND followed by that inverter.</li>
+  <li><b>OR</b> — invert both inputs, then NAND them. That is De Morgan read
+  backwards.</li>
+</ul>
+
+<p>This is not a curiosity. It is why real silicon is mostly NAND, and the reason
+becomes visible only when you open the gate.</p>
+
+<h2>2.4 What a gate actually is</h2>
+
+<div data-figure="cmosNand"></div>
+
+<f-plate no="15.4" title="CMOS" stamp="know"
+  caption="<b>The two networks are always complements.</b> That is the whole design
+  rule, and both of CMOS's famous properties fall out of it.">
+  <f-row tex="\text{PMOS conducts on a LOW gate}, \quad \text{NMOS on a HIGH gate}"
+         name="the two devices"
+         gloss="From Electronics Part 3. A p-channel device turns on when its gate is pulled below its source; an n-channel one when it is pulled above."></f-row>
+  <f-row tex="\text{pull-up network} = \overline{\text{pull-down network}}"
+         name="the rule"
+         gloss="Series in one becomes parallel in the other. Two NMOS in series and two PMOS in parallel is NAND; swap them and it is NOR."></f-row>
+  <f-row tex="P_{static} \approx 0" name="why CMOS won"
+         gloss="<b>Exactly one network conducts at a time</b>, so there is never a path from supply to ground. A CMOS gate holding a value burns essentially nothing."></f-row>
+  <f-row tex="P_{dynamic} = \alpha C V^2 f" name="what it costs instead"
+         gloss="Power is spent <b>switching</b>, charging and discharging capacitance. <b>Note the V²</b> — it is why every generation of chips has run at a lower supply voltage."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Why NAND is the cheap one</span>
+  <p style="margin-bottom:0">A CMOS NAND is <b>four</b> transistors. A CMOS AND is
+  <b>six</b> — because there is no such thing as an AND in CMOS; you build a NAND
+  and bolt an inverter onto it. The same holds for NOR against OR. <b>Inverting
+  gates are the natural products of the technology and non-inverting ones are the
+  expensive special case</b>, which is exactly backwards from how the symbols are
+  usually taught. It is also why a designer who can read bubbles fluently can save
+  real silicon.</p>
+</div>
+
+<h2>2.5 Combinational building blocks</h2>
+
+<p>Above the gate level, a handful of standard blocks appear constantly and are
+worth recognising by name:</p>
+
+<ul>
+  <li><b>Multiplexer</b> — <span class="math" data-tex="2^n">2ⁿ</span> data inputs,
+  <span class="math" data-tex="n">n</span> select lines, one output. "Choose one
+  of these."</li>
+  <li><b>Decoder</b> — <span class="math" data-tex="n">n</span> inputs,
+  <span class="math" data-tex="2^n">2ⁿ</span> outputs, exactly one active. "Which
+  address is this?"</li>
+  <li><b>Encoder</b> — the reverse; a priority encoder resolves ties by rank.</li>
+  <li><b>Half adder</b> — sum is <span class="math" data-tex="A \oplus B">A ⊕ B</span>,
+  carry is <span class="math" data-tex="A \cdot B">A · B</span>. Two gates.</li>
+  <li><b>Full adder</b> — adds a carry in. Sum is
+  <span class="math" data-tex="A \oplus B \oplus C_{in}">A ⊕ B ⊕ Cin</span>.</li>
+</ul>
+
+<div class="note trap">
+  <span class="note-tag">Trap · counting inputs and outputs</span>
+  <p style="margin-bottom:0">A multiplexer with 3 select lines has <b>8</b> data
+  inputs and <b>1</b> output. A decoder with 3 inputs has <b>8</b> outputs. They
+  are mirror images, and questions routinely give you one count and ask for the
+  other. <b>The select lines are the exponent, never the base.</b></p>
+</div>
+
+<h2>2.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>De Morgan</b> both ways, and how to read it off a bubbled symbol.</li>
+    <li><span data-tex="A + 1 = 1">A + 1 = 1</span> and
+        <span data-tex="A + \bar{A}B = A + B">A + ¬A·B = A + B</span>.</li>
+    <li><b>NAND and NOR are universal.</b> NOT is a NAND with its inputs tied.</li>
+    <li>CMOS: pull-up and pull-down networks are complements; <b>no static
+        power</b>; dynamic power goes as
+        <span data-tex="CV^2f">CV²f</span>.</li>
+    <li>NAND is 4 transistors, AND is 6. <b>Inverting gates are the cheap
+        ones.</b></li>
+    <li>MUX: n selects → 2ⁿ inputs. Decoder: n inputs → 2ⁿ outputs.</li>
+    <li>Half adder: sum = XOR, carry = AND.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>The gates are Mathematics Part 8's algebra given physical form, and the
+  bubbles on their symbols are De Morgan made visible — the same function drawn
+  two ways, chosen for readability rather than meaning.</p>
+  <p>Underneath, a gate is Electronics Part 3's MOSFETs in two complementary
+  networks. That single arrangement explains why CMOS draws no current at rest,
+  why its power bill goes as the square of the supply voltage, and why the
+  inverting gates — the ones the symbols make look like afterthoughts — are the
+  cheap primitives everything else is assembled from.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"gates","title":"Part 2 · Logic and gates","topics":["truth-eval","demorgan","gate-count","logic-block"],"count":6}'></div>
+
+<div data-reflex='{"only":["numbers","gates"],"count":6,"title":"Handbook Reflex · Parts 1–2"}'></div>
