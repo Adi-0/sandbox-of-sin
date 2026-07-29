@@ -184,6 +184,54 @@ export const MODULES = [
     ],
   },
   {
+    id: "digital", dir: "digital", area: 15,
+    title: "Digital Systems", questions: "8–12",
+    parts: [
+      {
+        id: "numbers", n: 1, spec: "15.A",
+        title: "Number Systems",
+        blurb: "One quantity, four notations — and the trick that makes subtraction free",
+        minutes: 22, figures: [63, 64],
+      },
+      {
+        id: "gates", n: 2, spec: "15.B · 15.C",
+        title: "Boolean Logic and Gates",
+        blurb: "Mathematics Part 8's algebra, now made of transistors",
+        minutes: 24, figures: [65, 66],
+      },
+      {
+        id: "minimisation", n: 3, spec: "15.D · 15.F",
+        title: "Minimisation",
+        blurb: "Every function is a sum of products, and the map finds the shortest one",
+        minutes: 26, figures: [67, 68],
+      },
+      {
+        id: "flipflops", n: 4, spec: "15.E",
+        title: "Flip-Flops and Counters",
+        blurb: "The moment a circuit acquires a memory, and what that costs",
+        minutes: 26, figures: [69, 70],
+      },
+      {
+        id: "state-machines", n: 5, spec: "15.G",
+        title: "State Machines",
+        blurb: "Memory plus logic is a machine that knows where it has been",
+        minutes: 24, figures: [71, 72],
+      },
+      {
+        id: "timing", n: 6, spec: "15.H",
+        title: "Timing and Hazards",
+        blurb: "Gates take time, and every digital failure mode starts there",
+        minutes: 22, figures: [73, 74],
+      },
+      {
+        id: "digital-synthesis", n: 7, spec: "15.A–15.H",
+        title: "Synthesis and the Mixed Bench",
+        blurb: "Two symbols became a machine, and a set under exam conditions",
+        minutes: 12, figures: [75],
+      },
+    ],
+  },
+  {
     id: "power", dir: "power", area: 10,
     title: "Power Systems", questions: "8–12",
     parts: [
@@ -270,6 +318,16 @@ export const SPEC = {
     ["9.C", "Operational amplifiers (ideal, nonideal)", "opamps"],
     ["9.D", "Instrumentation (measurements, data acquisition, transducers)", "instrumentation"],
     ["9.E", "Power electronics (rectifiers, inverters, converters)", "rectifiers"],
+  ],
+  digital: [
+    ["15.A", "Number systems", "numbers"],
+    ["15.B", "Boolean logic", "gates"],
+    ["15.C", "Logic gates and circuits", "gates"],
+    ["15.D", "Logic minimization (SOP, POS, Karnaugh maps)", "minimisation"],
+    ["15.E", "Flip-flops and counters", "flipflops"],
+    ["15.F", "Programmable logic devices and gate arrays", "minimisation"],
+    ["15.G", "State machine design", "state-machines"],
+    ["15.H", "Timing (diagrams, asynchronous inputs, race conditions, hazards)", "timing"],
   ],
   power: [
     ["10.A", "Power theory (power factor, single and three phase, voltage regulation)", "power-factor"],

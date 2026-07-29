@@ -25,6 +25,9 @@ import "./opamps.js";        // 58 59
 import "./instrumentation.js"; // 60 61
 import "./electronics-synthesis.js"; // 62
 
+/* --- Digital Systems --- */
+import "./numbers.js";       // 63 64
+
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41

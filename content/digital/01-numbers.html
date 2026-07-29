@@ -1,0 +1,157 @@
+<p class="eyebrow">
+  <span>Digital Systems · Part 1</span>
+  <span class="spec">NCEES 15.A</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Number Systems</h1>
+
+<p class="lede">Everything a digital system does is arithmetic on patterns of two
+symbols. This part is about reading those patterns fluently, and about the one
+representation choice that made hardware simple.</p>
+
+<h2>1.1 Bases are groupings, not conversions</h2>
+
+<p>A number does not have a base. <em>Notation</em> has a base, and the number is
+whatever it is. Once that clicks, "convert 53 to hex" stops being a procedure and
+becomes reading:</p>
+
+<div data-figure="baseView"></div>
+
+<f-plate no="15.1" title="Positional notation" stamp="know">
+  <f-row tex="N = \sum_k d_k\,b^k" name="any base at all"
+         gloss="Each digit multiplied by the base raised to its position. Everything below is this, specialised."></f-row>
+  <f-row tex="\text{4 bits} = \text{1 hex digit}, \qquad \text{3 bits} = \text{1 octal digit}"
+         name="why hex exists"
+         gloss="<b>16 = 2⁴ and 8 = 2³</b>, so grouping bits gives the digits directly — no arithmetic. Decimal is the awkward one, because 10 is not a power of two."></f-row>
+  <f-row tex="\text{decimal} \to \text{binary: divide by 2, keep remainders, read upward}"
+         name="the one that needs work"
+         gloss="Or subtract descending powers of two, which is faster by hand: 53 − 32 = 21, − 16 = 5, − 4 = 1, − 1 = 0 → 110101."></f-row>
+  <f-row tex="n \text{ bits} \Rightarrow 2^n \text{ patterns}, \ \ 0 \ldots 2^n-1"
+         name="range"
+         gloss="<b>Memorise the powers to 2¹⁶.</b> 256, 1024, 4096, 65 536 appear constantly, and recognising them saves whole minutes."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">The module's number</span>
+  <p style="margin-bottom:0">This module runs on <b>53</b>, for a reason worth
+  checking rather than taking on trust. In binary it is
+  <span class="math" data-tex="00110101_2">00110101</span>; its two nibbles are
+  <b>0011</b> and <b>0101</b>, so in hex it is <b>0x35</b> — the digits
+  <b>3</b> and <b>5</b>. And it has exactly <b>4</b> bits set. The 3-4-5 triangle
+  that has run through this compilation since Mathematics Part 1, and whose angle
+  is 53.13°, turns out to be sitting inside the number 53 as well.</p>
+</div>
+
+<h2>1.2 Representing negatives</h2>
+
+<p>Bits have no minus sign, so a convention is needed. Three exist, and only one
+survived:</p>
+
+<ul>
+  <li><b>Sign-magnitude</b> — top bit is the sign, the rest is the size. Simple to
+  read, and it has <em>two</em> zeros. Addition needs to compare signs first.</li>
+  <li><b>One's complement</b> — negate by inverting every bit. Still two zeros,
+  and addition needs an end-around carry.</li>
+  <li><b>Two's complement</b> — invert every bit and add one. <b>One zero, and
+  addition needs no special case at all.</b></li>
+</ul>
+
+<div data-figure="twosComplement"></div>
+
+<f-plate no="15.2" title="Two's complement" stamp="know">
+  <f-row tex="-N = (\overline{N} + 1)" name="negation"
+         gloss="Invert all bits, add one. Doing it twice returns the original, as a negation must."></f-row>
+  <f-row tex="\text{range} = -2^{n-1} \ \ldots \ +2^{n-1}-1" name="the asymmetry"
+         gloss="For 8 bits: <b>−128 to +127</b>. One more negative than positive, because zero occupies a slot on the positive side."></f-row>
+  <f-row tex="A - B = A + (\overline{B} + 1)" name="why hardware likes it"
+         gloss="<b>Subtraction is addition.</b> One adder does both operations, and this is the entire reason the scheme won."></f-row>
+  <f-row tex="\text{overflow: carry into MSB} \ne \text{carry out of MSB}"
+         name="detecting overflow"
+         gloss="For <em>signed</em> arithmetic. Adding two positives and getting a negative is the symptom; this is the test."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · carry is not overflow</span>
+  <p style="margin-bottom:0">They are different flags answering different
+  questions. <b>Carry out</b> means the result exceeded the <em>unsigned</em>
+  range. <b>Overflow</b> means it exceeded the <em>signed</em> range. The same
+  addition can set one, both, or neither — and which one matters depends entirely
+  on how you have decided to read the bits, which the hardware cannot know.
+  Adding 0x80 + 0x80 produces a carry and an overflow; adding 0x7F + 0x01
+  produces an overflow and no carry.</p>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>subtracting by adding</em></h4>
+  <div class="worked-body">
+    <p>Compute 53 − 20 in 8-bit two's complement, using addition only.</p>
+    <ol class="steps">
+      <li>Write both in binary:
+        <span data-tex="53 = 00110101, \qquad 20 = 00010100" data-display>53 = 00110101, 20 = 00010100</span></li>
+      <li>Negate 20 — invert, then add one:
+        <span data-tex="\overline{00010100} = 11101011, \qquad +1 \Rightarrow 11101100" data-display>−20 = 11101100</span></li>
+      <li>Add:
+        <span data-tex="00110101 + 11101100 = 1\,00100001" data-display>= 1 00100001</span></li>
+      <li>Discard the ninth bit. The result is
+        <span data-tex="00100001_2 = 33_{10}">00100001 = 33</span> ✓</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">That discarded carry
+    is not an error — it is the wheel going round. <b>The whole scheme is designed
+    so that the overflow off the top lands exactly where the answer needs it
+    to.</b></p>
+  </div>
+</div>
+
+<h2>1.3 Codes that are not weighted</h2>
+
+<p>Not every bit pattern is a positional number. Two encodings appear on this
+exam:</p>
+
+<ul>
+  <li><b>BCD</b> — each decimal digit stored in its own four bits.
+  <span class="math" data-tex="53_{10} = 0101\,0011">53 becomes 0101 0011</span>,
+  which is <em>not</em> 0x35. Wasteful, and used where the display matters more
+  than the arithmetic.</li>
+  <li><b>Gray code</b> — consecutive values differ in exactly <b>one</b> bit. Used
+  on rotary encoders and in K-maps, both for the same reason: a single-bit change
+  cannot be misread during a transition.</li>
+</ul>
+
+<div class="note honest">
+  <span class="note-tag">Gray code appears again in two parts' time</span>
+  <p style="margin-bottom:0">The row and column ordering of a Karnaugh map in
+  Part 3 is Gray code — 00, 01, <b>11</b>, 10 — and that ordering is the only
+  reason adjacent cells can be grouped. It is not a decoration; without it the map
+  does not work.</p>
+</div>
+
+<h2>1.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Powers of two to 2¹⁶: 256, 1024, 4096, 65 536.</li>
+    <li><b>4 bits = 1 hex digit</b>, 3 bits = 1 octal digit.</li>
+    <li>Two's complement: <b>invert and add one</b>; range
+        <span data-tex="-2^{n-1}">−2ⁿ⁻¹</span> to
+        <span data-tex="2^{n-1}-1">2ⁿ⁻¹ − 1</span>.</li>
+    <li><b>Carry ≠ overflow.</b> Carry is unsigned, overflow is signed.</li>
+    <li>BCD is one nibble per decimal digit, and is not hex.</li>
+    <li>Gray code changes one bit at a time.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A number has no base; notation does. Hexadecimal and octal exist because 16
+  and 8 are powers of two, so their digits are just bits in groups — which makes
+  them shorthand rather than a different system.</p>
+  <p>Two's complement won because it makes subtraction disappear. Negation is
+  invert-and-add-one, the wheel closes so there is only one zero, and the same
+  adder handles both operations — at the price of a range that is asymmetric by
+  exactly one.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"numbers","title":"Part 1 · Bases and complements","topics":["base-convert","twos-comp","binary-arith","code-type"],"count":6}'></div>

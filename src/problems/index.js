@@ -16,5 +16,8 @@ import "./circuits-ac.js";
 /* --- Electronics --- */
 import "./electronics.js";
 
+/* --- Digital Systems --- */
+import "./digital.js";
+
 /* --- Power Systems --- */
 import "./power.js";
