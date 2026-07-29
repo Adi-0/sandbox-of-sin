@@ -1,0 +1,184 @@
+<p class="eyebrow">
+  <span>Electronics · Part 3</span>
+  <span class="spec">NCEES 9.A · 9.B</span>
+  <span>28 minute read</span>
+</p>
+
+<h1>Transistors</h1>
+
+<p class="lede">A diode is a valve that opens by itself. A transistor is a valve
+with a handle — and almost every question about one is really the question
+"which region is it in?"</p>
+
+<h2>3.1 Two families, one job</h2>
+
+<p>Both device families do the same thing: a small signal at one terminal
+controls a much larger current between the other two. They differ in what the
+control input actually is.</p>
+
+<ul>
+  <li><b>Bipolar (BJT)</b> — a base <em>current</em> controls the collector
+  current. Three terminals: base, collector, emitter.</li>
+  <li><b>Field-effect (FET)</b> — a gate <em>voltage</em> controls the drain
+  current, and the gate draws essentially no current at all. Three terminals:
+  gate, drain, source.</li>
+</ul>
+
+<p>That difference decides where each is used. A FET's gate is an insulator or a
+reverse-biased junction, so it loads whatever drives it almost not at all — which
+is why every integrated circuit with millions of devices is built from MOSFETs.</p>
+
+<h2>3.2 The BJT in three regions</h2>
+
+<f-plate no="9.5" title="The bipolar transistor" stamp="know">
+  <f-row tex="I_E = I_B + I_C" name="KCL, and nothing more"
+         gloss="A transistor is still a node. <b>Whatever goes in comes out.</b>"></f-row>
+  <f-row tex="I_C = \beta I_B, \qquad I_E = (\beta + 1)I_B" name="active region only"
+         gloss="β is the common-emitter current gain, typically 50 to 300. <b>These hold only in the active region</b> — assuming them everywhere is the classic error."></f-row>
+  <f-row tex="\alpha = \frac{\beta}{\beta+1} = \frac{I_C}{I_E}" name="common-base gain"
+         gloss="Always slightly under 1. With β = 100, α = 0.990."></f-row>
+  <f-row tex="V_{BE} \approx 0.7\text{ V (on)}, \qquad V_{CE(sat)} \approx 0.2\text{ V}"
+         name="the two voltages to know"
+         gloss="The base-emitter junction is just a diode, so Part 1's 0.7 V applies unchanged."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">The three regions, in one sentence each</span>
+  <ul style="margin:0.4rem 0 0">
+    <li><b>Cutoff</b> — base-emitter below 0.7 V. No base current, no collector
+    current. The switch is <em>open</em>.</li>
+    <li><b>Active</b> — base-emitter forward, base-collector reverse.
+    <span class="math" data-tex="I_C = \beta I_B">IC = βIB</span> and the collector
+    voltage does not matter. This is the amplifier region.</li>
+    <li><b>Saturation</b> — both junctions forward. The collector current is
+    limited by the external circuit, not by β, and
+    <span class="math" data-tex="V_{CE}">VCE</span> collapses to about 0.2 V. The
+    switch is <em>closed</em>.</li>
+  </ul>
+</div>
+
+<div data-figure="bjtCurves"></div>
+
+<h2>3.3 Deciding the region — the method from Part 1</h2>
+
+<p>A transistor's region depends on quantities you have not computed yet, which is
+exactly the circularity Part 1's diode had. The resolution is the same, with three
+states instead of two:</p>
+
+<ol class="steps">
+  <li><b>Assume active.</b> Take
+  <span data-tex="V_{BE} = 0.7">VBE = 0.7</span> V, find
+  <span data-tex="I_B">IB</span>, and compute
+  <span data-tex="I_C = \beta I_B">IC = βIB</span>.</li>
+  <li><b>Find <span data-tex="V_{CE}">VCE</span></b> from the collector loop.</li>
+  <li><b>Check.</b> If
+  <span data-tex="V_{CE} > V_{CE(sat)}">VCE &gt; 0.2 V</span>, the assumption holds.
+  If it came out below 0.2 V — or negative, which is impossible — the transistor
+  is <b>saturated</b>, and you redo it with
+  <span data-tex="V_{CE} = 0.2">VCE = 0.2</span> V and
+  <span data-tex="I_C = (V_{CC} - 0.2)/R_C">IC = (VCC − 0.2)/RC</span>.</li>
+</ol>
+
+<div data-figure="regionCheck"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · using β when it does not apply</span>
+  <p style="margin-bottom:0">A saturated transistor still has base current and
+  still has a β on its datasheet, but
+  <span class="math" data-tex="I_C \ne \beta I_B">IC ≠ βIB</span> — the collector
+  current is whatever the supply and the collector resistor allow, and no more.
+  <b>A negative V<sub>CE</sub> is the tell.</b> If your arithmetic produces one,
+  you have not made an error in the arithmetic; you have made an error in the
+  assumption.</p>
+</div>
+
+<h2>3.4 The FET, and the square law</h2>
+
+<p>A FET has three regions too, under different names: <b>cutoff</b>,
+<b>triode</b> (also called ohmic or linear), and <b>saturation</b>. Note the
+vocabulary collision — <em>saturation in a FET is the useful amplifying region</em>,
+the opposite of what the word means for a BJT.</p>
+
+<f-plate no="9.6" title="Field-effect transistors" stamp="handbook"
+  caption="<b>Both are the same parabola.</b> A JFET conducts at zero gate voltage
+  and is turned off by going negative; an enhancement MOSFET is off until the
+  threshold and turns on going positive.">
+  <f-row tex="I_D = I_{DSS}\left(1 - \frac{V_{GS}}{V_P}\right)^{\!2}" name="JFET, saturation region"
+         gloss="<b>I<sub>DSS</sub></b> is the drain current at V<sub>GS</sub> = 0; <b>V<sub>P</sub></b> is the pinch-off voltage, negative for an n-channel device."></f-row>
+  <f-row tex="I_D = k\left(V_{GS} - V_t\right)^{\!2}" name="enhancement MOSFET"
+         gloss="<b>k</b> is the conductivity factor in A/V²; <b>V<sub>t</sub></b> the threshold. Below threshold the device is simply off."></f-row>
+  <f-row tex="g_m = \frac{\partial I_D}{\partial V_{GS}} = 2\sqrt{k I_D} = \frac{2\sqrt{I_{DSS}I_D}}{|V_P|}"
+         name="transconductance"
+         gloss="<b>The derivative of the square law</b>, which is why it is not a constant — it grows with drain current, and a FET biased at a higher current amplifies more."></f-row>
+  <f-row tex="V_{DS} \ge V_{GS} - V_t" name="staying in saturation"
+         gloss="Below this the device drops into the triode region and behaves like a voltage-controlled resistor instead of a current source."></f-row>
+</f-plate>
+
+<div data-figure="fetSquareLaw"></div>
+
+<div class="worked">
+  <h4>Worked · <em>a MOSFET's gate voltage</em></h4>
+  <div class="worked-body">
+    <p>An n-channel enhancement MOSFET has a conductivity factor of 4 mA/V² and a
+    threshold of 0.7 V. It is operating in saturation. What gate-to-source voltage
+    produces 23.5 mA of drain current?</p>
+    <ol class="steps">
+      <li>Start from the square law and solve for the overdrive:
+        <span data-tex="I_D = k(V_{GS}-V_t)^2 \ \Longrightarrow\ V_{GS} - V_t = \sqrt{I_D/k}" data-display>VGS − Vt = √(ID/k)</span></li>
+      <li>Substituting, in consistent units of mA and V:
+        <span data-tex="V_{GS} - 0.7 = \sqrt{\frac{23.5}{4}} = \sqrt{5.875} = 2.42\text{ V}" data-display>VGS − 0.7 = 2.42 V</span></li>
+      <li>So
+        <span data-tex="V_{GS} = 2.42 + 0.7 = 3.12\text{ V}" data-display>VGS = 3.1 V</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left"><b>Do not forget to add
+    the threshold back.</b> The square law is written in terms of the
+    <em>overdrive</em> V<sub>GS</sub> − V<sub>t</sub>, and the answer 2.42 V will
+    be one of the options.</p>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · "saturation" means opposite things</span>
+  <p style="margin-bottom:0">In a <b>BJT</b>, saturation is the fully-on switch
+  state where V<sub>CE</sub> has collapsed and gain is lost. In a <b>FET</b>,
+  saturation is the flat, high-output-impedance region where the device is a
+  well-behaved current source and amplification happens. A question that says "the
+  FET operates in the saturation region" is telling you the square law
+  <em>applies</em> — it is a hint, not a warning.</p>
+</div>
+
+<h2>3.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="I_E = I_B + I_C">IE = IB + IC</span>,
+        <span data-tex="I_C = \beta I_B">IC = βIB</span>,
+        <span data-tex="I_E = (\beta+1)I_B">IE = (β+1)IB</span>,
+        <span data-tex="\alpha = \beta/(\beta+1)">α = β/(β+1)</span>.</li>
+    <li><span data-tex="V_{BE} = 0.7">VBE = 0.7</span> V on,
+        <span data-tex="V_{CE(sat)} = 0.2">VCE(sat) = 0.2</span> V.</li>
+    <li>Assume active → compute → <b>check V<sub>CE</sub></b>. Negative means
+        saturated.</li>
+    <li>JFET: <span data-tex="I_D = I_{DSS}(1-V_{GS}/V_P)^2">ID = IDSS(1 − VGS/VP)²</span>.
+        MOSFET: <span data-tex="I_D = k(V_{GS}-V_t)^2">ID = k(VGS − Vt)²</span>.</li>
+    <li><span data-tex="g_m = 2\sqrt{kI_D}">gm = 2√(k ID)</span>, the slope of the
+        square law.</li>
+    <li><b>Saturation is the good region for a FET and the switch region for a
+        BJT.</b></li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A BJT is current-controlled and a FET is voltage-controlled, but both are
+  valves whose behaviour depends on which region they occupy — and the region is
+  never given to you. It has to be assumed, computed and checked, exactly as a
+  diode's state was in Part 1.</p>
+  <p>Both FET families follow the same square law, so transconductance is simply
+  its derivative and therefore rises with bias current. That single fact is what
+  Part 4 turns into voltage gain.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"transistors","title":"Part 3 · BJT and FET","topics":["bjt-currents","bjt-region","fet-square","fet-gm"],"count":6}'></div>

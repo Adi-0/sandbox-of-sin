@@ -470,3 +470,252 @@ defineReflex([
     because: "Buck steps down, boost steps up — check which side of the input your answer lands on.",
   },
 ]);
+
+/* ==========================================================================
+   Part 3 — transistors
+   ========================================================================== */
+
+defineProblem("bjt-currents", {
+  topic: "BJT terminal currents",
+  lookup: "Electrical → Electronics → BJT (current gain)",
+  make(rng) {
+    const beta = rng.pick([50, 80, 100, 150, 200]);
+    const ib = rng.pick([20, 34, 50, 134, 200]) * 1e-6;
+    const ic = beta * ib;
+    const ie = (beta + 1) * ib;
+    const ask = rng.pick(["ie", "ic", "alpha"]);
+
+    if (ask === "alpha") {
+      const alpha = beta / (beta + 1);
+      return {
+        stem: `An npn BJT has a common-emitter current gain of ${beta}. What is its common-base current gain α?`,
+        choices: [
+          { text: `${fixed(alpha, 4)}`, why: "" },
+          { text: `${fixed(beta / (beta - 1), 4)}`, why: "The denominator should be <b>β + 1</b>, not β − 1. α is always slightly <em>less</em> than 1, never more." },
+          { text: `${fixed(1 / beta, 4)}`, why: "That is 1/β, the ratio of base to collector current." },
+          { text: `${beta}`, why: "That is β itself. α and β are different gains: α relates collector to <b>emitter</b>, β relates collector to <b>base</b>." },
+        ],
+        answer: 0,
+        steps: [
+          `α is the fraction of emitter current that reaches the collector:`,
+          `<span class="math display" data-tex="\\alpha = \\frac{I_C}{I_E} = \\frac{\\beta I_B}{(\\beta+1)I_B} = \\frac{\\beta}{\\beta+1}"></span>`,
+          `<span class="math display" data-tex="\\alpha = \\frac{${beta}}{${beta + 1}} = ${fixed(alpha, 4)}"></span>`,
+          `<b>${fixed(alpha, 4)}.</b> Sanity check that never fails: <b>α is always just under 1</b>, because a little of the emitter current leaves through the base instead.`,
+        ],
+      };
+    }
+
+    const target = ask === "ie" ? ie : ic;
+    return {
+      stem: `An npn BJT has a common-emitter current gain of ${beta} and a base current of ${fixed(ib * 1e6, 0)} µA. ` +
+            `What is its ${ask === "ie" ? "emitter" : "collector"} current, most nearly?`,
+      choices: [
+        { text: `${fixed(target * 1000, 2)} mA`, why: "" },
+        { text: `${fixed((ask === "ie" ? ic : ie) * 1000, 2)} mA`,
+          why: ask === "ie"
+            ? "That is the <b>collector</b> current, βI<sub>B</sub>. The emitter carries the base current as well, so it is (β + 1)I<sub>B</sub>."
+            : "That is the <b>emitter</b> current, (β + 1)I<sub>B</sub>. The collector gets βI<sub>B</sub>; the extra one is the base's own contribution." },
+        { text: `${fixed(ib * 1000, 4)} mA`, why: "That is the base current, unamplified." },
+        { text: `${fixed(target * 1000 / beta, 4)} mA`, why: "Divided by β where you should multiply." },
+      ],
+      answer: 0,
+      steps: [
+        `A transistor is still a node, so KCL holds: ${T("I_E = I_B + I_C")}.`,
+        `<span class="math display" data-tex="I_C = \\beta I_B = (${beta})(${fixed(ib * 1e6, 0)}\\ \\mu\\text{A}) = ${fixed(ic * 1000, 2)}\\text{ mA}"></span>`,
+        ask === "ie"
+          ? `<span class="math display" data-tex="I_E = I_B + I_C = (\\beta+1)I_B = (${beta + 1})(${fixed(ib * 1e6, 0)}\\ \\mu\\text{A}) = ${fixed(ie * 1000, 2)}\\text{ mA}"></span><b>${fixed(ie * 1000, 2)} mA.</b>`
+          : `<b>${fixed(ic * 1000, 2)} mA.</b> Note these relations hold in the <b>active region only</b> — a saturated transistor has its own collector current set by the external circuit.`,
+      ],
+    };
+  },
+});
+
+defineProblem("bjt-region", {
+  topic: "Which region is the BJT in?",
+  lookup: "Electrical → Electronics → BJT (biasing, regions)",
+  make(rng) {
+    const Vcc = rng.pick([10, 12, 15]);
+    const Rc = rng.pick([1, 2, 2.2]) * 1000;
+    const Rb = rng.pick([22, 33, 47, 100]) * 1000;
+    const beta = rng.pick([100, 150, 200]);
+    const Vin = rng.pick([2, 3, 5, 8]);
+    const Vbe = 0.7, Vsat = 0.2;
+
+    const ib = Math.max(0, (Vin - Vbe) / Rb);
+    const icActive = beta * ib;
+    const icSat = (Vcc - Vsat) / Rc;
+    const sat = icActive > icSat;
+    const ic = sat ? icSat : icActive;
+    const vce = sat ? Vsat : Vcc - ic * Rc;
+
+    return {
+      stem: `A ${Vin} V input drives an npn BJT through a ${num(Rb / 1000, 0)} kΩ base resistor. ` +
+            `The collector has a ${num(Rc / 1000, Rc % 1000 ? 1 : 0)} kΩ resistor to a ${Vcc} V rail, the emitter is grounded, ` +
+            `β = ${beta} and V_BE = 0.7 V. What is V_CE, most nearly?`,
+      choices: [
+        { text: `${fixed(vce, 2)} V`, why: "" },
+        { text: `${fixed(Vcc - icActive * Rc, 2)} V`,
+          why: sat
+            ? `That is what βI<sub>B</sub> predicts, and it is <b>impossible</b> — a negative V<sub>CE</sub> means the assumption of active operation has failed. The transistor is saturated at about ${Vsat} V.`
+            : "" },
+        { text: `${Vcc}.00 V`, why: `That is the cutoff value. The base current here is ${fixed(ib * 1e6, 1)} µA, which is not zero, so the transistor is conducting.` },
+        { text: `${fixed(Vcc - icActive * Rc / beta, 2)} V`, why: "β was left out of the collector current." },
+        { text: "0.00 V", why: `Even a fully saturated transistor holds about ${Vsat} V — its two junctions cannot both collapse to nothing.` },
+      ].filter((c, i, all) => i === 0 || (c.why !== "" && Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.02)).slice(0, 4),
+      answer: 0,
+      steps: [
+        `<b>Assume the active region.</b> The base-emitter junction is a diode at 0.7 V, so:`,
+        `<span class="math display" data-tex="I_B = \\frac{${Vin} - 0.7}{${num(Rb, 0)}} = ${fixed(ib * 1e6, 1)}\\ \\mu\\text{A}"></span>`,
+        `<span class="math display" data-tex="I_C = \\beta I_B = (${beta})(${fixed(ib * 1e6, 1)}\\ \\mu\\text{A}) = ${fixed(icActive * 1000, 2)}\\text{ mA}"></span>`,
+        `<span class="math display" data-tex="V_{CE} = V_{CC} - I_CR_C = ${Vcc} - (${fixed(icActive, 5)})(${num(Rc, 0)}) = ${fixed(Vcc - icActive * Rc, 2)}\\text{ V}"></span>`,
+        sat
+          ? `<b>Check: that is below ${Vsat} V, which is impossible.</b> The assumption fails, so the transistor is <b>saturated</b>: V<sub>CE</sub> sits at about ${Vsat} V and the collector current is fixed by the resistor at ${T(`(${Vcc}-${Vsat})/${num(Rc, 0)} = ${fixed(icSat * 1000, 2)}`)} mA, not by β. <b>${fixed(vce, 2)} V.</b>`
+          : `<b>Check: ${fixed(vce, 2)} V is comfortably above ${Vsat} V</b>, so the transistor really is active and the assumption stands. <b>${fixed(vce, 2)} V.</b>`,
+      ],
+    };
+  },
+});
+
+defineProblem("fet-square", {
+  topic: "The FET square law",
+  lookup: "Electrical → Electronics → FET (saturation region)",
+  make(rng) {
+    const jfet = rng.pick([true, false]);
+
+    if (jfet) {
+      const Idss = rng.pick([8, 10, 12, 34.5]);
+      const Vp = rng.pick([-2.5, -3, -4, -6]);
+      const Vgs = rng.pick([-0.5, -1, -1.5, -2]);
+      const Id = Vgs <= Vp ? 0 : Idss * (1 - Vgs / Vp) ** 2;
+
+      return {
+        stem: `An n-channel JFET in saturation has ${T(`I_{DSS} = ${Idss}`)} mA and a pinch-off voltage of ${Vp} V. ` +
+              `What drain current flows at ${T(`V_{GS} = ${Vgs}`)} V, most nearly?`,
+        choices: [
+          { text: `${fixed(Id, 2)} mA`, why: "" },
+          { text: `${fixed(Idss * (1 - Vgs / Vp), 2)} mA`, why: "The bracket was not <b>squared</b>. The JFET relation is a square law — that exponent is the whole character of the device." },
+          { text: `${fixed(Idss * (1 + Vgs / Vp) ** 2, 2)} mA`, why: `A sign slip inside the bracket. With ${T("V_P")} negative and ${T("V_{GS}")} negative, ${T("V_{GS}/V_P")} is <b>positive</b> and gets subtracted from 1.` },
+          { text: `${Idss} mA`, why: `That is ${T("I_{DSS}")}, the current at ${T("V_{GS} = 0")}. Any negative gate voltage reduces it.` },
+        ],
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="I_D = I_{DSS}\\left(1 - \\frac{V_{GS}}{V_P}\\right)^2"></span>`,
+          `Both voltages are negative, so their ratio is positive:`,
+          `<span class="math display" data-tex="\\frac{V_{GS}}{V_P} = \\frac{${Vgs}}{${Vp}} = ${fixed(Vgs / Vp, 4)}"></span>`,
+          `<span class="math display" data-tex="I_D = ${Idss}\\left(1 - ${fixed(Vgs / Vp, 4)}\\right)^2 = ${Idss}(${fixed(1 - Vgs / Vp, 4)})^2 = ${fixed(Id, 2)}\\text{ mA}"></span>`,
+          `<b>${fixed(Id, 2)} mA</b>, which is less than I<sub>DSS</sub> — as it must be, since a negative gate can only pinch the channel down.`,
+        ],
+      };
+    }
+
+    const k = rng.pick([0.5, 1, 2, 4]);
+    const Vt = rng.pick([0.7, 1, 2, 4]);
+    const Id = rng.pick([7.2, 11, 23.5, 35]);
+    const over = Math.sqrt(Id / k);
+    const Vgs = over + Vt;
+
+    return {
+      stem: `An n-channel enhancement MOSFET in saturation has a conductivity factor of ${k} mA/V² and a threshold voltage of ${Vt} V. ` +
+            `What gate-to-source voltage produces a drain current of ${Id} mA, most nearly?`,
+      choices: [
+        { text: `${fixed(Vgs, 2)} V`, why: "" },
+        { text: `${fixed(over, 2)} V`, why: `That is the <b>overdrive</b> ${T("V_{GS}-V_t")}. The threshold has to be added back to reach the actual gate voltage — and this wrong answer is always offered.` },
+        { text: `${fixed(Id / k + Vt, 2)} V`, why: "No square root was taken. The relation is quadratic, so inverting it needs a root." },
+        { text: `${fixed(Math.sqrt(Id * k) + Vt, 2)} V`, why: `Multiplied by k instead of divided. From ${T("I_D = k(V_{GS}-V_t)^2")}, the overdrive is ${T("\\sqrt{I_D/k}")}.` },
+      ],
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="I_D = k\\left(V_{GS} - V_t\\right)^2 \\quad\\Longrightarrow\\quad V_{GS} - V_t = \\sqrt{\\frac{I_D}{k}}"></span>`,
+        `<span class="math display" data-tex="V_{GS} - ${Vt} = \\sqrt{\\frac{${Id}}{${k}}} = \\sqrt{${fixed(Id / k, 3)}} = ${fixed(over, 2)}\\text{ V}"></span>`,
+        `<b>Add the threshold back:</b>`,
+        `<span class="math display" data-tex="V_{GS} = ${fixed(over, 2)} + ${Vt} = ${fixed(Vgs, 2)}\\text{ V}"></span>`,
+        `<b>${fixed(Vgs, 2)} V.</b> Forgetting the final addition is the single most common error on this question type.`,
+      ],
+    };
+  },
+});
+
+defineProblem("fet-gm", {
+  topic: "Transconductance",
+  lookup: "Electrical → Electronics → FET (transconductance)",
+  make(rng) {
+    const jfet = rng.pick([true, false]);
+
+    if (jfet) {
+      const Idss = rng.pick([10, 34.5, 500]);
+      const Vp = rng.pick([-2.5, -4, -6]);
+      const Id = rng.pick([2.4, 6.4, 8]);
+      const gm = (2 * Math.sqrt(Idss * Id)) / Math.abs(Vp);
+
+      return {
+        stem: `An n-channel JFET in saturation has ${T(`I_{DSS} = ${Idss}`)} mA, a pinch-off voltage of ${Vp} V, ` +
+              `and a drain current of ${Id} mA. What is its transconductance, most nearly?`,
+        choices: [
+          { text: `${fixed(gm, 2)} mS`, why: "" },
+          { text: `${fixed(gm / 2, 2)} mS`, why: "The factor of 2 was dropped. It comes from differentiating a <b>square</b> law — the exponent falls out in front." },
+          { text: `${fixed(2 * Idss / Math.abs(Vp), 2)} mS`, why: `That is ${T("g_{m0}")}, the transconductance at ${T("V_{GS}=0")} where ${T("I_D = I_{DSS}")}. At a lower drain current the slope is smaller.` },
+          { text: `${fixed(Id / Math.abs(Vp), 2)} mS`, why: "Neither the square root nor the factor of 2 is present." },
+        ],
+        answer: 0,
+        steps: [
+          `Transconductance is the <b>slope</b> of the transfer curve, so differentiate the square law:`,
+          `<span class="math display" data-tex="g_m = \\frac{\\partial I_D}{\\partial V_{GS}} = \\frac{2\\sqrt{I_{DSS}I_D}}{|V_P|}"></span>`,
+          `<span class="math display" data-tex="g_m = \\frac{2\\sqrt{(${Idss})(${Id})}}{${Math.abs(Vp)}} = \\frac{2(${fixed(Math.sqrt(Idss * Id), 3)})}{${Math.abs(Vp)}} = ${fixed(gm, 2)}\\text{ mS}"></span>`,
+          `<b>${fixed(gm, 2)} mS.</b> Note that it depends on the operating current — <b>a FET biased harder amplifies more</b>, which is why the bias point matters as much as the device.`,
+        ],
+      };
+    }
+
+    const k = rng.pick([0.5, 1, 2, 4]);
+    const Vt = rng.pick([0.7, 1, 2]);
+    const Vgs = rng.pick([3, 4, 5]);
+    const over = Vgs - Vt;
+    const Id = k * over ** 2;
+    const gm = 2 * k * over;
+
+    return {
+      stem: `An n-channel enhancement MOSFET has k = ${k} mA/V² and ${T(`V_t = ${Vt}`)} V, operating in saturation at ${T(`V_{GS} = ${Vgs}`)} V. ` +
+            `What is its transconductance, most nearly?`,
+      choices: [
+        { text: `${fixed(gm, 2)} mS`, why: "" },
+        { text: `${fixed(k * over, 2)} mS`, why: "Missing the factor of 2 from differentiating the square." },
+        { text: `${fixed(2 * k * Vgs, 2)} mS`, why: `The threshold was not subtracted. Transconductance depends on the <b>overdrive</b> ${T("V_{GS}-V_t")}, not on ${T("V_{GS}")} alone.` },
+        { text: `${fixed(Id, 2)} mS`, why: "That is the drain current in mA, not a conductance." },
+      ],
+      answer: 0,
+      steps: [
+        `Differentiate the MOSFET square law with respect to gate voltage:`,
+        `<span class="math display" data-tex="g_m = \\frac{d}{dV_{GS}}\\,k(V_{GS}-V_t)^2 = 2k(V_{GS}-V_t)"></span>`,
+        `<span class="math display" data-tex="g_m = 2(${k})(${Vgs} - ${Vt}) = 2(${k})(${fixed(over, 2)}) = ${fixed(gm, 2)}\\text{ mS}"></span>`,
+        `<b>${fixed(gm, 2)} mS.</b> Equivalently ${T(`2\\sqrt{kI_D} = 2\\sqrt{(${k})(${fixed(Id, 2)})} = ${fixed(2 * Math.sqrt(k * Id), 2)}`)} mS — the same number by a different route, which is a useful check.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "transistors",
+    stem: "A BJT with β = 80 has 134 µA of base current. What is the emitter current?",
+    tool: "I_E = (β + 1) I_B",
+    because: "The emitter carries the collector current plus the base current — a transistor is still a KCL node.",
+  },
+  {
+    part: "transistors",
+    stem: "Your bias calculation gives V_CE = −3 V. What went wrong?",
+    tool: "nothing — the transistor is saturated",
+    because: "A negative V_CE is impossible, so the active-region assumption failed, not the arithmetic.",
+  },
+  {
+    part: "transistors",
+    stem: "A MOSFET with k = 4 mA/V² and V_t = 0.7 V must pass 23.5 mA. Gate voltage?",
+    tool: "V_GS = √(I_D/k) + V_t",
+    because: "The square law is written in overdrive, so the threshold has to be added back at the end.",
+  },
+  {
+    part: "transistors",
+    stem: "A JFET runs at 6.4 mA with I_DSS = 34.5 mA and V_P = −4 V. Transconductance?",
+    tool: "g_m = 2√(I_DSS I_D) / |V_P|",
+    because: "Transconductance is the derivative of the square law, so it rises with the operating current.",
+  },
+]);
