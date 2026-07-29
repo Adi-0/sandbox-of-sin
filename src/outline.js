@@ -232,6 +232,54 @@ export const MODULES = [
     ],
   },
   {
+    id: "linear", dir: "linear", area: 7,
+    title: "Linear Systems", questions: "5–8",
+    parts: [
+      {
+        id: "transient", n: 1, spec: "7.A",
+        title: "Transient Response",
+        blurb: "What a circuit does before steady state — one curve, four circuits",
+        minutes: 22, figures: [76, 77],
+      },
+      {
+        id: "second-order", n: 2, spec: "7.A",
+        title: "Second-Order Response",
+        blurb: "Two energy stores argue, and Mathematics Part 7's roots arrive as a circuit that rings",
+        minutes: 24, figures: [78, 79],
+      },
+      {
+        id: "laplace", n: 3, spec: "7.C",
+        title: "The Laplace Transform",
+        blurb: "The trick that turns a differential equation into algebra, and back",
+        minutes: 22, figures: [80, 81],
+      },
+      {
+        id: "transfer", n: 4, spec: "7.D",
+        title: "Transfer Functions and the s-Plane",
+        blurb: "One ratio holds the whole system, and a pole's position is its behaviour",
+        minutes: 24, figures: [82, 83],
+      },
+      {
+        id: "frequency", n: 5, spec: "7.A",
+        title: "Frequency Response",
+        blurb: "Let s become jω and the transfer function becomes a filter",
+        minutes: 22, figures: [84, 85],
+      },
+      {
+        id: "resonance", n: 6, spec: "7.B",
+        title: "Resonance",
+        blurb: "Where the reactances cancel, and how sharply — ω₀, Q, and bandwidth",
+        minutes: 22, figures: [86, 87],
+      },
+      {
+        id: "linear-synthesis", n: 7, spec: "7.A–7.D",
+        title: "Synthesis and the Mixed Bench",
+        blurb: "It was one s-plane the whole time, and a set under exam conditions",
+        minutes: 12, figures: [88],
+      },
+    ],
+  },
+  {
     id: "power", dir: "power", area: 10,
     title: "Power Systems", questions: "8–12",
     parts: [
@@ -328,6 +376,12 @@ export const SPEC = {
     ["15.F", "Programmable logic devices and gate arrays", "minimisation"],
     ["15.G", "State machine design", "state-machines"],
     ["15.H", "Timing (diagrams, asynchronous inputs, race conditions, hazards)", "timing"],
+  ],
+  linear: [
+    ["7.A", "Frequency/transient response", "transient"],
+    ["7.B", "Resonance", "resonance"],
+    ["7.C", "Laplace transforms", "laplace"],
+    ["7.D", "Transfer functions", "transfer"],
   ],
   power: [
     ["10.A", "Power theory (power factor, single and three phase, voltage regulation)", "power-factor"],

@@ -1,0 +1,180 @@
+<p class="eyebrow">
+  <span>Linear Systems · Part 1</span>
+  <span class="spec">NCEES 7.A</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Transient Response</h1>
+
+<p class="lede">Circuit Analysis stopped at steady state and said so. This is the
+part it deferred: what a circuit does in the moments <em>after</em> something
+changes, before it settles into the answer that module taught you to find.</p>
+
+<h2>1.1 The debt Circuit Analysis named</h2>
+
+<p>Every result in Circuit Analysis assumed the circuit had already settled —
+that the DC values were constant, or that the sinusoid had been running forever.
+That assumption is what let a capacitor be an open circuit and an inductor be a
+short. Take it away and neither is true.</p>
+
+<p>The reason is one property each, and they are mirror images:</p>
+
+<f-plate no="7.1" title="What a store of energy insists on" stamp="know"
+  caption="<b>These two rules are the whole subject.</b> Everything else in this
+  part is arithmetic on their consequences.">
+  <f-row tex="i = C\frac{dv}{dt}" name="the capacitor"
+         gloss="A finite current means a finite dv/dt, so <b>v cannot jump</b>. A capacitor stores energy in voltage and defends it."></f-row>
+  <f-row tex="v = L\frac{di}{dt}" name="the inductor"
+         gloss="A finite voltage means a finite di/dt, so <b>i cannot jump</b>. An inductor stores energy in current and defends that instead."></f-row>
+  <f-row tex="v_C(0^-) = v_C(0^+), \qquad i_L(0^-) = i_L(0^+)" name="continuity"
+         gloss="The two quantities that survive a switch. Everything else in the circuit — every other current and voltage — <b>may jump freely</b> at t = 0."></f-row>
+  <f-row tex="\tau = RC, \qquad \tau = L/R" name="the time constant"
+         gloss="Seconds, in both cases. Note the resistor moves: <b>a bigger R slows an RC circuit down and speeds an RL circuit up.</b>"></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · which way the resistor acts</span>
+  <p style="margin-bottom:0">τ = RC and τ = L/R look like a symmetry and are
+  not. A bigger resistor <b>limits the current that charges a capacitor</b>, so
+  the RC circuit gets slower. The same resistor <b>forces an inductor's current
+  to change faster</b>, because it takes a larger voltage to push that current
+  through it — so the RL circuit gets quicker. If you only remember the algebra
+  you will eventually write L·R; if you remember the physical reading you cannot.</p>
+</div>
+
+<h2>1.2 Why the curve is an exponential</h2>
+
+<p>Take an RC circuit charging. The current through the resistor is whatever
+voltage is <em>left over</em> divided by R, and that current is exactly what
+raises the capacitor's voltage. So the rate of climb is proportional to how far
+there still is to climb — and a quantity whose rate of change is proportional to
+what remains is the definition of exponential decay.</p>
+
+<p>That is not a fact about capacitors. It is a fact about the differential
+equation, which is why all four first-order transients on the exam are the same
+drawing:</p>
+
+<div data-figure="firstOrder"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Five numbers worth having on sight</span>
+  <p style="margin-bottom:0">After 1, 2, 3, 4 and 5 time constants a first-order
+  transient is <b>63.2%, 86.5%, 95.0%, 98.2%, 99.3%</b> of the way there. Each
+  time constant removes the same <em>fraction</em> of what is left — 63.2% of it
+  — which is what "exponential" means and why the sequence is not evenly spaced.
+  <b>Five time constants is conventionally settled</b>, and if a question
+  mentions a duration much longer than that, it is a steady-state problem with
+  no exponentials in it at all.</p>
+</div>
+
+<h2>1.3 The three-step method</h2>
+
+<p>Almost no first-order exam question needs a differential equation solved. It
+needs three numbers, and then one line that is the same line every time:</p>
+
+<f-plate no="7.2" title="Any first-order transient, in three steps" stamp="know"
+  caption="<b>Learn the general form and the two special cases come free.</b>
+  With v(0⁺) = 0 it collapses to a plain rise; with v(∞) = 0 to a plain decay.">
+  <f-row tex="x(t) = x(\infty) + \big[x(0^+) - x(\infty)\big]e^{-t/\tau}"
+         name="the general form"
+         gloss="x is whatever the question asks for — a voltage, a current, anything in the circuit. Only the <em>capacitor's</em> voltage and the <em>inductor's</em> current are guaranteed continuous, so find one of those first if you can."></f-row>
+  <f-row tex="\text{step 1: } x(0^+)" name="where it starts"
+         gloss="From continuity. Redraw the circuit at t = 0⁺ with the capacitor as a <b>voltage source</b> holding v(0⁻), or the inductor as a <b>current source</b> holding i(0⁻)."></f-row>
+  <f-row tex="\text{step 2: } x(\infty)" name="where it ends"
+         gloss="A DC problem. Capacitor becomes an <b>open circuit</b>, inductor becomes a <b>short</b>, and what is left is Ohm's law and a divider."></f-row>
+  <f-row tex="\text{step 3: } \tau = R_{th}C \ \text{ or } \ L/R_{th}"
+         name="how fast"
+         gloss="<b>R<sub>th</sub> is what the storage element sees looking outwards</b>, with the sources killed. Thévenin from Circuit Analysis Part 4, doing its fifth job in this compilation."></f-row>
+</f-plate>
+
+<div data-figure="threeStep"></div>
+
+<div class="worked">
+  <h4>Worked · <em>a transient with nothing at zero</em></h4>
+  <div class="worked-body">
+    <p>A 12 V source behind 4 kΩ feeds a 100 µF capacitor with 8 kΩ across it.
+    The capacitor starts at 2 V. Find v(t).</p>
+    <ol class="steps">
+      <li><b>Where it starts.</b> Given: 2 V. And it does not jump, so
+        <span data-tex="v(0^+) = 2\ \text{V}">v(0⁺) = 2 V</span>.</li>
+      <li><b>Where it ends.</b> Capacitor open, so it is a divider:
+        <span data-tex="v(\infty) = 12 \cdot \frac{8}{4+8} = 8\ \text{V}" data-display>v(∞) = 8 V</span></li>
+      <li><b>How fast.</b> Kill the source and look back from the capacitor's
+        terminals: R₁ and R₂ are in <em>parallel</em>.
+        <span data-tex="R_{th} = 4 \parallel 8 = 2.67\ \text{k}\Omega, \qquad \tau = (2670)(100\times10^{-6}) = 0.27\ \text{s}" data-display>τ = 0.27 s</span></li>
+      <li>Substitute into the general form:
+        <span data-tex="v(t) = 8 - 6e^{-t/0.27}" data-display>v(t) = 8 − 6e^(−t/0.27)</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left"><b>Step 3 is where
+    the marks are lost.</b> The obvious wrong answer uses R₁ alone, because that
+    is the resistor the charging current flows through — but the capacitor
+    discharges through R₂ at the same time, and τ is set by what the capacitor
+    <em>sees</em>, not by what charges it. Move R₂ on the plate above and watch
+    the final value and the time constant move together, because R₂ is in both.</p>
+  </div>
+</div>
+
+<h2>1.4 Reading the circuit at t = 0⁺ and t = ∞</h2>
+
+<p>Two substitutions do all the work in steps 1 and 2, and they are worth
+holding as pictures rather than rules:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th></th><th>at t = 0⁺, starting from rest</th><th>at t = ∞, on DC</th></tr></thead>
+  <tbody>
+    <tr><td><b>Capacitor</b></td><td>a <b>short</b> — holding 0 V</td><td>an <b>open circuit</b> — no current can flow into a constant voltage</td></tr>
+    <tr><td><b>Inductor</b></td><td>an <b>open circuit</b> — enforcing 0 A</td><td>a <b>short</b> — no voltage across a constant current</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">"Starting from rest" is doing work in that table</span>
+  <p style="margin-bottom:0">A capacitor already charged to 5 V is not a short at
+  t = 0⁺ — it is a <b>5 V source</b>, for that instant. An inductor already
+  carrying 2 A is a <b>2 A source</b>. The short and the open circuit are just
+  the special case where the stored value happens to be zero, and a question
+  that describes a switch moving from one position to another is usually
+  arranging for it not to be. <b>Read the circuit before the switch moves</b>;
+  that is where step 1 actually comes from.</p>
+</div>
+
+<h2>1.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>v<sub>C</sub> cannot jump; i<sub>L</sub> cannot jump.</b> Nothing else
+        in the circuit is protected.</li>
+    <li><span data-tex="\tau = RC">τ = RC</span> and
+        <span data-tex="\tau = L/R">τ = L/R</span>. <b>kΩ × µF = ms</b>;
+        mH ÷ kΩ = µs.</li>
+    <li>The general form
+        <span data-tex="x = x_\infty + (x_0 - x_\infty)e^{-t/\tau}">x = x∞ + (x₀ − x∞)e^(−t/τ)</span>,
+        and the three steps that fill it in.</li>
+    <li><b>τ uses R<sub>th</sub></b> — what the element sees, sources killed.</li>
+    <li>63.2, 86.5, 95.0, 98.2, 99.3 per cent. <b>5τ is settled.</b></li>
+    <li>0.69τ to half, 2.3τ to 90%, 4.6τ to 99%.</li>
+    <li>At t = 0⁺ from rest: C is a short, L is open. At t = ∞ on DC: C is open,
+        L is a short.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A capacitor defends its voltage and an inductor defends its current. That
+  is the only new physics in this part, and everything else follows: the
+  continuity conditions that give step 1, the steady-state substitutions that
+  give step 2, and the differential equation whose solution is the curve.</p>
+  <p>The curve itself is not a fact about components. <b>A rate of change
+  proportional to what remains produces an exponential</b>, and that describes
+  a cooling cup of coffee and a decaying isotope as readily as a charging
+  capacitor — which is why the same five percentages turn up everywhere. What
+  Part 2 adds is a second store of energy, so that the two can hand energy back
+  and forth instead of quietly running down. That is when the circuit starts to
+  ring, and when Mathematics Part 7's characteristic roots arrive as hardware.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"transient","title":"Part 1 · Transient response","topics":["tau-find","tau-percent","first-order-value","switch-state"],"count":6}'></div>

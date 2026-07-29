@@ -4,16 +4,20 @@
 
 import { svg, el } from "../lib/dom.js";
 import { register, plate } from "../lib/figure.js";
+import { COVERED_AREAS, MODULES } from "../outline.js";
 
 /* NCEES FE Electrical and Computer CBT specifications, effective July 2020.
-   Question counts are the ranges NCEES publishes, not estimates. */
+   Question counts are the ranges NCEES publishes, not estimates. The array is
+   in spec order, so its index plus one *is* the area number — which is what
+   lets the covered areas be read off outline.js rather than hand-marked here
+   and left to go stale, as they had. */
 const AREAS = [
-  ["Mathematics", 11, 17, true],
+  ["Mathematics", 11, 17],
   ["Probability and Statistics", 4, 6],
   ["Ethics and Professional Practice", 4, 6],
   ["Engineering Economics", 5, 8],
   ["Properties of Electrical Materials", 4, 6],
-  ["Circuit Analysis (DC and AC Steady State)", 11, 17],
+  ["Circuit Analysis (DC and AC)", 11, 17],
   ["Linear Systems", 5, 8],
   ["Signal Processing", 5, 8],
   ["Electronics", 7, 11],
@@ -30,7 +34,7 @@ const AREAS = [
 const V = (n) => `var(--${n})`;
 
 function blueprint() {
-  const W = 660, ROW = 21, PAD_L = 232, PAD_R = 52, TOP = 26;
+  const W = 690, ROW = 21, PAD_L = 252, PAD_R = 52, TOP = 26;
   const H = TOP + AREAS.length * ROW + 14;
   const MAX = 18;
   const span = W - PAD_L - PAD_R;
@@ -64,14 +68,15 @@ function blueprint() {
   }));
   root.appendChild(grid);
 
-  AREAS.forEach(([name, lo, hi, focus], i) => {
+  AREAS.forEach(([name, lo, hi], i) => {
+    const focus = COVERED_AREAS.includes(i + 1);
     const y = TOP + i * ROW;
     const g = svg("g");
 
     g.appendChild(svg("text", {
       class: "lbl", x: PAD_L - 10, y: y + 11, textAnchor: "end",
       fill: focus ? V("ink-strong") : V("muted"),
-      fontWeight: focus ? 500 : 400, fontSize: "11px", text: name,
+      fontWeight: focus ? 600 : 400, fontSize: "11px", text: name,
     }));
 
     // solid to the guaranteed minimum, hollow out to the maximum: the range is
@@ -97,6 +102,14 @@ function blueprint() {
   return root;
 }
 
+/** The question range this guide's finished modules account for. */
+function coveredSpan() {
+  const done = MODULES.filter((m) => m.area);
+  const lo = done.reduce((s, m) => s + Number(m.questions.split("\u2013")[0]), 0);
+  const hi = done.reduce((s, m) => s + Number(m.questions.split("\u2013")[1]), 0);
+  return `${lo} to ${hi}`;
+}
+
 register("blueprint", {
   no: 1,
   build: () => plate({
@@ -110,6 +123,8 @@ register("blueprint", {
       "The ranges deliberately sum to more than 110 — NCEES promises each area lands " +
       "inside its own range, not that the midpoints add up. Note that <b>Mathematics " +
       "and Circuit Analysis are tied for largest</b>, and that mathematics also turns " +
-      "up inside most of the sixteen bars below it.",
+      "up inside most of the sixteen bars below it. " +
+      `<b>The ${COVERED_AREAS.length} highlighted areas are the ones this guide covers so far</b> — ` +
+      `${coveredSpan()} of the 110 questions.`,
   }),
 });

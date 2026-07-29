@@ -34,6 +34,9 @@ import "./state-machines.js"; // 71 72
 import "./timing.js";        // 73 74
 import "./digital-synthesis.js"; // 75
 
+/* --- Linear Systems --- */
+import "./transient.js";     // 76 77
+
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41
