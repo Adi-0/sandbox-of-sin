@@ -10,9 +10,11 @@ This file is the durable memory across turns. Read it first.
 | **Mathematics** | 1 | 11–17 | 9 | 1–25 | complete |
 | **Circuit Analysis (DC and AC Steady State)** | 6 | 11–17 | 7 | 26–36 | complete |
 | **Power Systems** | 10 | 8–12 | 6 | 37–48 | complete |
+| **Electronics** | 9 | 7–11 | 7 | 49–62 | complete |
 
-Three of seventeen areas; 30–46 of the 110 questions. A shared orientation part
-sits ahead of all of them.
+Four of seventeen areas; 37–57 of the 110 questions. A shared orientation part
+sits ahead of all of them. Plate numbers run in the order the modules were
+built, not in module order — Electronics was written after Power Systems.
 
 ---
 
@@ -55,6 +57,11 @@ From the NCEES *FE Electrical and Computer CBT Exam Specifications*
 | 10.B | Transmission and distribution (losses, efficiency, voltage drop, delta and wye) | Power 2, Power 3 |
 | 10.C | Transformers (single- and three-phase connections, reflected impedance) | Power 4 |
 | 10.D | Motors and generators (synchronous, induction, dc) | Power 5 |
+| 9.A | Models, biasing and performance of discrete devices | Electronics 1, 3 |
+| 9.B | Amplifiers (single-stage/common emitter, differential, biasing) | Electronics 3, 4 |
+| 9.C | Operational amplifiers (ideal, nonideal) | Electronics 5 |
+| 9.D | Instrumentation (measurements, data acquisition, transducers) | Electronics 6 |
+| 9.E | Power electronics (rectifiers, inverters, converters) | Electronics 2 |
 
 **Checked against the PDF, not from memory:** area 10 has no per-unit and no
 symmetrical components. Those are PE topics. An earlier draft of this file
@@ -106,6 +113,16 @@ literature uses them for the same reason.
 | Power 2–5 | The whole plant on **208Y/120**: 24 A, **5184 W, 6912 VAR, 8640 VA** = 1728 × (3,4,5) |
 | Power 4 | The **4160 : 208** transformer, a = 20, so a² = 400 and 5 Ω reflects as 2000 Ω |
 | Power 5 | The plant is a **4-pole induction motor** at 1764 rpm, 2% slip, 91.3% efficient |
+| Electronics 1 | 5 V and 1 kΩ: **5.00 mA** ideal, **4.30 mA** constant-drop, 4.31 mA exact |
+| Electronics 5 | Ri 1 kΩ, Rf 4 kΩ: **−4** inverting and **+5** non-inverting, from one pair |
+
+**Electronics is where the numeric cast honestly runs out, and the module says
+so rather than forcing a triangle into a transistor.** What carries continuity
+there instead is structural, and it is stronger than the numbers would have
+been: Circuits 5's RMS integral *is* the rectifier factors, Circuits 4's
+Thévenin is the bias divider and the meter load, Power 4's a²Z is impedance
+matching, and Maths 6's exponential is the diode equation and r_e. Four debts,
+all collected explicitly in the prose.
 
 Every DC cast quantity is an integer, deliberately: a student checking their
 arithmetic should never be unsure whether the mismatch is theirs or rounding's.
@@ -173,6 +190,25 @@ Part 3 before Part 4 is the module's other ordering decision: T&D ends with
 Part 5 then closes the loop by explaining that the plant's 0.6 power factor was
 its own motor's magnetising current all along.
 
+### Module 9 — Electronics (area 9)
+
+| # | Part | Read | Why it comes here |
+|---|---|---|---|
+| 1 | The Diode | 22 min | The cheapest device with *states*; teaches assume–solve–check |
+| 2 | Rectifiers and Power Conversion | 24 min | The diode's real job, and it collects Circuits 5's RMS factors |
+| 3 | Transistors | 28 min | The same method on three states instead of two |
+| 4 | Amplifiers | 26 min | Making the state you chose *stay* chosen, against a β nobody controls |
+| 5 | Operational Amplifiers | 26 min | Enough surplus gain that the state becomes irrelevant |
+| 6 | Instrumentation | 22 min | Thévenin's third job in this module |
+| 7 | Synthesis and mixed bench | 12 min | One method, six devices |
+
+**The whole module is one method with rising device complexity.** Part 1 exists
+mainly so Part 3 is free. Part 4 exists so Part 5's punchline lands — an op-amp
+is what happens when feedback can pin the operating point for nothing.
+
+FETs get equal billing with BJTs deliberately. The PPI benchmark asks more
+JFET/MOSFET questions than BJT ones and most FE resources under-weight them.
+
 ## 5. Beyond a static guide
 
 1. **Generated problems, not a fixed bank.** Each problem type is a
@@ -218,13 +254,14 @@ src/
     figure.js       plate scaffolding, rAF loop, reduced-motion
     rng.js          seeded RNG so a problem set is reproducible
     bench.js        problem engine, MCQ UI, stepped solutions
-  figures/          one module per part, 48 plates
-  problems/         one module per part, 83 generators
+  figures/          one module per part, 62 plates
+  problems/         one module per part, 107 generators
 
 content/
   start/            orientation
   math/             Mathematics, 9 parts
   circuits/         Circuit Analysis, 7 parts
+  electronics/      Electronics, 7 parts
   power/            Power Systems, 6 parts
 ```
 
@@ -278,7 +315,7 @@ them reading as drafting ink rather than highlighter. Do not nudge them by eye.
 
 ## 8. Status
 
-Twenty-three parts, 48 plates, 83 generators, 83 reflex items.
+Thirty parts, 62 plates, 107 generators, 107 reflex items.
 
 | Module | Part | Plates | Generators |
 |---|---|---|---|
@@ -305,17 +342,24 @@ Twenty-three parts, 48 plates, 83 generators, 83 reflex items.
 | Power | 4 Transformers | 44–45 | 4 |
 | Power | 5 Motors and Generators | 46–47 | 4 |
 | Power | 6 Synthesis and mixed bench | 48 | (reuses 12) |
+| Electronics | 1 The Diode | 49–50 | 4 |
+| Electronics | 2 Rectifiers and Power Conversion | 51–52 | 4 |
+| Electronics | 3 Transistors | 53–55 | 4 |
+| Electronics | 4 Amplifiers | 56–57 | 4 |
+| Electronics | 5 Operational Amplifiers | 58–59 | 4 |
+| Electronics | 6 Instrumentation | 60–61 | 4 |
+| Electronics | 7 Synthesis and mixed bench | 62 | (reuses 14) |
 
 ### Verified
 
 Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
 read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 23 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 30 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 48 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 62 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
 - `bundle.mjs` — `dist/the-bench.html` runs from `file://` with no server and
   no network.
@@ -338,14 +382,18 @@ read the part list from `outline.js`, so they cannot drift as modules are added:
 - Plate 47's flow band barely narrows at a healthy motor's 2% slip, because
   the losses genuinely are small. The loss *arrows* are scaled instead;
   exaggerating the band would have been a lie about the machine.
+- Plate 53's BJT output family uses a smoothed knee so the curve is drawable;
+  it is a teaching curve, not a device model.
+- Electronics stops where area 9 stops. Semiconductor physics — doping,
+  carrier concentrations — appears in the PPI benchmark but belongs to area 5
+  (Properties of Electrical Materials) and is deliberately left there.
 
 ## 9. Next turns
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- **Electronics** (7–11 q) — Circuits 4's Thévenin as a small-signal model,
-  and Power 4's reflected impedance as impedance matching.
-- **Digital Systems** (7–11 q) — Maths 8's logic as gates and K-maps.
+- **Digital Systems** (7–11 q) — Maths 8's logic as gates and K-maps, and
+  Electronics 3's MOSFET as the thing they are built from.
 - **Linear Systems** (5–8 q) + **Control Systems** (6–9 q) — Maths 7 and
   Circuits 6 as transfer functions; the transient half of the RL/RC story.
 - **Signal Processing** (5–8 q) — Maths 6's integral as the Fourier transform.

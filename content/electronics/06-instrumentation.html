@@ -1,0 +1,163 @@
+<p class="eyebrow">
+  <span>Electronics · Part 6</span>
+  <span class="spec">NCEES 9.D</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Instrumentation</h1>
+
+<p class="lede">Two problems that every measurement has: reading a thing without
+changing it, and turning what the world does into a number. Neither is difficult,
+and both are routinely got wrong.</p>
+
+<h2>6.1 Every measurement is a load</h2>
+
+<p>A voltmeter is a resistor. Connecting it across a node puts that resistor in
+parallel with whatever was already there — so the act of measuring changes the
+circuit being measured.</p>
+
+<p>Whether that matters is not a question about the meter alone. It is a
+<b>ratio</b>, and the thing it must be compared against is the source's Thévenin
+resistance from Circuit Analysis Part 4:</p>
+
+<div data-figure="meterLoading"></div>
+
+<f-plate no="9.13" title="Instrument loading" stamp="know">
+  <f-row tex="V_{read} = V_{true}\cdot\frac{R_m}{R_m + R_{TH}}" name="voltmeter loading"
+         gloss="A divider between the source's own resistance and the meter's. <b>The error is small only when R_m ≫ R_TH.</b>"></f-row>
+  <f-row tex="\text{error} \approx -\frac{R_{TH}}{R_m} \times 100\%" name="the quick estimate"
+         gloss="For R_m ≫ R_TH. A 10 MΩ meter on a 50 kΩ source is 0.5% low — usually fine; the same meter on a 5 MΩ source is 50% low."></f-row>
+  <f-row tex="V_{read} = \tfrac{2}{3}V_{true} \quad \text{when } R_m = R_{TH}"
+         name="the reference point"
+         gloss="Worth memorising as a feel for the scale. Equal resistances means the reading is two-thirds, not one-half."></f-row>
+  <f-row tex="\text{Ammeter: } R_m \ll R_{circuit}" name="the other instrument"
+         gloss="An ammeter goes <b>in series</b>, so its requirement is the mirror image — it must be as close to a short as possible, and connecting one across a source is a short circuit."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · "10 MΩ is high impedance"</span>
+  <p style="margin-bottom:0">Ten megohms is a large number and it is not the
+  answer to anything by itself. <b>Loading error is a ratio.</b> On a 50 kΩ
+  divider a 10 MΩ meter is 200 times stiffer and reads 0.5% low — excellent. On a
+  pH electrode with a source resistance of 100 MΩ, that same meter reads
+  <em>9% of the true value</em>. The instrument did not change; the source did.</p>
+</div>
+
+<h2>6.2 Turning the world into volts</h2>
+
+<p>A <span class="term">transducer</span> converts a physical quantity into an
+electrical one. Most of the ones this exam names change <em>resistance</em>, which
+means they need a circuit to turn that into a voltage.</p>
+
+<ul>
+  <li><b>Strain gauge</b> — a foil grid whose resistance rises as it stretches.
+  Fractional changes are tiny, around 0.1%.</li>
+  <li><b>RTD</b> — a platinum resistance that rises with temperature, very
+  linearly.</li>
+  <li><b>Thermistor</b> — a semiconductor whose resistance falls sharply with
+  temperature. Sensitive, and markedly non-linear.</li>
+  <li><b>Thermocouple</b> — two dissimilar metals producing a voltage directly,
+  tens of microvolts per degree.</li>
+</ul>
+
+<f-plate no="9.14" title="The Wheatstone bridge" stamp="handbook"
+  caption="<b>The bridge exists to subtract.</b> A strain gauge changing by 0.1%
+  on a 5 V supply gives a 5 mV signal buried in 2.5 V of offset — a difference
+  amplifier cannot rescue that. The bridge removes the 2.5 V before amplification.">
+  <f-row tex="V_{out} = V_S\left(\frac{R_2}{R_1+R_2} - \frac{R_4}{R_3+R_4}\right)"
+         name="bridge output"
+         gloss="Two dividers, subtracted. <b>Zero when the ratios match</b>, which is the balance condition."></f-row>
+  <f-row tex="\frac{R_1}{R_2} = \frac{R_3}{R_4}" name="balance"
+         gloss="Nothing to do with the supply voltage — which is why a bridge measurement is insensitive to supply drift."></f-row>
+  <f-row tex="V_{out} \approx \frac{V_S}{4}\cdot\frac{\Delta R}{R}" name="small deviation"
+         gloss="For one active arm. <b>Output is proportional to the <em>fractional</em> change</b>, and the quarter is where the four arms share it out."></f-row>
+  <f-row tex="GF = \frac{\Delta R/R}{\varepsilon}" name="gauge factor"
+         gloss="Strain gauges are specified by this, typically about 2. Multiply strain by GF to get the fractional resistance change."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Why a bridge and not just an amplifier</span>
+  <p style="margin-bottom:0">A strain gauge at 350 Ω changing by 0.1% becomes
+  350.35 Ω. Put it in a plain divider and the output moves from 2.500 V to
+  2.501 V — <b>a 1 mV signal sitting on 2.5 V of offset</b>. Amplify that by 1000
+  and the offset saturates the op-amp long before the signal is visible. The
+  bridge subtracts the 2.5 V away <em>first</em>, leaving only the millivolt to be
+  amplified. <b>Subtract, then amplify — never the other way round.</b></p>
+</div>
+
+<h2>6.3 Turning volts into numbers</h2>
+
+<div data-figure="quantisation"></div>
+
+<f-plate no="9.15" title="Data acquisition" stamp="know">
+  <f-row tex="\text{LSB} = \frac{\text{FSR}}{2^n}" name="resolution"
+         gloss="Full-scale range over the number of levels. A 12-bit converter on 10 V has 4096 levels of 2.44 mV each."></f-row>
+  <f-row tex="\text{SNR}_{max} = 6.02n + 1.76\text{ dB}" name="signal-to-noise"
+         gloss="<b>About 6 dB per bit</b>, because each bit halves the error and 20 log 2 ≈ 6. The 1.76 is the difference between a peak and an RMS."></f-row>
+  <f-row tex="f_s > 2f_{max}" name="Nyquist"
+         gloss="Sample at more than twice the highest frequency present, or components above f_s/2 fold down and appear as <b>false low-frequency signals</b> that cannot be removed afterwards."></f-row>
+  <f-row tex="\text{quantisation error} = \pm\tfrac{1}{2}\text{LSB}" name="the irreducible error"
+         gloss="Rounding to the nearest level. It is a floor, not a fault, and only more bits lowers it."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>specifying a data acquisition channel</em></h4>
+  <div class="worked-body">
+    <p>A strain gauge bridge outputs ±20 mV full scale. It must be digitised to a
+    resolution of 1 microstrain, where the gauge factor is 2 and full scale is
+    2000 microstrain. What amplifier gain and how many bits?</p>
+    <ol class="steps">
+      <li>The converter's input range is usually ±5 V or 0–10 V. Take ±5 V, so the
+        amplifier must lift 20 mV to 5 V:
+        <span data-tex="A = \frac{5}{0.020} = 250" data-display>A = 250</span></li>
+      <li>Resolution of 1 in 2000 needs at least 2000 distinguishable levels:
+        <span data-tex="2^n \ge 2000 \ \Longrightarrow\ n \ge 11" data-display>n ≥ 11 bits</span></li>
+      <li>Nobody ships an 11-bit part, so specify <b>12 bits</b>, giving 4096
+        levels and about half a microstrain per step.</li>
+      <li>Check the noise floor: a 12-bit converter has
+        <span data-tex="6.02(12) + 1.76 = 74\text{ dB}">74 dB</span> of SNR.
+        The amplifier must be quieter than that, or the extra bits are measuring
+        its noise rather than the strain.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">That last step is the
+    one that separates a specification from a wish. <b>Resolution you cannot
+    distinguish from noise is not resolution</b> — it is just more digits.</p>
+  </div>
+</div>
+
+<h2>6.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Voltmeter needs <span data-tex="R_m \gg R_{TH}">Rm ≫ Rth</span>; ammeter
+        needs <span data-tex="R_m \ll R">Rm ≪ R</span>. Loading error ≈
+        <span data-tex="R_{TH}/R_m">Rth/Rm</span>.</li>
+    <li>Bridge balance: <span data-tex="R_1/R_2 = R_3/R_4">R1/R2 = R3/R4</span>.
+        One active arm gives
+        <span data-tex="V_{out} \approx (V_S/4)(\Delta R/R)">Vout ≈ (VS/4)(ΔR/R)</span>.</li>
+    <li><span data-tex="\text{LSB} = \text{FSR}/2^n">LSB = FSR/2ⁿ</span>.</li>
+    <li><span data-tex="\text{SNR} = 6.02n + 1.76">SNR = 6.02n + 1.76</span> dB —
+        <b>about 6 dB per bit</b>.</li>
+    <li><span data-tex="f_s > 2f_{max}">fs &gt; 2 fmax</span>, or aliasing is
+        permanent.</li>
+    <li><b>Subtract the offset before amplifying, not after.</b></li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Instruments are circuit elements. A voltmeter loads what it reads and an
+  ammeter obstructs what it passes, and in both cases the question is a ratio
+  against the Thévenin resistance of the thing being measured — not the raw
+  specification of the instrument.</p>
+  <p>Getting a physical quantity into a computer means a transducer, a bridge to
+  remove the offset, an amplifier to fill the converter's range and a converter
+  with enough bits to resolve what matters. Each stage has one number, and the
+  chain is only as good as the noisiest link in it.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"instrumentation","title":"Part 6 · Measurement and acquisition","topics":["meter-load","bridge-out","adc-res","adc-snr"],"count":6}'></div>
+
+<div data-reflex='{"only":["opamps","instrumentation"],"count":6,"title":"Handbook Reflex · Parts 5–6"}'></div>

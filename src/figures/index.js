@@ -22,6 +22,8 @@ import "./rectifiers.js";    // 51 52
 import "./transistors.js";   // 53 54 55
 import "./amplifiers.js";    // 56 57
 import "./opamps.js";        // 58 59
+import "./instrumentation.js"; // 60 61
+import "./electronics-synthesis.js"; // 62
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

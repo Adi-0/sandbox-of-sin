@@ -1,0 +1,147 @@
+<p class="eyebrow">
+  <span>Electronics · Part 7</span>
+  <span class="spec">NCEES 9.A–9.E</span>
+  <span>12 minute read</span>
+</p>
+
+<h1>Synthesis and the Mixed Bench</h1>
+
+<p class="lede">Five subtopics, one procedure. What looked like a catalogue of
+components was the same question asked six times, of progressively more capable
+devices.</p>
+
+<h2>7.1 The module was one method</h2>
+
+<div data-figure="electronicsMap"></div>
+
+<p>A diode was chosen to open this module for one reason: it is the cheapest
+device that has <em>states</em>. Once a component's behaviour depends on a
+condition you have not evaluated yet, Ohm's law alone stops working, and the only
+way through is to assume, solve and check.</p>
+
+<ul>
+  <li>Part 1 taught it on two states.</li>
+  <li>Part 3 reused it verbatim on three.</li>
+  <li>Part 4 spent an entire part making sure the state you chose <em>stays</em>
+  chosen, against a β nobody controls.</li>
+  <li>Part 5 is what happens when a device has so much surplus gain that feedback
+  pins the state for free — and the assumption disappears entirely.</li>
+</ul>
+
+<h2>7.2 What carried over from earlier modules</h2>
+
+<p>Very little in Electronics is new machinery. Four things were borrowed
+wholesale:</p>
+
+<div class="note payoff">
+  <span class="note-tag">Four debts collected</span>
+  <ul style="margin:0.4rem 0 0">
+    <li><b>Circuit Analysis Part 5's RMS integral</b> → Part 2's rectifier
+    factors. Those were derived there, from the definition, and this module only
+    named the circuits that produce the shapes.</li>
+    <li><b>Circuit Analysis Part 4's Thévenin</b> → the bias divider (Part 4), the
+    virtual ground's input impedance (Part 5), and meter loading (Part 6). Three
+    separate uses in one module, and the fourth module it has served.</li>
+    <li><b>Power Systems Part 4's reflected impedance</b> → impedance matching and
+    the buffer's whole reason for existing.</li>
+    <li><b>Mathematics Part 6's exponential and its derivative</b> → the diode
+    equation, and <span class="math" data-tex="r_e = 26\text{ mV}/I_E">re = 26 mV/IE</span>,
+    which is nothing but that exponential's slope.</li>
+  </ul>
+</div>
+
+<h2>7.3 How few relationships were doing the work</h2>
+
+<f-plate no="9.16" title="Electronics, complete" stamp="know"
+  caption="Every problem in this module's benches is one or two of these composed.
+  <b>The op-amp rules are worth more marks per minute than anything else in
+  area 9</b>, and they are the shortest line in the list.">
+  <f-row tex="V_D \approx 0.7\text{ V}, \qquad I = I_S\!\left(e^{V_D/nV_T}-1\right), \qquad V_T \approx 26\text{ mV}"
+         name="the diode"
+         gloss="Constant drop for circuits, the exponential only when the question is about the device itself."></f-row>
+  <f-row tex="V_{avg} = \frac{2V_m}{\pi}\ \text{(full)}, \ \frac{V_m}{\pi}\ \text{(half)}, \qquad V_r = \frac{I_L}{f_rC}"
+         name="rectifiers"
+         gloss="f_r = 2f for full-wave. PIV is V_m, except 2V_m for a centre-tap."></f-row>
+  <f-row tex="I_C = \beta I_B, \quad I_E = (\beta+1)I_B, \quad V_{CE} = V_{CC} - I_C(R_C+R_E)"
+         name="the BJT"
+         gloss="Active region only — and check V_CE against 0.2 V before believing it."></f-row>
+  <f-row tex="I_D = I_{DSS}\!\left(1-\tfrac{V_{GS}}{V_P}\right)^{\!2} = k(V_{GS}-V_t)^2, \qquad g_m = 2\sqrt{kI_D}"
+         name="the FET"
+         gloss="One square law, two sets of names. Transconductance is its derivative."></f-row>
+  <f-row tex="r_e = \frac{26\text{ mV}}{I_E}, \qquad A_v = -\frac{R_C}{r_e + R_E'}"
+         name="the amplifier"
+         gloss="Only the <em>unbypassed</em> emitter resistance counts. If R_E′ ≫ r_e the gain is just two resistors."></f-row>
+  <f-row tex="A = -\frac{R_f}{R_i} \ \text{or}\ 1+\frac{R_f}{R_i}, \qquad \text{GBW} = A\times\text{BW}"
+         name="the op-amp"
+         gloss="From two rules: no input current, inputs equal. <b>Then check the output against the rails.</b>"></f-row>
+  <f-row tex="\text{LSB} = \frac{\text{FSR}}{2^n}, \qquad \text{SNR} = 6.02n + 1.76\text{ dB}, \qquad f_s > 2f_{max}"
+         name="acquisition"
+         gloss="Six decibels a bit. And a voltmeter needs R_m ≫ R_TH, which is a ratio, not a number."></f-row>
+</f-plate>
+
+<h2>7.4 The five mistakes that cost the most</h2>
+
+<div class="note trap">
+  <span class="note-tag">Worth one last look before the bench</span>
+  <ol style="margin:0.4rem 0 0;padding-left:1.2rem">
+    <li><b>Not checking the rails.</b> An op-amp output of 40 V from a ±15 V
+    supply is 14 V and clipped. This decides more marks than any other single
+    check in area 9.</li>
+    <li><b>Not checking V<sub>CE</sub>.</b> A negative answer means saturated, not
+    a slip in the arithmetic.</li>
+    <li><b>The non-inverting +1.</b> Same two resistors, −4 one way and +5 the
+    other.</li>
+    <li><b>f<sub>r</sub> = 2f</b> for full-wave ripple, and PIV =
+    <span class="math" data-tex="2V_m">2Vm</span> only for the centre-tap.</li>
+    <li><b>Adding the threshold back.</b> The FET square law is written in
+    overdrive, so <span class="math" data-tex="V_{GS} = \sqrt{I_D/k} + V_t">VGS = √(ID/k) + Vt</span>.</li>
+  </ol>
+</div>
+
+<h2>7.5 Reading a stem quickly</h2>
+
+<p>Almost every Electronics question announces its method in the first line. The
+classification worth practising:</p>
+
+<ol class="steps">
+  <li><b>Is there a triangle in the figure?</b> Then it is two rules and four
+  lines. Compute, then check the rails.</li>
+  <li><b>Does the stem give β and a base resistor?</b> Assume active, find
+  I<sub>B</sub>, multiply, and check V<sub>CE</sub>.</li>
+  <li><b>Does it name a saturation region and give I<sub>DSS</sub> or k?</b>
+  That is the FET square law, and the phrase is a hint that it applies.</li>
+  <li><b>Are there diodes and a sinusoid?</b> Convert to peak, count the drops,
+  then use the average or RMS factor for the shape.</li>
+  <li><b>Is a meter, a bridge or a converter mentioned?</b> Instrumentation —
+  and the answer is a ratio or a power of two.</li>
+</ol>
+
+<div class="note honest">
+  <span class="note-tag">Where the marks actually are</span>
+  <p style="margin-bottom:0">Area 9 is 7 to 11 questions, and they are not spread
+  evenly. <b>Op-amps and diodes together are usually about half of them</b>, and
+  both are the fastest topics in the module — an op-amp question is often under
+  a minute. Transistor biasing is slower and less frequent. If time is short on
+  exam day, that ordering is worth knowing before you open the section.</p>
+</div>
+
+<h2>7.6 Under exam conditions</h2>
+
+<p>Eight questions across all five subtopics, at the real pace of 2 minutes
+50 seconds each.</p>
+
+<div data-bench='{"id":"electronics-mixed","title":"Electronics · mixed set, exam pace","topics":["diode-model","zener-design","rect-output","rect-piv","ripple-calc","bjt-region","fet-square","fet-gm","ce-gain","opamp-gain","opamp-rail","opamp-gbw","meter-load","adc-res"],"count":8}'></div>
+
+<div data-reflex='{"only":["diode","rectifiers","transistors","amplifiers","opamps","instrumentation"],"count":10,"title":"Handbook Reflex · all of Electronics"}'></div>
+
+<div class="keyidea">
+  <p>Electronics is one procedure applied to a sequence of devices that each have
+  more states than the last — until the op-amp, where enough surplus gain makes
+  the states irrelevant and two rules replace the whole method. Recognising which
+  stage of that sequence a question belongs to is most of the work.</p>
+  <p>Very little of the machinery is new. Thévenin, the RMS integral, the
+  exponential and reflected impedance all arrived from earlier modules and do most
+  of the lifting here. What Electronics adds is the habit of <b>checking the
+  answer against a physical limit</b> — a rail, a saturation voltage, a supply —
+  before believing the arithmetic.</p>
+</div>

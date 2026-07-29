@@ -1120,3 +1120,225 @@ defineReflex([
     because: "Gain and bandwidth are one fixed budget; spending on one takes from the other.",
   },
 ]);
+
+/* ==========================================================================
+   Part 6 — instrumentation
+   ========================================================================== */
+
+defineProblem("meter-load", {
+  topic: "Instrument loading",
+  lookup: "Electrical → Electronics → Instrumentation (measurement)",
+  make(rng) {
+    const Vs = rng.pick([10, 12, 20]);
+    const R = rng.pick([100, 220, 470, 1000]) * 1000;      // both divider arms
+    const Rm = rng.pick([0.1, 1, 10]) * 1e6;
+    const Rth = R / 2;
+    const vTrue = Vs / 2;
+    const par = (R * Rm) / (R + Rm);
+    const vRead = (Vs * par) / (R + par);
+
+    return {
+      stem: `A ${Vs} V source feeds two equal ${num(R / 1000, 0)} kΩ resistors in series. ` +
+            `A voltmeter with ${Rm >= 1e6 ? `${num(Rm / 1e6, 0)} MΩ` : `${num(Rm / 1000, 0)} kΩ`} input resistance is placed across the lower one. What does it read, most nearly?`,
+      choices: [
+        { text: `${fixed(vRead, 3)} V`, why: "" },
+        { text: `${fixed(vTrue, 3)} V`, why: `That is the <b>true</b> midpoint voltage, which is what would be there with no meter attached. The meter is a ${Rm >= 1e6 ? `${num(Rm / 1e6, 0)} MΩ` : `${num(Rm / 1000, 0)} kΩ`} resistor in parallel with the lower arm, and it pulls the node down.` },
+        { text: `${fixed(Vs * Rm / (Rm + R), 3)} V`, why: "That treats the meter as being in series with one arm. It goes in <b>parallel</b> with the element being measured." },
+        { text: `${fixed(vRead * 2, 3)} V`, why: "Twice the correct reading — the divider was left out." },
+      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.002),
+      answer: 0,
+      steps: [
+        `The source seen from the measurement point has a Thévenin resistance of the two arms in parallel:`,
+        `<span class="math display" data-tex="R_{TH} = ${num(R / 1000, 0)}\\parallel${num(R / 1000, 0)} = ${num(Rth / 1000, 0)}\\text{ k}\\Omega"></span>`,
+        `The meter sits in parallel with the lower arm, so recompute the divider:`,
+        `<span class="math display" data-tex="R_2\\parallel R_m = ${fixed(par / 1000, 2)}\\text{ k}\\Omega, \\qquad V = ${Vs}\\times\\frac{${fixed(par / 1000, 2)}}{${num(R / 1000, 0)} + ${fixed(par / 1000, 2)}} = ${fixed(vRead, 3)}\\text{ V}"></span>`,
+        `<b>${fixed(vRead, 3)} V</b> — ${fixed(Math.abs((vRead - vTrue) / vTrue) * 100, 2)}% below the truth. The quick estimate ${T("R_{TH}/R_m")} gives ${fixed(Rth / Rm * 100, 2)}%, which agrees. <b>Loading error is a ratio</b>, so what matters is the meter against the source, not the meter alone.`,
+      ],
+    };
+  },
+});
+
+defineProblem("bridge-out", {
+  topic: "The Wheatstone bridge",
+  lookup: "Electrical → Electronics → Instrumentation (bridges, transducers)",
+  make(rng) {
+    const form = rng.pick(["balance", "output"]);
+
+    if (form === "balance") {
+      const R1 = rng.pick([100, 220, 470, 1000]);
+      const R2 = rng.pick([100, 330, 680]);
+      const R3 = rng.pick([150, 300, 600]);
+      const R4 = (R2 * R3) / R1;
+      return {
+        stem: `A Wheatstone bridge has ${R1} Ω and ${R2} Ω in one arm pair and ${R3} Ω in the other, ` +
+              `with the fourth resistor adjustable. What value balances the bridge?`,
+        choices: [
+          { text: `${fixed(R4, 1)} Ω`, why: "" },
+          { text: `${fixed((R1 * R3) / R2, 1)} Ω`, why: "The ratio is inverted. Balance means R<sub>1</sub>/R<sub>2</sub> = R<sub>3</sub>/R<sub>4</sub>, so R<sub>4</sub> = R<sub>2</sub>R<sub>3</sub>/R<sub>1</sub>." },
+          { text: `${fixed(R1 + R2 - R3, 1)} Ω`, why: "Balance is a condition on <b>ratios</b>, not on sums." },
+          { text: `${R3} Ω`, why: "That would balance the bridge only if the first pair were equal." },
+        ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.5),
+        answer: 0,
+        steps: [
+          `A bridge is two dividers compared against each other, and it reads zero when their ratios match:`,
+          `<span class="math display" data-tex="\\frac{R_1}{R_2} = \\frac{R_3}{R_4} \\quad\\Longrightarrow\\quad R_4 = \\frac{R_2R_3}{R_1}"></span>`,
+          `<span class="math display" data-tex="R_4 = \\frac{(${R2})(${R3})}{${R1}} = ${fixed(R4, 1)}\\ \\Omega"></span>`,
+          `<b>${fixed(R4, 1)} Ω.</b> Note the supply voltage never appeared — <b>balance is independent of it</b>, which is exactly why bridge measurements tolerate a drifting supply.`,
+        ],
+      };
+    }
+
+    const Vs = rng.pick([5, 10, 12]);
+    const R = rng.pick([120, 350, 1000]);
+    const strain = rng.pick([200, 500, 1000, 2000]) * 1e-6;
+    const GF = 2;
+    const dRoR = GF * strain;
+    const Vout = (Vs / 4) * dRoR;
+
+    return {
+      stem: `A ${R} Ω strain gauge with a gauge factor of ${GF} sits in one arm of a Wheatstone bridge excited at ${Vs} V. ` +
+            `At ${num(strain * 1e6, 0)} microstrain, what is the bridge output, most nearly?`,
+      choices: [
+        { text: `${fixed(Vout * 1000, 3)} mV`, why: "" },
+        { text: `${fixed(Vout * 4000, 2)} mV`, why: "The factor of four was dropped. With only <b>one</b> active arm the fractional change is shared out across the bridge, giving V<sub>S</sub>/4 not V<sub>S</sub>." },
+        { text: `${fixed((Vs / 4) * strain * 1000, 4)} mV`, why: "The gauge factor was not applied. Strain has to be converted to a <b>fractional resistance change</b> first: ΔR/R = GF × ε." },
+        { text: `${fixed(Vs / 2 * 1000, 0)} mV`, why: "That is the bridge's half-supply offset, which is exactly what the bridge exists to <b>remove</b>." },
+      ],
+      answer: 0,
+      steps: [
+        `The gauge factor converts strain into a fractional resistance change:`,
+        `<span class="math display" data-tex="\\frac{\\Delta R}{R} = GF\\times\\varepsilon = (${GF})(${num(strain * 1e6, 0)}\\times10^{-6}) = ${fixed(dRoR * 1e6, 0)}\\times10^{-6}"></span>`,
+        `One active arm gives a quarter of the supply times that fraction:`,
+        `<span class="math display" data-tex="V_{out} = \\frac{V_S}{4}\\cdot\\frac{\\Delta R}{R} = \\frac{${Vs}}{4}(${fixed(dRoR, 6)}) = ${fixed(Vout * 1000, 3)}\\text{ mV}"></span>`,
+        `<b>${fixed(Vout * 1000, 3)} mV.</b> Tiny — and it arrives with <em>no</em> offset on it, which is the whole point. In a plain divider this signal would be riding on ${fixed(Vs / 2, 1)} V and no amplifier could reach it.`,
+      ],
+    };
+  },
+});
+
+defineProblem("adc-res", {
+  topic: "Converter resolution",
+  lookup: "Electrical → Electronics → Data acquisition",
+  make(rng) {
+    const bits = rng.pick([8, 10, 12, 14, 16]);
+    const fsr = rng.pick([1, 2.5, 5, 10]);
+    const lsb = fsr / 2 ** bits;
+    const ask = rng.pick(["lsb", "bits"]);
+
+    if (ask === "bits") {
+      const need = rng.pick([1000, 2000, 4000, 10000]);
+      const n = Math.ceil(Math.log2(need));
+      return {
+        stem: `A measurement must be resolved into at least ${num(need, 0)} distinguishable steps. ` +
+              `What is the smallest standard converter resolution that will do?`,
+        choices: [
+          { text: `${n} bits`, why: "" },
+          { text: `${n - 1} bits`, why: `That gives only ${num(2 ** (n - 1), 0)} levels, which is fewer than the ${num(need, 0)} required.` },
+          { text: `${need} bits`, why: "That confuses levels with bits. n bits gives 2ⁿ levels, so the relationship is logarithmic — 16 bits already gives 65 536." },
+          { text: `${Math.round(need / 100)} bits`, why: "No such relationship exists between the two." },
+        ],
+        answer: 0,
+        steps: [
+          `Each bit doubles the number of levels, so solve ${T("2^n \\ge N")}:`,
+          `<span class="math display" data-tex="n \\ge \\log_2(${num(need, 0)}) = ${fixed(Math.log2(need), 2)}"></span>`,
+          `Round <b>up</b> — a fractional bit does not exist:`,
+          `<span class="math display" data-tex="n = ${n} \\text{ bits}, \\quad 2^{${n}} = ${num(2 ** n, 0)}\\text{ levels}"></span>`,
+          `<b>${n} bits.</b> In practice converters come in 8, 10, 12, 14, 16, so the next available size up is what actually gets specified.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A ${bits}-bit analogue-to-digital converter has a full-scale range of ${fsr} V. ` +
+            `What is the size of one least-significant bit, most nearly?`,
+      choices: [
+        { text: lsb >= 0.001 ? `${fixed(lsb * 1000, 3)} mV` : `${fixed(lsb * 1e6, 1)} µV`, why: "" },
+        { text: `${fixed(fsr / (2 ** bits - 1) * 1000, 3)} mV`, why: "Dividing by 2ⁿ − 1 rather than 2ⁿ. Both conventions exist, but the difference is under 0.5% and the exam wants FSR/2ⁿ." },
+        { text: `${fixed(fsr / bits * 1000, 1)} mV`, why: "Divided by the number of <b>bits</b> rather than the number of <b>levels</b>. Each bit doubles the levels — the relation is exponential." },
+        { text: `${fixed(fsr / (2 * bits) * 1000, 1)} mV`, why: "Neither the exponent nor the base is right." },
+      ],
+      answer: 0,
+      steps: [
+        `The converter divides its full-scale range into 2ⁿ equal steps:`,
+        `<span class="math display" data-tex="\\text{LSB} = \\frac{\\text{FSR}}{2^n} = \\frac{${fsr}}{2^{${bits}}} = \\frac{${fsr}}{${num(2 ** bits, 0)}}"></span>`,
+        `<span class="math display" data-tex="= ${lsb >= 0.001 ? `${fixed(lsb * 1000, 3)}\\text{ mV}` : `${fixed(lsb * 1e6, 1)}\\ \\mu\\text{V}`}"></span>`,
+        `<b>${lsb >= 0.001 ? `${fixed(lsb * 1000, 3)} mV` : `${fixed(lsb * 1e6, 1)} µV`}.</b> The quantisation error is half of this, ±½ LSB, and it is a floor rather than a fault — only more bits lowers it.`,
+      ],
+    };
+  },
+});
+
+defineProblem("adc-snr", {
+  topic: "Signal-to-noise and sampling",
+  lookup: "Electrical → Electronics → Data acquisition (SNR, Nyquist)",
+  make(rng) {
+    const form = rng.pick(["snr", "nyquist"]);
+
+    if (form === "nyquist") {
+      const fmax = rng.pick([1, 4, 20, 50]) * 1000;
+      const fs = 2 * fmax;
+      return {
+        stem: `A signal contains frequency components up to ${num(fmax / 1000, 0)} kHz. ` +
+              `What is the minimum sampling rate that avoids aliasing?`,
+        choices: [
+          { text: `just above ${num(fs / 1000, 0)} kHz`, why: "" },
+          { text: `${num(fmax / 1000, 0)} kHz`, why: "Sampling at the highest frequency present is <b>half</b> what is needed. Two samples per cycle is the minimum, and one is not enough to establish even a sine wave." },
+          { text: `${num(fmax / 2000, 1)} kHz`, why: "Half the signal's own bandwidth — this would alias severely." },
+          { text: `${num(fs * 5 / 1000, 0)} kHz`, why: "Comfortably safe and far more than the <b>minimum</b> being asked for. In practice engineers do oversample like this, but Nyquist's limit is 2f<sub>max</sub>." },
+        ],
+        answer: 0,
+        steps: [
+          `The Nyquist criterion requires strictly more than two samples per cycle of the highest component:`,
+          `<span class="math display" data-tex="f_s > 2f_{max} = 2(${num(fmax, 0)}) = ${num(fs, 0)}\\text{ Hz}"></span>`,
+          `<b>Just above ${num(fs / 1000, 0)} kHz.</b> Below it, components above ${T("f_s/2")} <b>fold down</b> and appear as false low-frequency signals indistinguishable from real ones — which is why an anti-aliasing filter goes <em>before</em> the converter, never after. Aliasing cannot be undone in software.`,
+        ],
+      };
+    }
+
+    const bits = rng.pick([8, 10, 12, 14, 16]);
+    const snr = 6.02 * bits + 1.76;
+    return {
+      stem: `What is the best possible signal-to-noise ratio of an ideal ${bits}-bit converter, most nearly?`,
+      choices: [
+        { text: `${fixed(snr, 1)} dB`, why: "" },
+        { text: `${fixed(6.02 * bits, 1)} dB`, why: "The 1.76 dB was dropped. It comes from the difference between a full-scale sine's RMS value and its peak." },
+        { text: `${fixed(20 * Math.log10(2 ** bits), 1)} dB`, why: `That is 20 log(2ⁿ), which is the same as 6.02n — again missing the 1.76.` },
+        { text: `${fixed(bits * 3, 1)} dB`, why: "About 3 dB per bit would be right if each bit gained a factor of √2. Each bit gains a factor of <b>2</b>, and 20 log 2 ≈ 6." },
+      ].filter((c, i, all) => i === 0 || Math.abs(parseFloat(c.text) - parseFloat(all[0].text)) > 0.2),
+      answer: 0,
+      steps: [
+        `Each extra bit halves the quantisation step, and halving an error improves the ratio by ${T("20\\log 2 = 6.02")} dB:`,
+        `<span class="math display" data-tex="\\text{SNR} = 6.02n + 1.76\\text{ dB}"></span>`,
+        `<span class="math display" data-tex="= 6.02(${bits}) + 1.76 = ${fixed(snr, 1)}\\text{ dB}"></span>`,
+        `<b>${fixed(snr, 1)} dB.</b> This is a <em>ceiling</em>. Any noise in the amplifier ahead of the converter counts against it, so specifying more bits than the analogue front end can justify buys digits rather than information.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "instrumentation",
+    stem: "A 10 MΩ meter reads a divider made of two 100 kΩ resistors. Error?",
+    tool: "error ≈ R_TH / R_m",
+    because: "Loading is a ratio against the source's Thévenin resistance, not a property of the meter alone.",
+  },
+  {
+    part: "instrumentation",
+    stem: "A strain gauge with GF = 2 at 1000 microstrain, bridge excited at 10 V.",
+    tool: "V_out = (V_S/4)(GF × ε)",
+    because: "One active arm shares the fractional change out across four, and the gauge factor converts strain to ΔR/R first.",
+  },
+  {
+    part: "instrumentation",
+    stem: "A 12-bit converter spans 0 to 10 V. What is one step worth?",
+    tool: "LSB = FSR / 2ⁿ",
+    because: "n bits gives 2ⁿ levels, so resolution improves exponentially with bits, not linearly.",
+  },
+  {
+    part: "instrumentation",
+    stem: "A sensor signal reaches 20 kHz. How fast must you sample?",
+    tool: "f_s > 2 f_max",
+    because: "Below Nyquist, high components fold down into the band and no later processing can remove them.",
+  },
+]);

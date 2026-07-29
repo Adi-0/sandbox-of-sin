@@ -3,17 +3,17 @@
 An interactive educator for the NCEES *Fundamentals of Engineering (Electrical
 and Computer)* exam, built one knowledge area at a time.
 
-**Covered so far — the three largest blocks on the exam, 30 to 46 of the 110
-questions:**
+**Covered so far — 37 to 57 of the 110 questions:**
 
 | | Module | NCEES | Questions | Parts | Plates |
 |---|---|---|---|---|---|
 | 1 | **Mathematics** | area 1 | 11–17 | 9 | 1–25 |
 | 6 | **Circuit Analysis (DC and AC Steady State)** | area 6 | 11–17 | 7 | 26–36 |
+| 9 | **Electronics** | area 9 | 7–11 | 7 | 49–62 |
 | 10 | **Power Systems** | area 10 | 8–12 | 6 | 37–48 |
 
-Forty-eight live plates, eighty-three problem generators, and one right triangle
-followed from the first plate to the last.
+Sixty-two live plates, one hundred and seven problem generators, and one right
+triangle followed from the first plate to the last.
 
 ## Run it
 
@@ -40,7 +40,7 @@ tablet and read it on a train.
 
 The FE exam is **closed book with an electronic reference** — the NCEES FE
 Reference Handbook, searchable, open in a second window. Almost every formula
-in these twenty-three parts is in it.
+in these thirty parts is in it.
 
 So the usual approach — flashcard the formulas until they stick — spends your
 most expensive resource on the one thing the exam gives away. What the handbook
@@ -77,6 +77,14 @@ literature uses these numbers for the same reason.
 | Circuits 6 | the **power triangle** | 1200 W, 1600 VAR, 2000 VA, pf 0.6 lagging |
 | Power 1 | one 120 V branch of a plant | 1728 W, 2304 VAR, 2880 VA — 576 × (3,4,5) |
 | Power 2–5 | the **whole plant** on 208Y/120 | 5184 W, 6912 VAR, 8640 VA — 1728 × (3,4,5) |
+| Electronics 5 | 1 kΩ and 4 kΩ around an op-amp | −4 inverting and **+5** non-inverting |
+
+Electronics is where the numeric cast honestly thins out, and the module says so
+rather than forcing it. What carries the continuity there is **structural**:
+Circuit Analysis Part 5's RMS integral becomes the rectifier factors, Part 4's
+Thévenin becomes the bias divider and meter loading, Power Part 4's reflected
+impedance becomes impedance matching, and Mathematics Part 6's exponential
+becomes the diode equation.
 
 The payoff arrives three times. In Mathematics Part 7 the triangle becomes the
 characteristic root that decides whether a circuit rings. In Circuit Analysis
@@ -125,12 +133,24 @@ numbers doing the work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 5 | **Motors and Generators** | 10.D | 26 min | 46–47 |
 | 6 | **Synthesis and the Mixed Bench** | 10.A–10.D | 12 min | 48 |
 
-Every subtopic of all three published specifications is covered; the order within
+### Module 9 — Electronics (NCEES area 9)
+
+| Part | | NCEES | Read | Plates |
+|---|---|---|---|---|
+| 1 | **The Diode** — the first component Ohm's law cannot solve | 9.A | 22 min | 49–50 |
+| 2 | **Rectifiers and Power Conversion** | 9.E | 24 min | 51–52 |
+| 3 | **Transistors** — BJT and FET, and the region each is in | 9.A · 9.B | 28 min | 53–55 |
+| 4 | **Amplifiers** — biasing, the load line, where gain comes from | 9.B | 26 min | 56–57 |
+| 5 | **Operational Amplifiers** | 9.C | 26 min | 58–59 |
+| 6 | **Instrumentation** — measuring without disturbing | 9.D | 22 min | 60–61 |
+| 7 | **Synthesis and the Mixed Bench** | 9.A–9.E | 12 min | 62 |
+
+Every subtopic of all four published specifications is covered; the order within
 each module is pedagogical rather than the alphabetical order NCEES prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 83 types is a seeded
+- **Problems are generated, not stored.** Each of the 107 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
@@ -174,13 +194,14 @@ src/
     fmt.js          number formatting — no floating-point tails, ever
     rng.js          seeded RNG, so any problem set is reproducible
     circuit.js      schematic drawing on a grid, plus a network solver
-  figures/          one file per part, 48 plates
-  problems/         one file per part, 83 generators
+  figures/          one file per part, 62 plates
+  problems/         one file per part, 107 generators
 
 content/
   start/            the orientation part
   math/             Mathematics, 9 parts
   circuits/         Circuit Analysis, 7 parts
+  electronics/      Electronics, 7 parts
   power/            Power Systems, 6 parts
 ```
 
@@ -205,8 +226,9 @@ floor, adjacent CVD separation, normal-vision separation and contrast — at the
 rather than highlighter. Do not nudge them by eye.
 
 The HANDBOOK / KNOW COLD stamps are deliberately monochrome, so they stay out of
-the colour vocabulary entirely. In Circuit Analysis and Power Systems the same
-three quantity tokens carry over as voltage, current and result.
+the colour vocabulary entirely. In Circuit Analysis, Power Systems and
+Electronics the same three quantity tokens carry over as voltage, current and
+result.
 
 **Figures compute their own numbers.** `circuit.js` ships a Gaussian-elimination
 solver and every schematic figure runs the same node analysis the prose teaches.
@@ -236,7 +258,7 @@ Verified with no horizontal scroll down to a 360 px viewport, in both themes.
 
 ---
 
-Three of the seventeen NCEES knowledge areas are done. The next ones — Electronics,
-Digital Systems, Linear Systems and Control Systems — reuse `styles/` and
-`src/lib/` unchanged and slot into `outline.js` as further modules, so the
+Four of the seventeen NCEES knowledge areas are done. The next ones — Digital
+Systems, Linear Systems and Control Systems, Signal Processing — reuse `styles/`
+and `src/lib/` unchanged and slot into `outline.js` as further modules, so the
 compilation keeps reading as one work.
