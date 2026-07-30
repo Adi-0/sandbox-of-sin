@@ -1,0 +1,162 @@
+<p class="eyebrow">
+  <span>Linear Systems · Part 7</span>
+  <span class="spec">NCEES 7.A–7.D</span>
+  <span>12 minute read</span>
+</p>
+
+<h1>Synthesis and the Mixed Bench</h1>
+
+<p class="lede">Four subtopics, six parts, one object. A pole pair is a step
+response, a Bode plot, a resonance curve and a pair of characteristic roots —
+and none of those is a metaphor for the others.</p>
+
+<h2>7.1 One point, four questions</h2>
+
+<div data-figure="oneObject"></div>
+
+<p>Every panel on that plate is drawn from the same two numbers, so moving ζ
+moves all four at once. That is not a nice coincidence to notice at the end —
+it is what the module <em>is</em>:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Ask</th><th>And the answer is</th><th>Part</th></tr></thead>
+  <tbody>
+    <tr><td>How long until it settles?</td><td>the poles' distance <b>left</b> of the axis</td><td>1, 2</td></tr>
+    <tr><td>Does it overshoot, and by how much?</td><td>the poles' <b>angle</b> — that is ζ</td><td>2</td></tr>
+    <tr><td>How do I get the poles from a circuit?</td><td>substitute sL and 1/sC, then divide</td><td>3, 4</td></tr>
+    <tr><td>What does it do to a sinusoid?</td><td>the <b>distance</b> from the poles to jω</td><td>5</td></tr>
+    <tr><td>How selective is it?</td><td>Q, which is 1/2ζ — <b>the angle again</b></td><td>6</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note payoff">
+  <span class="note-tag">Where the two domains disagree, and both are right</span>
+  <p style="margin-bottom:0">Set ζ between 0.707 and 1 on the plate. The step
+  response still overshoots — so in the <b>time</b> domain the system plainly
+  rings. But the Bode peak has vanished and the magnitude response is
+  monotonic, so in the <b>frequency</b> domain it does not resonate at all.
+  Neither reading is wrong: overshoot appears below ζ = 1 and a frequency peak
+  appears below ζ = 0.707, and between those two values a system does one and
+  not the other. <b>ζ = 0.707 is exactly the maximally-flat, or Butterworth,
+  condition</b>, which is why filter design keeps landing on it.</p>
+</div>
+
+<h2>7.2 What carried over from earlier modules</h2>
+
+<div class="note payoff">
+  <span class="note-tag">Three debts collected</span>
+  <ul style="margin:0.4rem 0 0">
+    <li><b>Circuit Analysis Part 6 named this module's opening</b> and deferred
+    it: it stopped at steady state deliberately, and Part 1 here is the
+    transient half it left out.</li>
+    <li><b>Mathematics Part 7's characteristic roots</b> −3 ± 4j are Part 2's
+    circuit at 2000× the scale, and Part 4's poles, and the 3-4-5 triangle. One
+    pair of numbers, four appearances.</li>
+    <li><b>Circuit Analysis Part 2's divider</b> is Part 4's transfer function,
+    unchanged — the only difference is that the impedances now contain s.</li>
+  </ul>
+</div>
+
+<h2>7.3 How few relationships were doing the work</h2>
+
+<f-plate no="7.13" title="Linear Systems, complete" stamp="know"
+  caption="Every problem in this module's benches is one or two of these
+  composed. <b>The first-order line and the standard second-order form carry
+  most of the marks</b>, and both are short.">
+  <f-row tex="x(t) = x_\infty + (x_0 - x_\infty)e^{-t/\tau}, \quad \tau = R_{th}C \ \text{or}\ L/R_{th}"
+         name="any first-order transient"
+         gloss="Three steps: initial, final, τ. <b>R_th is what the element sees</b>, sources killed. 63.2 / 86.5 / 95.0 / 98.2 / 99.3 per cent."></f-row>
+  <f-row tex="\omega_n = \frac{1}{\sqrt{LC}}, \qquad \zeta = \frac{R}{2}\sqrt{\frac{C}{L}} \ \text{(series)}"
+         name="second-order, from parts"
+         gloss="<b>Parallel inverts ζ.</b> Compare R against 2√(L/C) to name the damping case on sight."></f-row>
+  <f-row tex="\%OS = 100e^{-\pi\zeta/\sqrt{1-\zeta^2}}, \qquad t_s \approx \frac{4}{\zeta\omega_n}, \qquad t_p = \frac{\pi}{\omega_d}"
+         name="performance"
+         gloss="Overshoot is a function of <b>ζ alone</b>; settling of the product ζω_n. 0.5 → 16.3%, 0.6 → 9.5%, 0.707 → 4.3%."></f-row>
+  <f-row tex="\mathcal{L}\{f'\} = sF(s) - f(0^-), \qquad e^{-at} \leftrightarrow \frac{1}{s+a}"
+         name="the transform"
+         gloss="Differentiation is multiplication by s. <b>A pole at −a is a decay at rate a.</b> Final value: lim s→0 of sF(s), if the poles allow it."></f-row>
+  <f-row tex="Z_R = R, \quad Z_L = sL, \quad Z_C = \frac{1}{sC}"
+         name="circuit to H(s)"
+         gloss="Then it is Circuit Analysis unchanged. <b>Order = number of storage elements</b>; stable ⟺ every pole strictly left of the axis."></f-row>
+  <f-row tex="H(s) = \frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}"
+         name="the standard form"
+         gloss="<b>Match coefficients to read off ζ and ω_n.</b> The constant term is ω_n²; the s coefficient is 2ζω_n."></f-row>
+  <f-row tex="\omega_c = \frac{1}{RC}, \qquad Q = \frac{\omega_0}{\text{BW}} = \frac{1}{2\zeta}, \qquad V_L = QV_s"
+         name="frequency and resonance"
+         gloss="Corner, pole and 1/τ are one number. <b>−3.01 dB and −45° at every corner.</b> Poles bend a Bode plot down 20 dB/decade, zeros up."></f-row>
+</f-plate>
+
+<h2>7.4 The five mistakes that cost the most</h2>
+
+<div class="note trap">
+  <span class="note-tag">Worth one last look before the bench</span>
+  <ol style="margin:0.4rem 0 0;padding-left:1.2rem">
+    <li><b>τ = RC but L/R.</b> A bigger resistor slows an RC circuit and
+    <em>speeds up</em> an RL one. The physical reading fixes it; the algebra
+    alone does not.</li>
+    <li><b>Using R instead of R<sub>th</sub>.</b> The time constant uses the
+    resistance the storage element <em>sees</em>, not the one it charges
+    through.</li>
+    <li><b>Series and parallel invert.</b> ζ inverts, Q inverts, and resonant
+    impedance goes from a minimum to a maximum. <b>Both answers are "R"</b>, so
+    the number will not warn you.</li>
+    <li><b>ωn is not ωd.</b> On the s-plane ωn is the pole's <em>distance</em>
+    and ωd its <em>height</em>. Reading the imaginary part as ωn is the
+    commonest slip in Part 4.</li>
+    <li><b>20 log for voltage, 10 log for power.</b> Getting it wrong doubles or
+    halves every decibel answer.</li>
+  </ol>
+</div>
+
+<h2>7.5 Reading a stem quickly</h2>
+
+<ol class="steps">
+  <li><b>A switch, and "at t = 0"?</b> Transient. Count the storage elements:
+  one means the three-step method, two means ζ and ωn.</li>
+  <li><b>"Most nearly, after N time constants"?</b> Pure recall — 63.2, 86.5,
+  95.0, 98.2, 99.3.</li>
+  <li><b>Overshoot, settling or peak time given?</b> Work back to ζ first;
+  overshoot identifies it uniquely.</li>
+  <li><b>An s in the expression?</b> Transfer function. Factor the denominator
+  — <b>the poles are the answer to almost anything else asked</b>.</li>
+  <li><b>Decibels, corners or "per decade"?</b> Frequency response. Put every
+  factor into (1 + s/ωc) form and sketch.</li>
+  <li><b>"Resonant", "tuned", "bandwidth" or "Q"?</b> Part 6, and check
+  <em>series or parallel</em> before writing anything.</li>
+</ol>
+
+<div class="note honest">
+  <span class="note-tag">Where the marks actually are</span>
+  <p style="margin-bottom:0">Linear Systems is <b>5 to 8 questions</b>, and
+  they cluster. Time constants, the five percentages, ω₀ = 1/√(LC), corner
+  frequencies and the dB anchors are pure recall and appear constantly — that
+  is most of the area's marks for a few hours of work. <b>Laplace questions are
+  usually table lookups rather than derivations</b>, and pole-location questions
+  are geometry. The genuinely slow ones are full partial-fraction inversions,
+  and they are also the rarest; if you meet one late in the exam, flag it.</p>
+</div>
+
+<h2>7.6 A set under exam conditions</h2>
+
+<p>Ten questions drawn from all six parts, at the real pace of <b>2 minutes
+50 seconds</b> each.</p>
+
+<div data-bench='{"id":"linear-mixed","title":"Linear Systems · mixed set","topics":["tau-find","tau-percent","first-order-value","switch-state","damping-case","wn-zeta","overshoot-calc","laplace-theorem","s-impedance","pole-read","corner-freq","bode-sketch","resonant-freq","q-bandwidth"],"count":10}'></div>
+
+<div class="keyidea">
+  <p>Six parts, and one object underneath all of them. A circuit with two
+  energy stores has a pair of poles; where that pair sits decides how quickly
+  the circuit settles, whether it overshoots, what it does to each frequency,
+  and how sharply it selects one. Those are not four related facts — they are
+  four questions asked of one point on a plane.</p>
+  <p>The transform is what makes the point visible. Before it, each of those
+  questions needed its own differential equation; after it, they need a
+  factored denominator and a picture. <b>That is why this module sits where it
+  does in the compilation</b>: Circuit Analysis could describe a circuit only
+  once it had settled, and Linear Systems describes what it does on the way —
+  which is the same thing Control Systems will then try to change on purpose.</p>
+</div>
+
+<div data-reflex='{"only":["transient","second-order","laplace","transfer","frequency","resonance"],"count":8,"title":"Handbook Reflex · the whole module"}'></div>

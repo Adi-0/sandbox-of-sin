@@ -40,6 +40,8 @@ import "./second-order.js";  // 78 79
 import "./laplace.js";       // 80 81
 import "./transfer.js";      // 82 83
 import "./frequency.js";     // 84 85
+import "./resonance.js";     // 86 87
+import "./linear-synthesis.js"; // 88
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

@@ -41,7 +41,7 @@ function step(zeta, t) {
    Plate 78 — one resistor, three behaviours
    ========================================================================== */
 
-function damping() {
+function rlcDamping() {
   const p = new Plot({
     w: 620, h: 330, xr: [-0.07, 2.6], yr: [-0.12, 1.78],
     pad: { l: 54, r: 22, t: 18, b: 40 },
@@ -232,8 +232,8 @@ function overshoot() {
    registration
    ------------------------------------------------------------------------- */
 
-register("damping", { no: 78, build: () => {
-  const f = damping();
+register("rlcDamping", { no: 78, build: () => {
+  const f = rlcDamping();
   return plate({
     no: 78, title: "One resistor, three behaviours", tag: "interactive",
     label: f.stage.getAttribute("aria-label"),

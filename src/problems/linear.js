@@ -1123,3 +1123,211 @@ defineReflex([
     because: "The magnitude turns at a point but the phase turns over two decades, which is why phase is the harder one to eyeball.",
   },
 ]);
+
+/* ==========================================================================
+   Part 6 — resonance (7.B)
+   ========================================================================== */
+
+defineProblem("resonant-freq", {
+  topic: "Resonant frequency",
+  lookup: "Electrical → Linear Systems → Resonance",
+  make(rng) {
+    const Lmh = rng.pick([1, 2, 10, 25, 100]);
+    const Cuf = rng.pick([0.01, 0.1, 1, 4, 10]);
+    const Lv = Lmh * 1e-3, Cv = Cuf * 1e-6;
+    const w0 = 1 / Math.sqrt(Lv * Cv);
+    const f0 = w0 / (2 * Math.PI);
+    const asked = rng.pick(["w", "f", "z"]);
+
+    if (asked === "z") {
+      const R = rng.pick([10, 22, 47, 100]);
+      const series = rng.pick([true, false]);
+      return {
+        stem: `A ${series ? "series" : "parallel"} RLC circuit is at resonance. What is its impedance?`,
+        choices: [
+          { text: series ? "R — a minimum" : "R — a maximum", why: "" },
+          { text: series ? "R — a maximum" : "R — a minimum", why: series
+              ? "The reactances cancel, leaving only R, and R is <b>less</b> than the impedance at any other frequency — so it is a minimum and the current peaks."
+              : "In parallel the two reactive branches carry equal and opposite currents that cancel, so <b>no net current flows into them</b> and the impedance is at a maximum." },
+          { text: "Zero", why: "Only if R were zero. The resistance does not cancel — it is the one thing left." },
+          { text: "Infinite", why: series ? "That is the parallel case, and only for an ideal lossless circuit." : "Only for an ideal lossless circuit. Any real R makes it finite." },
+        ],
+        answer: 0,
+        steps: [
+          `At resonance ${T("X_L = X_C")}, so the reactive parts cancel and only R survives.`,
+          series
+            ? `In <b>series</b> the two reactances are in the same current path and subtract, so ${T("|Z| = R")} — a <b>minimum</b>, and the current is at its largest.`
+            : `In <b>parallel</b> the two branch currents are equal and opposite, so they circulate between L and C and none of it comes from the source. ${T("|Z| = R")} is therefore a <b>maximum</b>, and the line current is at its smallest.`,
+          `<b>Series is a minimum, parallel is a maximum.</b> That inversion is the trap, and it comes from the same place as the ζ inversion in Part 2 — in series the resistor is in the path, and in parallel it is a bypass.`,
+        ],
+      };
+    }
+
+    const val = asked === "w" ? w0 : f0;
+    const unit = asked === "w" ? "rad/s" : "Hz";
+    return {
+      stem: `A series RLC circuit has L = ${num(Lmh, 0)} mH and C = ${num(Cuf, 2)} µF. What is its resonant frequency in ${unit}?`,
+      choices: options(
+        { text: `${num(val, 0)} ${unit}`, why: "" },
+        [
+          { text: `${num(asked === "w" ? f0 : w0, 0)} ${unit}`,
+            why: asked === "w" ? "That is in <b>hertz</b>; the question asks for rad/s, which is 2π times larger."
+              : "That is in <b>rad/s</b>; divide by 2π for hertz." },
+          { text: `${num(1 / (Lv * Cv), 0)} ${unit}`, why: "The square root is missing." },
+          { text: `${num(Math.sqrt(Lv * Cv) * 1e6, 2)} ${unit}`, why: "That is √(LC), which has units of time — it is the reciprocal that is a frequency." },
+        ]),
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="\\omega_0 = \\frac{1}{\\sqrt{LC}} = \\frac{1}{\\sqrt{(${num(Lmh, 0)}\\times10^{-3})(${num(Cuf, 2)}\\times10^{-6})}} = ${num(w0, 0)}\\text{ rad/s}"></span>`,
+        `<span class="math display" data-tex="f_0 = \\frac{\\omega_0}{2\\pi} = ${num(f0, 0)}\\text{ Hz}"></span>`,
+        `<b>${num(val, 0)} ${unit}.</b> Note that <b>R does not appear</b> — resistance changes how <em>sharp</em> the resonance is, not where it is. This is the same ω₀ as Part 2's undamped natural frequency, and for the same reason: resonance and ringing are one phenomenon.`,
+      ],
+    };
+  },
+});
+
+defineProblem("q-bandwidth", {
+  topic: "Q and bandwidth",
+  lookup: "Electrical → Linear Systems → Resonance",
+  make(rng) {
+    const q = rng.pick(["q", "bw", "rise", "zeta"]);
+    const Lmh = rng.pick([1, 10, 25, 100]);
+    const Cuf = rng.pick([0.01, 0.1, 1, 10]);
+    const Lv = Lmh * 1e-3, Cv = Cuf * 1e-6;
+    const w0 = 1 / Math.sqrt(Lv * Cv);
+    const Z0 = Math.sqrt(Lv / Cv);
+    const R = rng.pick([0.05, 0.1, 0.2, 0.5]) * Z0;
+    const Q = Z0 / R;
+
+    if (q === "q") {
+      return {
+        stem: `A series RLC has R = ${num(R, 1)} Ω, L = ${num(Lmh, 0)} mH and C = ${num(Cuf, 2)} µF. What is its quality factor?`,
+        choices: options(
+          { text: fixed(Q, 2), why: "" },
+          [
+            { text: fixed(1 / Q, 3), why: "Inverted. <b>More resistance means lower Q</b> in a series circuit, so R belongs on the bottom." },
+            { text: fixed(R / Z0, 3), why: "Also inverted — that is 1/Q. √(L/C) over R is the right way up." },
+            { text: fixed(w0 / R, 1), why: "ω₀/R is not dimensionless and is not Q. The characteristic impedance √(L/C) is what R is compared against." },
+          ]),
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="Q = \\frac{1}{R}\\sqrt{\\frac{L}{C}} = \\frac{\\omega_0 L}{R} = \\frac{1}{\\omega_0 R C}"></span>`,
+          `<span class="math display" data-tex="Q = \\frac{${num(Z0, 0)}}{${num(R, 1)}} = ${fixed(Q, 2)}"></span>`,
+          `<b>${fixed(Q, 2)}.</b> All three forms are the same quantity — <b>the reactance at resonance, divided by the resistance</b>. Reading it as "how big is the reactance compared with the resistance" makes it obvious why a lossless circuit has infinite Q.`,
+        ],
+      };
+    }
+
+    if (q === "bw") {
+      const BW = w0 / Q;
+      const askBw = rng.pick([true, false]);
+      if (askBw) {
+        return {
+          stem: `A resonant circuit has ω₀ = ${num(w0, 0)} rad/s and Q = ${fixed(Q, 1)}. What is its bandwidth?`,
+          choices: options(
+            { text: `${num(BW, 0)} rad/s`, why: "" },
+            [
+              { text: `${num(w0 * Q, 0)} rad/s`, why: "Multiplied instead of divided. <b>Higher Q means a narrower band</b>, which is what &ldquo;sharper&rdquo; means." },
+              { text: `${num(w0, 0)} rad/s`, why: "That is the resonant frequency itself, not the width of the band around it." },
+              { text: `${num(BW / 2, 0)} rad/s`, why: "That is the half-bandwidth — the distance from resonance to <em>one</em> half-power point." },
+            ]),
+          answer: 0,
+          steps: [
+            `<span class="math display" data-tex="\\text{BW} = \\frac{\\omega_0}{Q} = \\frac{${num(w0, 0)}}{${fixed(Q, 1)}} = ${num(BW, 0)}\\text{ rad/s}"></span>`,
+            `<b>${num(BW, 0)} rad/s</b>, measured between the two <b>half-power</b> points where the response has fallen to 1/√2 — the same −3 dB points as Part 5's corner frequency.`,
+            `The two edges are not symmetric about ω₀ arithmetically; they are symmetric <em>geometrically</em>, so <b>ω₀ = √(ω₁ω₂)</b>. For high Q the difference is negligible and taking ω₀ ± BW/2 is fine.`,
+          ],
+        };
+      }
+      const Qb = w0 / BW;
+      return {
+        stem: `A tuned circuit resonates at ${num(w0, 0)} rad/s and its half-power points are ${num(BW, 0)} rad/s apart. What is Q?`,
+        choices: options(
+          { text: fixed(Qb, 2), why: "" },
+          [
+            { text: fixed(1 / Qb, 4), why: "Inverted. Q is <b>ω₀ over the bandwidth</b> — a narrow band means a high Q." },
+            { text: fixed(w0 * BW, 0), why: "Multiplied rather than divided, which does not even give a dimensionless number." },
+            { text: fixed(BW, 0), why: "That is the bandwidth itself, restated." },
+          ]),
+        answer: 0,
+        steps: [
+          `<span class="math display" data-tex="Q = \\frac{\\omega_0}{\\text{BW}} = \\frac{${num(w0, 0)}}{${num(BW, 0)}} = ${fixed(Qb, 2)}"></span>`,
+          `<b>${fixed(Qb, 2)}.</b> This is the definition of Q that a measurement gives you: <b>drive the circuit, find the peak, find the two frequencies where the response is 0.707 of it, and divide</b>. It needs no knowledge of R, L or C at all.`,
+        ],
+      };
+    }
+
+    if (q === "rise") {
+      const Vs = rng.pick([5, 10, 12, 24]);
+      const Vl = Q * Vs;
+      return {
+        stem: `A series RLC with Q = ${fixed(Q, 1)} is driven at resonance by a ${Vs} V source. What is the voltage across the inductor?`,
+        choices: options(
+          { text: `${num(Vl, 1)} V`, why: "" },
+          [
+            { text: `${Vs} V`, why: "The <b>total</b> across L and C together is zero, because they cancel — but each one individually carries Q times the source voltage." },
+            { text: `${num(Vs / Q, 2)} V`, why: "Divided rather than multiplied. Q is a <b>rise</b>, not an attenuation." },
+            { text: "0 V", why: "That is the <em>sum</em> of the inductor and capacitor voltages, which is what makes |Z| = R. Individually they are large and opposite." },
+          ]),
+        answer: 0,
+        steps: [
+          `At resonance the current is ${T("I = V_s/R")}, and the inductor's reactance is ${T("X_L = \\omega_0 L")}:`,
+          `<span class="math display" data-tex="V_L = I X_L = \\frac{V_s}{R}\\,\\omega_0 L = Q\\,V_s = (${fixed(Q, 1)})(${Vs}) = ${num(Vl, 1)}\\text{ V}"></span>`,
+          `<b>${num(Vl, 1)} V — ${fixed(Q, 1)} times the supply.</b> The capacitor carries the same magnitude with the opposite sign, which is why they cancel and the source sees only R. <b>The components do not cancel; only the source's view of them does</b>, and both must be rated for the full rise.`,
+          `This is why Q is called a <em>magnification</em> factor, and why a high-Q circuit can destroy its own capacitor from a modest supply.`,
+        ],
+      };
+    }
+
+    const zeta = 1 / (2 * Q);
+    return {
+      stem: `A resonant circuit has Q = ${fixed(Q, 1)}. What is its damping ratio?`,
+      choices: options(
+        { text: fixed(zeta, 3), why: "" },
+        [
+          { text: fixed(1 / Q, 3), why: "The factor of 2 is missing. <b>ζ = 1/2Q</b>." },
+          { text: fixed(2 * Q, 1), why: "Inverted and doubled. High Q means <em>light</em> damping, so ζ must be small." },
+          { text: fixed(Q, 2), why: "They are reciprocals, not equal — a sharp resonance is a lightly damped one." },
+        ]),
+      answer: 0,
+      steps: [
+        `<span class="math display" data-tex="Q = \\frac{1}{2\\zeta} \\quad\\Longleftrightarrow\\quad \\zeta = \\frac{1}{2Q} = \\frac{1}{2(${fixed(Q, 1)})} = ${fixed(zeta, 3)}"></span>`,
+        `<b>${fixed(zeta, 3)}</b> — lightly damped, which is exactly what a sharp resonance means.`,
+        `<b>Q and ζ are the same fact told from two directions.</b> Part 2 asked how quickly a ringing circuit settles; this part asks how sharply the same circuit selects a frequency. Ringing in time and selectivity in frequency are one property, and Q = 1/2ζ is the exchange rate. Critical damping, ζ = 1, is Q = 0.5 — the point at which the circuit stops resonating at all.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "resonance",
+    stem: "L = 10 mH and C = 1 µF. Resonant frequency?",
+    tool: "ω₀ = 1/√(LC) = 10 krad/s",
+    because: "R does not appear — resistance changes how sharp the resonance is, not where it is.",
+  },
+  {
+    part: "resonance",
+    stem: "A series RLC at resonance. Is |Z| a maximum or a minimum?",
+    tool: "a minimum, equal to R — parallel is the opposite",
+    because: "In series the reactances are in the same path and subtract; in parallel their branch currents cancel and no net current is drawn.",
+  },
+  {
+    part: "resonance",
+    stem: "ω₀ = 50 krad/s and Q = 25. Bandwidth?",
+    tool: "BW = ω₀/Q = 2 krad/s",
+    because: "Measured between the half-power points, which are the same −3 dB points as a filter's corner.",
+  },
+  {
+    part: "resonance",
+    stem: "A series RLC with Q = 20, driven at resonance by 10 V. Voltage across C?",
+    tool: "Q × Vs = 200 V",
+    because: "L and C cancel as far as the source can tell, but each individually carries Q times the supply and must be rated for it.",
+  },
+  {
+    part: "resonance",
+    stem: "Q = 5. What is the damping ratio?",
+    tool: "ζ = 1/2Q = 0.1",
+    because: "Sharpness in frequency and ringing in time are one property; Q = 1/2ζ is the exchange rate between the two descriptions.",
+  },
+]);

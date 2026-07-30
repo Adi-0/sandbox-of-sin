@@ -12,8 +12,9 @@ This file is the durable memory across turns. Read it first.
 | **Power Systems** | 10 | 8–12 | 6 | 37–48 | complete |
 | **Electronics** | 9 | 7–11 | 7 | 49–62 | complete |
 | **Digital Systems** | 15 | 8–12 | 7 | 63–75 | complete |
+| **Linear Systems** | 7 | 5–8 | 7 | 76–88 | complete |
 
-Five of seventeen areas; 45–69 of the 110 questions. A shared orientation part
+Six of seventeen areas; 50–77 of the 110 questions. A shared orientation part
 sits ahead of all of them. Plate numbers run in the order the modules were
 built, not in module order — Electronics was written after Power Systems, and
 Digital Systems after Electronics.
@@ -72,6 +73,10 @@ From the NCEES *FE Electrical and Computer CBT Exam Specifications*
 | 15.F | Programmable logic devices and gate arrays | Digital 3 |
 | 15.G | State machine design | Digital 5 |
 | 15.H | Timing (diagrams, asynchronous inputs, race conditions, hazards) | Digital 6 |
+| 7.A | Frequency/transient response | Linear 1, 2, 5 |
+| 7.B | Resonance | Linear 6 |
+| 7.C | Laplace transforms | Linear 3 |
+| 7.D | Transfer functions | Linear 4 |
 
 **Checked against the PDF, not from memory:** area 10 has no per-unit and no
 symmetrical components. Those are PE topics. An earlier draft of this file
@@ -222,6 +227,30 @@ is what happens when feedback can pin the operating point for nothing.
 FETs get equal billing with BJTs deliberately. The PPI benchmark asks more
 JFET/MOSFET questions than BJT ones and most FE resources under-weight them.
 
+### Module 7 — Linear Systems (area 7)
+
+| # | Part | Read | Why it comes here |
+|---|---|---|---|
+| 1 | Transient Response | 22 min | The debt Circuit Analysis Part 6 named and deferred |
+| 2 | Second-Order Response | 24 min | Two energy stores argue; Maths 7's roots arrive as components |
+| 3 | The Laplace Transform | 22 min | The detour that turns out to be shorter |
+| 4 | Transfer Functions and the s-Plane | 24 min | The centrepiece — behaviour becomes a position |
+| 5 | Frequency Response | 22 min | The same plane restricted to one line |
+| 6 | Resonance | 22 min | The one subtopic with its own vocabulary, and Q = 1/2ζ closes the loop |
+| 7 | Synthesis and mixed bench | 12 min | One object, four views |
+
+**The cast lands here harder than anywhere since Circuit Analysis.** Mathematics
+Part 7 solved y'' + 6y' + 25y = 0 for roots −3 ± 4j — ωn = 5, ζ = cos 53.13° =
+0.6. Multiply by 2000 and it is a 120 Ω / 10 mH / 1 µF series RLC with poles at
+−6000 ± j8000. Plates 78, 82 and 88 all default to it, so the reader meets the
+same triangle as a step response, as a point on the s-plane, and as a resonance
+curve.
+
+Seven parts is generous for a 5–8 question area, and it is deliberate: Control
+Systems (12, 6–9 q) reuses nearly all of it, so this is load-bearing
+infrastructure rather than padding. Read times are held to 22–24 minutes rather
+than the 26–32 the larger modules use.
+
 ### Module 15 — Digital Systems (area 15)
 
 | # | Part | Read | Why it comes here |
@@ -351,7 +380,7 @@ them reading as drafting ink rather than highlighter. Do not nudge them by eye.
 
 ## 8. Status
 
-Thirty-seven parts, 75 plates, 130 generators, 131 reflex items.
+Forty-four parts, 88 plates, 146 generators, 157 reflex items.
 
 | Module | Part | Plates | Generators |
 |---|---|---|---|
@@ -392,19 +421,26 @@ Thirty-seven parts, 75 plates, 130 generators, 131 reflex items.
 | Digital | 5 State Machines | 71–72 | 4 |
 | Digital | 6 Timing and Hazards | 73–74 | 3 |
 | Digital | 7 Synthesis and mixed bench | 75 | (reuses 12) |
+| Linear | 1 Transient Response | 76–77 | 4 |
+| Linear | 2 Second-Order Response | 78–79 | 3 |
+| Linear | 3 The Laplace Transform | 80–81 | 3 |
+| Linear | 4 Transfer Functions and the s-Plane | 82–83 | 2 |
+| Linear | 5 Frequency Response | 84–85 | 2 |
+| Linear | 6 Resonance | 86–87 | 2 |
+| Linear | 7 Synthesis and mixed bench | 88 | (reuses 14) |
 
 ### Verified
 
 Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
 read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 37 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 44 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 75 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 88 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
-- `genall.mjs` — every one of the 130 generators run over 100 seeds, checking
+- `genall.mjs` — every one of the 146 generators run over 100 seeds, checking
   that no question offers a duplicate option, fewer than three options, a bad
   answer index, an unexpanded template literal or a NaN. **This one earned its
   place immediately**: it found 58 faulty generators on its first run, and the

@@ -1,0 +1,146 @@
+<p class="eyebrow">
+  <span>Linear Systems · Part 6</span>
+  <span class="spec">NCEES 7.B</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Resonance</h1>
+
+<p class="lede">One frequency where two opposite reactances happen to be equal.
+Nothing new is introduced — but the consequences are large enough that the
+spec gives it a subtopic of its own.</p>
+
+<h2>6.1 The cancellation</h2>
+
+<p>Inductive reactance <span class="math" data-tex="X_L = \omega L">X_L = ωL</span>
+rises with frequency; capacitive reactance
+<span class="math" data-tex="X_C = 1/\omega C">X_C = 1/ωC</span> falls. Two
+curves going opposite ways must cross, and because they enter the impedance
+with opposite signs, at the crossing they cancel <em>exactly</em>.</p>
+
+<div data-figure="reactances"></div>
+
+<f-plate no="7.11" title="Resonance" stamp="know"
+  caption="<b>R does not appear in ω₀.</b> Resistance changes how sharp the
+  resonance is, never where it is.">
+  <f-row tex="X_L = X_C \ \Rightarrow \ \omega_0 = \frac{1}{\sqrt{LC}}"
+         name="the condition, and the frequency"
+         gloss="The same ω₀ as Part 2's undamped natural frequency, because <b>resonating and ringing are one phenomenon</b> seen in two domains."></f-row>
+  <f-row tex="\text{series: } |Z|_{min} = R" name="series resonance"
+         gloss="The reactances are in the same current path and subtract, so the impedance is at a <b>minimum</b> and the current peaks."></f-row>
+  <f-row tex="\text{parallel: } |Z|_{max} = R" name="parallel resonance"
+         gloss="<b>The opposite.</b> The two branch currents are equal and opposite and circulate between L and C, so the source supplies almost nothing and the impedance is at a <b>maximum</b>."></f-row>
+  <f-row tex="\omega < \omega_0: \text{capacitive}, \quad \omega > \omega_0: \text{inductive}"
+         name="either side"
+         gloss="One frequency separates the two behaviours, and it is where the curves cross. Below it the current leads; above it, lags."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · series is a minimum, parallel is a maximum</span>
+  <p style="margin-bottom:0">This inversion catches people every time, and it is
+  the same inversion as Part 2's damping ratio. In <b>series</b> the resistor
+  sits in the current path, so it is what limits the current when the
+  reactances get out of the way. In <b>parallel</b> it is a bypass, so getting
+  the reactances out of the way means the source stops supplying current at all.
+  <b>Read the topology before writing anything down</b> — and note that both
+  answers are "R", so the number alone will not save you.</p>
+</div>
+
+<h2>6.2 Q — how sharp, and how large</h2>
+
+<div data-figure="quality"></div>
+
+<f-plate no="7.12" title="Quality factor" stamp="handbook"
+  caption="<b>Every line here is the same ratio</b> — energy stored against
+  energy dissipated per cycle — read in a different situation.">
+  <f-row tex="Q = \frac{1}{R}\sqrt{\frac{L}{C}} = \frac{\omega_0 L}{R} = \frac{1}{\omega_0 R C}"
+         name="series Q"
+         gloss="The reactance at resonance divided by the resistance. <b>Parallel inverts it</b>, as always: Q = R√(C/L)."></f-row>
+  <f-row tex="Q = \frac{\omega_0}{\text{BW}}" name="sharpness"
+         gloss="The definition a <em>measurement</em> gives: find the peak, find the two half-power frequencies, divide. Needs no knowledge of R, L or C."></f-row>
+  <f-row tex="V_L = V_C = Q\,V_s \ \text{at resonance}" name="voltage magnification"
+         gloss="<b>The one that catches people.</b> At Q = 20 a 10 V source puts 200 V across the capacitor. They cancel as far as the source can see, but the components do not know that."></f-row>
+  <f-row tex="Q = \frac{1}{2\zeta}" name="and Part 2"
+         gloss="Sharp in frequency <b>is</b> lightly damped in time. Critical damping, ζ = 1, is Q = 0.5 — where the circuit stops resonating at all."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Why the voltage rise is real and the cancellation is not a trick</span>
+  <p style="margin-bottom:0">At resonance the current is
+  <span class="math" data-tex="V_s/R">V_s/R</span>, which is large because
+  nothing but R is opposing it. That current flows through an inductor whose
+  reactance is <span class="math" data-tex="\omega_0 L">ω₀L</span> — and
+  <span class="math" data-tex="(V_s/R)(\omega_0 L) = Q V_s">(V_s/R)(ω₀L) = QV_s</span>.
+  The capacitor carries the same magnitude with the opposite sign, so their
+  <em>sum</em> is zero and the source sees only R. <b>The two voltages cancel;
+  they do not fail to exist.</b> A high-Q circuit routinely destroys its own
+  capacitor from a modest supply, and this is how.</p>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>a tuned circuit, end to end</em></h4>
+  <div class="worked-body">
+    <p>A series RLC has R = 20 Ω, L = 10 mH, C = 1 µF, driven by 10 V.</p>
+    <ol class="steps">
+      <li><b>Where.</b>
+        <span data-tex="\omega_0 = 1/\sqrt{LC} = 10^4\ \text{rad/s}">ω₀ = 10⁴ rad/s</span>
+        — that is 1.59 kHz.</li>
+      <li><b>How sharp.</b> The characteristic impedance is
+        <span data-tex="\sqrt{L/C} = 100\ \Omega">√(L/C) = 100 Ω</span>, so
+        <span data-tex="Q = 100/20 = 5">Q = 5</span>.</li>
+      <li><b>How wide.</b>
+        <span data-tex="\text{BW} = \omega_0/Q = 2000\ \text{rad/s}" data-display>BW = 2000 rad/s</span></li>
+      <li><b>What it does to the components.</b>
+        <span data-tex="V_L = V_C = QV_s = 50\ \text{V}" data-display>V_L = V_C = 50 V</span></li>
+      <li><b>And in the time domain.</b>
+        <span data-tex="\zeta = 1/2Q = 0.1">ζ = 0.1</span> — so a step would
+        overshoot by 73% and ring for a long time. <b>Same circuit, same number,
+        other domain.</b></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Five answers from
+    three components, and the last one is the point of the module: <b>Q and ζ
+    are one property</b>. A circuit that selects a narrow band of frequencies is
+    a circuit that rings for a long time, because both are statements about how
+    slowly it loses stored energy.</p>
+  </div>
+</div>
+
+<h2>6.3 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="\omega_0 = 1/\sqrt{LC}">ω₀ = 1/√(LC)</span>.
+        <b>R is not in it.</b></li>
+    <li><b>Series: |Z| = R, a minimum. Parallel: |Z| = R, a maximum.</b></li>
+    <li>Series <span data-tex="Q = \frac{1}{R}\sqrt{L/C}">Q = (1/R)√(L/C)</span>;
+        <b>parallel inverts it</b>.</li>
+    <li><span data-tex="\text{BW} = \omega_0/Q">BW = ω₀/Q</span>, between the
+        <b>half-power</b> points.</li>
+    <li><span data-tex="V_L = V_C = QV_s">V_L = V_C = QV_s</span> at resonance —
+        and the components must survive it.</li>
+    <li><span data-tex="Q = 1/2\zeta">Q = 1/2ζ</span>. Q = 0.5 is critical
+        damping.</li>
+    <li>Below ω₀ capacitive, above ω₀ inductive.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Resonance is the frequency at which a circuit's two opposite reactances
+  are equal. That is all it is — and everything else follows: the impedance
+  collapses to R (or rises to it), the current peaks (or vanishes), and the
+  circuit stops being reactive at exactly one point on the axis.</p>
+  <p>What makes it worth a subtopic is Q, and the fact that Q means two things
+  at once. <b>How narrow the band is, and how much the voltage inside the
+  circuit exceeds the source</b> — the same number, because both measure how
+  much energy the circuit is storing against how little it is losing. And that
+  is also Part 2's damping ratio upside down, which closes the module: a circuit
+  that rings for a long time and a circuit that is selective in frequency are
+  <em>the same circuit</em>, described from the two ends of the same transform.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"resonance","title":"Part 6 · Resonance","topics":["resonant-freq","q-bandwidth"],"count":6}'></div>
+
+<div data-reflex='{"only":["frequency","resonance"],"count":6,"title":"Handbook Reflex · Parts 5–6"}'></div>
