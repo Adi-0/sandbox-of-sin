@@ -1,0 +1,192 @@
+<p class="eyebrow">
+  <span>Control Systems · Part 6</span>
+  <span class="spec">NCEES 12.D</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Controller Performance and PID</h1>
+
+<p class="lede">Part 5 left a plant with two requirements that one gain could not
+satisfy at once. The fix is not a cleverer gain: it is to stop asking a single
+number to do three jobs, and put three terms in front of the plant instead.</p>
+
+<h2>6.1 Three questions about one error</h2>
+
+<p>Everything a PID controller does comes from asking three different things
+about the same error signal, and acting on each answer:</p>
+
+<p class="math" data-tex="u(t) = K_p\,e(t) + K_i\!\int\! e\,dt + K_d\,\frac{de}{dt}" data-display>u(t) = Kp·e + Ki∫e dt + Kd·de/dt</p>
+
+<ul>
+  <li><b>How big is the error?</b> — proportional. Push harder when further
+      away.</li>
+  <li><b>How long has it been there?</b> — integral. Keep adding to the push
+      while any error remains.</li>
+  <li><b>Which way is it heading?</b> — derivative. Ease off early if it is
+      closing fast.</li>
+</ul>
+
+<p>In the s-domain those are a constant, a
+<span class="math" data-tex="1/s">1/s</span>, and an
+<span class="math" data-tex="s">s</span> — and putting them over a common
+denominator is worth doing once, because the result says what the controller
+<em>is</em>:</p>
+
+<p class="math" data-tex="G_c(s) = K_p + \frac{K_i}{s} + K_d s = \frac{K_d s^2 + K_p s + K_i}{s}" data-display>Gc(s) = (Kd s² + Kp s + Ki) / s</p>
+
+<p><b>One pole at the origin and two zeros.</b> The pole is the integrator — it
+raises the system type by one, and Part 5 says that drives the steady-state
+error to zero. The zeros are what pull the root locus back to the left,
+recovering the damping the pole cost. <b>The structure of PID is the two halves
+of that fraction pulling against each other</b>, which is why the three gains
+are tuned together rather than one at a time.</p>
+
+<div data-figure="pidTune"></div>
+
+<f-plate no="12.12" title="What each gain buys, and what it costs" stamp="know"
+  caption="<b>Every row has a cost column, and the costs are not optional.</b>
+  The reason PI and PD are so often used together is that their phase
+  contributions are equal and opposite.">
+  <f-row tex="K_p: \text{faster, less error, more overshoot}"
+         name="proportional"
+         gloss="The workhorse. On a type-0 plant it shrinks the error as 1/(1+Kp·G(0)) — <b>but never to zero</b>, and every doubling costs 6 dB of gain margin."></f-row>
+  <f-row tex="K_i: \text{error} \rightarrow 0, \text{ but } -90^\circ \text{ of phase}"
+         name="integral"
+         gloss="Adds a pole at the origin, so the type goes up by one and the error vanishes outright. <b>The 90° of lag is charged at every frequency</b>, straight out of the phase margin."></f-row>
+  <f-row tex="K_d: \text{damping, } +90^\circ, \text{ no change to error}"
+         name="derivative"
+         gloss="Acts on the error's <em>slope</em>, which is zero in steady state — so it contributes nothing at all to the final value. <b>Pure phase lead</b>, which is exactly what buys back what the integrator spent."></f-row>
+  <f-row tex="\text{stabilise} \rightarrow K_d \rightarrow K_i \rightarrow K_p"
+         name="the order to tune in"
+         gloss="Get it settling first, then get the shape, then the accuracy, then the speed. <b>Any other order means retuning what you already tuned.</b>"></f-row>
+</f-plate>
+
+<h2>6.2 Why the integral term works</h2>
+
+<p>The claim that an integrator removes steady-state error is easy to state and
+easy to disbelieve. The plate below is the argument: it opens the controller up
+and plots the three terms separately, so you can see where the control effort
+comes from once the error has gone.</p>
+
+<div data-figure="pidSignals"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The effort has to come from somewhere</span>
+  <p style="margin-bottom:0">Hold a plant's output at 1 and the plant needs a
+  steady input — for the plate's plant, exactly <b>8</b>, because
+  <span class="math" data-tex="G(0) = 1/8">G(0) = 1/8</span>. A P controller can
+  only produce 8 by having an error of 8/Kp sitting there permanently.
+  <b>An integral term produces the same 8 with no error at all</b>: it
+  accumulated the value during the transient and has no reason to give it back,
+  because its input is now zero. Select <b>PI</b> on the plate and read the four
+  numbers at the end — P term 0.07, D term nothing, integral 7.95, total 8.02.
+  <b>That is the whole mechanism</b>, and it is also why an integrator winds up
+  when the plant cannot deliver: the term keeps accumulating regardless.</p>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">Why real derivative terms are filtered</span>
+  <p style="margin-bottom:0">A pure derivative has gain that rises without limit
+  with frequency, so it amplifies sensor noise ferociously — a clean 1 mV of
+  hiss at 1 kHz becomes a very loud command. Real controllers therefore use
+  <span class="math" data-tex="K_d s / (1 + s/N)">Kd·s/(1 + s/N)</span>, a
+  derivative with a pole well above the loop bandwidth, and often take the
+  derivative of the <em>output</em> rather than the error so that a step change
+  in the command does not produce an impulse. <b>Neither refinement is on this
+  exam</b>, but both are the reason a real PID block has more than three
+  settings.</p>
+</div>
+
+<h2>6.3 The plant Part 5 could not satisfy</h2>
+
+<div class="worked">
+  <h4>Worked · <em>the same plant, three controllers</em></h4>
+  <div class="worked-body">
+    <p>The plant is
+    <span data-tex="G(s) = \dfrac{1}{(s+1)(s+2)(s+4)}">G(s) = 1/[(s+1)(s+2)(s+4)]</span>,
+    the one where a 5% error demanded K = 152 on a loop that goes unstable at
+    K = 90. Compare what the three controllers achieve.</p>
+    <ol class="steps">
+      <li><b>P, Kp = 20.</b> Closed loop
+        <span data-tex="s^3 + 7s^2 + 14s + 28">s³ + 7s² + 14s + 28</span>.
+        Error <b>28.6%</b>, overshoot 27%, settling 4.9 s. Accurate: no.</li>
+      <li><b>PI, Kp = 20, Ki = 10.</b> The open loop gains a pole at the origin,
+        so the characteristic equation becomes
+        <span data-tex="s^4 + 7s^3 + 14s^2 + 28s + 10" data-display>s⁴ + 7s³ + 14s² + 28s + 10</span>
+        Error <b>zero, exactly</b> — but the extra 90° of lag shows up as more
+        overshoot and a longer settle.</li>
+      <li><b>PID, Kp = 40, Ki = 20, Kd = 15.</b> The derivative adds
+        <span data-tex="K_d">Kd</span> to the s² coefficient:
+        <span data-tex="s^4 + 7s^3 + 29s^2 + 48s + 20" data-display>s⁴ + 7s³ + 29s² + 48s + 20</span>
+        Error <b>zero</b>, overshoot <b>6.6%</b>, settling <b>2.5 s</b>. Better
+        than P on every count at once.</li>
+      <li><b>Check it is stable</b>, with Part 3's array on that quartic. The
+        first column comes out 1, 7, 22.1, 41.7, 20 — all positive, so
+        <b>no sign changes</b>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Set the plate above
+    to each preset in turn and watch the three numbers move. <b>The point is not
+    that PID is magic — it is that three independent terms can satisfy three
+    independent requirements, and one gain cannot.</b> Note also what the
+    derivative did to the polynomial: it raised the s² coefficient from 14 to
+    29, and it is that coefficient the Routh array needs to be large. The
+    derivative term is buying stability in the most literal way available.</p>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · derivative cannot fix an offset</span>
+  <p style="margin-bottom:0">The single commonest confusion in this topic. The
+  derivative term acts on <b>de/dt</b>, and in steady state the error is
+  constant, so <b>de/dt is zero and the term contributes nothing</b>. A loop
+  sitting 8% low will sit 8% low with any Kd you like. Equally: the integral
+  term cannot fix ringing — it makes it worse, because 90° of extra lag is
+  exactly what a ringing loop cannot afford. <b>Match the symptom to the
+  term</b>: offset is integral, ringing is derivative, sluggish is
+  proportional.</p>
+</div>
+
+<h2>6.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="u = K_pe + K_i\int e\,dt + K_d\dot{e}">u = Kp·e + Ki∫e + Kd·ė</span>,
+        and <span data-tex="G_c = \frac{K_ds^2 + K_ps + K_i}{s}">Gc = (Kd s² + Kp s + Ki)/s</span>.</li>
+    <li><b>I adds a pole at the origin</b> — type goes up by one, steady-state
+        error to a step goes to zero.</li>
+    <li><b>D adds a zero</b>, contributes +90°, damps the response, and does
+        <em>nothing</em> to the steady-state error.</li>
+    <li><b>I costs −90° of phase</b> at every frequency. That is what makes PI
+        loops ring, and why D usually comes with it.</li>
+    <li>Kp: faster, less error, more overshoot, less margin. <b>Never zero
+        error.</b></li>
+    <li><b>PI</b> for accuracy, <b>PD</b> for damping, <b>PID</b> when you need
+        both.</li>
+    <li>Tune in order: <b>stable → Kd → Ki → Kp.</b></li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A PID controller is three answers to three questions about the same signal,
+  and its whole character is in the fraction
+  <span class="math" data-tex="(K_ds^2 + K_ps + K_i)/s">(Kd s² + Kp s + Ki)/s</span>:
+  <b>one pole that buys accuracy at the cost of phase, and two zeros that buy
+  the phase back</b>. Every trade in this module is present in that one
+  expression, which is why almost every loop in industry is running some version
+  of it.</p>
+  <p>And look at what has been assembled. Part 1 gave the loop and its algebra;
+  Part 2 said where the poles go; Part 3 said when they cross; Part 4 measured
+  how far from crossing they are; Part 5 said whether the loop ends up in the
+  right place; and this part supplies the thing you actually get to change.
+  <b>Six parts, one loop, and each one asked a different question of it.</b>
+  Part 7 puts them in a single set under exam conditions, because on the day
+  they arrive mixed and unlabelled — and knowing which of the six a question
+  belongs to is most of the work.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"pid","title":"Part 6 · Controller performance","topics":["pid-form","pid-effect","pid-choose"],"count":6}'></div>
+
+<div data-reflex='{"only":["pid","margins","steady-error"],"count":6,"title":"Handbook Reflex · Parts 4–6"}'></div>

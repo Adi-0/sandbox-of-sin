@@ -169,7 +169,7 @@ const TRADE = { poles: [1, 2, 4], den: [1, 7, 14, 8], kCrit: 90 };
 function overshootAt(K) {
   const cl = add(TRADE.den, [K]);
   const final = K / (8 + K);
-  const r = simulate([K], cl, () => 1, 26, 900);
+  const r = simulate([K], cl, () => 1, 22, 2600);
   const peak = Math.max(...r.map((p) => p[1]));
   return Math.max(0, (peak / final - 1) * 100);
 }

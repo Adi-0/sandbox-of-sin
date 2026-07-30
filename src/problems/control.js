@@ -1121,6 +1121,195 @@ defineProblem("error-design", {
   },
 });
 
+/* ==========================================================================
+   Part 6 — controller performance and PID
+   ========================================================================== */
+
+defineProblem("pid-form", {
+  topic: "The controller, written down",
+  lookup: "Electrical → Control Systems → Controller performance",
+  make(rng) {
+    const kp = rng.pick([2, 4, 5, 8, 10]);
+    const ki = rng.pick([1, 2, 5, 10, 20]);
+    const kd = rng.pick([0.5, 1, 2, 4]);
+    const ask = rng.pick(["single", "single", "type", "which"]);
+
+    if (ask === "single") {
+      return {
+        stem: `A PID controller has ${T(`K_p = ${num(kp, 0)}`)}, ${T(`K_i = ${num(ki, 0)}`)} and ${T(`K_d = ${num(kd, 1)}`)}. Write ${T("G_c(s)")} as a single fraction.`,
+        choices: options(
+          { tex: `\\dfrac{${num(kd, 1)}s^2 + ${num(kp, 0)}s + ${num(ki, 0)}}{s}`, why: "" },
+          [
+            { tex: `\\dfrac{${num(ki, 0)}s^2 + ${num(kp, 0)}s + ${num(kd, 1)}}{s}`, why: `${T("K_i")} and ${T("K_d")} are swapped. Multiplying ${T("K_d s")} by s gives the ${T("s^2")} term, so <b>the derivative gain leads</b>; the integral gain is the one with no s left.` },
+            { tex: `\\dfrac{${num(kd, 1)}s^2 + ${num(kp, 0)}s + ${num(ki, 0)}}{s^2}`, why: `Only one power of s is cleared. The lowest term is ${T("K_i/s")}, so the common denominator is <b>s</b>.` },
+            { tex: `${num(kd, 1)}s^2 + ${num(kp, 0)}s + ${num(ki, 0)}`, why: "The denominator was dropped. Without it this is a pure polynomial — no integrator at all, and the whole point of the I term is lost." },
+            { tex: `\\dfrac{${num(kp, 0)}s^2 + ${num(kd, 1)}s + ${num(ki, 0)}}{s}`, why: `${T("K_p")} multiplies s to the first power, not the second.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`G_c(s) = K_p + \\frac{K_i}{s} + K_d s`),
+          `Over the common denominator s:`,
+          D(`G_c(s) = \\frac{K_p s + K_i + K_d s^2}{s} = \\frac{${num(kd, 1)}s^2 + ${num(kp, 0)}s + ${num(ki, 0)}}{s}`),
+          `<b>Worth reading what that form is telling you.</b> The denominator s is a pole at the origin — <b>the controller supplies an integrator</b>, which raises the system type by one. The numerator is a quadratic, so <b>the controller also supplies two zeros</b>, and those are what pull the root locus left and buy back the damping the integrator cost.`,
+        ],
+      };
+    }
+
+    if (ask === "type") {
+      const a = rng.pick([2, 3, 4, 6]);
+      const b = rng.pick([5, 8, 10]);
+      return {
+        stem: `A plant ${T(`G(s) = \\dfrac{K}{(s+${a})(s+${b})}`)} is put under <b>PI</b> control. What is the steady-state error of the closed loop to a unit step?`,
+        choices: options(
+          { text: "zero", why: "" },
+          [
+            { text: `1 / (1 + K/${num(a * b, 0)})`, why: "That is the answer <em>without</em> the controller — the plain type-0 result. <b>The PI controller adds a pole at the origin</b>, which makes the open loop type 1, and a type-1 loop tracks a step exactly." },
+            { text: "it depends on Kp", why: `Not for a step. The integrator makes ${T("K_p^{pos}")} infinite whatever the gains are, so ${T("e = 1/(1+\\infty) = 0")}. <b>Kp affects how fast and how oscillatory, never the final value.</b>` },
+            { text: "it depends on Ki", why: "Ki changes how quickly the error is driven out and how much overshoot there is on the way. It does not change the destination — any non-zero Ki gives zero error." },
+            { text: "grows without bound", why: "That would need the loop to be short of integrators, or unstable. A PI loop on this plant is neither for reasonable gains." },
+          ]),
+        answer: 0,
+        steps: [
+          `The controller is ${T("G_c = K_p + K_i/s = (K_ps + K_i)/s")}, so the open loop is`,
+          D(`G_cG = \\frac{(K_ps + K_i)K}{s(s+${a})(s+${b})}`),
+          `<b>That s in the denominator was not there before.</b> The open loop has gone from type 0 to type 1, so ${T("K_p^{pos} = \\lim_{s\\to0} G_cG = \\infty")} and`,
+          D(`e(\\infty) = \\frac{1}{1 + \\infty} = 0`),
+          `<b>Zero, exactly, at any gains that keep it stable.</b> This is the single most useful fact about PI control, and the reason it is the default choice: an integrator holds its output when its input is zero, so the loop can sit on the command with nothing driving it.`,
+        ],
+      };
+    }
+
+    const WHICH = [
+      { c: "K_p + K_i/s", name: "PI", gloss: "proportional and integral" },
+      { c: "K_p + K_d s", name: "PD", gloss: "proportional and derivative" },
+      { c: "K_p + K_i/s + K_d s", name: "PID", gloss: "all three" },
+    ];
+    const w = rng.pick(WHICH);
+    return {
+      stem: `A controller has transfer function ${T(`G_c(s) = ${w.c}`)}. What is it, and does it raise the system type?`,
+      choices: options(
+        { text: `${w.name} — ${w.name.includes("I") ? "yes, by one" : "no"}`, why: "" },
+        [
+          { text: `${w.name} — ${w.name.includes("I") ? "no" : "yes, by one"}`, why: w.name.includes("I") ? "The <b>1/s term is a pole at the origin</b>, which is exactly what system type counts. Adding it raises the type by one." : "There is no 1/s here, so no pole at the origin is added and the type is unchanged. <b>A PD controller adds a zero, not a pole.</b>" },
+          { text: `${w.name === "PD" ? "PI" : "PD"} — ${w.name === "PD" ? "yes, by one" : "no"}`, why: "<b>I is the term with 1/s</b> and D is the term with s. Read which one is present." },
+          { text: `${w.name} — only if K${w.name.includes("I") ? "i" : "d"} is large`, why: "Type is a structural count of poles at the origin. It does not depend on how big a gain is, only on whether the term is there at all." },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>Name the terms by what they do to the error.</b> P is proportional to it, I is its integral, D is its derivative — and in s those are a constant, a ${T("1/s")}, and an s.`,
+        `Here the controller has ${w.gloss}, so it is a <b>${w.name}</b> controller.`,
+        w.name.includes("I")
+          ? `The ${T("K_i/s")} term is a <b>pole at the origin</b>, so the open loop gains an integrator and <b>the type goes up by one</b> — a type-0 plant becomes type 1, and its steady-state error to a step becomes exactly zero.`
+          : `There is no ${T("1/s")}, so no pole is added at the origin and <b>the type is unchanged</b>. A PD controller contributes a <em>zero</em>, at ${T("s = -K_p/K_d")}, which adds phase lead and buys damping — but it cannot remove a steady-state error.`,
+      ],
+    };
+  },
+});
+
+defineProblem("pid-effect", {
+  topic: "What each gain does",
+  lookup: "Electrical → Control Systems → Controller performance",
+  make(rng) {
+    const ROWS = [
+      {
+        term: "K_p", name: "proportional gain",
+        right: "faster and less steady-state error, but more overshoot",
+        wrong: [
+          { text: "slower, with less overshoot", why: "Backwards. More proportional gain pushes harder on the same error, so the response is <b>faster</b> — and it overshoots more, because the push does not let up until the error has already been crossed." },
+          { text: "no effect on steady-state error", why: `On a type-0 loop it has a large effect: ${T("e = 1/(1+K_p^{pos})")}, and the constant is proportional to the gain. What it cannot do is drive the error to <em>zero</em>.` },
+          { text: "eliminates steady-state error entirely", why: "Only an integrator does that. Proportional gain shrinks the error towards zero without ever arriving, and costs stability margin on the way." },
+        ],
+      },
+      {
+        term: "K_i", name: "integral gain",
+        right: "removes steady-state error, but adds overshoot and can destabilise",
+        wrong: [
+          { text: "removes steady-state error with no side effects", why: "There is always a cost. <b>An integrator adds 90° of phase lag at every frequency</b>, which eats phase margin directly — that is why a PI loop overshoots more than the P loop it came from." },
+          { text: "improves damping", why: "That is the derivative term. Integral action makes the response <em>less</em> damped, because it keeps pushing based on history even after the error has been corrected." },
+          { text: "has no effect until the error is large", why: "It acts on the <b>accumulated</b> error, so a small error present for a long time produces a large integral term. Duration matters as much as size." },
+        ],
+      },
+      {
+        term: "K_d", name: "derivative gain",
+        right: "damps the response and reduces overshoot, with no effect on steady-state error",
+        wrong: [
+          { text: "reduces steady-state error", why: "It cannot. <b>In steady state the error is constant, so its derivative is zero</b> and the D term contributes nothing at all. Look at the end of plate 100's trace." },
+          { text: "makes the response faster with more overshoot", why: "That is proportional gain. The derivative term acts against the <em>rate of change</em>, so it opposes the approach and slows the crossing — which is what damping is." },
+          { text: "adds phase lag, like the integral term", why: "The opposite: a derivative contributes +90°, which is <b>phase lead</b>. That is precisely why it buys back the margin an integrator spends." },
+        ],
+      },
+    ];
+    const r = rng.pick(ROWS);
+    return {
+      stem: `In a PID controller, what does increasing ${T(r.term)} — the ${r.name} — do?`,
+      choices: options({ text: r.right, why: "" }, r.wrong),
+      answer: 0,
+      steps: [
+        `<b>Each term answers a different question about the error.</b> P asks how big it is, I asks how long it has been there, D asks which way it is heading.`,
+        `Increasing <b>${r.name}</b>: ${r.right}.`,
+        `The table worth carrying: <b>Kp — faster, less error, more overshoot, less margin. Ki — error to zero, more overshoot, less margin. Kd — more damping, less overshoot, no change to the error.</b>`,
+        `And the reason in one line each: <b>an integrator is −90° of phase and a derivative is +90°</b>, so the two pull in opposite directions on stability — which is why the pair is used together.`,
+      ],
+    };
+  },
+});
+
+defineProblem("pid-choose", {
+  topic: "Choosing the fix",
+  lookup: "Electrical → Control Systems → Controller performance",
+  make(rng) {
+    const CASES = [
+      {
+        symptom: "settles at 8% below the command and stays there",
+        right: "add integral action",
+        wrong: [
+          { text: "add derivative action", why: "Derivative acts on the error's <em>slope</em>, and in steady state the slope is zero — so the D term contributes nothing to a standing error. It is the right fix for ringing, not for offset." },
+          { text: "reduce the proportional gain", why: "That makes the offset <b>worse</b>: on a type-0 loop the error is 1/(1 + Kp·G(0)), so lowering the gain raises it." },
+          { text: "nothing can fix it", why: "An integrator fixes it outright, and does so at any gain. That is exactly what the I term is for." },
+        ],
+      },
+      {
+        symptom: "rings for a long time with 40% overshoot before settling",
+        right: "add derivative action",
+        wrong: [
+          { text: "add integral action", why: "That makes it worse. <b>An integrator adds 90° of lag</b>, which eats phase margin, and a system already ringing has none to spare." },
+          { text: "increase the proportional gain", why: "Also worse. More proportional gain moves the closed-loop poles towards the imaginary axis, which lowers ζ and increases the overshoot." },
+          { text: "increase the command", why: "The response shape of a linear system does not depend on the size of the input — a bigger step gives a proportionally bigger overshoot." },
+        ],
+      },
+      {
+        symptom: "is stable and accurate but far too slow to respond",
+        right: "increase the proportional gain",
+        wrong: [
+          { text: "increase the derivative gain", why: "Derivative action <b>damps</b>, which if anything slows the approach further. It buys headroom to raise Kp, but it is not itself the speed knob." },
+          { text: "increase the integral gain", why: "That speeds up the removal of the residual error, but the initial response is set by Kp. A large Ki with a small Kp gives a sluggish rise followed by a slow crawl." },
+          { text: "reduce the proportional gain", why: "The wrong direction: less push means a slower response." },
+        ],
+      },
+      {
+        symptom: "oscillates with a growing amplitude and never settles",
+        right: "reduce the gain, then add derivative action",
+        wrong: [
+          { text: "add integral action", why: "The loop is already unstable and an integrator adds 90° more lag. <b>This is the worst available move.</b>" },
+          { text: "increase the proportional gain", why: "Growing oscillation means a closed-loop pole is in the right half-plane. More gain pushes it further right." },
+          { text: "wait — it will settle eventually", why: "It will not. A right-half-plane pole grows without bound until something saturates or breaks; that is what unstable means." },
+        ],
+      },
+    ];
+    const c = rng.pick(CASES);
+    return {
+      stem: `A closed loop ${c.symptom}. What is the right change to the controller?`,
+      choices: options({ text: c.right, why: "" }, c.wrong),
+      answer: 0,
+      steps: [
+        `<b>Match the symptom to the term that acts on it.</b> A standing offset is a job for the integral; ringing is a job for the derivative; sluggishness is a job for proportional gain; instability is a job for less of everything, then derivative.`,
+        `Here: <b>${c.right}</b>.`,
+        `<b>The general order of operations.</b> Get it stable first — reduce gain until it settles. Then get the shape right with Kd. Then get the accuracy with Ki. Then raise Kp for speed until the margins start to complain. <b>Doing it in any other order means retuning what you already tuned.</b>`,
+      ],
+    };
+  },
+});
+
 defineReflex([
   {
     part: "feedback",
@@ -1301,5 +1490,41 @@ defineReflex([
     stem: "Error too large on a type-0 loop. Two ways to fix it?",
     tool: "raise K, or add an integrator",
     because: "Gain only shrinks the error and costs margin doing it; an integrator removes it outright, which is why PI control exists.",
+  },
+  {
+    part: "pid",
+    stem: "Write Kp + Ki/s + Kd·s as one fraction.",
+    tool: "(Kd s² + Kp s + Ki)/s",
+    because: "One pole at the origin and two zeros — the pole raises the type and the zeros buy back the damping it costs.",
+  },
+  {
+    part: "pid",
+    stem: "Which PID term removes steady-state error?",
+    tool: "integral — it adds a pole at the origin",
+    because: "An integrator holds its output when its input is zero, so no standing error is needed to sustain a standing output.",
+  },
+  {
+    part: "pid",
+    stem: "Which term reduces overshoot, and what does it do to the error?",
+    tool: "derivative — and nothing, the error's slope is zero in steady state",
+    because: "It contributes +90° of phase lead, which is exactly what buys back the margin the integrator spends.",
+  },
+  {
+    part: "pid",
+    stem: "A type-0 plant under PI control. Steady-state error to a step?",
+    tool: "zero, at any stable gains",
+    because: "The controller's 1/s makes the open loop type 1, and type is structural — it does not depend on how big the gains are.",
+  },
+  {
+    part: "pid",
+    stem: "The loop is accurate but rings badly. Raise which gain?",
+    tool: "Kd — never Ki, which adds 90° of lag",
+    because: "Match the symptom to the term: offset is integral, ringing is derivative, sluggishness is proportional.",
+  },
+  {
+    part: "pid",
+    stem: "What does an integrator do to phase margin?",
+    tool: "costs 90° of it, at every frequency",
+    because: "Accuracy is bought with stability margin, which is why the D term usually has to come along with the I term.",
   },
 ]);
