@@ -1,0 +1,184 @@
+<p class="eyebrow">
+  <span>Control Systems · Part 4</span>
+  <span class="spec">NCEES 12.B</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Bode Plots and Margins</h1>
+
+<p class="lede">Part 3 answered "is it stable" with a yes. That is not enough to
+design with. This part measures <em>how far</em> from unstable a loop is, in the
+two units engineers actually quote — and both are distances read off a plot you
+already know how to sketch.</p>
+
+<h2>4.1 Why the open loop tells you about the closed loop</h2>
+
+<p>The closed-loop poles are where
+<span class="math" data-tex="1 + GH = 0">1 + GH = 0</span>. Rearranged, that is
+one of the most useful sentences in the subject:</p>
+
+<p class="math" data-tex="GH(j\omega) = -1" data-display>GH(jω) = −1</p>
+
+<p>A complex number equals −1 when its <b>magnitude is 1</b> and its
+<b>phase is −180°</b>, at the same frequency. So the question "is this loop
+close to oscillating" becomes "<b>is there a frequency where the open loop
+returns a signal the same size as it started, and exactly inverted</b>" — and
+that is a question you can answer by looking at two curves you already know how
+to draw.</p>
+
+<div class="note payoff">
+  <span class="note-tag">Why inverted feedback becomes reinforcing</span>
+  <p style="margin-bottom:0">The summing junction subtracts, which is another
+  180° of phase. Add the plant's own 180° of lag and the signal arriving back is
+  <em>in phase</em> with the one that produced it. If it is also the same size or
+  larger, it sustains itself with no input at all. <b>That is the whole content
+  of the −1 point</b>: the loop's minus sign and the plant's lag have cancelled,
+  and negative feedback has quietly become positive.</p>
+</div>
+
+<h2>4.2 Two crossings, two margins</h2>
+
+<p>The magnitude curve crosses 0 dB somewhere; the phase curve crosses −180°
+somewhere else. <b>Each margin is measured at the other one's crossing</b>, and
+getting that the wrong way round is the standard mistake.</p>
+
+<div data-figure="marginPlot"></div>
+
+<f-plate no="12.8" title="The two margins" stamp="know"
+  caption="<b>Both are measured on the OPEN loop, GH — never on the closed
+  loop.</b> Each says how much of one quantity could change before GH reaches
+  −1.">
+  <f-row tex="\omega_{gc}: |GH| = 1 \ (0\text{ dB})" name="gain crossover"
+         gloss="Where the magnitude curve passes unity. <b>Phase margin is read here.</b>"></f-row>
+  <f-row tex="PM = 180^\circ + \angle GH(j\omega_{gc})" name="phase margin"
+         gloss="How much more <b>lag</b> the loop could take. The phase is negative, so this is an addition — and a stable loop has PM &gt; 0."></f-row>
+  <f-row tex="\omega_{pc}: \angle GH = -180^\circ" name="phase crossover"
+         gloss="Where the phase curve passes −180°. <b>Gain margin is read here.</b> Raising K never moves this frequency, because gain does not change phase."></f-row>
+  <f-row tex="GM = -|GH(j\omega_{pc})|_{dB} = 20\log_{10}\frac{1}{|GH|}"
+         name="gain margin"
+         gloss="How much more <b>gain</b> the loop could take. 6 dB means the gain could double; 20 dB means it could go up tenfold."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>both margins, and a check against Part 3</em></h4>
+  <div class="worked-body">
+    <p>Find the phase crossover, the critical gain and the gain margin for
+    <span data-tex="GH = \dfrac{60}{s(s+2)(s+8)}">GH = 60/[s(s+2)(s+8)]</span>.</p>
+    <ol class="steps">
+      <li><b>Phase crossover.</b> The integrator gives a flat −90°, so the two
+        poles must supply the other 90°:
+        <span data-tex="\arctan\frac{\omega}{2} + \arctan\frac{\omega}{8} = 90^\circ" data-display>arctan(ω/2) + arctan(ω/8) = 90°</span>
+        Two angles summing to 90° have reciprocal tangents, so
+        <span data-tex="\omega^2 = (2)(8)">ω² = 16</span> and
+        <b>ω<sub>pc</sub> = 4 rad/s</b> — the <em>geometric</em> mean of the
+        corners, which is the midpoint on a logarithmic axis.</li>
+      <li><b>Magnitude there.</b>
+        <span data-tex="|GH| = \frac{60}{4\sqrt{4^2+2^2}\,\sqrt{4^2+8^2}} = \frac{60}{4(4.472)(8.944)} = 0.375" data-display>|GH| = 0.375</span></li>
+      <li><b>Gain margin.</b>
+        <span data-tex="GM = 20\log_{10}\frac{1}{0.375} = 8.5\text{ dB}">GM = 8.5 dB</span>
+        — the gain could be multiplied by 2.67.</li>
+      <li><b>Critical gain.</b>
+        <span data-tex="K_{crit} = (60)(2.67) = 160">Kcrit = 60 × 2.67 = 160</span>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left"><b>160 and 4 rad/s
+    are exactly what the Routh array gave in Part 3</b>, from the coefficients of
+    s³ + 10s² + 16s + K, with no plot involved. The two methods have nothing in
+    common procedurally and must agree, because both are locating the moment the
+    closed-loop poles reach the imaginary axis. For this shape there is a formula
+    worth carrying: <b>ω<sub>pc</sub> = √(ab)</b> and
+    <b>K<sub>crit</sub> = ab(a+b)</b>, which is the same
+    <span data-tex="c < ab">c &lt; ab</span> cubic rule wearing different
+    clothes.</p>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · gain moves one curve only</span>
+  <p style="margin-bottom:0">Multiplying K by ten shifts the whole magnitude
+  curve up by 20 dB and leaves the phase curve <b>completely untouched</b> — a
+  constant has no phase. So <b>the phase crossover frequency never moves</b>, and
+  the gain margin falls by exactly the 20 dB you added. The gain crossover, on
+  the other hand, slides right, and since the phase is still dropping there, the
+  phase margin falls too. <b>One knob, both margins</b>, which is why turning the
+  gain up to go faster always costs stability.</p>
+</div>
+
+<h2>4.3 What a margin is worth</h2>
+
+<p>Margins are quoted in the frequency domain and specifications are written in
+the time domain, so there has to be a bridge. There is, it is one line, and it
+is used constantly.</p>
+
+<div data-figure="marginFeel"></div>
+
+<f-plate no="12.9" title="Margin to response" stamp="know"
+  caption="<b>The rule is a straight line drawn through a curve.</b> It is good
+  from about 30° to 65°, which is where designs live — so it is accurate exactly
+  where it is used.">
+  <f-row tex="\zeta \approx \frac{PM}{100}" name="the bridge"
+         gloss="Phase margin in degrees, divided by a hundred. <b>60° → ζ = 0.6 → 9.5% overshoot</b>, which is the design default and the recurring pair of this compilation."></f-row>
+  <f-row tex="PM: 45^\circ \text{ to } 65^\circ" name="what to aim for"
+         gloss="Below 45° the response rings and there is no allowance for the plant being different from the model. Above 65° it is sluggish, because the only way to get there is to turn the gain down."></f-row>
+  <f-row tex="GM: 6 \text{ to } 12 \text{ dB}" name="the other target"
+         gloss="A factor of two to four in gain. <b>Components drift, temperature changes and loads vary</b> — this is the allowance for all of it."></f-row>
+  <f-row tex="\omega_{gc} \approx \omega_{BW}" name="speed, roughly"
+         gloss="The gain crossover frequency is close to the closed-loop bandwidth, so it sets how fast the system is. <b>Margins say how well-behaved; crossover says how quick.</b>"></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">Where the rule of thumb gives up</span>
+  <p style="margin-bottom:0">Above about 65° the exact relationship flattens and
+  <span class="math" data-tex="\zeta \approx PM/100">ζ ≈ PM/100</span> starts
+  understating the damping badly — at 75° the true ζ is 0.95, not 0.75. It is
+  also derived for a <b>second-order loop with a single dominant pair</b>, so a
+  plant with a resonance or a right-half-plane zero can have a perfectly
+  respectable phase margin and still behave poorly. <b>Both margins being healthy
+  is a good sign, not a proof.</b> On this exam it is a good sign that is worth
+  full marks; in practice it is where the simulation starts.</p>
+</div>
+
+<h2>4.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Instability is <span data-tex="GH = -1">GH = −1</span>: <b>magnitude 1
+        and phase −180° at the same frequency.</b></li>
+    <li><b>PM is read at the 0 dB crossing</b>:
+        <span data-tex="180^\circ + \angle GH">180° + ∠GH</span>.</li>
+    <li><b>GM is read at the −180° crossing</b>:
+        <span data-tex="-|GH|_{dB}">−|GH| in dB</span>.</li>
+    <li>Targets: <b>PM 45–65°, GM 6–12 dB.</b> Both positive means stable.</li>
+    <li><span data-tex="\zeta \approx PM/100">ζ ≈ PM/100</span> — and
+        <b>60° ⇒ ζ 0.6 ⇒ 9.5% overshoot</b>.</li>
+    <li><b>Gain moves the magnitude curve only.</b> ω<sub>pc</sub> is fixed by
+        the plant; ω<sub>gc</sub> and both margins move with K.</li>
+    <li>For <span data-tex="K/[s(s+a)(s+b)]">K/[s(s+a)(s+b)]</span>:
+        <span data-tex="\omega_{pc} = \sqrt{ab}">ω<sub>pc</sub> = √(ab)</span>,
+        <span data-tex="K_{crit} = ab(a+b)">K<sub>crit</sub> = ab(a+b)</span>.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>All of this part is one substitution. The closed loop misbehaves when
+  <span class="math" data-tex="GH = -1">GH = −1</span>, and a Bode plot shows
+  magnitude and phase against frequency, so <b>the distance from −1 is visible as
+  two gaps</b> — how far the magnitude is below unity where the phase hits −180°,
+  and how far the phase is above −180° where the magnitude hits unity. Nothing is
+  being computed that Routh could not compute; what the plot adds is a
+  <em>quantity</em> where the array gave a verdict.</p>
+  <p>And notice what has now been established four separate ways for the same
+  plant. The locus of plate 91 <em>showed</em> the branches crossing at ω = 4;
+  the Routh array of Part 3 <em>computed</em> K = 160 from the coefficients; this
+  part <em>measured</em> both off a Bode plot; and the step response of plate 94
+  <em>heard</em> the result. <b>Four methods, one fact</b> — which is what it
+  looks like when a subject is properly joined up. <b>Part 5 changes the question
+  entirely</b>: not whether the loop is stable, but whether it ends up in the
+  right place at all.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"margins","title":"Part 4 · Bode plots and margins","topics":["margin-read","margin-calc","pm-to-time"],"count":6}'></div>
+
+<div data-reflex='{"only":["margins"],"count":5,"title":"Handbook Reflex · Part 4"}'></div>

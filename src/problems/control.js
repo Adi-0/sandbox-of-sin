@@ -9,7 +9,7 @@
    ========================================================================== */
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
-import { num, sig } from "../lib/fmt.js";
+import { num, fixed, sig } from "../lib/fmt.js";
 import { overshoot, zetaFor } from "../lib/poly.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
@@ -725,6 +725,231 @@ defineProblem("marginal-freq", {
   },
 });
 
+/* ==========================================================================
+   Part 4 — Bode plots and margins
+   ========================================================================== */
+
+const dbOf = (r) => 20 * Math.log10(r);
+
+defineProblem("margin-read", {
+  topic: "Reading a margin off a plot",
+  lookup: "Electrical → Control Systems → Bode plots / stability margins",
+  make(rng) {
+    const ask = rng.pick(["pm", "pm", "gm", "gmratio", "phase"]);
+
+    if (ask === "pm") {
+      const ph = rng.pick([-105, -120, -132, -145, -155, -168]);
+      const pm = 180 + ph;
+      return {
+        stem: `An open-loop Bode plot crosses <b>0 dB</b> at ω = 8 rad/s, where the phase is ${T(`${num(ph, 0)}^\\circ`)}. What is the phase margin?`,
+        choices: options(
+          { text: `${num(pm, 0)}°`, why: "" },
+          [
+            { text: `${num(-ph, 0)}°`, why: `That is the phase itself, with the sign dropped. <b>Phase margin is the gap left before −180°</b>: ${T(`180 + (${num(ph, 0)}) = ${num(pm, 0)}^\\circ`)}.` },
+            { text: `${num(180 - ph, 0)}°`, why: "Subtracted rather than added. The phase is already negative, so adding 180 is what measures the distance up to −180°." },
+            { text: `${num(90 + ph, 0)}°`, why: "The reference is −180°, not −90°. −90° is where a single integrator sits and has nothing to do with the stability boundary." },
+            { text: `${num(pm / 2, 0)}°`, why: "No halving anywhere. The margin is the plain difference." },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>Phase margin is measured at the gain crossover</b> — the frequency where the open-loop magnitude passes through 0 dB, which the stem gives as 8 rad/s.`,
+          D(`PM = 180^\\circ + \\angle GH(j\\omega_{gc}) = 180^\\circ + (${num(ph, 0)}^\\circ) = ${num(pm, 0)}^\\circ`),
+          `<b>${num(pm, 0)}°.</b> Read it as an allowance: the loop could suffer ${num(pm, 0)}° more phase lag — from an unmodelled pole, or a transport delay — before ${T("GH")} reaches −1 and the closed loop oscillates.`,
+          pm >= 45
+            ? `That is a healthy margin. <b>Designs aim for 45° to 65°</b>, which corresponds to a damping ratio of roughly 0.45 to 0.7.`
+            : `<b>Thin.</b> Below about 45° the closed-loop response rings badly, and there is little room for the plant to be different from the model.`,
+        ],
+      };
+    }
+
+    if (ask === "gm") {
+      const db = rng.pick([-4, -8, -12, -16, -20]);
+      return {
+        stem: `An open-loop phase plot passes <b>−180°</b> at ω = 5 rad/s, where the magnitude is ${T(`${num(db, 0)}\\text{ dB}`)}. What is the gain margin?`,
+        choices: options(
+          { text: `${num(-db, 0)} dB`, why: "" },
+          [
+            { text: `${num(db, 0)} dB`, why: `Sign. <b>Gain margin is how far the magnitude is <em>below</em> 0 dB</b>, quoted as a positive number when the loop is stable: ${T(`GM = -(${num(db, 0)}) = ${num(-db, 0)}`)} dB.` },
+            { text: `${sig(10 ** (db / 20), 3)}`, why: "That is the magnitude as a ratio, not the margin. And the question asked in decibels." },
+            { text: `${num(180 + db, 0)}°`, why: "That mixes the two margins. Gain margin is in decibels and is read at the <b>phase</b> crossover; phase margin is in degrees and is read at the <b>gain</b> crossover." },
+            { text: `${num(-db / 2, 0)} dB`, why: "No factor of two. The margin is read straight off the plot." },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>Gain margin is measured at the phase crossover</b> — the frequency where the phase passes −180°, given here as 5 rad/s.`,
+          D(`GM = -|GH(j\\omega_{pc})|_{dB} = -(${num(db, 0)}) = ${num(-db, 0)}\\text{ dB}`),
+          `<b>${num(-db, 0)} dB.</b> In plain terms: the gain could be multiplied by ${sig(10 ** (-db / 20), 3)} before the loop reaches the boundary. <b>The two margins answer the same question in different currencies</b> — one in gain, one in lag — and a design wants both.`,
+        ],
+      };
+    }
+
+    if (ask === "gmratio") {
+      const r = rng.pick([0.1, 0.2, 0.25, 0.4, 0.5]);
+      const gm = dbOf(1 / r);
+      return {
+        stem: `At the phase crossover, the open-loop magnitude is ${T(`|GH| = ${num(r, 2)}`)}. What is the gain margin in decibels?`,
+        choices: options(
+          { text: `${sig(gm, 3)} dB`, why: "" },
+          [
+            { text: `${sig(-gm, 3)} dB`, why: "Sign. The magnitude is below 1, so it is below 0 dB, so the margin is positive — there is room to raise the gain." },
+            { text: `${sig(10 * Math.log10(1 / r), 3)} dB`, why: `That used 10 log instead of 20 log. <b>|GH| is a ratio of amplitudes, so the multiplier is 20</b>; 10 is for power.` },
+            { text: `${sig(1 / r, 3)} dB`, why: `${sig(1 / r, 3)} is the factor the gain could be multiplied by, which is the right idea in the wrong units. Take 20 log of it.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`GM = 20\\log_{10}\\frac{1}{|GH(j\\omega_{pc})|} = 20\\log_{10}\\frac{1}{${num(r, 2)}} = ${sig(gm, 4)}\\text{ dB}`),
+          `<b>${sig(gm, 3)} dB.</b> The two ways of saying it are worth keeping side by side: the loop gain could be multiplied by ${sig(1 / r, 3)}, <em>or</em> raised by ${sig(gm, 3)} dB. Same statement.`,
+          `<b>The anchors do this in your head.</b> ×2 is 6 dB and ×10 is 20 dB, so ×${sig(1 / r, 3)} is ${sig(gm, 3)} dB without a calculator.`,
+        ],
+      };
+    }
+
+    const pm = rng.pick([30, 40, 45, 50, 60]);
+    return {
+      stem: `A loop has a phase margin of ${num(pm, 0)}°. What is its open-loop phase at the gain crossover?`,
+      choices: options(
+        { text: `${num(pm - 180, 0)}°`, why: "" },
+        [
+          { text: `${num(180 - pm, 0)}°`, why: "Sign. The open-loop phase of a real plant at crossover is <b>negative</b> — poles contribute lag. The margin is the distance from that lag up to −180°." },
+          { text: `${num(-pm, 0)}°`, why: `That is the margin itself, negated. The phase is ${T(`-180 + ${num(pm, 0)}`)}.` },
+          { text: `${num(-90 - pm, 0)}°`, why: "The reference is −180°, not −90°." },
+        ]),
+      answer: 0,
+      steps: [
+        `Rearrange the definition: ${D(`PM = 180^\\circ + \\angle GH \\quad\\Rightarrow\\quad \\angle GH = PM - 180^\\circ`)}`,
+        `${D(`\\angle GH = ${num(pm, 0)}^\\circ - 180^\\circ = ${num(pm - 180, 0)}^\\circ`)}`,
+        `<b>${num(pm - 180, 0)}°.</b> Sanity check the sign every time: <b>a stable loop has less than 180° of lag where its gain passes unity</b>, so the phase is between 0 and −180 and the margin is what is left over.`,
+      ],
+    };
+  },
+});
+
+defineProblem("margin-calc", {
+  topic: "Margins from a transfer function",
+  lookup: "Electrical → Control Systems → Bode plots / stability margins",
+  make(rng) {
+    const a = rng.pick([1, 2, 3, 4, 5]);
+    const b = rng.pick([6, 8, 10, 12, 20]);
+    const wpc = Math.sqrt(a * b);
+    const kCrit = a * b * (a + b);
+    const ask = rng.pick(["wpc", "kcrit", "gm"]);
+    const K = Math.round(kCrit / rng.pick([2, 4, 5]));
+
+    if (ask === "wpc") {
+      return {
+        stem: `A unity-feedback loop has ${T(`GH = \\dfrac{K}{s(s+${a})(s+${b})}`)}. At what frequency does the phase reach −180°?`,
+        choices: options(
+          { text: `${sig(wpc, 3)} rad/s`, why: "" },
+          [
+            { text: `${sig(a + b, 3)} rad/s`, why: `The corner frequencies add only their <em>phase</em>, not their values. Setting ${T("\\arctan(\\omega/a) + \\arctan(\\omega/b) = 90^\\circ")} makes the two ratios reciprocal, which gives ${T("\\omega = \\sqrt{ab}")}.` },
+            { text: `${sig((a + b) / 2, 3)} rad/s`, why: "The average of the corners is not it either. The relation is the <b>geometric</b> mean, which sits at the midpoint on a logarithmic axis — as it should, since a Bode plot is logarithmic." },
+            { text: `${sig(a * b, 3)} rad/s`, why: `That is ab. Take the square root: ${T(`\\sqrt{${num(a * b, 0)}} = ${sig(wpc, 3)}`)}.` },
+            { text: `${sig(b, 3)} rad/s`, why: "The larger corner on its own contributes only 45° of lag at that frequency, which with the integrator's 90° and the other pole is not yet 180°." },
+          ]),
+        answer: 0,
+        steps: [
+          `The integrator supplies a flat −90°, so the two poles must supply the other 90° between them:`,
+          D(`\\arctan\\frac{\\omega}{${a}} + \\arctan\\frac{\\omega}{${b}} = 90^\\circ`),
+          `Two angles summing to 90° have reciprocal tangents, so ${T(`\\frac{\\omega}{${a}}\\cdot\\frac{\\omega}{${b}} = 1`)}:`,
+          D(`\\omega_{pc} = \\sqrt{(${a})(${b})} = ${sig(wpc, 4)}\\text{ rad/s}`),
+          `<b>${sig(wpc, 3)} rad/s — the geometric mean of the two corners</b>, and note that <b>K does not appear</b>. Gain moves the magnitude curve up and down and never touches the phase, so the phase crossover is a property of the plant alone.`,
+        ],
+      };
+    }
+
+    if (ask === "kcrit") {
+      return {
+        stem: `A unity-feedback loop has ${T(`GH = \\dfrac{K}{s(s+${a})(s+${b})}`)}. At what gain does it become unstable?`,
+        choices: options(
+          { text: num(kCrit, 0), why: "" },
+          [
+            { text: num(a * b, 0), why: `That is ab, which is ${T("\\omega_{pc}^2")}. The critical gain carries an extra factor of (a + b) — it is the product of all three coefficients of the characteristic equation's middle terms.` },
+            { text: num(a + b, 0), why: "Far too small. Check against Routh: the characteristic equation is s³ + (a+b)s² + ab·s + K, stable while K < (a+b)(ab)." },
+            { text: num(a * b * b, 0), why: "One factor is wrong. It is a·b·(a + b)." },
+            { text: num(2 * kCrit, 0), why: "Twice the boundary — this gain is already unstable." },
+          ]),
+        answer: 0,
+        steps: [
+          `Two routes, and they agree — which is the point of this part. <b>By Routh:</b>`,
+          D(`s(s+${a})(s+${b}) + K = s^3 + ${a + b}s^2 + ${a * b}s + K`),
+          `A cubic is stable while the constant term is below the product of the other two: ${T(`K < (${a + b})(${a * b}) = ${num(kCrit, 0)}`)}.`,
+          `<b>By Bode:</b> the phase reaches −180° at ${T(`\\omega_{pc} = \\sqrt{ab} = ${sig(wpc, 3)}`)}, and setting ${T("|GH| = 1")} there gives ${T(`K = ab(a+b) = ${num(kCrit, 0)}`)}.`,
+          `<b>${num(kCrit, 0)}.</b> The two methods look nothing alike — one counts signs in a table, the other measures a distance on a graph — and they must give the same number, because both are asking where the roots cross the imaginary axis.`,
+        ],
+      };
+    }
+
+    const gm = dbOf(kCrit / K);
+    return {
+      stem: `A unity-feedback loop has ${T(`GH = \\dfrac{${num(K, 0)}}{s(s+${a})(s+${b})}`)}. What is its gain margin?`,
+      choices: options(
+        { text: `${sig(gm, 3)} dB`, why: "" },
+        [
+          { text: `${sig(-gm, 3)} dB`, why: "Sign. The magnitude at the phase crossover is below unity, so there is room to raise the gain and the margin is positive." },
+          { text: `${sig(kCrit / K, 3)} dB`, why: `${sig(kCrit / K, 3)} is the <em>factor</em> the gain could be multiplied by. In decibels that is ${T(`20\\log_{10}${sig(kCrit / K, 3)} = ${sig(gm, 3)}`)}.` },
+          { text: `${sig(dbOf(K / kCrit), 3)} dB`, why: "Upside down. The margin is the critical gain over the actual gain." },
+          { text: `${sig(dbOf(kCrit / K) / 2, 3)} dB`, why: "10 log instead of 20 log — that multiplier is for power ratios." },
+        ]),
+      answer: 0,
+      steps: [
+        `The loop goes unstable at ${T(`K_{crit} = ab(a+b) = ${num(kCrit, 0)}`)}, and the gain margin is simply how far below that you are, in decibels:`,
+        D(`GM = 20\\log_{10}\\frac{K_{crit}}{K} = 20\\log_{10}\\frac{${num(kCrit, 0)}}{${num(K, 0)}} = ${sig(gm, 4)}\\text{ dB}`),
+        `<b>${sig(gm, 3)} dB</b>, or a factor of ${sig(kCrit / K, 3)} in plain gain. ${gm >= 6 ? "<b>Comfortably inside the 6–12 dB a design aims for.</b>" : "<b>Below the 6 dB a design would want</b>, so this loop has little tolerance for the plant drifting."}`,
+      ],
+    };
+  },
+});
+
+defineProblem("pm-to-time", {
+  topic: "From margin to overshoot",
+  lookup: "Electrical → Control Systems → Controller performance",
+  make(rng) {
+    const ask = rng.pick(["os", "os", "pm"]);
+    if (ask === "os") {
+      const pm = rng.pick([30, 40, 45, 50, 60, 65]);
+      const z = pm / 100;
+      const os = overshoot(z);
+      return {
+        stem: `A loop has a phase margin of ${num(pm, 0)}°. Estimate the overshoot of its closed-loop step response.`,
+        choices: options(
+          { text: `about ${sig(os, 2)}%`, why: "" },
+          [
+            { text: `about ${sig(overshoot(pm / 200), 2)}%`, why: `The rule is ${T("\\zeta \\approx PM/100")}, so ${num(pm, 0)}° gives ζ ≈ ${num(z, 2)} — not ${num(z / 2, 3)}.` },
+            { text: `about ${num(pm, 0)}%`, why: "The margin is in degrees and the overshoot is a percentage; they are not the same number. Go through ζ." },
+            { text: `about ${sig(overshoot(Math.min(0.99, pm / 60)), 2)}%`, why: "Check the divisor: the rule divides the phase margin by 100." },
+            { text: "0%", why: "A finite phase margin means a complex pole pair and therefore overshoot. Only a real-pole response has none." },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>The bridge between the two domains, and it is worth memorising:</b> ${D(`\\zeta \\approx \\frac{PM}{100} = \\frac{${num(pm, 0)}}{100} = ${num(z, 2)}`)}`,
+          `${D(`\\%OS = 100\\,e^{-\\pi\\zeta/\\sqrt{1-\\zeta^2}} = ${sig(os, 3)}\\%`)}`,
+          `<b>About ${sig(os, 2)}%.</b> The rule is a straight line drawn through a curve and it is good from roughly 30° to 65° — which is where designs live, so it is good where it matters. ${pm >= 55 ? "<b>At 60° it gives ζ = 0.6 and 9.5% overshoot</b>, which is why 60° is the number people quote." : ""}`,
+        ],
+      };
+    }
+    const target = rng.pick([5, 10, 16, 20]);
+    const z = zetaFor(target);
+    const pm = Math.round(z * 100);
+    return {
+      stem: `A closed loop must overshoot by no more than about ${num(target, 0)}%. What phase margin should the open loop be designed for?`,
+      choices: options(
+        { text: `about ${num(pm, 0)}°`, why: "" },
+        [
+          { text: `about ${num(target, 0)}°`, why: "The overshoot percentage is not the margin in degrees. Convert to ζ first, then multiply by 100." },
+          { text: `about ${num(100 - pm, 0)}°`, why: "Inverted. <b>More phase margin means more damping means less overshoot</b>, so a tight overshoot limit calls for a large margin." },
+          { text: `about ${num(pm * 2, 0)}°`, why: `Twice the answer. ${T(`\\zeta = ${fixed(z, 2)}`)} maps to ${T(`100\\zeta = ${num(pm, 0)}^\\circ`)}.` },
+          { text: "180°", why: "A phase margin is the gap up to 180° of lag, so it can never be 180° itself — that would mean the loop had no lag at all at crossover." },
+        ]),
+      answer: 0,
+      steps: [
+        `Overshoot fixes ζ. ${num(target, 0)}% corresponds to ${D(`\\zeta = ${fixed(z, 3)}`)}`,
+        `${D(`PM \\approx 100\\zeta = ${num(pm, 0)}^\\circ`)}`,
+        `<b>About ${num(pm, 0)}°.</b> That is how a time-domain requirement becomes something you can check on a Bode plot — and it is why designers state specifications in phase margin at all, rather than in the overshoot they actually care about.`,
+      ],
+    };
+  },
+});
+
 defineReflex([
   {
     part: "feedback",
@@ -833,5 +1058,41 @@ defineReflex([
     stem: "s³ + 5s² + 9s + K is marginally stable. K and ω?",
     tool: "K = 45, ω = √9 = 3 rad/s",
     because: "For a cubic the boundary is K = ab and the auxiliary polynomial as² + ab gives ω = √b every time.",
+  },
+  {
+    part: "margins",
+    stem: "The phase at the gain crossover is −140°. Phase margin?",
+    tool: "180 − 140 = 40°",
+    because: "The margin is the lag still available before GH reaches −1, measured where the magnitude passes unity.",
+  },
+  {
+    part: "margins",
+    stem: "|GH| = −14 dB where the phase passes −180°. Gain margin?",
+    tool: "14 dB — how much more gain the loop could take",
+    because: "Gain margin is read at the phase crossover and phase margin at the gain crossover; swapping them is the standard slip.",
+  },
+  {
+    part: "margins",
+    stem: "Phase margin 55°. Rough damping ratio and overshoot?",
+    tool: "ζ ≈ 0.55, so about 12% overshoot",
+    because: "ζ ≈ PM/100 is the bridge from the frequency domain to a time-domain specification, and it holds from about 30° to 65°.",
+  },
+  {
+    part: "margins",
+    stem: "What margins would a design aim for?",
+    tool: "45–65° of phase, 6–12 dB of gain",
+    because: "Margins are the allowance for the plant not matching the model, so a bare yes from Routh is not a design.",
+  },
+  {
+    part: "margins",
+    stem: "Raising K on a Bode plot does what to the phase curve?",
+    tool: "nothing — gain only shifts the magnitude up",
+    because: "The phase crossover frequency is a property of the plant alone, which is why the gain margin has a fixed frequency and a movable value.",
+  },
+  {
+    part: "margins",
+    stem: "GH = K/[s(s+2)(s+8)]. Phase crossover and critical gain?",
+    tool: "ω = √(2·8) = 4 rad/s, K = ab(a+b) = 160",
+    because: "The geometric mean of the corners is where two arctangents sum to 90°, and Routh gives the same 160 from the coefficients.",
   },
 ]);
