@@ -43,6 +43,9 @@ import "./frequency.js";     // 84 85
 import "./resonance.js";     // 86 87
 import "./linear-synthesis.js"; // 88
 
+/* --- Control Systems --- */
+import "./feedback.js";      // 89 90
+
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41

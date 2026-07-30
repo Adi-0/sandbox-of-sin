@@ -22,5 +22,8 @@ import "./digital.js";
 /* --- Linear Systems --- */
 import "./linear.js";
 
+/* --- Control Systems --- */
+import "./control.js";
+
 /* --- Power Systems --- */
 import "./power.js";

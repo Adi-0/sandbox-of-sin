@@ -1,0 +1,240 @@
+<p class="eyebrow">
+  <span>Control Systems · Part 1</span>
+  <span class="spec">NCEES 12.A</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Feedback and Block Diagrams</h1>
+
+<p class="lede">Measure what you got, compare it with what you asked for, and act
+on the difference. That sentence is the entire subject; the rest of this module
+is working out what it costs and when it goes wrong.</p>
+
+<h2>1.1 Open loop, and why nobody ships it</h2>
+
+<p>An <b>open-loop</b> system acts and hopes. You set the oven dial to 200 °C,
+the element delivers whatever power that dial means, and if the door is open or
+the mains sags, the oven is simply wrong — nothing in it knows. Its accuracy is
+the accuracy of every component in the chain, multiplied together.</p>
+
+<p>A <b>closed-loop</b> system measures the result and drives the difference to
+zero. It cannot be more accurate than its sensor, but it is <em>almost
+completely indifferent</em> to everything in front of the sensor. That trade —
+throw away gain, buy accuracy — is the reason essentially every amplifier,
+regulator, motor drive and autopilot on earth is built this way.</p>
+
+<div data-figure="loopGain"></div>
+
+<f-plate no="12.1" title="The loop, in four lines" stamp="know"
+  caption="<b>Everything in this module comes out of these.</b> Derive the second
+  line once, from the first, and you will never need to remember which way round
+  the sign goes.">
+  <f-row tex="E = R - HC" name="the error signal"
+         gloss="The summing junction subtracts what came back from what was asked. <b>E is what the forward path actually sees</b> — not R."></f-row>
+  <f-row tex="\frac{C}{R} = \frac{G}{1 + GH}" name="closed-loop transfer function"
+         gloss="Substitute C = GE into the line above and solve. Forward path on top; <b>one plus the loop gain</b> underneath."></f-row>
+  <f-row tex="\frac{E}{R} = \frac{1}{1 + GH}" name="the error ratio"
+         gloss="The same denominator. <b>Big loop gain means small error</b>, which is the whole of Part 5 in one fraction."></f-row>
+  <f-row tex="L(s) = G(s)H(s)" name="loop gain, a.k.a. open-loop transfer function"
+         gloss="What the signal is multiplied by on one complete trip round. <b>Stability, error and margin are all read off this one product</b>, not off G alone."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>deriving the formula, so you never memorise it wrong</em></h4>
+  <div class="worked-body">
+    <p>Three lines, and worth doing on scrap paper the first time a question
+    makes you doubt the sign.</p>
+    <ol class="steps">
+      <li>The junction subtracts:
+        <span data-tex="E = R - HC">E = R − HC</span>.</li>
+      <li>The forward block acts on the error:
+        <span data-tex="C = GE = G(R - HC)">C = GE = G(R − HC)</span>.</li>
+      <li>Collect the C terms:
+        <span data-tex="C + GHC = GR \quad\Rightarrow\quad C(1 + GH) = GR" data-display>C(1 + GH) = GR</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">So
+    <span data-tex="C/R = G/(1+GH)">C/R = G/(1+GH)</span>. <b>The plus came from
+    the minus</b> — the C term crossed the equals sign and changed sign, which
+    is exactly why the denominator's sign is opposite to the junction's. That is
+    the one fact people get backwards under time pressure, and it is two lines
+    of algebra away at all times.</p>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the sign reads backwards</span>
+  <p style="margin-bottom:0"><b>Negative feedback gives
+  <span class="math" data-tex="1 + GH">1 + GH</span>. Positive feedback gives
+  <span class="math" data-tex="1 - GH">1 − GH</span>.</b> Every instinct says
+  otherwise. If you have thirty seconds of doubt, sanity-check the answer
+  instead of the algebra: negative feedback must make the gain
+  <em>smaller</em> than G, and if your expression makes it bigger you have the
+  wrong sign. And note what <span class="math" data-tex="GH = 1">GH = 1</span>
+  does to the positive-feedback denominator — infinite gain with no input is not
+  an amplifier, it is an oscillator.</p>
+</div>
+
+<h2>1.2 What 1 + GH divides</h2>
+
+<p>The factor <span class="math" data-tex="1 + GH">1 + GH</span> is not just a
+denominator. It is the exchange rate of the whole subject: <b>everything
+feedback improves, it improves by exactly this factor, and it pays for all of
+it out of gain</b>.</p>
+
+<f-plate no="12.2" title="The exchange rate" stamp="know"
+  caption="<b>One factor, four consequences.</b> Three of them are why you build
+  the loop and the fourth is what it costs — and the fourth is why Part 3 has to
+  talk about stability.">
+  <f-row tex="\frac{\Delta T/T}{\Delta G/G} = \frac{1}{1 + GH}" name="sensitivity to the plant"
+         gloss="A ±40% spread in G with a loop gain of 9 becomes ±4%. <b>The accuracy has moved out of G and into H</b>, which is usually two resistors and a reference."></f-row>
+  <f-row tex="\text{disturbance} \ \rightarrow \ \frac{\text{disturbance}}{1 + GH}"
+         name="disturbance rejection"
+         gloss="A load thrown onto the output is divided down the same way. This is the reason a regulator holds its voltage when you plug something in."></f-row>
+  <f-row tex="\omega_{BW} \ \rightarrow \ (1 + GH)\,\omega_{BW}" name="bandwidth"
+         gloss="For a first-order plant, closing the loop moves the pole from −a to −(a + K): <b>faster by the same factor</b>. Gain × bandwidth stays put, which is the op-amp GBW rule of Electronics Part 5 arriving from the other direction."></f-row>
+  <f-row tex="\text{gain} \ \rightarrow \ \frac{\text{gain}}{1 + GH}" name="the price"
+         gloss="You cannot get the other three for nothing. <b>Feedback spends gain</b>, and the only reason the trade is worth making is that raw gain is cheap and precision is not."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">This is the op-amp, again</span>
+  <p style="margin-bottom:0">Electronics Part 5 asserted two rules —
+  <b>no current into the inputs, and the inputs sit at the same voltage</b> —
+  and got the non-inverting gain <span class="math" data-tex="1 + R_f/R_1">1 + Rf/R1</span>
+  in one line. That second rule was never a law; it was
+  <span class="math" data-tex="E = R - HC">E = R − HC</span> with
+  <span class="math" data-tex="GH">GH</span> of about 10⁵, so the error is a few
+  microvolts and rounds to zero. <b>The virtual short is a large loop gain, seen
+  from the inside.</b> And 1/H for the non-inverting amplifier is exactly
+  <span class="math" data-tex="1 + R_f/R_1">1 + Rf/R1</span> — the divider that
+  feeds the inverting input, inverted. The rule you memorised was this plate's
+  first line all along.</p>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">More loop gain is not free</span>
+  <p style="margin-bottom:0">Reading the plate above, the obvious move is to
+  make <span class="math" data-tex="GH">GH</span> enormous and collect all four
+  benefits at once. Real loops will not let you. Every extra stage of gain
+  brings its own pole, each pole adds up to 90° of phase lag, and once the lag
+  reaches 180° the feedback that was subtracting is <em>adding</em> — at which
+  point the system does not settle, it oscillates. <b>The entire remainder of
+  this module exists because of that sentence</b>: Part 2 watches the poles move
+  as the gain rises, Part 3 decides when they cross over, and Part 4 measures how
+  much room is left.</p>
+</div>
+
+<h2>1.3 Reducing a diagram</h2>
+
+<p>Exam diagrams are drawn to look worse than they are. There are only four
+moves, they are all mechanical, and the order you apply them in is fixed:
+<b>innermost first</b>.</p>
+
+<div data-figure="reduction"></div>
+
+<f-plate no="12.3" title="The four moves" stamp="handbook"
+  caption="<b>Collapse every cascade and parallel pair, then close the innermost
+  loop, then repeat.</b> Any block diagram this exam can print comes apart in
+  three or four passes.">
+  <f-row tex="G_1 \rightarrow G_2 \ \Rightarrow \ G_1G_2" name="cascade multiplies"
+         gloss="The signal passes through both, so the gains compound."></f-row>
+  <f-row tex="G_1 \parallel G_2 \ \Rightarrow \ G_1 + G_2" name="parallel adds"
+         gloss="Two paths from the same node to the same summing junction. <b>Confusing this with the cascade rule is the single commonest reduction error</b> — ask whether the signal goes through both in turn, or splits."></f-row>
+  <f-row tex="\Rightarrow \ \frac{G}{1 \pm GH}" name="a loop collapses"
+         gloss="Minus at the junction gives plus below the line. Unity feedback is the H = 1 case: G/(1+G)."></f-row>
+  <f-row tex="\text{move a takeoff past } G \ \Rightarrow \ \text{insert } G \text{ or } 1/G"
+         name="moving a node"
+         gloss="<b>Whatever the signal loses by moving, give it back.</b> Moving a takeoff from after a block to before it costs the branch a copy of that block; the other way costs it a 1/G."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>a minor loop inside a major one</em></h4>
+  <div class="worked-body">
+    <p>A controller <span data-tex="G_1">G₁</span> drives a plant
+    <span data-tex="G_2">G₂</span>. The plant has its own <b>minor</b> feedback
+    path <span data-tex="H_2">H₂</span> — a tachometer, in a motor drive — and
+    unity feedback is closed around the lot. Find
+    <span data-tex="C/R">C/R</span>, then evaluate it for
+    <span data-tex="G_1 = 4">G₁ = 4</span>,
+    <span data-tex="G_2 = 10">G₂ = 10</span>,
+    <span data-tex="H_2 = 0.5">H₂ = 0.5</span>.</p>
+    <ol class="steps">
+      <li><b>Innermost loop first.</b> Ignore everything outside it:
+        <span data-tex="\dfrac{G_2}{1 + G_2H_2}">G₂/(1 + G₂H₂)</span>. It is now
+        a single block.</li>
+      <li><b>Cascade.</b> The controller is in series with that block, so
+        multiply: <span data-tex="\dfrac{G_1G_2}{1 + G_2H_2}">G₁G₂/(1 + G₂H₂)</span>.
+        This is the forward path of what is left.</li>
+      <li><b>Close the outer loop</b>, with H = 1:
+        <span data-tex="\frac{C}{R} = \frac{\frac{G_1G_2}{1 + G_2H_2}}{1 + \frac{G_1G_2}{1 + G_2H_2}} = \frac{G_1G_2}{1 + G_2H_2 + G_1G_2}" data-display>C/R = G₁G₂ / (1 + G₂H₂ + G₁G₂)</span></li>
+      <li><b>Numbers.</b>
+        <span data-tex="\frac{(4)(10)}{1 + 5 + 40} = \frac{40}{46} = 0.870" data-display>40/46 = 0.870</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Two things to take
+    from the shape of that answer. <b>The denominator is 1 plus every loop
+    gain</b> — 5 from the minor loop, 40 from the major one — which is a
+    reliable check on any reduction you do. And the result sits just below 1
+    almost regardless of what G₁ and G₂ were, because the outer loop is unity
+    feedback: <b>the answer is set by H, and the gains only decide how close to
+    it you get.</b></p>
+  </div>
+</div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · reducing from the outside in</span>
+  <p style="margin-bottom:0">Started at the outer loop, that diagram invites you
+  to write <span class="math" data-tex="G_1G_2/(1 + G_1G_2)">G₁G₂/(1 + G₁G₂)</span>
+  and lose H₂ entirely, or to sweep a block into a loop gain it was never inside.
+  <b>Work innermost-first, and after every step redraw the collapsed block</b> —
+  even as a scribble. The rule for what belongs in a loop gain is physical, not
+  algebraic: <em>trace one complete trip round the loop and multiply everything
+  the signal passes through</em>. A block downstream of the takeoff point is not
+  on that trip.</p>
+</div>
+
+<h2>1.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="C/R = G/(1 + GH)">C/R = G/(1+GH)</span>. <b>Negative
+        feedback → plus</b>; positive feedback → minus.</li>
+    <li><span data-tex="E/R = 1/(1 + GH)">E/R = 1/(1+GH)</span> — same
+        denominator, and the reason big loop gain means small error.</li>
+    <li><b>Loop gain</b> <span data-tex="L = GH">L = GH</span> is what one trip
+        round multiplies by. Stability and margin are read off L, not G.</li>
+    <li>Large GH ⇒ <span data-tex="C/R \approx 1/H">C/R ≈ 1/H</span>.
+        <b>Check the loop gain before you use that shortcut.</b></li>
+    <li>Sensitivity, disturbance and gain are all divided by
+        <span data-tex="1 + GH">1 + GH</span>; bandwidth is multiplied by it.</li>
+    <li>Cascade <b>multiplies</b>, parallel <b>adds</b>, and you reduce
+        <b>innermost first</b>.</li>
+    <li>Move a takeoff past a block and the branch gains a copy of it — or a
+        1/G going the other way.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Feedback is a trade, and the exchange rate is
+  <span class="math" data-tex="1 + GH">1 + GH</span>. Spend gain, and you buy
+  insensitivity to the plant, rejection of disturbances, and speed — in exactly
+  that proportion, all at once. What you end up with depends on H, which you
+  choose and can build precisely, rather than on G, which drifts with
+  temperature and varies between units. <b>That is why the block diagram is the
+  right picture</b>: it puts the thing you trust and the thing you do not in
+  different boxes.</p>
+  <p>And here is where this module is going. Put
+  <span class="math" data-tex="G(s) = K/[s(s+6)]">G(s) = K/[s(s+6)]</span> —
+  a motor, near enough — inside a unity loop, and the closed-loop denominator is
+  <span class="math" data-tex="s^2 + 6s + K">s² + 6s + K</span>. <b>At K = 25
+  the roots are −3 ± 4j</b>: the same pair Mathematics Part 7 solved as algebra
+  and Linear Systems Part 2 built out of a 120 Ω resistor, with
+  <span class="math" data-tex="\zeta = 0.6">ζ = 0.6</span>, 9.5% overshoot and a
+  53.13° angle. <b>The gain you turn up in a control loop is the same knob as
+  the resistor you change in an RLC circuit</b> — and Part 2 draws the path
+  those roots take as you turn it.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"feedback","title":"Part 1 · Feedback and block diagrams","topics":["loop-formula","block-reduce","nested-loop","feedback-sens"],"count":6}'></div>

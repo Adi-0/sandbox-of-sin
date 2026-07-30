@@ -280,6 +280,54 @@ export const MODULES = [
     ],
   },
   {
+    id: "control", dir: "control", area: 12,
+    title: "Control Systems", questions: "6–9",
+    parts: [
+      {
+        id: "feedback", n: 1, spec: "12.A",
+        title: "Feedback and Block Diagrams",
+        blurb: "One loop, one formula — and the reason almost everything is built this way",
+        minutes: 24, figures: [89, 90],
+      },
+      {
+        id: "closed-loop", n: 2, spec: "12.C",
+        title: "The Closed Loop",
+        blurb: "Turning the gain up drags the poles somewhere, and where is the whole question",
+        minutes: 24, figures: [91, 92],
+      },
+      {
+        id: "stability", n: 3, spec: "12.C",
+        title: "Stability and Routh–Hurwitz",
+        blurb: "Deciding whether any root is in the right half-plane without finding one",
+        minutes: 22, figures: [93, 94],
+      },
+      {
+        id: "margins", n: 4, spec: "12.B",
+        title: "Bode Plots and Margins",
+        blurb: "How much gain and how much delay a loop has left before it oscillates",
+        minutes: 24, figures: [95, 96],
+      },
+      {
+        id: "steady-error", n: 5, spec: "12.D",
+        title: "Steady-State Error and System Type",
+        blurb: "Count the integrators and you know the error before solving anything",
+        minutes: 22, figures: [97, 98],
+      },
+      {
+        id: "pid", n: 6, spec: "12.D",
+        title: "Controller Performance and PID",
+        blurb: "Three terms, three jobs, and the trade every one of them makes",
+        minutes: 24, figures: [99, 100],
+      },
+      {
+        id: "control-synthesis", n: 7, spec: "12.A–12.D",
+        title: "Synthesis and the Mixed Bench",
+        blurb: "One loop equation ran all of it, and a set under exam conditions",
+        minutes: 12, figures: [101],
+      },
+    ],
+  },
+  {
     id: "power", dir: "power", area: 10,
     title: "Power Systems", questions: "8–12",
     parts: [
@@ -382,6 +430,12 @@ export const SPEC = {
     ["7.B", "Resonance", "resonance"],
     ["7.C", "Laplace transforms", "laplace"],
     ["7.D", "Transfer functions", "transfer"],
+  ],
+  control: [
+    ["12.A", "Block diagrams (feedforward, feedback)", "feedback"],
+    ["12.B", "Bode plots", "margins"],
+    ["12.C", "Closed-loop response, open-loop response, and stability", "closed-loop"],
+    ["12.D", "Controller performance (steady-state errors, settling time, overshoot)", "steady-error"],
   ],
   power: [
     ["10.A", "Power theory (power factor, single and three phase, voltage regulation)", "power-factor"],
