@@ -950,6 +950,177 @@ defineProblem("pm-to-time", {
   },
 });
 
+/* ==========================================================================
+   Part 5 — steady-state error and system type
+   ========================================================================== */
+
+defineProblem("system-type", {
+  topic: "System type",
+  lookup: "Electrical → Control Systems → Steady-state error",
+  make(rng) {
+    const CASES = [
+      { tex: "\\dfrac{20}{(s+2)(s+5)}", type: 0, order: 3 },
+      { tex: "\\dfrac{40(s+3)}{(s+1)(s+4)(s+9)}", type: 0, order: 3 },
+      { tex: "\\dfrac{12}{s(s+6)}", type: 1, order: 2 },
+      { tex: "\\dfrac{8(s+2)}{s(s+1)(s+5)}", type: 1, order: 3 },
+      { tex: "\\dfrac{30}{s^2(s+4)}", type: 2, order: 3 },
+      { tex: "\\dfrac{15(s+1)}{s^2(s+7)}", type: 2, order: 3 },
+    ];
+    const c = rng.pick(CASES);
+    const ask = rng.pick(["type", "type", "track"]);
+    const TRACKED = ["none of them", "a step", "a step and a ramp"];
+
+    if (ask === "type") {
+      return {
+        stem: `A unity-feedback system has ${T(`G(s) = ${c.tex}`)}. What is its <b>type</b>?`,
+        choices: options(
+          { text: `type ${num(c.type, 0)}`, why: "" },
+          [
+            { text: `type ${num(c.order, 0)}`, why: `That is the <b>order</b> — the degree of the denominator. Type counts only the poles <em>at the origin</em>, which is a different and much smaller number.` },
+            { text: `type ${num(c.type + 1, 0)}`, why: "One too many. Count the factors of s standing alone in the denominator; a pole at −4 is not a pole at the origin." },
+            { text: `type ${num(Math.max(0, c.type - 1), 0)}`, why: c.type === 0 ? "Type cannot be negative. With no pole at the origin the system is type 0." : "One too few — look again at the power of s in the denominator." },
+          ], [{ text: "type 4", why: "Type is the number of open-loop poles at the origin, and no plant here has four." }]),
+        answer: 0,
+        steps: [
+          `<b>System type is the number of poles at the origin in the open loop</b> — the power of s standing alone in the denominator. Nothing else about the transfer function matters.`,
+          `Here that power is ${num(c.type, 0)}, so the system is <b>type ${num(c.type, 0)}</b>.`,
+          `Why the count is worth having: <b>each integrator lets the loop track one more order of input with zero error.</b> Type ${num(c.type, 0)} tracks ${TRACKED[c.type]} exactly, leaves a constant error on the next input up, and falls behind without bound on the one after that.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A unity-feedback system has ${T(`G(s) = ${c.tex}`)}. Which commands does it follow with <b>zero</b> steady-state error?`,
+      choices: options(
+        { text: TRACKED[c.type], why: "" },
+        [
+          { text: TRADE_ALT(c.type, 1), why: `That is one more than it can manage. This is <b>type ${num(c.type, 0)}</b>, and a type-n loop tracks inputs up to order n exactly — no further.` },
+          { text: TRADE_ALT(c.type, -1), why: c.type === 0 ? "It cannot even do this one: with no integrator, holding a constant output requires a constant error." : "It can do better than that — count the integrators again." },
+          { text: "every input, if K is large enough", why: "<b>Gain shrinks a steady-state error but never removes it.</b> Only an integrator can hold an output with no input to drive it, and gain is not an integrator." },
+        ]),
+      answer: 0,
+      steps: [
+        `Count the poles at the origin: <b>type ${num(c.type, 0)}</b>.`,
+        `<b>An integrator holds its output when its input is zero</b>, so a loop with one can sit exactly on a constant command with no error at all. Without one, the plant only produces output while it is being told to, and the telling <em>is</em> the error.`,
+        `A type-${num(c.type, 0)} loop therefore follows <b>${TRACKED[c.type]}</b> exactly, leaves a constant error on the next order of input, and loses ground without bound on the one after.`,
+      ],
+    };
+  },
+});
+
+function TRADE_ALT(type, d) {
+  const T3 = ["none of them", "a step", "a step and a ramp", "a step, a ramp and a parabola"];
+  return T3[Math.max(0, Math.min(3, type + d))];
+}
+
+defineProblem("ss-error", {
+  topic: "Steady-state error",
+  lookup: "Electrical → Control Systems → Steady-state error",
+  make(rng) {
+    const a = rng.pick([2, 3, 4, 5]);
+    const b = rng.pick([5, 6, 8, 10]);
+    const mode = rng.pick(["t0step", "t0step", "t1ramp", "t1ramp", "mismatch"]);
+
+    if (mode === "t0step") {
+      const K = rng.pick([2, 3, 4, 5]) * a * b;
+      const Kp = K / (a * b);
+      const e = 1 / (1 + Kp);
+      return {
+        stem: `A unity-feedback system has ${T(`G(s) = \\dfrac{${num(K, 0)}}{(s+${a})(s+${b})}`)}. What is the steady-state error to a <b>unit step</b>?`,
+        choices: options(
+          { text: sig(e, 3), why: "" },
+          [
+            { text: sig(1 / Kp, 3), why: `The 1 in the denominator was dropped. <b>For a step it is ${T("e = 1/(1 + K_p)")}</b>, not ${T("1/K_p")} — the ${T("1/K_v")} form belongs to a ramp.` },
+            { text: sig(Kp, 3), why: `That is ${T("K_p")} itself, ${T(`= G(0) = ${num(K, 0)}/(${a}\\cdot${b}) = ${sig(Kp, 3)}`)}. The error is its reciprocal, plus the 1.` },
+            { text: "0", why: "Zero error to a step needs an integrator, and this plant has no pole at the origin — it is type 0." },
+            { text: sig(1 / (1 + K), 3), why: `${T("K_p")} is ${T("G(0)")}, not K. Evaluating at s = 0 divides by both pole locations: ${T(`${num(K, 0)}/(${a}\\cdot${b}) = ${sig(Kp, 3)}`)}.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Type 0 — no pole at the origin — so the position constant is what matters:`,
+          D(`K_p = \\lim_{s\\to0} G(s) = \\frac{${num(K, 0)}}{(${a})(${b})} = ${sig(Kp, 4)}`),
+          D(`e(\\infty) = \\frac{1}{1 + K_p} = \\frac{1}{1 + ${sig(Kp, 4)}} = ${sig(e, 4)}`),
+          `<b>${sig(e, 3)}</b>, or ${fixed(e * 100, 1)}% of the command — permanently. <b>Raising K shrinks it and never removes it</b>, because a type-0 plant needs a standing error to hold a standing output.`,
+        ],
+      };
+    }
+
+    if (mode === "t1ramp") {
+      const K = rng.pick([2, 4, 5, 8]) * a;
+      const Kv = K / a;
+      const e = 1 / Kv;
+      return {
+        stem: `A unity-feedback system has ${T(`G(s) = \\dfrac{${num(K, 0)}}{s(s+${a})}`)}. What is the steady-state error to a <b>unit ramp</b>?`,
+        choices: options(
+          { text: sig(e, 3), why: "" },
+          [
+            { text: sig(1 / (1 + Kv), 3), why: `The <b>1 + belongs to the step case only</b>. For a ramp it is a clean ${T("e = 1/K_v")}.` },
+            { text: sig(Kv, 3), why: `That is ${T("K_v")}, the velocity constant. The error is its reciprocal.` },
+            { text: "0", why: `Zero error to a ramp needs <b>two</b> integrators. This loop has one, so it tracks a step exactly and a ramp with a constant lag.` },
+            { text: "grows without bound", why: "That happens one input further on — a parabola. A type-1 loop keeps up with a ramp, just permanently behind it." },
+          ]),
+        answer: 0,
+        steps: [
+          `One pole at the origin, so this is type 1 and the velocity constant is the one to compute:`,
+          D(`K_v = \\lim_{s\\to0} sG(s) = \\lim_{s\\to0}\\frac{${num(K, 0)}}{s+${a}} = \\frac{${num(K, 0)}}{${a}} = ${sig(Kv, 4)}`),
+          D(`e(\\infty) = \\frac{1}{K_v} = ${sig(e, 4)}`),
+          `<b>${sig(e, 3)}.</b> The s in ${T("sG(s)")} cancels the integrator, which is exactly why the constant comes out finite — <b>and the answer is that the output runs parallel to the command, ${sig(e, 3)} behind it, for ever</b>.`,
+        ],
+      };
+    }
+
+    const K = rng.pick([10, 20, 40]);
+    return {
+      stem: `A unity-feedback system has ${T(`G(s) = \\dfrac{${num(K, 0)}}{(s+${a})(s+${b})}`)}. What is the steady-state error to a <b>unit ramp</b>?`,
+      choices: options(
+        { text: "it grows without bound", why: "" },
+        [
+          { text: sig(a * b / K, 3), why: `That is ${T("1/K_v")} computed as if the plant had an integrator. Check first: ${T(`K_v = \\lim_{s\\to0} sG(s) = 0`)} here, because there is no s in the denominator to cancel — and ${T("1/0")} is not a number.` },
+          { text: sig(1 / (1 + K / (a * b)), 3), why: "That is the error to a <b>step</b>. The input matters as much as the plant." },
+          { text: "0", why: "Zero error to a ramp needs two integrators; this plant has none." },
+          { text: sig(K / (a * b), 3), why: `That is ${T("K_p")}, which is the right constant for a step and the wrong one here.` },
+        ]),
+      answer: 0,
+      steps: [
+        `The plant is <b>type 0</b> — no pole at the origin — and the input is a ramp.`,
+        D(`K_v = \\lim_{s\\to0} sG(s) = \\lim_{s\\to0}\\frac{${num(K, 0)}\\,s}{(s+${a})(s+${b})} = 0`),
+        `${T("e = 1/K_v")} with ${T("K_v = 0")} means <b>the error grows without bound</b>. Physically: the command keeps rising, the plant can only produce output in proportion to the error, so the error must keep rising too.`,
+        `<b>The rule in one line: a type-n loop needs n integrators to track an order-n input.</b> Step needs 1 for zero error, ramp needs 2, parabola needs 3 — and one short of that gives a constant error, two short gives an unbounded one.`,
+      ],
+    };
+  },
+});
+
+defineProblem("error-design", {
+  topic: "Designing to an error",
+  lookup: "Electrical → Control Systems → Steady-state error",
+  make(rng) {
+    const a = rng.pick([2, 4, 5]);
+    const b = rng.pick([5, 8, 10]);
+    const pct = rng.pick([2, 4, 5, 10, 20]);
+    const KpNeed = 100 / pct - 1;
+    const K = KpNeed * a * b;
+    return {
+      stem: `A unity-feedback system has ${T(`G(s) = \\dfrac{K}{(s+${a})(s+${b})}`)}. What gain holds the steady-state error to a unit step at <b>${num(pct, 0)}%</b>?`,
+      choices: options(
+        { text: sig(K, 4), why: "" },
+        [
+          { text: sig((100 / pct) * a * b, 4), why: `The 1 was dropped. ${T("e = 1/(1+K_p)")} gives ${T(`K_p = 1/${num(pct / 100, 2)} - 1 = ${sig(KpNeed, 3)}`)}, not ${sig(100 / pct, 3)}.` },
+          { text: sig(KpNeed, 4), why: `That is the required ${T("K_p")}, not K. ${T("K_p = G(0) = K/(ab)")}, so K is ${T(`${sig(KpNeed, 3)} \\times ${num(a * b, 0)}`)}.` },
+          { text: sig(KpNeed * (a + b), 4), why: `The poles were added. ${T("G(0)")} is found by putting s = 0 into the product, which <b>multiplies</b> them.` },
+          { text: sig(K / 100, 4), why: "A stray factor of 100 — the percentage was already converted when Kp was found." },
+        ]),
+      answer: 0,
+      steps: [
+        `Work backwards from the error. ${D(`e = \\frac{1}{1 + K_p} = ${num(pct / 100, 2)} \\quad\\Rightarrow\\quad K_p = \\frac{1}{${num(pct / 100, 2)}} - 1 = ${sig(KpNeed, 4)}`)}`,
+        `Now turn ${T("K_p")} into K, remembering that ${T("K_p = G(0)")} and the poles multiply:`,
+        D(`K_p = \\frac{K}{(${a})(${b})} \\quad\\Rightarrow\\quad K = (${sig(KpNeed, 4)})(${num(a * b, 0)}) = ${sig(K, 4)}`),
+        `<b>K = ${sig(K, 3)}.</b> And the sting: <b>halving the error means roughly doubling the gain</b>, and Part 4 says every doubling costs 6 dB of gain margin. A 1% specification on a type-0 plant is usually a request for an integrator, not a bigger number.`,
+      ],
+    };
+  },
+});
+
 defineReflex([
   {
     part: "feedback",
@@ -1094,5 +1265,41 @@ defineReflex([
     stem: "GH = K/[s(s+2)(s+8)]. Phase crossover and critical gain?",
     tool: "ω = √(2·8) = 4 rad/s, K = ab(a+b) = 160",
     because: "The geometric mean of the corners is where two arctangents sum to 90°, and Routh gives the same 160 from the coefficients.",
+  },
+  {
+    part: "steady-error",
+    stem: "G = 40/[s(s+4)(s+10)]. What type is it?",
+    tool: "type 1 — one pole at the origin",
+    because: "Type counts integrators, not order, and it is the only thing that decides which inputs are tracked exactly.",
+  },
+  {
+    part: "steady-error",
+    stem: "Type 1, unit step input. Steady-state error?",
+    tool: "zero — Kp is infinite",
+    because: "An integrator holds its output with no input, so no standing error is needed to sustain a standing output.",
+  },
+  {
+    part: "steady-error",
+    stem: "Type 0 with Kp = 24, unit step. Error?",
+    tool: "1/(1 + 24) = 0.04",
+    because: "The step formula is the one that carries the 1 +; the ramp and parabola ones do not.",
+  },
+  {
+    part: "steady-error",
+    stem: "G = 20/[s(s+5)], unit ramp. Error?",
+    tool: "Kv = 20/5 = 4, so e = 1/4",
+    because: "Multiplying by s cancels the integrator before taking the limit, which is what makes Kv finite.",
+  },
+  {
+    part: "steady-error",
+    stem: "Type 1 loop, parabolic input. Error?",
+    tool: "unbounded — Ka = 0",
+    because: "Two orders of input beyond what the loop can hold means the output falls further behind for ever, at any gain.",
+  },
+  {
+    part: "steady-error",
+    stem: "Error too large on a type-0 loop. Two ways to fix it?",
+    tool: "raise K, or add an integrator",
+    because: "Gain only shrinks the error and costs margin doing it; an integrator removes it outright, which is why PI control exists.",
   },
 ]);

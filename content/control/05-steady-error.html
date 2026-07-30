@@ -1,0 +1,195 @@
+<p class="eyebrow">
+  <span>Control Systems · Part 5</span>
+  <span class="spec">NCEES 12.D</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Steady-State Error and System Type</h1>
+
+<p class="lede">A loop can be perfectly stable and still settle in the wrong
+place. This part is about the gap that is left when everything has stopped
+moving — where it comes from, how to compute it in one limit, and why one
+structural feature of the plant decides whether it exists at all.</p>
+
+<h2>5.1 The gap, in one limit</h2>
+
+<p>For unity feedback the error signal is the command minus the output, and
+Part 1 already gave its transfer function:</p>
+
+<p class="math" data-tex="E(s) = \frac{R(s)}{1 + G(s)}" data-display>E(s) = R(s) / (1 + G(s))</p>
+
+<p>Linear Systems Part 3's <b>final value theorem</b> turns that into a number
+without inverting anything:</p>
+
+<p class="math" data-tex="e(\infty) = \lim_{s \to 0} sE(s) = \lim_{s \to 0} \frac{sR(s)}{1 + G(s)}" data-display>e(∞) = lim (s→0) sR(s) / (1 + G(s))</p>
+
+<p>Everything else in this part is that one expression evaluated for the three
+inputs the exam uses. <b>Which one you get depends on a race</b>: the
+<span class="math" data-tex="s">s</span> on top going to zero, against
+<span class="math" data-tex="G(s)">G(s)</span> below blowing up if it has poles
+at the origin. Who wins is the whole subject.</p>
+
+<div class="note trap">
+  <span class="note-tag">Trap · the theorem lies about unstable systems</span>
+  <p style="margin-bottom:0">The final value theorem is only valid when the
+  final value <em>exists</em> — that is, when every closed-loop pole is in the
+  left half-plane. Apply it to an unstable loop and it returns a perfectly
+  respectable-looking number for a signal that is actually growing without
+  bound. <b>Check stability first</b>, with Routh if you have to. On an exam
+  this is usually safe; in a question that gives you a gain near the boundary,
+  it is the trap being set.</p>
+</div>
+
+<h2>5.2 Type is a count of integrators</h2>
+
+<p><b>System type is the number of open-loop poles at the origin</b> — the power
+of s standing alone in the denominator of GH. Not the order, not the number of
+poles, just how many integrators the signal passes through on its way round.</p>
+
+<div data-figure="systemType"></div>
+
+<div class="note payoff">
+  <span class="note-tag">Why an integrator kills the error</span>
+  <p style="margin-bottom:0">Think about what a plant with no integrator has to
+  do to hold its output at 5. Its output is proportional to its input, so its
+  input must be a steady non-zero number — and its input <em>is</em> the error.
+  <b>A type-0 loop needs a permanent error to hold a permanent output.</b> The
+  error is not a defect, it is the command. Put an integrator in the forward
+  path and that changes completely: an integrator's output stays where it is
+  when its input is zero, so the loop can sit exactly on the command with
+  nothing driving it. <b>That single sentence explains the whole table
+  below.</b></p>
+</div>
+
+<f-plate no="12.10" title="The three error constants" stamp="handbook"
+  caption="<b>One limit each, and the s that appears in front of G is exactly
+  what cancels the integrators.</b> All three are defined for <em>unity</em>
+  feedback — with H ≠ 1, work from E/R directly.">
+  <f-row tex="K_p = \lim_{s\to0} G(s)" name="position constant, for a step"
+         gloss="Just G(0). <b>Infinite the moment there is a pole at the origin</b>, which is why type 1 and above track a step exactly."></f-row>
+  <f-row tex="K_v = \lim_{s\to0} sG(s)" name="velocity constant, for a ramp"
+         gloss="The s cancels one integrator. Finite for type 1, zero for type 0, infinite for type 2."></f-row>
+  <f-row tex="K_a = \lim_{s\to0} s^2G(s)" name="acceleration constant, for a parabola"
+         gloss="Two integrators cancelled. <b>Read the pattern: the input's order sets the power of s.</b>"></f-row>
+  <f-row tex="e_{step} = \frac{1}{1+K_p}, \quad e_{ramp} = \frac{1}{K_v}, \quad e_{par} = \frac{1}{K_a}"
+         name="the errors"
+         gloss="<b>Only the step formula carries the 1 +.</b> That asymmetry catches people constantly, and it comes from the 1 in 1 + G surviving the limit only when G(0) is finite."></f-row>
+</f-plate>
+
+<f-plate no="12.11" title="The whole table" stamp="know"
+  caption="<b>Read down the diagonal.</b> Each extra integrator moves the
+  finite-error entry one step to the right, and everything left of it becomes
+  zero while everything right of it becomes unbounded.">
+  <f-row tex="\text{type }0: \quad \tfrac{1}{1+K_p} \quad \infty \quad \infty"
+         name="step · ramp · parabola"
+         gloss="A constant error even on a step, and no hope on anything faster. <b>Almost every uncompensated plant is this one.</b>"></f-row>
+  <f-row tex="\text{type }1: \quad 0 \quad \tfrac{1}{K_v} \quad \infty"
+         name="step · ramp · parabola"
+         gloss="Steps exactly, ramps with a constant lag. <b>The commonest useful case</b> — a motor position loop lives here."></f-row>
+  <f-row tex="\text{type }2: \quad 0 \quad 0 \quad \tfrac{1}{K_a}"
+         name="step · ramp · parabola"
+         gloss="Two integrators. Tracks an accelerating target with a constant lag, but is hard to stabilise — two poles at the origin start you 180° down before the plant has done anything."></f-row>
+  <f-row tex="\text{one short} \Rightarrow \text{constant}, \quad \text{two short} \Rightarrow \text{unbounded}"
+         name="the pattern, in words"
+         gloss="You do not need the table if you have this. <b>Count the integrators, count the order of the input, and compare.</b>"></f-row>
+</f-plate>
+
+<h2>5.3 What raising the gain costs</h2>
+
+<p>For a type-0 loop the only lever available is K, and it works: the error is
+<span class="math" data-tex="1/(1+K_p)">1/(1+Kp)</span> and Kp is proportional to
+K. The problem is what else K is attached to.</p>
+
+<div data-figure="errorTradeoff"></div>
+
+<div class="worked">
+  <h4>Worked · <em>a specification that proportional gain cannot meet</em></h4>
+  <div class="worked-body">
+    <p>A unity-feedback loop has
+    <span data-tex="G(s) = \dfrac{K}{(s+1)(s+2)(s+4)}">G(s) = K/[(s+1)(s+2)(s+4)]</span>.
+    The steady-state error to a step must be no more than <b>5%</b>. Find the
+    gain — and then check it.</p>
+    <ol class="steps">
+      <li><b>Error to Kp.</b>
+        <span data-tex="\frac{1}{1+K_p} = 0.05 \ \Rightarrow \ K_p = 19">1/(1+Kp) = 0.05 → Kp = 19</span></li>
+      <li><b>Kp to K.</b>
+        <span data-tex="K_p = G(0) = \frac{K}{(1)(2)(4)} = \frac{K}{8} \ \Rightarrow \ K = 152" data-display>K = 8 × 19 = 152</span></li>
+      <li><b>Check stability</b>, which Part 3 makes cheap. The characteristic
+        equation is
+        <span data-tex="s^3 + 7s^2 + 14s + (8+K)">s³ + 7s² + 14s + (8+K)</span>,
+        stable while <span data-tex="8 + K < (7)(14) = 98">8 + K &lt; 98</span>,
+        so <b>K &lt; 90</b>.</li>
+      <li><b>152 &gt; 90.</b> The gain that meets the error specification makes
+        the loop unstable. There is no answer.</li>
+      <li><b>How close can it get?</b> At the very boundary, K = 90 gives
+        <span data-tex="e = \frac{8}{8+90} = 8.2\%">e = 8/98 = 8.2%</span> — and
+        that is with zero margin and a response that never settles. A sane
+        design at K = 20 gives 29%.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">This is not a
+    contrived example; it is the normal situation. <b>Proportional gain is one
+    number being asked to set accuracy, damping and stability at once</b>, and
+    beyond a certain point those demands are simply incompatible. The way out is
+    not a cleverer value of K. It is to <b>add an integrator</b> — which turns
+    the loop from type 0 to type 1 and makes the step error <em>exactly</em>
+    zero at any gain. That is what the I in PID does, and it is Part 6.</p>
+  </div>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">The constants assume unity feedback</span>
+  <p style="margin-bottom:0">Kp, Kv and Ka are defined for a loop whose feedback
+  path is a plain wire. If H is a sensor with its own gain or dynamics, the
+  quantity being driven to zero is <em>R − HC</em>, not <em>R − C</em>, and the
+  table does not apply directly. <b>Go back to
+  <span class="math" data-tex="E/R = 1/(1+GH)">E/R = 1/(1+GH)</span> and use the
+  final value theorem on that</b> — it always works, and it is only one more
+  line. Worth knowing because a question that quietly puts a 0.1 in the feedback
+  path is testing exactly this.</p>
+</div>
+
+<h2>5.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><span data-tex="e(\infty) = \lim_{s\to0} \frac{sR(s)}{1+G(s)}">e(∞) = lim sR/(1+G)</span>
+        — <b>and only if the loop is stable.</b></li>
+    <li><b>Type = poles at the origin</b>, not order.</li>
+    <li><span data-tex="K_p = G(0)">Kp = G(0)</span>,
+        <span data-tex="K_v = \lim sG">Kv = lim sG</span>,
+        <span data-tex="K_a = \lim s^2G">Ka = lim s²G</span>.</li>
+    <li><span data-tex="e_{step} = 1/(1+K_p)">e = 1/(1+Kp)</span> — <b>the 1 +
+        appears here and nowhere else.</b> Ramp is 1/Kv, parabola 1/Ka.</li>
+    <li><b>Type n tracks inputs up to order n exactly</b>; one order past gives a
+        constant error, two gives an unbounded one.</li>
+    <li>Raising K shrinks a type-0 error but <b>never removes it</b>, and costs
+        margin every time.</li>
+    <li>An <b>integrator removes it outright</b> — and that is what makes PI
+        control the standard answer.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Two different questions have now been asked of the same loop. Parts 3 and 4
+  asked whether it settles; this part asks whether it settles <em>in the right
+  place</em>, and the answer turns out to depend on something completely
+  different — not on the gain, not on the pole locations, but on <b>how many
+  integrators the loop happens to contain</b>. A structural property, countable
+  at a glance, decides which commands can be followed exactly and which cannot
+  be followed at all.</p>
+  <p>And the two questions pull against each other. The gain that makes the
+  error small is the gain that ruins the damping, and on a real third-order
+  plant the two specifications can be flatly incompatible — as the worked
+  example was. <b>The resolution is to stop using one knob for two jobs.</b>
+  Part 6 adds a term that acts on the accumulated error, which fixes the
+  accuracy outright, and a term that acts on its rate of change, which buys back
+  the damping. Those three terms are the controller almost every plant in the
+  world is running.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"steady-error","title":"Part 5 · Steady-state error","topics":["system-type","ss-error","error-design"],"count":6}'></div>
+
+<div data-reflex='{"only":["steady-error"],"count":5,"title":"Handbook Reflex · Part 5"}'></div>

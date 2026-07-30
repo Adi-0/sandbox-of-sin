@@ -163,6 +163,56 @@ export function zetaFor(osPercent) {
   return -l / Math.sqrt(Math.PI * Math.PI + l * l);
 }
 
+/* --- time response -------------------------------------------------------- */
+
+/**
+ * The response of num(s)/den(s) to an arbitrary input u(t), by integrating the
+ * controllable canonical realisation with RK4. Returns [[t, y], …].
+ *
+ * Partial fractions would be exact and faster, but it cannot cope with a ramp
+ * driving a system that already has a pole at the origin — which is precisely
+ * the case steady-state error is about. Integration does not care.
+ */
+export function simulate(num, den, u, tMax, steps = 800) {
+  const d0 = den[0];
+  const d = den.map((c) => c / d0);
+  const n = d.length - 1;
+  if (n < 1) return [];
+  const nn = new Array(n + 1).fill(0);
+  for (let i = 0; i < num.length; i++) nn[n + 1 - num.length + i] = num[i] / d0;
+
+  /* x_i' = x_{i+1}; the last row carries the denominator. Coefficient on x_i
+     is arr[n - i] in both the state equation and the output equation. */
+  const f = (x, t) => {
+    const dx = new Array(n);
+    for (let i = 0; i < n - 1; i++) dx[i] = x[i + 1];
+    let acc = u(t);
+    for (let i = 0; i < n; i++) acc -= d[n - i] * x[i];
+    dx[n - 1] = acc;
+    return dx;
+  };
+  const yOf = (x, t) => {
+    let y = nn[0] * u(t);
+    for (let i = 0; i < n; i++) y += (nn[n - i] - nn[0] * d[n - i]) * x[i];
+    return y;
+  };
+
+  let x = new Array(n).fill(0);
+  const h = tMax / steps;
+  const out = [[0, yOf(x, 0)]];
+  const axpy = (a, k, b) => a.map((v, i) => v + k * b[i]);
+  for (let s = 0; s < steps; s++) {
+    const t = s * h;
+    const k1 = f(x, t);
+    const k2 = f(axpy(x, h / 2, k1), t + h / 2);
+    const k3 = f(axpy(x, h / 2, k2), t + h / 2);
+    const k4 = f(axpy(x, h, k3), t + h);
+    x = x.map((v, i) => v + (h / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+    out.push([t + h, yOf(x, t + h)]);
+  }
+  return out;
+}
+
 /* --- Routh–Hurwitz -------------------------------------------------------- */
 
 const ROUTH_EPS = 1e-4;
