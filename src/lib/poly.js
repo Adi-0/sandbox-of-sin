@@ -12,10 +12,11 @@
 
 /* --- complex scratch ------------------------------------------------------ */
 
-const cmul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
-const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const cabs = (a) => Math.hypot(a[0], a[1]);
-function cdiv(a, b) {
+export const cmul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+export const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+export const cabs = (a) => Math.hypot(a[0], a[1]);
+export const carg = (a) => Math.atan2(a[1], a[0]);
+export function cdiv(a, b) {
   const d = b[0] * b[0] + b[1] * b[1];
   return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d];
 }
@@ -44,6 +45,12 @@ export function mul(a, b) {
 /** Build the monic polynomial with the given real roots. */
 export function fromRoots(rs) {
   return rs.reduce((p, r) => mul(p, [1, -r]), [1]);
+}
+
+/** d/ds, still highest power first. */
+export function deriv(a) {
+  const n = a.length - 1;
+  return n < 1 ? [0] : a.slice(0, n).map((c, i) => c * (n - i));
 }
 
 /** Horner, on the real line. */
@@ -154,4 +161,79 @@ export function overshoot(zeta) {
 export function zetaFor(osPercent) {
   const l = Math.log(osPercent / 100);
   return -l / Math.sqrt(Math.PI * Math.PI + l * l);
+}
+
+/* --- Routh–Hurwitz -------------------------------------------------------- */
+
+const ROUTH_EPS = 1e-4;
+
+/**
+ * The Routh array of a characteristic polynomial.
+ *
+ * Rows run s^n down to s^0. Both textbook special cases are handled and
+ * flagged, because both mean something physical: a zero in the first column
+ * is a bookkeeping accident, but an entire row of zeros means roots placed
+ * symmetrically about the origin — which for a stable-until-now system is
+ * exactly a pair sitting on the imaginary axis.
+ */
+export function routh(coef) {
+  const n = coef.length - 1;
+  const width = Math.floor(n / 2) + 1;
+  const pad = (a) => {
+    const r = a.slice(0, width);
+    while (r.length < width) r.push(0);
+    return r;
+  };
+  const rows = [
+    pad(coef.filter((_, i) => i % 2 === 0)),
+    pad(coef.filter((_, i) => i % 2 === 1)),
+  ];
+  const flags = [];
+  let aux = null;
+
+  for (let k = 2; k <= n; k++) {
+    const A = rows[k - 2];
+    let B = rows[k - 1];
+    if (B.every((v) => Math.abs(v) < 1e-10)) {
+      const p = n - (k - 2);                       // power of the row above
+      aux = { row: k - 2, power: p, coef: A.slice() };
+      B = pad(A.map((v, i) => v * (p - 2 * i)));   // derivative of the auxiliary
+      rows[k - 1] = B;
+      flags[k - 1] = "auxiliary";
+    } else if (Math.abs(B[0]) < 1e-10) {
+      B = B.slice();
+      B[0] = ROUTH_EPS;
+      rows[k - 1] = B;
+      flags[k - 1] = "epsilon";
+    }
+    const C = [];
+    for (let j = 0; j < width; j++) {
+      C.push((B[0] * (A[j + 1] ?? 0) - A[0] * (B[j + 1] ?? 0)) / B[0]);
+    }
+    rows.push(pad(C));
+  }
+
+  const first = rows.map((r) => r[0]);
+  let changes = 0;
+  for (let i = 1; i < first.length; i++) {
+    if (first[i] !== 0 && first[i - 1] !== 0 && Math.sign(first[i]) !== Math.sign(first[i - 1])) changes++;
+  }
+  return { rows, flags, width, first, changes, aux, labels: rows.map((_, i) => n - i) };
+}
+
+/**
+ * The auxiliary polynomial's roots, as ± jω. This is how a Routh table hands
+ * you the frequency a marginally stable loop will oscillate at.
+ */
+export function auxFrequency(aux) {
+  if (!aux) return null;
+  const c = [];
+  for (let i = 0; i < aux.coef.length; i++) {
+    const p = aux.power - 2 * i;
+    if (p < 0) break;
+    c.push(aux.coef[i]);
+    if (p - 1 >= 0) c.push(0);
+  }
+  const r = roots(c).filter((z) => Math.abs(z[0]) < 1e-6 && z[1] > 1e-9);
+  return r.length ? r[0][1] : null;
 }

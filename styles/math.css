@@ -151,12 +151,14 @@
   display: inline-grid; gap: 0.18em 0.7em; justify-items: center;
   padding: 0.15em 0.32em;
 }
-.math .matrix > .br {
-  align-self: stretch; width: 0.34em;
+/* Plain `matrix` carries no delimiters, as in LaTeX — it is the environment
+   for a laid-out table such as a Routh array. bmatrix adds the brackets. */
+.math .matrix > .br { align-self: stretch; width: 0.34em; }
+.math .matrix.bmatrix > .br {
   border-top: 1px solid currentColor; border-bottom: 1px solid currentColor;
 }
-.math .matrix > .br.l { border-left: 1px solid currentColor; }
-.math .matrix > .br.r { border-right: 1px solid currentColor; }
+.math .matrix.bmatrix > .br.l { border-left: 1px solid currentColor; }
+.math .matrix.bmatrix > .br.r { border-right: 1px solid currentColor; }
 /* pmatrix: round, drawn with glyphs instead of rules */
 .math .matrix.pmatrix > .br { border: 0; width: auto; display: grid; align-items: center; }
 .math .matrix.pmatrix > .br::before {

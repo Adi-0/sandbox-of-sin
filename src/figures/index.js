@@ -46,6 +46,7 @@ import "./linear-synthesis.js"; // 88
 /* --- Control Systems --- */
 import "./feedback.js";      // 89 90
 import "./closed-loop.js";   // 91 92
+import "./stability.js";     // 93 94
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

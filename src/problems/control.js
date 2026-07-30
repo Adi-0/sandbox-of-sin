@@ -575,6 +575,156 @@ defineProblem("gain-design", {
   },
 });
 
+/* ==========================================================================
+   Part 3 — stability
+   ========================================================================== */
+
+defineProblem("stability-quick", {
+  topic: "Ruling it out by inspection",
+  lookup: "Electrical → Control Systems → Routh–Hurwitz criterion",
+  make(rng) {
+    const CASES = [
+      { tex: "s^3 + 4s^2 - 3s + 6", kind: "neg" },
+      { tex: "s^4 + 2s^3 + 5s^2 - s + 3", kind: "neg" },
+      { tex: "s^3 + 2s^2 + 7", kind: "gap" },
+      { tex: "s^4 + 3s^3 + 2s + 8", kind: "gap" },
+      { tex: "s^3 + 6s^2 + 11s + 6", kind: "ok" },
+      { tex: "s^4 + 2s^3 + 3s^2 + 4s + 5", kind: "ok" },
+    ];
+    const c = rng.pick(CASES);
+    const right =
+      c.kind === "neg" ? "Unstable — a coefficient is negative"
+        : c.kind === "gap" ? "Unstable — a coefficient is missing"
+          : "Nothing yet — build the array";
+    return {
+      stem: `A closed-loop characteristic polynomial is ${T(c.tex)}. What can you conclude <b>without building the Routh array</b>?`,
+      choices: options(
+        { text: right, why: "" },
+        c.kind === "ok"
+          ? [
+              { text: "Stable — all the coefficients are positive", why: "<b>All-positive is necessary, not sufficient.</b> Above second order the coefficients can all be positive and roots still sit in the right half-plane — which is exactly why Routh exists. It <em>is</em> sufficient for first and second order." },
+              { text: "Unstable — a coefficient is missing", why: "Every power from the leading term down to the constant is present here. Check again before reaching for the array — but in this case the array really is needed." },
+              { text: "Stable — the leading coefficient is positive", why: "The leading coefficient tells you nothing; you can always multiply the whole polynomial by −1. <b>What matters is that all the coefficients share a sign and none is missing.</b>" },
+            ]
+          : [
+              { text: "Nothing yet — build the array", why: "You can stop earlier than that. <b>Any missing or negative coefficient is a guarantee of instability</b>, no arithmetic required — it is the cheapest check in the subject." },
+              { text: c.kind === "neg" ? "Unstable — a coefficient is missing" : "Unstable — a coefficient is negative", why: "The right verdict for the wrong reason, which on a multiple-choice paper is still the wrong answer. <b>Read the polynomial again</b>: one of those two faults is present and the other is not." },
+              { text: "Unstable — the order is too high", why: "Order has nothing to do with stability. A tenth-order system can be perfectly stable." },
+            ]),
+      answer: 0,
+      steps: [
+        `<b>The necessary condition, and it costs nothing:</b> for every root to be in the left half-plane, all the coefficients must be present and all must have the same sign.`,
+        `Why: a polynomial with only left-half-plane roots factors into terms like ${T("(s + a)")} and ${T("(s^2 + bs + c)")} with a, b, c all positive. <b>Multiplying those out can never produce a negative or a zero coefficient</b> — there is nothing to cancel with.`,
+        c.kind === "ok"
+          ? `Here every coefficient is present and positive, so <b>the test is passed and tells you nothing</b>. The system may or may not be stable, and the array is the only way to find out.`
+          : c.kind === "neg"
+            ? `Here one coefficient is negative, so <b>at least one root is in the right half-plane</b>. Stop — the array would confirm it and waste a minute.`
+            : `Here a power is missing, which is a coefficient of zero, so <b>at least one root is not in the left half-plane</b>. Stop.`,
+        `<b>Do this check first, every time.</b> On the exam it turns a two-minute problem into a five-second one often enough to be worth the habit.`,
+      ],
+    };
+  },
+});
+
+defineProblem("routh-count", {
+  topic: "Counting right-half-plane roots",
+  lookup: "Electrical → Control Systems → Routh–Hurwitz criterion",
+  make(rng) {
+    /* s³ + as² + bs + c, with c chosen either side of the boundary ab. */
+    const a = rng.pick([2, 3, 4, 5, 6]);
+    const b = rng.pick([3, 4, 6, 8, 10]);
+    const crit = a * b;
+    const stable = rng.pick([true, false]);
+    const c = stable
+      ? Math.max(1, Math.round(crit * rng.pick([0.25, 0.4, 0.6])))
+      : Math.round(crit * rng.pick([1.5, 2, 3]));
+    const s1 = (a * b - c) / a;
+    const nRhp = stable ? 0 : 2;
+    return {
+      stem: `How many roots of ${T(`s^3 + ${a}s^2 + ${b}s + ${c}`)} lie in the right half-plane?`,
+      choices: options(
+        { text: num(nRhp, 0), why: "" },
+        [
+          { text: num(stable ? 2 : 0, 0), why: stable
+              ? `Check the sign of the s¹ entry: ${T(`(${a}\\cdot${b} - ${c})/${a} = ${sig(s1, 3)}`)}, which is positive. <b>The first column never changes sign, so no roots are in the right half-plane.</b>`
+              : `The s¹ entry is ${T(`(${a}\\cdot${b} - ${c})/${a} = ${sig(s1, 3)}`)} — negative. <b>Two sign changes, so two roots.</b> All the coefficients being positive was not enough.` },
+          { text: "1", why: "Complex roots come in conjugate pairs, so for a real polynomial the count of right-half-plane roots is even unless a <em>real</em> root has crossed. Here the crossing is a complex pair, so the answer is 0 or 2." },
+          { text: "3", why: "That would need every root in the right half-plane, which requires the coefficients to change sign — they do not." },
+        ]),
+      answer: 0,
+      steps: [
+        `Coefficients are all present and positive, so the cheap test is inconclusive. Build the array:`,
+        D(`\\begin{matrix} s^3 & 1 & ${b} \\\\ s^2 & ${a} & ${c} \\\\ s^1 & \\frac{(${a})(${b}) - (1)(${c})}{${a}} = ${sig(s1, 3)} & 0 \\\\ s^0 & ${c} & 0 \\end{matrix}`),
+        `First column: ${T(`1, \\ ${a}, \\ ${sig(s1, 3)}, \\ ${c}`)} — ${stable ? "all positive, <b>no sign changes</b>." : "one negative entry, so the signs go <b>+ + − +</b>: <b>two changes</b>."}`,
+        stable
+          ? `<b>0 roots in the right half-plane; the system is stable.</b> The boundary for this polynomial is ${T(`c = ab = ${num(crit, 0)}`)}, and ${num(c, 0)} is comfortably below it.`
+          : `<b>2 roots in the right half-plane.</b> The boundary is ${T(`c = ab = ${num(crit, 0)}`)} and ${num(c, 0)} is past it — so a complex pair has crossed the imaginary axis, which is why the count is two rather than one.`,
+        `<b>For a cubic ${T("s^3 + as^2 + bs + c")} the whole test is ${T("0 < c < ab")}.</b> Worth carrying: cubics are the commonest case on the exam, and this collapses the array to one multiplication.`,
+      ],
+    };
+  },
+});
+
+defineProblem("routh-range", {
+  topic: "The range of gain for stability",
+  lookup: "Electrical → Control Systems → Routh–Hurwitz criterion",
+  make(rng) {
+    const a = rng.pick([2, 4, 5, 6, 10]);
+    const b = rng.pick([3, 6, 8, 12, 16]);
+    const crit = a * b;
+    return {
+      stem: `A unity-feedback system has ${T(`G(s) = \\dfrac{K}{s(s^2 + ${a}s + ${b})}`)}. For what range of K is the closed loop stable?`,
+      choices: options(
+        { text: `0 < K < ${num(crit, 0)}`, why: "" },
+        [
+          { text: `K > ${num(crit, 0)}`, why: `Backwards. The s¹ entry is ${T(`(${a}\\cdot${b} - K)/${a}`)}, which goes <b>negative</b> as K grows — so large gain is the unstable side, not the stable one.` },
+          { text: `0 < K < ${num(a + b, 0)}`, why: "The coefficients were added. The boundary comes from the cross-multiplication in the array, which is a product." },
+          { text: `0 < K < ${num(crit / a, 0)}`, why: `That is b, the boundary divided by a. The s¹ entry ${T(`(${a}\\cdot${b} - K)/${a}`)} changes sign when its <b>numerator</b> does, so the division by a never affects the answer.` },
+          { text: `K > 0`, why: "The lower bound is right and there is an upper one too. Every extra pole adds phase lag, and a third-order loop always has a gain at which it oscillates." },
+        ]),
+      answer: 0,
+      steps: [
+        `Characteristic equation: ${D(`s(s^2 + ${a}s + ${b}) + K = s^3 + ${a}s^2 + ${b}s + K = 0`)}`,
+        `The array:`,
+        D(`\\begin{matrix} s^3 & 1 & ${b} \\\\ s^2 & ${a} & K \\\\ s^1 & \\frac{(${a})(${b}) - K}{${a}} & 0 \\\\ s^0 & K & 0 \\end{matrix}`),
+        `Both of the last two entries must be positive: ${T(`K > 0`)} from the bottom row, and ${T(`${a}\\cdot${b} - K > 0`)} from the one above.`,
+        `${D(`0 < K < ${num(crit, 0)}`)}`,
+        `<b>Two conditions, one from each of the last two rows.</b> Only the rows that contain K can constrain it, so a range question is never as much work as the full array suggests — find the entries with K in them and make each positive.`,
+      ],
+    };
+  },
+});
+
+defineProblem("marginal-freq", {
+  topic: "The frequency it oscillates at",
+  lookup: "Electrical → Control Systems → Routh–Hurwitz criterion",
+  make(rng) {
+    const a = rng.pick([2, 4, 5, 6, 10]);
+    const b = rng.pick([4, 9, 16, 25, 36]);
+    const crit = a * b;
+    const w = Math.sqrt(b);
+    return {
+      stem: `The characteristic equation ${T(`s^3 + ${a}s^2 + ${b}s + K`)} is marginally stable at ${T(`K = ${num(crit, 0)}`)}. At what frequency does the loop oscillate?`,
+      choices: options(
+        { text: `${sig(w, 3)} rad/s`, why: "" },
+        [
+          { text: `${sig(Math.sqrt(crit), 3)} rad/s`, why: `That is ${T("\\sqrt{K}")}. The auxiliary polynomial is the <b>s² row</b>, which is ${T(`${a}s^2 + ${num(crit, 0)}`)}, so ${T(`\\omega^2 = ${num(crit, 0)}/${a} = ${num(b, 0)}`)} — the a divides out.` },
+          { text: `${sig(crit / a, 3)} rad/s`, why: `That is ω², not ω. Take the square root of ${num(b, 0)}.` },
+          { text: `${sig(a, 3)} rad/s`, why: "The s² coefficient is not the frequency. Form the auxiliary polynomial from the s² row and solve it." },
+          { text: `${sig(Math.sqrt(a), 3)} rad/s`, why: `Wrong coefficient. For ${T("s^3 + as^2 + bs + K")} the marginal frequency is always ${T("\\sqrt{b}")}.` },
+        ]),
+      answer: 0,
+      steps: [
+        `At the critical gain the s¹ row goes to zeros. <b>That is the array telling you there are roots symmetric about the origin</b> — here, a pair on the imaginary axis.`,
+        `The <b>auxiliary polynomial</b> is the row above the zero row, read as a polynomial in s:`,
+        D(`A(s) = ${a}s^2 + ${num(crit, 0)} = 0`),
+        `${D(`s^2 = -\\frac{${num(crit, 0)}}{${a}} = -${num(b, 0)} \\quad\\Rightarrow\\quad s = \\pm ${sig(w, 3)}j`)}`,
+        `<b>ω = ${sig(w, 3)} rad/s.</b> Notice the shortcut: for ${T("s^3 + as^2 + bs + K")} the critical gain is ${T("K = ab")} and the auxiliary polynomial is ${T("as^2 + ab")}, so <b>ω = √b every time</b> — the s coefficient, square-rooted. Two numbers straight off the polynomial.`,
+      ],
+    };
+  },
+});
+
 defineReflex([
   {
     part: "feedback",
@@ -647,5 +797,41 @@ defineReflex([
     stem: "Poles at −1 ± 3j and −1.5. Use the second-order formulas?",
     tool: "no — the third pole needs to be 5× further left",
     because: "The performance formulas are derived for exactly two poles, and the dominance check is what licenses them.",
+  },
+  {
+    part: "stability",
+    stem: "s³ + 4s² − 2s + 7. Stable?",
+    tool: "no — a negative coefficient settles it",
+    because: "A polynomial with only left-half-plane roots factors into all-positive terms, so nothing can cancel to give a negative or missing coefficient.",
+  },
+  {
+    part: "stability",
+    stem: "Every coefficient present and positive. Is the system stable?",
+    tool: "cannot tell above second order — build the array",
+    because: "The condition is necessary but not sufficient, and that gap is the entire reason Routh–Hurwitz exists.",
+  },
+  {
+    part: "stability",
+    stem: "The first column of a Routh array reads 1, 3, −2, 5. What does it say?",
+    tool: "two sign changes — two roots in the right half-plane",
+    because: "The array counts right-half-plane roots without factoring anything, which is why order barely costs it any work.",
+  },
+  {
+    part: "stability",
+    stem: "s³ + as² + bs + c, all positive. Condition for stability?",
+    tool: "c < ab",
+    because: "It is the s¹ entry (ab − c)/a staying positive, and cubics are common enough that the shortcut is worth carrying.",
+  },
+  {
+    part: "stability",
+    stem: "A whole row of the Routh array is zeros. What does that mean?",
+    tool: "roots symmetric about the origin — usually a pair on the jω axis",
+    because: "The row above is the auxiliary polynomial, and solving it hands you the frequency the loop will oscillate at.",
+  },
+  {
+    part: "stability",
+    stem: "s³ + 5s² + 9s + K is marginally stable. K and ω?",
+    tool: "K = 45, ω = √9 = 3 rad/s",
+    because: "For a cubic the boundary is K = ab and the auxiliary polynomial as² + ab gives ω = √b every time.",
   },
 ]);

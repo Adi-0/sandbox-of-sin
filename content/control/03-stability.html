@@ -1,0 +1,202 @@
+<p class="eyebrow">
+  <span>Control Systems · Part 3</span>
+  <span class="spec">NCEES 12.C</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Stability and Routh–Hurwitz</h1>
+
+<p class="lede">A system is stable when every pole is in the left half-plane.
+Finding the poles of a fifth-order polynomial is not something you will do in
+two minutes — so this part is a test that counts the bad ones without finding
+any of them.</p>
+
+<h2>3.1 What the word means</h2>
+
+<p>Every closed-loop pole contributes a term
+<span class="math" data-tex="e^{st}">e^(st)</span> to the response, and with
+<span class="math" data-tex="s = \sigma + j\omega">s = σ + jω</span> that is
+<span class="math" data-tex="e^{\sigma t}">e^(σt)</span> times an oscillation.
+The sign of σ decides everything:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Pole location</th><th>Its term</th><th>The system</th></tr></thead>
+  <tbody>
+    <tr><td>left half-plane, σ &lt; 0</td><td>decays</td><td><b>stable</b> — the transient dies and the output settles</td></tr>
+    <tr><td>on the jω axis, σ = 0</td><td>neither grows nor decays</td><td><b>marginally stable</b> — it rings for ever at that frequency</td></tr>
+    <tr><td>right half-plane, σ &gt; 0</td><td>grows</td><td><b>unstable</b> — the output runs away until something saturates</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><b>One pole in the right half-plane is enough.</b> It does not matter how far
+left the other nine are; that single growing exponential eventually dominates
+everything. So the question is never &ldquo;where are the poles&rdquo; but &ldquo;<b>is any pole
+not in the left half-plane</b>&rdquo; — and that is a yes-or-no question with a
+yes-or-no answer, which is why a counting test can settle it.</p>
+
+<h2>3.2 The check that costs nothing</h2>
+
+<f-plate no="12.6" title="The free test" stamp="know"
+  caption="<b>Necessary, not sufficient — and the distinction is the whole point
+  of the next section.</b> Do it first anyway: it settles a surprising number of
+  exam questions in five seconds.">
+  <f-row tex="\text{all coefficients present, all the same sign}"
+         name="the necessary condition"
+         gloss="A missing power counts as a zero coefficient and fails it. <b>Fail this and the system is definitely unstable</b> — stop, and do not build the array."></f-row>
+  <f-row tex="(s+a)(s^2 + bs + c), \quad a,b,c > 0" name="why it holds"
+         gloss="Every stable polynomial factors into terms like these. <b>Multiplying all-positive factors can never produce a negative or a zero</b> — there is nothing to cancel with."></f-row>
+  <f-row tex="n \le 2: \ \text{also sufficient}" name="the one place it settles things"
+         gloss="For s² + bs + c, all-positive really does mean stable. From third order up it does not, and <b>that gap is where Routh lives</b>."></f-row>
+  <f-row tex="s^3 + 4s^2 + 2s + 20" name="the cautionary example"
+         gloss="Every coefficient present and positive — and it has two roots in the right half-plane. <b>Passing the free test tells you nothing at all.</b>"></f-row>
+</f-plate>
+
+<h2>3.3 The array</h2>
+
+<p>Routh's test builds a table of numbers from the coefficients, and
+<b>the number of sign changes down its first column is the number of roots in
+the right half-plane</b>. That sentence is the whole method. Nothing is
+factored, nothing is solved, and the work grows slowly with order.</p>
+
+<div data-figure="routhArray"></div>
+
+<f-plate no="12.7" title="Building it" stamp="handbook"
+  caption="<b>Two starting rows from the coefficients, then every later row from
+  the two above it.</b> The pattern is a 2×2 determinant divided by the left
+  entry of the row directly above.">
+  <f-row tex="s^n \quad a_n \ \ a_{n-2} \ \ a_{n-4} \ \ldots" name="first row"
+         gloss="The coefficients, taken <b>every other one</b> starting from the leading term."></f-row>
+  <f-row tex="s^{n-1} \quad a_{n-1} \ \ a_{n-3} \ \ldots" name="second row"
+         gloss="The ones you skipped. Between them the two rows use every coefficient exactly once — a good check that you have written them down correctly."></f-row>
+  <f-row tex="b_1 = \frac{a_{n-1}a_{n-2} - a_n a_{n-3}}{a_{n-1}}" name="every entry after that"
+         gloss="<b>Cross-multiply the first column with the next column, then divide by the first entry of the row above.</b> Pad with zeros as you run out of coefficients; the array narrows to a single column."></f-row>
+  <f-row tex="\text{sign changes in column 1} = \text{RHP roots}"
+         name="reading it"
+         gloss="Zero sign changes means stable. <b>Multiplying any row by a positive number changes nothing</b>, so clear fractions freely — the signs are all that matter."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">A row of zeros is not a failure — it is the answer</span>
+  <p style="margin-bottom:0">When an entire row comes out zero, the polynomial
+  has roots placed symmetrically about the origin, and for a loop that was
+  stable up to this gain, that means <b>a conjugate pair sitting exactly on the
+  imaginary axis</b>. Take the row <em>above</em> the zeros as a polynomial —
+  the <b>auxiliary polynomial</b> — and solve it. Its roots are that pair. So
+  the array does not merely tell you the loop is on the boundary, it tells you
+  <b>the frequency it will oscillate at</b>. Set the first system on the plate
+  to K = 160 and watch it happen: the s¹ row goes to zeros and
+  <span class="math" data-tex="10s^2 + 160 = 0">10s² + 160 = 0</span> gives
+  ω = 4 rad/s.</p>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">The other special case, briefly</span>
+  <p style="margin-bottom:0">Occasionally the <em>first entry</em> of a row is
+  zero while the rest of the row is not. The division that builds the next row
+  then blows up. The standard fix is to replace the zero with a small positive
+  <span class="math" data-tex="\epsilon">ε</span>, carry on symbolically, and
+  read the signs in the limit as ε → 0 — an entry like
+  <span class="math" data-tex="2 - 3/\epsilon">2 − 3/ε</span> is large and
+  <em>negative</em>. It is worth recognising, and it is rare enough on this exam
+  that it is not worth drilling.</p>
+</div>
+
+<h2>3.4 The question the exam actually asks</h2>
+
+<p>Almost every Routh question on the FE is one of two shapes: <em>how many
+roots are in the right half-plane</em>, or <em>for what range of K is this
+stable</em>. The second is the same array with a symbol in it.</p>
+
+<div class="worked">
+  <h4>Worked · <em>the range of gain, and the frequency at the edge</em></h4>
+  <div class="worked-body">
+    <p>A unity-feedback system has
+    <span data-tex="G(s) = \dfrac{K}{s(s+2)(s+8)}">G(s) = K/[s(s+2)(s+8)]</span>
+    — the plant whose locus crossed the axis in Part 2. Find the range of K for
+    stability, and the frequency of oscillation at the boundary.</p>
+    <ol class="steps">
+      <li><b>Characteristic equation.</b>
+        <span data-tex="s(s+2)(s+8) + K = s^3 + 10s^2 + 16s + K = 0" data-display>s³ + 10s² + 16s + K = 0</span></li>
+      <li><b>Free test.</b> All coefficients present and positive provided
+        K &gt; 0. Inconclusive, so build the array.</li>
+      <li><b>The array.</b>
+        <span data-tex="\begin{matrix} s^3 & 1 & 16 \\ s^2 & 10 & K \\ s^1 & \frac{(10)(16) - K}{10} & 0 \\ s^0 & K & 0 \end{matrix}" data-display>s³: 1, 16 / s²: 10, K / s¹: (160−K)/10 / s⁰: K</span></li>
+      <li><b>Make the first column positive.</b> The bottom row gives
+        <span data-tex="K > 0">K &gt; 0</span>; the row above gives
+        <span data-tex="160 - K > 0">160 − K &gt; 0</span>. So
+        <b>0 &lt; K &lt; 160</b>.</li>
+      <li><b>The boundary.</b> At K = 160 the s¹ row is zero. The auxiliary
+        polynomial is the s² row:
+        <span data-tex="10s^2 + 160 = 0 \ \Rightarrow \ s = \pm 4j" data-display>10s² + 160 = 0 → s = ±4j</span>
+        so it oscillates at <b>4 rad/s</b>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Two numbers, one
+    array, no root-finding — and they match the locus of plate 91 exactly, which
+    is the point: the locus <em>showed</em> the crossing and Routh
+    <em>computed</em> it. For a cubic
+    <span data-tex="s^3 + as^2 + bs + c">s³ + as² + bs + c</span> the whole
+    thing collapses to <b>0 &lt; c &lt; ab</b>, with
+    <b><span data-tex="\omega = \sqrt b">ω = √b</span></b> at the boundary.
+    Cubics come up often enough that the shortcut is worth carrying.</p>
+  </div>
+</div>
+
+<div data-figure="stabilityRange"></div>
+
+<div class="note trap">
+  <span class="note-tag">Trap · stable is not the same as good</span>
+  <p style="margin-bottom:0">Routh answers a yes-or-no question, and it is easy
+  to leave with the impression that any gain inside the range is acceptable.
+  Look at the response on the plate at K = 140: it is stable, and it is
+  <em>useless</em> — enormous overshoot, ringing that takes an age to die, and no
+  margin at all for a plant that drifts. <b>A design lives well inside the
+  stable range, not at the edge of it.</b> Quantifying &ldquo;well inside&rdquo; is what
+  gain and phase margin do, and that is Part 4.</p>
+</div>
+
+<h2>3.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>Stable ⇔ every pole strictly in the left half-plane.</b> One bad pole
+        is enough to ruin it.</li>
+    <li><b>Free test first:</b> any missing or negative coefficient ⇒ unstable.
+        All-positive proves nothing above second order.</li>
+    <li>First two rows are the alternating coefficients; every later entry is
+        <span data-tex="\frac{b_1a_2 - a_1b_2}{b_1}">(b₁a₂ − a₁b₂)/b₁</span>
+        from the two rows above.</li>
+    <li><b>Sign changes in the first column = roots in the right half-plane.</b></li>
+    <li>A whole row of zeros ⇒ roots on the jω axis. <b>Auxiliary polynomial
+        from the row above gives ω.</b></li>
+    <li>Cubic shortcut: <span data-tex="s^3+as^2+bs+c">s³+as²+bs+c</span> is
+        stable iff <b>0 &lt; c &lt; ab</b>, and
+        <span data-tex="\omega = \sqrt b">ω = √b</span> at the boundary.</li>
+    <li>Rows may be scaled by any <b>positive</b> number — clear fractions
+        freely.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Routh–Hurwitz is a counting argument dressed as arithmetic. It never
+  locates a root; it counts how many are on the wrong side, which is all the
+  question needs. That is why it survives into fifth and sixth order where
+  factoring has long since become hopeless, and why the exam likes it: the
+  answer is a couple of multiplications and a look at four signs.</p>
+  <p>What it hands you beyond a verdict is the <b>boundary</b> — the exact gain
+  at which the loop tips over, and the frequency it tips over at. Both come out
+  of the same table. But notice what the last plate showed: <b>the response is
+  already bad long before the boundary</b>, so knowing where the cliff is does
+  not tell you where to stand. <b>Part 4 measures the distance to the cliff</b>
+  in the two units engineers actually quote — how much more gain the loop could
+  take, and how much more phase lag — and both are read off a Bode plot rather
+  than a table.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"stability","title":"Part 3 · Stability","topics":["stability-quick","routh-count","routh-range","marginal-freq"],"count":6}'></div>
+
+<div data-reflex='{"only":["stability"],"count":5,"title":"Handbook Reflex · Part 3"}'></div>
