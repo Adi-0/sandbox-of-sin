@@ -1,0 +1,204 @@
+<p class="eyebrow">
+  <span>Control Systems · Part 2</span>
+  <span class="spec">NCEES 12.C</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>The Closed Loop</h1>
+
+<p class="lede">Closing a loop moves the poles. Where they move to is what the
+system does — and since the gain is the one thing you get to choose, the whole
+design problem is: which point on that path do I want?</p>
+
+<h2>2.1 One equation, and everything comes out of it</h2>
+
+<p>Part 1 gave the closed-loop transfer function as
+<span class="math" data-tex="G/(1+GH)">G/(1+GH)</span>. Its poles are wherever
+the denominator vanishes, so:</p>
+
+<p class="math" data-tex="1 + G(s)H(s) = 0" data-display>1 + G(s)H(s) = 0</p>
+
+<p>Write <span class="math" data-tex="G H = K N(s)/D(s)">GH = K·N(s)/D(s)</span>
+— numerator, denominator, and the gain pulled out front — and clear the
+fraction:</p>
+
+<p class="math" data-tex="D(s) + K\,N(s) = 0" data-display>D(s) + K·N(s) = 0</p>
+
+<p>That is the <b>characteristic equation</b>, and it is worth staring at for a
+moment. At <span class="math" data-tex="K = 0">K = 0</span> it is
+<span class="math" data-tex="D(s) = 0">D(s) = 0</span> — the open-loop poles. As
+<span class="math" data-tex="K \to \infty">K → ∞</span> it is
+<span class="math" data-tex="N(s) = 0">N(s) = 0</span> — the open-loop zeros.
+<b>So the closed-loop poles start at the open-loop poles and travel to the
+open-loop zeros</b>, and the path between is fixed by the plant. The gain does
+not choose the path. It chooses how far along it you are.</p>
+
+<div data-figure="rootLocus"></div>
+
+<f-plate no="12.4" title="Reading a root locus" stamp="handbook"
+  caption="<b>Five facts, and you can sketch or check any locus this exam
+  prints.</b> Note that the first four need no arithmetic at all — they are
+  counting exercises.">
+  <f-row tex="\text{branches} = n \ \text{(number of open-loop poles)}"
+         name="how many"
+         gloss="One per closed-loop pole, and the closed-loop polynomial D + KN has the same order as D. <b>Symmetric about the real axis, always</b>, because the coefficients are real."></f-row>
+  <f-row tex="K = 0 \rightarrow \text{poles}, \quad K \rightarrow \infty \rightarrow \text{zeros}"
+         name="where they start and end"
+         gloss="<b>m branches end at the finite zeros; the other n − m run off to infinity.</b> This is the single most useful sentence in the topic."></f-row>
+  <f-row tex="\text{on the real axis: an odd count to the right}"
+         name="which real segments"
+         gloss="Stand at a point on the real axis and count the poles and zeros to your right. Odd total, you are on the locus. Even, you are not."></f-row>
+  <f-row tex="\theta_q = \frac{(2q+1)180^\circ}{n - m}" name="asymptote angles"
+         gloss="Two escaping branches leave at <b>±90°</b>, three at <b>±60° and 180°</b>, four at <b>±45° and ±135°</b>. Recognising those three cases covers nearly everything."></f-row>
+  <f-row tex="\sigma_a = \frac{\sum p - \sum z}{n - m}" name="where the asymptotes meet"
+         gloss="A centre of mass: <b>poles push it left, zeros pull it right</b>. That is the geometric reason a well-placed zero stabilises a loop."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Why the locus is a straight line for two poles</span>
+  <p style="margin-bottom:0">Take
+  <span class="math" data-tex="G = K/[s(s+6)]">G = K/[s(s+6)]</span>. The
+  characteristic equation is
+  <span class="math" data-tex="s^2 + 6s + K = 0">s² + 6s + K = 0</span>, so the
+  two roots always sum to <b>−6</b> — the coefficient of s never changes. Two
+  numbers summing to −6 and complex must be
+  <span class="math" data-tex="-3 \pm j\omega">−3 ± jω</span>. <b>The real part
+  is pinned at −3 for every gain above 9</b>, so raising K moves the poles
+  straight up. Nothing was computed: the sum of the roots is the second
+  coefficient, and that coefficient has no K in it.</p>
+</div>
+
+<h2>2.2 The plane, read as performance</h2>
+
+<p>The whole point of putting the poles on a diagram is that their <em>position
+is the answer</em>. Three readings, and each of them is a piece of geometry.</p>
+
+<f-plate no="12.5" title="Pole position, read four ways" stamp="know"
+  caption="<b>Radius, angle, and horizontal distance.</b> Everything a
+  second-order specification can ask for is one of those three, which is why a
+  specification turns into a region and not a calculation.">
+  <f-row tex="\omega_n = |s| = \sqrt{\sigma^2 + \omega_d^2}" name="distance from the origin"
+         gloss="The natural frequency. <b>A constant-ωn contour is a circle</b>, so a speed requirement is a radius."></f-row>
+  <f-row tex="\zeta = \cos\theta = \sigma/\omega_n" name="angle from the negative real axis"
+         gloss="Damping is an <b>angle</b>. A constant-ζ contour is a straight ray from the origin, which is why the overshoot limit in plate 92 is a wedge."></f-row>
+  <f-row tex="t_s \approx 4/\sigma" name="horizontal distance from the axis"
+         gloss="<b>ζωn is the real part</b>, so settling time needs neither ζ nor ωn — read it straight off. A constant-ts contour is a vertical line."></f-row>
+  <f-row tex="\%OS = 100\,e^{-\pi\zeta/\sqrt{1-\zeta^2}}, \quad t_p = \pi/\omega_d"
+         name="the two time-domain numbers"
+         gloss="Overshoot from ζ alone; peak time from the imaginary part alone. <b>0.5 → 16%, 0.6 → 9.5%, 0.707 → 4.3%</b> is faster than the formula."></f-row>
+</f-plate>
+
+<div class="note trap">
+  <span class="note-tag">Trap · those formulas assume exactly two poles</span>
+  <p style="margin-bottom:0">Every performance expression above is derived for a
+  single complex pair. Hand them a third pole and they are estimates at best.
+  The licence to use them anyway is the <b>dominance rule: a real pole may be
+  ignored if it sits at least five times further left than the pair's real
+  part</b>. At 5× its exponential has decayed by
+  <span class="math" data-tex="e^{-5} = 0.7\%">e⁻⁵ = 0.7%</span> in the time the
+  pair takes one time constant, so it is genuinely gone. At 1.5× it is not, and
+  the true settling time will be <em>longer</em> than
+  <span class="math" data-tex="4/\sigma">4/σ</span> says. <b>A question that
+  hands you three poles is usually testing whether you checked.</b></p>
+</div>
+
+<h2>2.3 Choosing the gain</h2>
+
+<p>A specification is not a number to hit, it is a region to land in — and once
+it is drawn on the plane, &ldquo;what gain?&rdquo; becomes &ldquo;which part of
+the locus is inside?&rdquo;</p>
+
+<div data-figure="designRegion"></div>
+
+<div class="worked">
+  <h4>Worked · <em>picking K, and finding out what gain cannot do</em></h4>
+  <div class="worked-body">
+    <p>A unity-feedback system has
+    <span data-tex="G(s) = \dfrac{K}{s(s+6)}">G(s) = K/[s(s+6)]</span>. Choose K
+    for no more than <b>9.5% overshoot</b>, then check whether it settles within
+    <b>1.5 s</b>. Then check <b>1.0 s</b>.</p>
+    <ol class="steps">
+      <li><b>Overshoot fixes ζ.</b> 9.5% is the anchor worth memorising:
+        <span data-tex="\zeta = 0.6">ζ = 0.6</span>.</li>
+      <li><b>Match the characteristic equation to the standard form.</b>
+        <span data-tex="s^2 + 6s + K = s^2 + 2\zeta\omega_n s + \omega_n^2" data-display>s² + 6s + K = s² + 2ζωn·s + ωn²</span>
+        so <span data-tex="\omega_n = \sqrt{K}">ωn = √K</span> and
+        <span data-tex="2\zeta\omega_n = 6">2ζωn = 6</span>.</li>
+      <li><b>Solve for K.</b>
+        <span data-tex="\zeta = \frac{6}{2\sqrt K} = 0.6 \ \Rightarrow\ \sqrt K = 5 \ \Rightarrow\ K = 25" data-display>K = 25</span>
+        The poles are at <b>−3 ± 4j</b>, ωn = 5.</li>
+      <li><b>Settling time.</b>
+        <span data-tex="t_s = 4/\sigma = 4/3 = 1.33\text{ s}">ts = 4/3 = 1.33 s</span>
+        — inside 1.5 s, so both requirements are met at K = 25.</li>
+      <li><b>Now 1.0 s.</b> That needs
+        <span data-tex="\sigma \ge 4">σ ≥ 4</span>. But σ is pinned at 3 for
+        every gain, so <b>no value of K meets it</b>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">The last step is the
+    one worth remembering. <b>Gain slides the poles along the locus; it cannot
+    move the locus.</b> When a specification asks for something the path never
+    passes through, no amount of tuning will produce it — the plant has to be
+    changed, or a compensator added to bend the path. That is not a failure of
+    the method; it is the method telling you the truth early.</p>
+  </div>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">What the exam actually asks</span>
+  <p style="margin-bottom:0">Constructing a root locus by hand is a
+  <em>drawing</em> skill, and the FE does not have time for it. What it does ask
+  is the reading: <b>how many branches, where do they start, how many asymptotes
+  and at what angles, and is this system stable at this gain</b>. All of those
+  are counting or one substitution. Learn the five lines of plate 12.4 and the
+  geometry of plate 12.5 cold, and treat the sketching as a way of understanding
+  rather than a technique to drill.</p>
+</div>
+
+<h2>2.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>Closed-loop poles are the roots of
+        <span data-tex="1 + GH = 0">1 + GH = 0</span>, i.e. of
+        <span data-tex="D + KN = 0">D + KN = 0</span>.</li>
+    <li><b>Branches start at the open-loop poles and end at the zeros.</b>
+        n of them; n − m go to infinity.</li>
+    <li>Asymptotes: <span data-tex="(2q+1)180^\circ/(n-m)">(2q+1)180°/(n−m)</span>,
+        meeting at <span data-tex="(\sum p - \sum z)/(n-m)">(Σp − Σz)/(n−m)</span>.</li>
+    <li>Real-axis locus: <b>odd count of poles and zeros to the right.</b></li>
+    <li><span data-tex="\zeta = \cos\theta">ζ = cos θ</span>,
+        <span data-tex="\omega_n = |s|">ωn = |s|</span>,
+        <span data-tex="t_s = 4/\sigma">ts = 4/σ</span>. <b>Angle, radius,
+        horizontal distance.</b></li>
+    <li>For <span data-tex="K/[s(s+a)]">K/[s(s+a)]</span> with unity feedback:
+        <span data-tex="\zeta = a/(2\sqrt K)">ζ = a/(2√K)</span>,
+        <span data-tex="\omega_n = \sqrt K">ωn = √K</span>, and
+        <b>σ = a/2 at every gain</b>.</li>
+    <li><b>Dominance:</b> ignore a real pole only if it is 5× further left than
+        the dominant pair.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>The closed-loop poles are the roots of one polynomial,
+  <span class="math" data-tex="D + KN">D + KN</span>, and the root locus is
+  nothing more than a plot of those roots as K sweeps. Everything else in this
+  part is geometry laid over that plot: <b>an angle is a damping ratio, a
+  distance from the origin is a natural frequency, and a distance from the
+  imaginary axis is a settling time</b>. A specification, drawn, is a region;
+  the design question is whether the path goes through it.</p>
+  <p>The most useful thing the picture tells you is a limit. For a two-pole
+  plant the branches turn vertical, so <b>gain buys speed of oscillation and
+  nothing else</b> — no settling time faster than the plant's own breakaway
+  point is available at any price. For a three-pole plant the branches turn
+  <em>towards</em> the imaginary axis, so there is a gain at which the loop
+  starts oscillating on its own. <b>Part 3 finds that gain exactly, without
+  plotting anything</b>, using a test that only looks at the coefficients.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"closed-loop","title":"Part 2 · The closed loop","topics":["cl-poles","locus-read","pole-perform","gain-design"],"count":6}'></div>
+
+<div data-reflex='{"only":["feedback","closed-loop"],"count":6,"title":"Handbook Reflex · Parts 1–2"}'></div>

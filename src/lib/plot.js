@@ -68,9 +68,16 @@ export class Plot {
 
   /* --- structure ----------------------------------------------------------- */
 
-  /** Faint ruling behind everything. Steps are in user units. */
+  /**
+   * Faint ruling behind everything. Steps are in user units.
+   *
+   * Redraws clear the layer first. Figures call this from inside their draw
+   * function on every slider move, and nothing else writes here, so without
+   * the clear a drag would stack thousands of identical lines.
+   */
   grid({ xStep, yStep, color = "grid" } = {}) {
     const g = this.layers.grid;
+    while (g.firstChild) g.removeChild(g.firstChild);
     if (xStep) for (const v of ticks(this.xr, xStep)) {
       g.appendChild(svg("line", {
         x1: this.x(v), y1: this.pad.t, x2: this.x(v), y2: this.pad.t + this.ih,
@@ -96,6 +103,7 @@ export class Plot {
     origin = true, arrows = true, skipZero = true,
   } = {}) {
     const ax = this.layers.axis;
+    while (ax.firstChild) ax.removeChild(ax.firstChild);   // idempotent on redraw
     const y0 = origin && this.yr[0] < 0 && this.yr[1] > 0 ? this.y(0) : this.pad.t + this.ih;
     const x0 = origin && this.xr[0] < 0 && this.xr[1] > 0 ? this.x(0) : this.pad.l;
 
@@ -139,9 +147,19 @@ export class Plot {
     return this;
   }
 
-  /** A reusable arrowhead marker in the given token colour. */
+  /**
+   * A reusable arrowhead marker in the given token colour.
+   *
+   * Memoised per plot: `defs` is not a layer, so `clear()` never touches it,
+   * and a figure that draws vectors inside its redraw would otherwise mint a
+   * fresh marker on every frame and never free one.
+   */
   arrowhead(color = "ink", size = 7) {
+    this._heads ??= new Map();
+    const key = `${color}|${size}`;
+    if (this._heads.has(key)) return this._heads.get(key);
     const id = `ah-${color}-${size}-${++arrowSeq}`;
+    this._heads.set(key, id);
     const m = svg("marker", {
       id, viewBox: "0 0 10 10", refX: 8.5, refY: 5,
       markerWidth: size, markerHeight: size, orient: "auto-start-reverse",
