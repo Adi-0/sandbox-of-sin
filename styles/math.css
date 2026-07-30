@@ -197,6 +197,11 @@
   letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint);
   white-space: nowrap;
 }
+/* On a phone there is no width to hold a long name on one line, and a name
+   that cannot wrap pushes the page into horizontal scroll. */
+@media (max-width: 560px) {
+  .named > .tag { white-space: normal; }
+}
 
 /* Formulas inside SVG figure labels. */
 svg .lbl {

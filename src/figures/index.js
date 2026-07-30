@@ -50,6 +50,7 @@ import "./stability.js";     // 93 94
 import "./margins.js";       // 95 96
 import "./error.js";         // 97 98
 import "./pid.js";           // 99 100
+import "./control-synthesis.js"; // 101
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

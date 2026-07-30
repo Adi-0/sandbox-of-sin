@@ -1,0 +1,177 @@
+<p class="eyebrow">
+  <span>Control Systems · Part 7</span>
+  <span class="spec">NCEES 12.A–12.D</span>
+  <span>13 minute read</span>
+</p>
+
+<h1>Synthesis and the Mixed Bench</h1>
+
+<p class="lede">Four subtopics, six parts, one loop. The root locus, the Routh
+array, the Bode margins and the step response are not four related techniques —
+they are four questions asked of a single polynomial, and they have to agree.</p>
+
+<h2>7.1 One gain, four views</h2>
+
+<div data-figure="oneLoop"></div>
+
+<p>Every panel on that plate is drawn from
+<span class="math" data-tex="s^3 + 10s^2 + 16s + K">s³ + 10s² + 16s + K</span>,
+so moving one knob moves all four. Take K to <b>160</b> and watch them arrive at
+their boundaries together. That is not a tidy coincidence arranged for the last
+part of the module — it is what the module <em>is</em>:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Ask</th><th>And the answer is</th><th>Part</th></tr></thead>
+  <tbody>
+    <tr><td>What does closing the loop do?</td><td><b>G/(1 + GH)</b> — the poles move, the zeros do not</td><td>1</td></tr>
+    <tr><td>Where do the poles go as K rises?</td><td>along a fixed path from the <b>open-loop poles to the zeros</b></td><td>2</td></tr>
+    <tr><td>Is any of them on the wrong side?</td><td><b>sign changes</b> in the first column of a table</td><td>3</td></tr>
+    <tr><td>How close to the wrong side?</td><td>two <b>distances</b> measured on a Bode plot</td><td>4</td></tr>
+    <tr><td>Does it end up in the right place?</td><td>how many <b>integrators</b> the loop contains</td><td>5</td></tr>
+    <tr><td>What can I actually change?</td><td>three terms: <b>size, history, direction</b> of the error</td><td>6</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note payoff">
+  <span class="note-tag">Why the four methods have to agree</span>
+  <p style="margin-bottom:0">All four are asking where the roots of
+  <span class="math" data-tex="1 + GH = 0">1 + GH = 0</span> are. The locus
+  <em>plots</em> them, Routh <em>counts</em> the bad ones, the Bode margins
+  <em>measure the distance</em> to the moment one goes bad, and the step
+  response is <em>what those roots do</em>. Different arithmetic, one object —
+  which makes them a free check on each other. <b>If your Routh answer and your
+  Bode answer disagree, one of them is wrong, and you now know to look.</b></p>
+</div>
+
+<h2>7.2 What this module was owed</h2>
+
+<div class="note payoff">
+  <span class="note-tag">Four debts collected</span>
+  <ul style="margin:0.4rem 0 0">
+    <li><b>Mathematics Part 7's roots −3 ± 4j</b> arrive here as a <em>choice
+    of gain</em>: put K/[s(s+6)] in a unity loop, set K = 25, and there they
+    are. Same triangle, fifth appearance.</li>
+    <li><b>Electronics Part 5's virtual short</b> was never a law. It is
+    <span class="math" data-tex="E = R - HC">E = R − HC</span> with a loop gain
+    of 10⁵, and Part 1 here is where it gets its actual justification.</li>
+    <li><b>Linear Systems Part 4 and 5</b> supplied the transfer function and
+    the Bode plot as objects. This module never re-taught either — it only
+    changed which transfer function you plot.</li>
+    <li><b>Linear Systems Part 3's final value theorem</b> is the whole of
+    Part 5 here, applied to <span class="math" data-tex="R/(1+G)">R/(1+G)</span>
+    instead of to a circuit.</li>
+  </ul>
+</div>
+
+<h2>7.3 How few relationships were doing the work</h2>
+
+<f-plate no="12.13" title="Control Systems, complete" stamp="know"
+  caption="Every problem in this module's benches is one or two of these
+  composed. <b>The first line and the type table carry most of the marks</b>,
+  and both are short.">
+  <f-row tex="\frac{C}{R} = \frac{G}{1+GH}, \qquad \frac{E}{R} = \frac{1}{1+GH}, \qquad L = GH"
+         name="the loop"
+         gloss="<b>Negative feedback gives a plus.</b> Same denominator both times. Large GH ⇒ C/R ≈ 1/H, and 1 + GH divides the sensitivity, the disturbance and the gain while multiplying the bandwidth."></f-row>
+  <f-row tex="G_1G_2 \ | \ G_1 + G_2 \ | \ \frac{G}{1 \pm GH}"
+         name="reduction: series, parallel, loop"
+         gloss="<b>Cascade multiplies, parallel adds, innermost first.</b> Moving a takeoff past a block costs the branch a copy of it."></f-row>
+  <f-row tex="D(s) + K\,N(s) = 0, \quad \zeta = \cos\theta"
+         name="closed-loop poles, and reading them"
+         gloss="Branches start at the open-loop poles, end at the zeros; n − m go to infinity at <b>(2q+1)180°/(n−m)</b>. <b>Angle is damping, radius is ωn, horizontal distance is settling</b> — ts ≈ 4/σ."></f-row>
+  <f-row tex="\text{sign changes in column 1} = \text{RHP roots}"
+         name="Routh–Hurwitz"
+         gloss="Free test first: <b>any missing or negative coefficient ⇒ unstable</b>. For a cubic s³+as²+bs+c, stable iff <b>0 &lt; c &lt; ab</b>, and ω = √b at the boundary."></f-row>
+  <f-row tex="PM = 180^\circ + \angle GH\big|_{0\,dB}, \qquad GM = -|GH|_{dB}\big|_{-180^\circ}"
+         name="the two margins"
+         gloss="<b>Each is read at the other's crossing.</b> Aim for 45–65° and 6–12 dB. Bridge to the time domain: <b>ζ ≈ PM/100</b>."></f-row>
+  <f-row tex="K_p = G(0), \quad K_v = \lim sG, \quad K_a = \lim s^2G"
+         name="steady-state error"
+         gloss="Type = poles at the origin. <b>e = 1/(1+Kp) for a step — the only one with the 1 +</b> — then 1/Kv and 1/Ka. One order past what the loop can hold gives a constant error; two gives an unbounded one."></f-row>
+  <f-row tex="G_c(s) = K_p + \frac{K_i}{s} + K_d s = \frac{K_ds^2 + K_ps + K_i}{s}"
+         name="PID"
+         gloss="<b>I raises the type and removes the error, costing 90° of phase; D adds a zero, damps, and does nothing to the error.</b> Tune in the order stable → Kd → Ki → Kp."></f-row>
+</f-plate>
+
+<h2>7.4 The six mistakes that cost the most</h2>
+
+<div class="note trap">
+  <span class="note-tag">Worth one last look before the bench</span>
+  <ol style="margin:0.4rem 0 0;padding-left:1.2rem">
+    <li><b>The sign reads backwards.</b> Negative feedback puts a
+    <em>plus</em> in the denominator. If your answer makes the gain bigger than
+    G, you have it the wrong way round.</li>
+    <li><b>Reducing outermost-first.</b> It drags blocks into loop gains they
+    were never inside. Collapse the innermost loop, redraw, repeat.</li>
+    <li><b>Swapping the two margins.</b> Gain margin is read where the
+    <em>phase</em> crosses −180°; phase margin where the <em>magnitude</em>
+    crosses 0 dB. Both are on the <b>open</b> loop.</li>
+    <li><b>The 1 + on the wrong error formula.</b> Step is
+    <span data-tex="1/(1+K_p)">1/(1+Kp)</span>; ramp and parabola are bare
+    <span data-tex="1/K_v">1/Kv</span> and
+    <span data-tex="1/K_a">1/Ka</span>.</li>
+    <li><b>Type confused with order.</b> Type counts poles <em>at the
+    origin</em>. A fourth-order plant with no integrator is type 0.</li>
+    <li><b>Expecting D to fix an offset.</b> In steady state the error is
+    constant, so its derivative is zero and the D term contributes nothing at
+    all. Offset is always the integral's job.</li>
+  </ol>
+</div>
+
+<h2>7.5 Reading a stem quickly</h2>
+
+<ol class="steps">
+  <li><b>A diagram with boxes and a circle?</b> Reduction. Innermost first,
+  and the answer is almost always G/(1+GH) with something substituted.</li>
+  <li><b>&ldquo;For what range of K…&rdquo; or &ldquo;how many roots in the right half-plane&rdquo;?</b>
+  Routh. Check the coefficients for a missing or negative one first — it is
+  sometimes the whole question.</li>
+  <li><b>Decibels, degrees, or &ldquo;crossover&rdquo;?</b> Margins. Identify which
+  crossing the stem is describing before doing anything.</li>
+  <li><b>&ldquo;Steady-state&rdquo;, &ldquo;final value&rdquo;, or a ramp input?</b> Count the poles at
+  the origin, pick the matching constant, apply the right formula.</li>
+  <li><b>Overshoot, settling or ζ given?</b> Second-order geometry. Convert to
+  ζ first; overshoot identifies it uniquely, and 0.5/0.6/0.707 → 16/9.5/4.3%
+  covers most of them.</li>
+  <li><b>Kp, Ki, Kd, or &ldquo;the controller&rdquo;?</b> Part 6. Match the symptom to the
+  term and remember which one costs phase.</li>
+</ol>
+
+<div class="note honest">
+  <span class="note-tag">Where the marks actually are</span>
+  <p style="margin-bottom:0">Control Systems is <b>6 to 9 questions</b>, and
+  they are unusually concentrated. <b>Block reduction and G/(1+GH) alone are
+  worth a couple of them</b>, and both are mechanical. Routh range questions and
+  steady-state error questions are formula recall with one limit. Margin
+  questions are almost always <em>reading</em> a plot rather than constructing
+  one. <b>The genuinely slow item is a full root-locus sketch</b> — and it is
+  also the rarest, because the exam does not have time for it either. If you
+  learn the plate above and nothing else in this module, you will still get most
+  of the area.</p>
+</div>
+
+<h2>7.6 A set under exam conditions</h2>
+
+<p>Ten questions drawn from all six parts, at the real pace of <b>2 minutes
+50 seconds</b> each.</p>
+
+<div data-bench='{"id":"control-mixed","title":"Control Systems · mixed set","topics":["loop-formula","block-reduce","nested-loop","feedback-sens","cl-poles","locus-read","pole-perform","gain-design","stability-quick","routh-count","routh-range","marginal-freq","margin-read","margin-calc","pm-to-time","system-type","ss-error","error-design","pid-form","pid-effect","pid-choose"],"count":10}'></div>
+
+<div class="keyidea">
+  <p>Six parts, and one polynomial underneath all of them. A loop has a
+  characteristic equation; where its roots sit decides whether the system
+  settles, how fast, with how much overshoot, and how much room is left before
+  it stops settling at all. Those are not five related facts — they are five
+  questions asked of one set of numbers, which is why the locus, the array, the
+  margins and the response can never disagree.</p>
+  <p>What makes it engineering rather than algebra is the last part. Everything
+  up to Part 5 <em>describes</em> a loop; Part 6 <b>changes</b> one, and it does
+  so by adding exactly the poles and zeros the earlier parts said were missing —
+  an integrator because Part 5 showed the error needed one, a zero because
+  Part 4 showed the phase could not afford the integrator on its own.
+  <b>The design follows from the analysis, term by term.</b> That is the whole
+  discipline, and it fits on one drawing plate.</p>
+</div>
+
+<div data-reflex='{"only":["feedback","closed-loop","stability","margins","steady-error","pid"],"count":8,"title":"Handbook Reflex · the whole module"}'></div>

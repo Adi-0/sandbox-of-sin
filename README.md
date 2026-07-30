@@ -3,7 +3,7 @@
 An interactive educator for the NCEES *Fundamentals of Engineering (Electrical
 and Computer)* exam, built one knowledge area at a time.
 
-**Covered so far — 50 to 77 of the 110 questions:**
+**Covered so far — 56 to 86 of the 110 questions:**
 
 | | Module | NCEES | Questions | Parts | Plates |
 |---|---|---|---|---|---|
@@ -13,9 +13,10 @@ and Computer)* exam, built one knowledge area at a time.
 | 10 | **Power Systems** | area 10 | 8–12 | 6 | 37–48 |
 | 15 | **Digital Systems** | area 15 | 8–12 | 7 | 63–75 |
 | 7 | **Linear Systems** | area 7 | 5–8 | 7 | 76–88 |
+| 12 | **Control Systems** | area 12 | 6–9 | 7 | 89–101 |
 
-Eighty-eight live plates, one hundred and forty-six problem generators, and
-one right triangle followed from the first plate to the last.
+A hundred and one live plates, a hundred and sixty-seven problem generators,
+and one right triangle followed from the first plate to the last.
 
 ## Run it
 
@@ -35,14 +36,14 @@ case there is a bundle:
 python3 build.py            # writes dist/the-bench.html
 ```
 
-One file, 1.7 MB, opens from disk with no server and no network. Put it on a
+One file, about 2 MB, opens from disk with no server and no network. Put it on a
 tablet and read it on a train.
 
 ## The idea it is built around
 
 The FE exam is **closed book with an electronic reference** — the NCEES FE
 Reference Handbook, searchable, open in a second window. Almost every formula
-in these forty-four parts is in it.
+in these fifty-one parts is in it.
 
 So the usual approach — flashcard the formulas until they stick — spends your
 most expensive resource on the one thing the exam gives away. What the handbook
@@ -83,6 +84,8 @@ literature uses these numbers for the same reason.
 | Digital 3 | **Σm(3, 4, 5)** on a Karnaugh map | an honest bad case — 3 has no neighbour |
 | Linear 2 | 120 Ω, 10 mH, 1 µF | roots **−6000 ± j8000** — Maths 7's −3 ± 4j at 2000× |
 | Linear 4 | the same poles on the s-plane | ωₙ = 10 krad/s, ζ = cos 53.13° = **0.6** |
+| Control 2 | K/[s(s+6)] closed at **K = 25** | s² + 6s + 25 — the same roots, now *chosen* |
+| Control 4 | a phase margin of **≈ 59°** | ζ = 0.6 again, and 9.5% overshoot |
 
 Electronics is where the numeric cast honestly thins out, and the module says so
 rather than forcing it. What carries the continuity there is **structural**:
@@ -91,12 +94,14 @@ Thévenin becomes the bias divider and meter loading, Power Part 4's reflected
 impedance becomes impedance matching, and Mathematics Part 6's exponential
 becomes the diode equation.
 
-The payoff arrives three times. In Mathematics Part 7 the triangle becomes the
+The payoff arrives four times. In Mathematics Part 7 the triangle becomes the
 characteristic root that decides whether a circuit rings. In Circuit Analysis
 Part 6 it becomes the power triangle — 1200, 1600 and 2000 are 3, 4 and 5
 multiplied by 400. In Power Systems it becomes an actual industrial plant, drawn
-end to end on the final plate. None of it is analogy; they are the same three
-numbers doing the work, and a 0.6 power factor simply *is* a 53.13° triangle.
+end to end on the final plate. And in Control Systems it stops being something
+you *find* and becomes something you *choose* — the gain that puts a loop's poles
+at −3 ± 4j. None of it is analogy; they are the same three numbers doing the
+work, and a 0.6 power factor simply *is* a 53.13° triangle.
 
 ## What is in it
 
@@ -162,6 +167,18 @@ numbers doing the work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 6 | **Resonance** — ω₀, Q, bandwidth, and the voltage rise | 7.B | 22 min | 86–87 |
 | 7 | **Synthesis and the Mixed Bench** | 7.A–7.D | 12 min | 88 |
 
+### Module 12 — Control Systems (NCEES area 12)
+
+| Part | | NCEES | Read | Plates |
+|---|---|---|---|---|
+| 1 | **Feedback and Block Diagrams** — one loop, one formula, and why almost everything is built this way | 12.A | 24 min | 89–90 |
+| 2 | **The Closed Loop** — turning the gain up drags the poles somewhere | 12.C | 24 min | 91–92 |
+| 3 | **Stability and Routh–Hurwitz** — counting bad roots without finding any | 12.C | 22 min | 93–94 |
+| 4 | **Bode Plots and Margins** — two distances to disaster | 12.B | 24 min | 95–96 |
+| 5 | **Steady-State Error and System Type** — stable, and still in the wrong place | 12.D | 22 min | 97–98 |
+| 6 | **Controller Performance and PID** — three terms, three jobs | 12.D | 22 min | 99–100 |
+| 7 | **Synthesis and the Mixed Bench** | 12.A–12.D | 13 min | 101 |
+
 ### Module 9 — Electronics (NCEES area 9)
 
 | Part | | NCEES | Read | Plates |
@@ -174,12 +191,13 @@ numbers doing the work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 6 | **Instrumentation** — measuring without disturbing | 9.D | 22 min | 60–61 |
 | 7 | **Synthesis and the Mixed Bench** | 9.A–9.E | 12 min | 62 |
 
-Every subtopic of all six published specifications is covered; the order within
-each module is pedagogical rather than the alphabetical order NCEES prints.
+Every subtopic of all seven published specifications is covered; the order
+within each module is pedagogical rather than the alphabetical order NCEES
+prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 146 types is a seeded
+- **Problems are generated, not stored.** Each of the 167 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
@@ -224,8 +242,9 @@ src/
     rng.js          seeded RNG, so any problem set is reproducible
     circuit.js      schematic drawing on a grid, plus a network solver
     boolean.js      exact minimal-SOP solver, shared by the plates and the bench
-  figures/          one file per part, 88 plates
-  problems/         one file per part, 146 generators
+    poly.js         polynomials, roots, Routh arrays and RK4 time responses
+  figures/          one file per part, 101 plates
+  problems/         one file per part, 167 generators
 
 content/
   start/            the orientation part
@@ -235,6 +254,7 @@ content/
   power/            Power Systems, 6 parts
   digital/          Digital Systems, 7 parts
   linear/           Linear Systems, 7 parts
+  control/          Control Systems, 7 parts
 ```
 
 Vanilla ES modules. No framework, no external JavaScript, no maths library.
@@ -265,10 +285,17 @@ result.
 **Figures compute their own numbers.** `circuit.js` ships a Gaussian-elimination
 solver and every schematic figure runs the same node analysis the prose teaches;
 `boolean.js` ships an exact minimal-SOP solver, and the Karnaugh-map plate, the
-minimisation bench and the state-assignment plate all call it. Nothing in a plate
-is a hand-computed constant, so a caption cannot drift out of agreement with the
+minimisation bench and the state-assignment plate all call it; `poly.js` ships a
+root finder, a Routh array and an RK4 time response, and Control Systems' four
+methods each drive their own plate from it. Nothing in a plate is a
+hand-computed constant, so a caption cannot drift out of agreement with the
 drawing when a slider moves — and twice now the solver has contradicted something
 the prose asserted, which is the whole reason for the rule.
+
+That last point is what plate 101 is for. The root locus, the Routh array, the
+Bode margins and the step response are computed independently from one
+polynomial and drawn side by side, so if any of the four were wrong the plate
+would visibly disagree with itself.
 
 ## Accessibility
 
@@ -293,7 +320,7 @@ Verified with no horizontal scroll down to a 360 px viewport, in both themes.
 
 ---
 
-Four of the seventeen NCEES knowledge areas are done. The next ones — Digital
-Systems, Linear Systems and Control Systems, Signal Processing — reuse `styles/`
-and `src/lib/` unchanged and slot into `outline.js` as further modules, so the
-compilation keeps reading as one work.
+Seven of the seventeen NCEES knowledge areas are done. The next ones — Signal
+Processing, Electromagnetics, Computer Systems, Software Development — reuse
+`styles/` and `src/lib/` unchanged and slot into `outline.js` as further
+modules, so the compilation keeps reading as one work.

@@ -151,9 +151,16 @@ export function dominant(rs) {
   return { complex: false, re: slow[0], im: 0, wn: Math.abs(slow[0]), zeta: 1 };
 }
 
-/** Percent overshoot of a second-order step response, from ζ alone. */
+/**
+ * Percent overshoot of a second-order step response, from ζ alone.
+ *
+ * ζ = 0 gives 100: an undamped pair peaks at twice its final value and stays
+ * there. Callers must rule out ζ < 0 themselves — an unstable response has no
+ * final value to overshoot.
+ */
 export function overshoot(zeta) {
-  if (zeta >= 1 || zeta <= 0) return 0;
+  if (zeta >= 1) return 0;
+  if (zeta <= 0) return 100;
   return 100 * Math.exp(-Math.PI * zeta / Math.sqrt(1 - zeta * zeta));
 }
 
@@ -264,11 +271,15 @@ export function routh(coef) {
   }
 
   const first = rows.map((r) => r[0]);
+  /* Both flags fire only when the entry as computed was zero, so this
+     recovers the first column before either substitution — which is what a
+     readout quoting the symbolic entry has to show. */
+  const rawFirst = rows.map((r, i) => (flags[i] ? 0 : r[0]));
   let changes = 0;
   for (let i = 1; i < first.length; i++) {
     if (first[i] !== 0 && first[i - 1] !== 0 && Math.sign(first[i]) !== Math.sign(first[i - 1])) changes++;
   }
-  return { rows, flags, width, first, changes, aux, labels: rows.map((_, i) => n - i) };
+  return { rows, flags, width, first, rawFirst, changes, aux, labels: rows.map((_, i) => n - i) };
 }
 
 /**

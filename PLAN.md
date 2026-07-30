@@ -13,11 +13,12 @@ This file is the durable memory across turns. Read it first.
 | **Electronics** | 9 | 7–11 | 7 | 49–62 | complete |
 | **Digital Systems** | 15 | 8–12 | 7 | 63–75 | complete |
 | **Linear Systems** | 7 | 5–8 | 7 | 76–88 | complete |
+| **Control Systems** | 12 | 6–9 | 7 | 89–101 | complete |
 
-Six of seventeen areas; 50–77 of the 110 questions. A shared orientation part
+Seven of seventeen areas; 56–86 of the 110 questions. A shared orientation part
 sits ahead of all of them. Plate numbers run in the order the modules were
-built, not in module order — Electronics was written after Power Systems, and
-Digital Systems after Electronics.
+built, not in module order — Electronics was written after Power Systems,
+Digital Systems after Electronics, and Control Systems after Linear Systems.
 
 ---
 
@@ -77,6 +78,10 @@ From the NCEES *FE Electrical and Computer CBT Exam Specifications*
 | 7.B | Resonance | Linear 6 |
 | 7.C | Laplace transforms | Linear 3 |
 | 7.D | Transfer functions | Linear 4 |
+| 12.A | Block diagrams (feedforward, feedback) | Control 1 |
+| 12.B | Bode plots | Control 4 |
+| 12.C | Closed-loop response, open-loop response, and stability | Control 2, 3 |
+| 12.D | Controller performance (steady-state errors, settling time, overshoot) | Control 5, 6 |
 
 **Checked against the PDF, not from memory:** area 10 has no per-unit and no
 symmetrical components. Those are PE topics. An earlier draft of this file
@@ -251,6 +256,40 @@ Systems (12, 6–9 q) reuses nearly all of it, so this is load-bearing
 infrastructure rather than padding. Read times are held to 22–24 minutes rather
 than the 26–32 the larger modules use.
 
+### Module 12 — Control Systems (area 12)
+
+| # | Part | Read | Why it comes here |
+|---|---|---|---|
+| 1 | Feedback and Block Diagrams | 24 min | The loop, its algebra, and the trade that justifies the subject |
+| 2 | The Closed Loop | 24 min | Gain drags the poles along a fixed path; the path is the design space |
+| 3 | Stability and Routh–Hurwitz | 22 min | Counting bad roots without finding any |
+| 4 | Bode Plots and Margins | 24 min | Part 3 gave a yes; this measures how far from no |
+| 5 | Steady-State Error and System Type | 22 min | Stable is not the same as correct |
+| 6 | Controller Performance and PID | 22 min | The first part that *changes* a loop rather than describing one |
+| 7 | Synthesis and mixed bench | 13 min | One loop, four views, and they must agree |
+
+**Built directly on Linear Systems, which is why that module was written
+first.** Part 2 needs the s-plane and the pole-position readings of Linear 4;
+Part 4 needs the Bode sketching of Linear 5 and does not re-teach it; Part 5
+needs the final value theorem of Linear 3.
+
+**One plant runs through Parts 2–4 and 7**: K/[s(s+2)(s+8)]. Its locus crosses
+the imaginary axis at ω = 4 rad/s, its Routh array gives K = 160 from the
+coefficients, and its Bode plot gives the same two numbers as measurements.
+Plate 101 drives all four views from one knob so the agreement is watchable
+rather than asserted. **Parts 5 and 6 use a second plant**, 1/[(s+1)(s+2)(s+4)],
+chosen because a 5% error specification demands K = 152 on a loop that goes
+unstable at K = 90 — so the case for PID is made by a contradiction the earlier
+parts produce, not by assertion.
+
+The cast arrives twice more: unity feedback around K/[s(s+6)] at **K = 25**
+gives s² + 6s + 25 and the roots −3 ± 4j *chosen* rather than found, and a
+phase margin of 59° is ζ = 0.6 wearing frequency-domain clothes.
+
+Root locus *construction* is deliberately underweighted — it is a drawing skill
+the exam has no time for. The five counting rules and the reading of a locus
+get the space instead.
+
 ### Module 15 — Digital Systems (area 15)
 
 | # | Part | Read | Why it comes here |
@@ -312,15 +351,16 @@ src/
   lib/
     dom.js          element + SVG helpers, sliders, readouts
     fmt.js          number formatting — no floating-point tails, ever
-    exact.js        Fraction, Complex, Matrix, polynomial roots
     tex.js          compact TeX subset -> themed HTML + speech text
     plot.js         axes, grids, curves, vectors, shading
     circuit.js      schematics on a grid lattice, plus solve()/series/parallel
+    boolean.js      exact minimal-SOP solver over n variables
+    poly.js         polynomial arithmetic, root finder, Routh array, RK4 response
     figure.js       plate scaffolding, rAF loop, reduced-motion
     rng.js          seeded RNG so a problem set is reproducible
     bench.js        problem engine, MCQ UI, stepped solutions
-  figures/          one module per part, 62 plates
-  problems/         one module per part, 107 generators
+  figures/          one module per part, 101 plates
+  problems/         one module per part, 167 generators
 
 content/
   start/            orientation
@@ -328,6 +368,9 @@ content/
   circuits/         Circuit Analysis, 7 parts
   electronics/      Electronics, 7 parts
   power/            Power Systems, 6 parts
+  digital/          Digital Systems, 7 parts
+  linear/           Linear Systems, 7 parts
+  control/          Control Systems, 7 parts
 ```
 
 Vanilla ES modules. No framework, no build step to run it, no external
@@ -428,6 +471,13 @@ Forty-four parts, 88 plates, 146 generators, 157 reflex items.
 | Linear | 5 Frequency Response | 84–85 | 2 |
 | Linear | 6 Resonance | 86–87 | 2 |
 | Linear | 7 Synthesis and mixed bench | 88 | (reuses 14) |
+| Control | 1 Feedback and Block Diagrams | 89–90 | 4 |
+| Control | 2 The Closed Loop | 91–92 | 4 |
+| Control | 3 Stability and Routh–Hurwitz | 93–94 | 4 |
+| Control | 4 Bode Plots and Margins | 95–96 | 3 |
+| Control | 5 Steady-State Error and System Type | 97–98 | 3 |
+| Control | 6 Controller Performance and PID | 99–100 | 3 |
+| Control | 7 Synthesis and mixed bench | 101 | (reuses 21) |
 
 ### Verified
 
@@ -505,13 +555,29 @@ Each was invisible on the page and wrong in a way a reader would have paid for.
    because the physics collapses. `generate()` re-draws on a stepped seed
    rather than inventing filler options with nothing to say.
 
+### Two more, from building Control Systems
+
+4. **`plot.js` leaked a plate's worth of SVG on every slider move.** `grid()`
+   and `axes()` are called from inside a figure's draw function, but neither
+   cleared its own layer and `arrowhead()` minted a fresh `<marker>` into
+   `defs` on each call — and `clear()` never touches `defs`. Sixty moves on one
+   plate added 1,700 dead nodes; a real drag added tens of thousands. Both now
+   clear or memoise. **This affected every interactive figure in the
+   compilation**, and it was invisible until something counted the nodes.
+5. **A readout contradicting the plate above it.** At the critical gain the
+   Routh array's s¹ row is all zeros, so `routh()` substitutes the auxiliary
+   polynomial's derivative — and plate 101's readout, labelled `(160−K)/10`,
+   printed the *substituted* 20 while the note beside it said the entry had
+   reached zero. `routh()` now also returns `rawFirst`. The lesson is the
+   general one: **a computed readout and hand-written prose about it are two
+   sources of truth**, and screenshotting the boundary case is what caught it.
+
 ## 9. Next turns
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- **Linear Systems** (5–8 q) + **Control Systems** (6–9 q) — Maths 7 and
-  Circuits 6 as transfer functions; the transient half of the RL/RC story.
-- **Signal Processing** (5–8 q) — Maths 6's integral as the Fourier transform.
+- **Signal Processing** (5–8 q) — Maths 6's integral as the Fourier transform,
+  and the sampling theorem. Reuses Linear 5's Bode machinery and `poly.js`.
 - Then: Electromagnetics, Communications, Computer Networks, Computer Systems,
   Software Development, Engineering Economics, Ethics, Probability and
   Statistics, Properties of Electrical Materials.
