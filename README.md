@@ -3,7 +3,7 @@
 An interactive educator for the NCEES *Fundamentals of Engineering (Electrical
 and Computer)* exam, built one knowledge area at a time.
 
-**Covered so far — 56 to 86 of the 110 questions:**
+**Covered so far — 61 to 94 of the 110 questions:**
 
 | | Module | NCEES | Questions | Parts | Plates |
 |---|---|---|---|---|---|
@@ -14,9 +14,10 @@ and Computer)* exam, built one knowledge area at a time.
 | 15 | **Digital Systems** | area 15 | 8–12 | 7 | 63–75 |
 | 7 | **Linear Systems** | area 7 | 5–8 | 7 | 76–88 |
 | 12 | **Control Systems** | area 12 | 6–9 | 7 | 89–101 |
+| 8 | **Signal Processing** | area 8 | 5–8 | 7 | 102–114 |
 
-A hundred and one live plates, a hundred and sixty-seven problem generators,
-and one right triangle followed from the first plate to the last.
+A hundred and fourteen live plates, a hundred and eighty-five problem
+generators, and one right triangle followed from the first plate to the last.
 
 ## Run it
 
@@ -179,6 +180,18 @@ work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 6 | **Controller Performance and PID** — three terms, three jobs | 12.D | 22 min | 99–100 |
 | 7 | **Synthesis and the Mixed Bench** | 12.A–12.D | 13 min | 101 |
 
+### Module 8 — Signal Processing (NCEES area 8)
+
+| Part | | NCEES | Read | Plates |
+|---|---|---|---|---|
+| 1 | **Signals and Spectra** — the same signal written twice, and why a sharp edge is expensive | 8.A · 8.B | 20 min | 102–103 |
+| 2 | **Sampling and Aliasing** — a slower impostor fits the same dots, permanently | 8.A | 24 min | 104–105 |
+| 3 | **Analog Filters** — four shapes, four circuits, and why two sections are not one squared | 8.B | 22 min | 106–107 |
+| 4 | **Order, Roll-Off and Butterworth** — what a steeper skirt costs | 8.B | 22 min | 108–109 |
+| 5 | **Digital Filters and Difference Equations** — a filter that is one line of arithmetic | 8.C | 22 min | 110–111 |
+| 6 | **The Z-Transform and the Unit Circle** — stability becomes a distance | 8.C | 24 min | 112–113 |
+| 7 | **Synthesis and the Mixed Bench** | 8.A–8.C | 12 min | 114 |
+
 ### Module 9 — Electronics (NCEES area 9)
 
 | Part | | NCEES | Read | Plates |
@@ -191,13 +204,13 @@ work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 6 | **Instrumentation** — measuring without disturbing | 9.D | 22 min | 60–61 |
 | 7 | **Synthesis and the Mixed Bench** | 9.A–9.E | 12 min | 62 |
 
-Every subtopic of all seven published specifications is covered; the order
+Every subtopic of all eight published specifications is covered; the order
 within each module is pedagogical rather than the alphabetical order NCEES
 prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 167 types is a seeded
+- **Problems are generated, not stored.** Each of the 185 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
@@ -243,8 +256,8 @@ src/
     circuit.js      schematic drawing on a grid, plus a network solver
     boolean.js      exact minimal-SOP solver, shared by the plates and the bench
     poly.js         polynomials, roots, Routh arrays and RK4 time responses
-  figures/          one file per part, 101 plates
-  problems/         one file per part, 167 generators
+  figures/          one file per part, 114 plates
+  problems/         one file per part, 185 generators
 
 content/
   start/            the orientation part
@@ -320,7 +333,7 @@ Verified with no horizontal scroll down to a 360 px viewport, in both themes.
 
 ---
 
-Seven of the seventeen NCEES knowledge areas are done. The next ones — Signal
-Processing, Electromagnetics, Computer Systems, Software Development — reuse
-`styles/` and `src/lib/` unchanged and slot into `outline.js` as further
+Eight of the seventeen NCEES knowledge areas are done. The next ones —
+Electromagnetics, Communications, Computer Systems, Software Development —
+reuse `styles/` and `src/lib/` unchanged and slot into `outline.js` as further
 modules, so the compilation keeps reading as one work.

@@ -1,0 +1,195 @@
+<p class="eyebrow">
+  <span>Signal Processing · Part 6</span>
+  <span class="spec">NCEES 8.C</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>The Z-Transform and the Unit Circle</h1>
+
+<p class="lede">Part 5 could run a difference equation but not design one, and
+could not answer &ldquo;is this stable?&rdquo; except by running it and
+watching. This part supplies the missing tool, and it is the same tool Linear
+Systems used on differential equations — with the half-plane rolled up into a
+circle.</p>
+
+<h2>6.1 One symbol, one meaning: delay</h2>
+
+<p>Everything here follows from a single definition. <b>z⁻¹ means one sample of
+delay.</b> That is the whole intuition, and if you keep hold of it the rest is
+bookkeeping.</p>
+
+<f-plate no="8.10" title="The z-transform" stamp="handbook"
+  caption="<b>Compare it with Linear Systems Part 3 line by line.</b> Laplace
+  turned differentiation into multiplying by s; the z-transform turns a
+  one-sample delay into multiplying by z⁻¹. Same trick, discrete alphabet.">
+  <f-row tex="X(z) = \sum_{n=0}^{\infty} x[n]\,z^{-n}" name="the definition"
+         gloss="A polynomial in z⁻¹ whose coefficients are the samples. The sequence and the polynomial are <b>the same object written twice</b>."></f-row>
+  <f-row tex="\mathcal{Z}\{x[n-k]\} = z^{-k}X(z)" name="the only property you need"
+         gloss="<b>Delaying by k samples means multiplying by z⁻ᵏ.</b> Every difference equation converts to algebra with this one line."></f-row>
+  <f-row tex="H(z) = \frac{Y(z)}{X(z)} = \frac{b_0 + b_1z^{-1} + \cdots}{1 + a_1z^{-1} + \cdots}"
+         name="the transfer function"
+         gloss="<b>Read straight off the difference equation</b> — the b's become the numerator, the a's the denominator. No integration, no algebra."></f-row>
+  <f-row tex="z = e^{sT} = e^{j\omega T} \ \text{ on the axis}" name="how it relates to s"
+         gloss="Sampling maps the s-plane onto the z-plane by <b>z = e^{sT}</b>. The left half-plane wraps into the unit disc, and the jω axis becomes the unit circle itself."></f-row>
+</f-plate>
+
+<h2>6.2 Difference equation to transfer function, by inspection</h2>
+
+<p>Take any difference equation, replace each delay by its power of z⁻¹, and
+collect. There is no step more clever than that.</p>
+
+<div class="worked">
+  <h4>Worked · <em>a one-pole filter, completely characterised</em></h4>
+  <div class="worked-body">
+    <p>Given <span data-tex="y[n] = 0.6\,y[n-1] + 0.4\,x[n]">y[n] = 0.6y[n−1] + 0.4x[n]</span>,
+    find H(z), the pole, whether it is stable, the DC gain, and the gain at the
+    Nyquist frequency.</p>
+    <ol class="steps">
+      <li><b>Transform every term.</b> y[n−1] becomes z⁻¹Y(z):
+        <span data-tex="Y(z) = 0.6z^{-1}Y(z) + 0.4X(z)" data-display>Y = 0.6z⁻¹Y + 0.4X</span></li>
+      <li><b>Collect and divide.</b>
+        <span data-tex="H(z) = \frac{Y}{X} = \frac{0.4}{1 - 0.6z^{-1}} = \frac{0.4z}{z - 0.6}" data-display>H(z) = 0.4z/(z − 0.6)</span></li>
+      <li><b>The pole is at z = 0.6.</b> Its magnitude is 0.6, which is less
+        than 1, so it is inside the unit circle: <b>stable</b>.</li>
+      <li><b>DC is z = 1.</b>
+        <span data-tex="H(1) = \frac{0.4}{1 - 0.6} = 1">H(1) = 1</span> — unity,
+        as a smoother should be.</li>
+      <li><b>Nyquist is z = −1.</b>
+        <span data-tex="H(-1) = \frac{0.4}{1 + 0.6} = 0.25" data-display>H(−1) = 0.25 → −12.0 dB</span></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Five facts from two
+    lines of algebra, and notice that <b>DC and Nyquist need no trigonometry at
+    all</b> — they are z = +1 and z = −1, so you just substitute a real number.
+    Those two points are free on any digital filter question, and they are
+    often enough to eliminate three of the four choices.</p>
+  </div>
+</div>
+
+<h2>6.3 Stability is a distance from the origin</h2>
+
+<p>Linear Systems asked whether a pole was to the left of the imaginary axis.
+The mapping <span class="math" data-tex="z = e^{sT}">z = e^{sT}</span> answers
+the same question in the new plane: since
+<span class="math" data-tex="|z| = e^{\sigma T}">|z| = e^{σT}</span>, a negative
+σ gives a magnitude below 1. <b>The left half-plane rolls up into the unit
+disc.</b></p>
+
+<div data-figure="zPlanePoles"></div>
+
+<f-plate no="8.11" title="Poles, zeros, stability" stamp="know"
+  caption="<b>Everything from the s-plane carries over with one substitution.</b>
+  Distance from the origin replaces distance from the imaginary axis, and the
+  boundary is a circle instead of a line.">
+  <f-row tex="\text{stable} \Leftrightarrow |z_i| < 1 \ \text{ for every pole}"
+         name="the test"
+         gloss="<b>Strictly inside.</b> On the circle is marginal — it rings for ever — and outside grows without bound."></f-row>
+  <f-row tex="\text{radius} \rightarrow \text{decay}, \quad \text{angle} \rightarrow \text{frequency}"
+         name="how to read a pole"
+         gloss="A pole at r∠θ produces a response decaying as rⁿ and oscillating at θ radians per sample. <b>σ became r and ω became θ.</b>"></f-row>
+  <f-row tex="\text{FIR} \Rightarrow \text{all poles at } z = 0"
+         name="why an FIR cannot be unstable"
+         gloss="With no feedback the denominator is 1, so every pole sits at the origin — <b>as far inside the circle as it is possible to be</b>. Part 5 said an FIR is always stable; this is why."></f-row>
+  <f-row tex="\Omega = \frac{2\pi f}{f_s}, \quad f = \frac{\Omega f_s}{2\pi}"
+         name="angle to frequency"
+         gloss="Angle round the circle <b>is</b> frequency. A full turn is the whole sample rate, so <b>Ω = π is the Nyquist frequency</b> — half a turn."></f-row>
+</f-plate>
+
+<h2>6.4 The frequency response is a lap of the circle</h2>
+
+<p>Linear Systems Part 5 got a frequency response by walking s up the imaginary
+axis. Here you walk z <b>around the unit circle</b>, because that is where the
+imaginary axis went.</p>
+
+<div data-figure="unitCircleWalk"></div>
+
+<p>The plate draws the lines that make this computable by eye:</p>
+
+<p class="math display" data-tex="|H| = \frac{\prod \text{distances to the zeros}}{\prod \text{distances to the poles}}">|H| = (product of distances to zeros) / (product of distances to poles)</p>
+
+<p><b>Pass close to a pole and the response peaks. Pass through a zero and it
+vanishes.</b> That is enough to sketch any of these responses without
+evaluating anything, and it is the same reasoning the s-plane used — the only
+change is that the path is now a circle rather than a straight line.</p>
+
+<div class="note payoff">
+  <span class="note-tag">The cast, in its last appearance</span>
+  <p style="margin-bottom:0">The notch on that plate puts its zeros at
+  <b>0.6 ± 0.8j</b>. That point has magnitude exactly 1 and angle exactly
+  53.13° — the 3-4-5 triangle, normalised, landing precisely on the unit
+  circle. Which is exactly what a notch needs: <b>a zero on the circle is a
+  response of exactly nothing</b>, so the frequency is not attenuated but
+  annihilated. The same triangle was an impedance in Circuit Analysis, a pole
+  pair at −3 ± 4j in Linear Systems, a phase margin in Control, and an alias
+  in Part 2 of this module. It has been the same triangle every time.</p>
+</div>
+
+<h2>6.5 Why the plane is a circle at all</h2>
+
+<p>It is worth seeing where the circle comes from rather than accepting it. The
+map is <span class="math" data-tex="z = e^{sT}">z = e^{sT}</span>, and it does
+two things at once:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>In the s-plane</th><th>Becomes, in the z-plane</th></tr></thead>
+  <tbody>
+    <tr><td>left half-plane, σ &lt; 0</td><td><b>inside</b> the unit circle</td></tr>
+    <tr><td>the jω axis, σ = 0</td><td><b>the unit circle itself</b></td></tr>
+    <tr><td>right half-plane, σ &gt; 0</td><td><b>outside</b> the unit circle</td></tr>
+    <tr><td>the origin, s = 0</td><td>z = 1 — DC</td></tr>
+    <tr><td>ω = ±π/T, the Nyquist frequency</td><td>z = −1</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The last two rows explain the wrap. As ω climbs the imaginary axis, the angle
+of z is ωT, so <b>at the Nyquist frequency z has gone exactly half way round
+and reached −1</b>. Keep climbing and it comes back round to where it started.
+<b>That wrapping is aliasing</b>, seen from a third direction — the same fact
+Part 2 drew as overlapping spectra and Part 2's other plate drew as an
+impostor sinusoid.</p>
+
+<h2>6.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>z⁻¹ is one sample of delay.</b> Everything else follows.</li>
+    <li><span data-tex="\mathcal{Z}\{x[n-k]\} = z^{-k}X(z)">Z{x[n−k]} = z⁻ᵏX(z)</span>
+        — the only property most questions need.</li>
+    <li>H(z) is read <b>straight off</b> the difference equation: b's on top,
+        a's underneath.</li>
+    <li><b>Stable ⇔ every pole strictly inside the unit circle</b>, |z| &lt; 1.</li>
+    <li><b>Radius sets decay, angle sets frequency.</b> A pole at r∠θ gives rⁿ
+        times an oscillation at θ rad/sample.</li>
+    <li><b>An FIR has all its poles at the origin</b>, which is why it is
+        unconditionally stable.</li>
+    <li><b>DC is z = +1, Nyquist is z = −1.</b> Both need only real arithmetic
+        and are free marks.</li>
+    <li><span data-tex="\Omega = 2\pi f/f_s">Ω = 2πf/fs</span>; a full lap of
+        the circle is the whole sample rate.</li>
+    <li><b>|H| = product of zero distances ÷ product of pole distances</b>, from
+        the point on the circle.</li>
+    <li>s to z is <span data-tex="z = e^{sT}">z = e^{sT}</span>: left
+        half-plane → inside, jω axis → the circle.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>The z-transform is the Laplace transform with a discrete alphabet. One
+  symbol means delay, difference equations become ratios of polynomials, and
+  the stability question that was &ldquo;which side of a line?&rdquo; becomes
+  &ldquo;inside or outside a circle?&rdquo;. Nothing conceptual is new — the
+  half-plane has simply been rolled up, and it was sampling that rolled it.</p>
+  <p>That is the whole module in one image, in fact. <b>The circle is finite
+  because the sample rate is finite</b>, and going round it once and arriving
+  back where you started <em>is</em> aliasing. Part 7 puts every piece of this
+  together on one signal chain and then runs a mixed set under exam
+  conditions.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"z-transform","title":"Part 6 · The Z-Transform","topics":["hz-from-diff","z-stability","z-freq"],"count":6}'></div>
+
+<div data-reflex='{"only":["z-transform"],"count":5,"title":"Handbook Reflex · Part 6"}'></div>

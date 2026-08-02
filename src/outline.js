@@ -355,6 +355,24 @@ export const MODULES = [
         blurb: "What a steeper skirt costs, and the trade every real design makes instead",
         minutes: 22, figures: [108, 109],
       },
+      {
+        id: "digital-filters", n: 5, spec: "8.C",
+        title: "Digital Filters and Difference Equations",
+        blurb: "A filter that is one line of arithmetic, and the one question that classifies it",
+        minutes: 22, figures: [110, 111],
+      },
+      {
+        id: "z-transform", n: 6, spec: "8.C",
+        title: "The Z-Transform and the Unit Circle",
+        blurb: "Stability becomes a distance, and the frequency response a walk around a circle",
+        minutes: 24, figures: [112, 113],
+      },
+      {
+        id: "dsp-synthesis", n: 7, spec: "8.A–8.C",
+        title: "Synthesis and the Mixed Bench",
+        blurb: "One chain from microphone to numbers, and a set under exam conditions",
+        minutes: 12, figures: [114],
+      },
     ],
   },
   {

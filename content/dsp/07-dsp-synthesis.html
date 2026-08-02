@@ -1,0 +1,123 @@
+<p class="eyebrow">
+  <span>Signal Processing · Part 7</span>
+  <span class="spec">NCEES 8.A–8.C</span>
+  <span>12 minute read</span>
+</p>
+
+<h1>Synthesis and the Mixed Bench</h1>
+
+<p class="lede">One signal chain has been running since Part 2 — speech to
+3.4 kHz, an interferer at 5 kHz, a sampler at 8 kHz. Here it is with every
+control in your hands at once, followed by a set under exam conditions.</p>
+
+<h2>7.1 One chain, both knobs</h2>
+
+<div data-figure="oneChain"></div>
+
+<p>Start where the module started: <b>8 kHz, two poles</b>. The interferer
+arrives at 3 kHz, inside the speech band, and nothing after the converter can
+remove it. Now fix it twice.</p>
+
+<ul>
+  <li><b>Add poles.</b> Push the anti-alias filter's order up and the interferer
+    is attenuated before it can fold. It works, and panel three shows the price:
+    twelve poles for 40 dB at this rate.</li>
+  <li><b>Raise the rate.</b> Above 10 kHz the tone stops folding at all — it
+    stays at 5 kHz, outside the speech band, where a digital filter can take it
+    out for the cost of a few multiplies.</li>
+</ul>
+
+<p><b>Both defences work and they are not equally priced.</b> That asymmetry is
+the single most useful thing this module has to give you, and it is why the
+analog front end of a modern converter is usually a gentle two- or three-pole
+filter and nothing more.</p>
+
+<h2>7.2 How few ideas were doing the work</h2>
+
+<p>Seven parts, and almost all of it came from four sentences.</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>The idea</th><th>Where it did the work</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>A signal is a set of frequencies</b>, and it has a highest one</td>
+      <td>Part 1 built it; every other part consumed it. Bandwidth, Nyquist rate, filter specifications and the frequency axis of a Bode plot are all the same idea.</td>
+    </tr>
+    <tr>
+      <td><b>Sampling copies the spectrum to every multiple of f<sub>s</sub></b></td>
+      <td>Part 2's whole theorem. Overlap of those copies is aliasing, the copies touching is why the criterion is strict, and the wrap-around is why the z-plane is a circle.</td>
+    </tr>
+    <tr>
+      <td><b>Filtering is multiplying each frequency by a number</b></td>
+      <td>Parts 3 to 6 without exception. Analog or digital, the only questions are what the numbers are and what it costs to make them change quickly with frequency.</td>
+    </tr>
+    <tr>
+      <td><b>Poles and zeros are places, and their distances give the response</b></td>
+      <td>Part 3's corner, Part 4's order, Part 6's unit circle. The s-plane and the z-plane are the same picture with the boundary rolled from a line into a circle.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7.3 The six mistakes that cost the most</h2>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Mistake</th><th>The check that catches it</th></tr></thead>
+  <tbody>
+    <tr><td>Swapping Nyquist <em>rate</em> and Nyquist <em>frequency</em></td><td><b>Rate = 2f<sub>max</sub></b> and belongs to the signal; <b>frequency = f<sub>s</sub>/2</b> and belongs to the sampler.</td></tr>
+    <tr><td>An alias answer above f<sub>s</sub>/2</td><td>Impossible by construction. <b>You subtracted the wrong multiple.</b></td></tr>
+    <tr><td>The 2π in 1/(2πRC)</td><td><b>ω has no 2π; f has one.</b> Getting it backwards is a factor of 40.</td></tr>
+    <tr><td>Decades and octaves</td><td>20n dB per <b>decade</b> = 6n dB per <b>octave</b>. Mixing them is a factor of 3.3.</td></tr>
+    <tr><td>Adding RMS values or harmonic amplitudes</td><td><b>Powers add, amplitudes do not.</b> 3 and 4 make 5.</td></tr>
+    <tr><td>Rounding a filter order down</td><td>Order is an integer and the requirement is a floor. <b>Always round up.</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7.4 Reading a stem quickly</h2>
+
+<p>The classification takes about five seconds and it is most of the battle.</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>If the stem mentions…</th><th>Reach for</th></tr></thead>
+  <tbody>
+    <tr><td>a sample rate, or &ldquo;aliasing&rdquo;</td><td>f<sub>s</sub> &gt; 2f<sub>max</sub>; alias at |f − kf<sub>s</sub>|, answer under f<sub>s</sub>/2</td></tr>
+    <tr><td>R and C, or a −3 dB point</td><td>f<sub>c</sub> = 1/(2πRC); classify by which element shunts</td></tr>
+    <tr><td>a stopband attenuation</td><td>the order formula — and only the <b>ratio</b> of the edges matters</td></tr>
+    <tr><td>y[n] and x[n−k]</td><td>a difference equation: look for past <b>outputs</b> to classify it</td></tr>
+    <tr><td>z, or poles and a circle</td><td>|z| &lt; 1 for stability; DC at z = +1, Nyquist at z = −1</td></tr>
+    <tr><td>harmonics, THD or RMS of a waveform</td><td>powers add; a jump gives 1/k and a corner 1/k²</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7.5 A set under exam conditions</h2>
+
+<p>Everything from all seven parts, mixed, at exam pace.</p>
+
+<div data-bench='{"id":"dsp-mixed","title":"Signal Processing · mixed set","topics":["harmonic-id","spectrum-rms","bandwidth-pick","nyquist-rate","alias-where","alias-concept","filter-type","rc-corner","filter-loading","order-needed","butter-response","family-pick","run-difference","fir-iir","convolve","hz-from-diff","z-stability","z-freq"],"count":10}'></div>
+
+<div class="keyidea">
+  <p>This module is about one boundary. Below f<sub>s</sub>/2 a sampled signal
+  is the original signal, exactly and recoverably. Above it, the information is
+  not degraded but <b>gone</b>, and gone in a way no later processing can
+  reach — because sampling maps many input frequencies onto each output
+  frequency, and that map has no inverse.</p>
+  <p>Everything else here is in service of that boundary. <b>Part 1</b> gave a
+  signal a highest frequency so the boundary could be stated. <b>Parts 3 and
+  4</b> built the filter that makes the highest frequency true, and priced it.
+  <b>Parts 5 and 6</b> work on the far side of the boundary, where filters are
+  arithmetic and the plane has rolled into a circle — a circle that is finite
+  precisely <em>because</em> the sample rate is.</p>
+  <p>And one number ran through all of it. A 5 kHz tone at 8 kHz folds to 3.
+  ζ = 0.6 gives √(1 − ζ²) = 0.8. The point 0.6 + 0.8j sits exactly on the unit
+  circle at 53.13°. <b>The same triangle that was an impedance in Circuit
+  Analysis and a pole pair in Linear Systems has been here the whole time</b>,
+  which is the strongest evidence this compilation can offer that these are not
+  seventeen subjects.</p>
+</div>
+
+<div data-reflex='{"only":["spectra","sampling","analog-filters","filter-order","digital-filters","z-transform"],"count":8,"title":"Handbook Reflex · the whole module"}'></div>

@@ -16,6 +16,8 @@ import { defineProblem, defineReflex } from "../lib/bench.js";
 import { num, fixed, sig, ord } from "../lib/fmt.js";
 import { aliasOf, orderFor, butterworth, dB, runFilter } from "../lib/dsp.js";
 
+const DEGP = 180 / Math.PI;
+
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 const D = (s) => `<span class="math display" data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 
@@ -1077,8 +1079,11 @@ defineProblem("run-difference", {
       };
     }
 
-    /* --- run it forward a few samples ----------------------------------- */
-    const a = rng.pick([0.5, 0.6, 0.8]);
+    /* --- run it forward a few samples -----------------------------------
+       a = 0.5 is excluded: it converges so fast that by n = 4 consecutive
+       outputs are 0.9375 and 0.9688, and the "off by one sample" distractor
+       becomes indistinguishable from the answer. */
+    const a = rng.pick([0.6, 0.7, 0.8]);
     const b0 = +(1 - a).toFixed(2);
     const x = [1, 1, 1, 1, 1];
     const y = runFilter([b0], [1, -a], x);
@@ -1191,35 +1196,54 @@ defineProblem("convolve", {
     const fmt = (v) => `{${v.join(", ")}}`;
 
     if (ask === "len") {
+      /* This branch uses its own lengths rather than the drawn sequences:
+         at 2 by 2 the "added" and "multiplied" distractors are both 4, and
+         dedupe would leave three choices. Lx of 3 or more rules it out. */
+      const Lx = rng.int(3, 6), Lh = rng.int(2, 5);
+      const Ly = Lx + Lh - 1;
       return {
-        stem: `A sequence of ${x.length} samples is convolved with a filter whose impulse response is ${h.length} samples long. How many samples long is the result?`,
+        stem: `A sequence of ${Lx} samples is convolved with a filter whose impulse response is ${Lh} samples long. How many samples long is the result?`,
         choices: options(
-          { text: `${L}`, why: "" },
+          { text: `${Ly}`, why: "" },
           [
-            { text: `${x.length + h.length}`, why: `One too many. The two sequences <b>overlap by one sample</b> at each end, so the length is Lx + Lh − 1, not Lx + Lh.` },
-            { text: `${Math.max(x.length, h.length)}`, why: `That is the longer of the two. Convolution <b>spreads</b> a signal — the output is longer than either input, which is why a filter smears an edge.` },
-            { text: `${x.length * h.length}`, why: `Multiplied instead of added. There are that many products, but they <b>collect</b> into overlapping output positions.` },
+            { text: `${Lx + Lh}`, why: `One too many. The two sequences <b>overlap by one sample</b> at each end, so the length is Lx + Lh − 1, not Lx + Lh.` },
+            { text: `${Math.max(Lx, Lh)}`, why: `That is the longer of the two. Convolution <b>spreads</b> a signal — the output is longer than either input, which is why a filter smears an edge.` },
+            { text: `${Lx * Lh}`, why: `Multiplied instead of added. There are that many products, but they <b>collect</b> into overlapping output positions.` },
           ]),
         answer: 0,
         steps: [
-          D(`L_y = L_x + L_h - 1 = ${x.length} + ${h.length} - 1 = ${L}`),
-          `<b>${L} samples.</b> Read it as: the first output needs only the first sample of each, the last needs only the last of each, and everything between overlaps.`,
-          `This is why a filter <b>spreads</b> a transient. An impulse one sample wide comes out ${h.length} samples wide, and that spreading is the time-domain face of band-limiting.`,
+          D(`L_y = L_x + L_h - 1 = ${Lx} + ${Lh} - 1 = ${Ly}`),
+          `<b>${Ly} samples.</b> Read it as: the first output needs only the first sample of each, the last needs only the last of each, and everything between overlaps.`,
+          `This is why a filter <b>spreads</b> a transient. An impulse one sample wide comes out ${Lh} samples wide, and that spreading is the time-domain face of band-limiting.`,
         ],
       };
     }
 
-    const dropped = y.slice(0, L - 1);
-    const noCarry = x.map((v) => v * h[0]);
+    /* Several of these coincide for particular h — with h = {1,1,1} the
+       "first coefficient only" and "term by term" errors both reproduce x
+       exactly — so build candidates and keep the distinct ones rather than
+       letting dedupe quietly shorten the list. */
+    const rev = [...h].reverse();
+    const corr = new Array(L).fill(0);
+    for (let i = 0; i < x.length; i++) for (let j = 0; j < rev.length; j++) corr[i + j] += x[i] * rev[j];
+    const key = (v) => v.join(",");
+    const cands = [
+      { v: y.slice(0, L - 1), why: `The last term was dropped. Check the length: it must be ${x.length} + ${h.length} − 1 = <b>${L}</b> samples, and this has only ${L - 1}.` },
+      { v: x.map((c) => c * h[0]), why: `Each input was multiplied by the first coefficient only. <b>Every input sample sets off a whole copy of h</b>, scaled by that sample, and the copies overlap and add.` },
+      { v: x.map((c, i) => c * (h[i] ?? 0)), why: `The two sequences were multiplied term by term. Convolution is not multiplication — it <b>slides</b> one past the other, summing products at each shift.` },
+      { v: corr, why: `h was reversed before sliding. That is <b>correlation</b>, not convolution — and the two differ whenever h is not symmetric.` },
+      { v: y.map((c) => c * 2), why: `Every term doubled. Check against the sum rule: the output must sum to ${x.reduce((s, c) => s + c, 0) * h.reduce((s, c) => s + c, 0)}, and this sums to twice that.` },
+    ];
+    const seenY = new Set([key(y)]);
+    const wrongC = [];
+    for (const c of cands) {
+      if (seenY.has(key(c.v))) continue;
+      seenY.add(key(c.v));
+      wrongC.push({ text: fmt(c.v), why: c.why });
+    }
     return {
       stem: `Convolve x = ${fmt(x)} with h = ${fmt(h)}.`,
-      choices: options(
-        { text: fmt(y), why: "" },
-        [
-          { text: fmt(dropped), why: `The last term was dropped. Check the length: it must be ${x.length} + ${h.length} − 1 = <b>${L}</b> samples, and this has only ${dropped.length}.` },
-          { text: fmt(noCarry), why: `Each input was multiplied by the first coefficient only. <b>Every input sample sets off a whole copy of h</b>, scaled by that sample, and the copies overlap and add.` },
-          { text: fmt(x.map((v, i) => v * (h[i] ?? 0))), why: `The two sequences were multiplied term by term. Convolution is not multiplication — it <b>slides</b> one past the other, summing products at each shift.` },
-        ]),
+      choices: options({ text: fmt(y), why: "" }, wrongC),
       answer: 0,
       steps: [
         `<b>Every input sample launches a scaled copy of h</b>, delayed to that sample's position, and the output is all the copies added up:`,
@@ -1273,5 +1297,261 @@ defineReflex([
     stem: "Where does an L-point moving average put its nulls?",
     tool: "At every multiple of fs/L",
     because: "It is a filter with real zeros, not merely an average — worth knowing before you pick L.",
+  },
+]);
+
+/* ==========================================================================
+   Part 6 — the z-transform and the unit circle
+
+   Three questions the exam actually sets: read H(z) off a difference
+   equation, decide stability from pole positions, and evaluate the response
+   at a frequency — usually DC or Nyquist, which need no trigonometry at all.
+   ========================================================================== */
+
+defineProblem("hz-from-diff", {
+  topic: "Transfer function from a difference equation",
+  lookup: "Electrical → Signal Processing → Z-transform",
+  make(rng) {
+    /* |a1| = 0.5 is excluded: b0 = 1 − |a1| would then equal |a1|, and the
+       "that is the numerator, not the pole" distractor becomes the answer. */
+    const a1 = rng.pick([0.6, 0.7, 0.8, -0.6, -0.7]);
+    const b0 = +(1 - Math.abs(a1)).toFixed(2);
+    const sgn = a1 >= 0 ? "+" : "−";
+    const A = Math.abs(a1);
+    const ask = rng.pick(["hz", "hz", "pole"]);
+
+    if (ask === "pole") {
+      return {
+        stem: `A filter obeys <b>y[n] = ${sgn === "+" ? "" : "−"}${fixed(A, 2)}·y[n−1] + ${fixed(b0, 2)}·x[n]</b>. Where is its pole, and is the filter stable?`,
+        choices: options(
+          { text: `z = ${fixed(a1, 2)}, stable`, why: "" },
+          [
+            { text: `z = ${fixed(-a1, 2)}, stable`, why: `Sign flipped. Writing the equation as Y = ${fixed(a1, 2)}z⁻¹Y + … gives a denominator of <b>1 − ${fixed(a1, 2)}z⁻¹</b>, so the pole is where z = ${fixed(a1, 2)}, matching the coefficient's own sign.` },
+            { text: `z = ${fixed(1 / a1, 2)}, unstable`, why: `The reciprocal. That comes from reading the denominator as z − 1/${fixed(a1, 2)}; setting <b>1 − ${fixed(a1, 2)}z⁻¹ = 0</b> gives z = ${fixed(a1, 2)} directly.` },
+            { text: `z = ${fixed(b0, 2)}, stable`, why: `That is the numerator coefficient, which sets a <b>zero</b> (here at the origin once written in positive powers of z), not a pole. Poles come from the feedback terms.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Transform: ${D(`Y = ${fixed(a1, 2)}z^{-1}Y + ${fixed(b0, 2)}X \\ \\Rightarrow \\ H(z) = \\frac{${fixed(b0, 2)}}{1 - ${fixed(a1, 2)}z^{-1}}`)}`,
+          `Multiply top and bottom by z: ${D(`H(z) = \\frac{${fixed(b0, 2)}z}{z - ${fixed(a1, 2)}}`)}`,
+          `<b>The pole is at z = ${fixed(a1, 2)}</b>, and |${fixed(a1, 2)}| = ${fixed(A, 2)} &lt; 1, so it is inside the unit circle: <b>stable</b>.`,
+          `<b>The sign of the pole matches the sign of the feedback coefficient.</b> A negative pole means the response alternates sign each sample — a high-frequency ring rather than a slow decay.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `Find H(z) for <b>y[n] = ${sgn === "+" ? "" : "−"}${fixed(A, 2)}·y[n−1] + ${fixed(b0, 2)}·x[n]</b>.`,
+      choices: options(
+        { tex: `H(z) = \\frac{${fixed(b0, 2)}}{1 - ${fixed(a1, 2)}z^{-1}}`, why: "" },
+        [
+          { tex: `H(z) = \\frac{${fixed(b0, 2)}}{1 + ${fixed(a1, 2)}z^{-1}}`, why: `Sign error. Moving ${fixed(a1, 2)}z⁻¹Y to the left-hand side gives Y(1 <b>−</b> ${fixed(a1, 2)}z⁻¹), so the denominator carries the opposite sign to the equation.` },
+          { tex: `H(z) = ${fixed(b0, 2)}\\left(1 - ${fixed(a1, 2)}z^{-1}\\right)`, why: `The denominator was multiplied rather than divided. Feedback terms end up <b>underneath</b> — that is what makes them poles.` },
+          { tex: `H(z) = \\frac{1 - ${fixed(a1, 2)}z^{-1}}{${fixed(b0, 2)}}`, why: `Upside down. H is output over input, so the numerator comes from the <b>x</b> terms.` },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>Replace each delay by its power of z⁻¹</b> — that is the only step:`,
+        D(`Y(z) = ${fixed(a1, 2)}z^{-1}Y(z) + ${fixed(b0, 2)}X(z)`),
+        `Gather the Y terms on one side: ${D(`Y(z)\\left(1 - ${fixed(a1, 2)}z^{-1}\\right) = ${fixed(b0, 2)}X(z)`)}`,
+        D(`H(z) = \\frac{Y}{X} = \\frac{${fixed(b0, 2)}}{1 - ${fixed(a1, 2)}z^{-1}}`),
+        `<b>The b's go on top and the a's underneath</b>, with the sign of the a's flipped relative to how they appear in the equation. Check it at DC (z = 1): ${fixed(b0, 2)}/(1 − ${fixed(a1, 2)}) = ${fixed(b0 / (1 - a1), 3)}.`,
+      ],
+    };
+  },
+});
+
+defineProblem("z-stability", {
+  topic: "Stability in the z-plane",
+  lookup: "Electrical → Signal Processing → Z-plane stability",
+  make(rng) {
+    const kind = rng.pick(["pair", "pair", "list", "fir"]);
+
+    if (kind === "fir") {
+      return {
+        stem: `An FIR filter has the impulse response h = {1, −2, 3, −2, 1}. Is it stable?`,
+        choices: options(
+          { text: "yes — an FIR filter is always stable", why: "" },
+          [
+            { text: "no — the coefficients alternate in sign", why: `Sign alternation makes it a high-pass filter, not an unstable one. <b>Stability is about growth, and there is no mechanism here for growth</b> — the output is a finite sum of five bounded inputs.` },
+            { text: "only if the coefficients sum to less than 1", why: `The coefficient sum is the DC gain, which here is 1. A gain above 1 is still perfectly stable — an amplifier is not an unstable device.` },
+            { text: "cannot tell without knowing the sample rate", why: `Stability depends on the coefficients alone. The sample rate changes what frequencies the filter acts on, not whether its output stays bounded.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Write it as a transfer function: ${D(`H(z) = 1 - 2z^{-1} + 3z^{-2} - 2z^{-3} + z^{-4}`)}`,
+          `The denominator is <b>1</b>. Multiplying through by z⁴ puts every pole at <b>z = 0</b> — the centre of the unit circle, as far inside as it is possible to be.`,
+          `<b>Always stable.</b> This is the z-plane's version of Part 5's argument: no feedback means no path for the output to grow itself.`,
+        ],
+      };
+    }
+
+    if (kind === "list") {
+      const sets = [
+        { p: "0.5, −0.8, 0.3", ok: true },
+        { p: "0.9, 1.2", ok: false, bad: "1.2" },
+        { p: "0.95, −0.99", ok: true },
+        { p: "0.4, −1.05", ok: false, bad: "−1.05" },
+        { p: "0.7, 1.0", ok: false, bad: "1.0" },
+      ];
+      const S = rng.pick(sets);
+      return {
+        stem: `A digital filter has poles at z = ${S.p}. Is it stable?`,
+        choices: options(
+          { text: S.ok ? "yes — every pole is inside the unit circle" : "no", why: "" },
+          [
+            { text: S.ok ? "no — one of the poles is outside" : "yes — every pole is inside the unit circle",
+              why: S.ok
+                ? `Check each magnitude against 1: all of these are below it, some only just. <b>Being close to the circle makes a filter ring for a long time, not unstable.</b>`
+                : `The pole at ${S.bad} has magnitude ${Math.abs(parseFloat(S.bad)) >= 1 ? "at least" : "less than"} 1, so it is <b>${Math.abs(parseFloat(S.bad)) > 1 ? "outside" : "on"}</b> the circle. <b>One bad pole is enough.</b>` },
+            { text: "only if the input is bounded", why: `Stability already means "bounded input gives bounded output". It is a property of the filter, and the poles settle it without reference to any signal.` },
+            { text: "cannot tell without the zeros", why: `Zeros shape the response but cannot stabilise it. <b>A zero near a bad pole reduces its visibility, not its growth</b> — the growing term is still there.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>The test is on magnitudes only:</b> every pole must satisfy |z| &lt; 1.`,
+          S.ok
+            ? `Each of ${S.p} has magnitude below 1, so every one is strictly inside the circle. <b>Stable.</b> Note that 0.95 and 0.99 are inside — very close to the edge means a long ringing response, which is a performance question, not a stability one.`
+            : `The pole at <b>${S.bad}</b> has magnitude ${fixed(Math.abs(parseFloat(S.bad)), 2)}, which is not less than 1. <b>Unstable</b> (or marginally so, if it is exactly 1). It does not matter how far inside the others are — one is enough.`,
+          `<b>Angles are irrelevant here.</b> The angle of a pole decides what frequency the filter rings at; only the radius decides whether the ringing dies.`,
+        ],
+      };
+    }
+
+    /* --- a conjugate pair given by radius and angle --------------------- */
+    /* 90 degrees is excluded because cos 90 = 0 makes the middle coefficient
+       zero, so the "wrong sign" distractor is literally the same filter. r = 1
+       is excluded because r squared then equals r and the "r not r squared"
+       distractor collides with the answer. */
+    const r = rng.pick([0.6, 0.8, 0.9, 0.95, 1.1, 1.2]);
+    const deg = rng.pick([30, 45, 53.13, 60, 120]);
+    const th = deg / DEGP;
+    const a = [1, -2 * r * Math.cos(th), r * r];
+    const verdict = r < 1 ? "stable" : "unstable";
+    return {
+      stem: `A second-order filter has poles at <b>${fixed(r, 2)}∠±${num(deg, 2)}°</b>. Classify it, and give the denominator of H(z).`,
+      choices: options(
+        { text: `${verdict}; 1 ${a[1] < 0 ? "−" : "+"} ${fixed(Math.abs(a[1]), 3)}z⁻¹ + ${fixed(a[2], 3)}z⁻²`, why: "" },
+        [
+          { text: `${verdict}; 1 ${a[1] < 0 ? "+" : "−"} ${fixed(Math.abs(a[1]), 3)}z⁻¹ + ${fixed(a[2], 3)}z⁻²`, why: `Sign of the middle term. Expanding (1 − re^{jθ}z⁻¹)(1 − re^{−jθ}z⁻¹) gives <b>−2r cos θ</b> as the z⁻¹ coefficient, and cos ${num(deg, 2)}° = ${fixed(Math.cos(th), 3)}.` },
+          { text: `${verdict}; 1 ${a[1] < 0 ? "−" : "+"} ${fixed(Math.abs(a[1]), 3)}z⁻¹ + ${fixed(r, 3)}z⁻²`, why: `The last term is <b>r², not r</b> — it is the product of the two pole magnitudes, and they multiply.` },
+          { text: `${r < 1 ? "unstable" : "stable"}; 1 ${a[1] < 0 ? "−" : "+"} ${fixed(Math.abs(a[1]), 3)}z⁻¹ + ${fixed(a[2], 3)}z⁻²`, why: `The verdict is backwards. <b>Inside the unit circle is stable</b> — a radius of ${fixed(r, 2)} is ${r < 1 ? "inside" : r > 1 ? "outside" : "exactly on"} it.` },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>The verdict needs the radius alone:</b> |z| = ${fixed(r, 2)}, which is ${r < 1 ? "less than 1 — inside the circle, so stable" : r > 1 ? "greater than 1 — outside the circle, so unstable" : "exactly 1 — on the circle, so marginally stable: it rings for ever"}.`,
+        `For the denominator, expand the conjugate pair — the imaginary parts cancel and only real coefficients survive:`,
+        D(`\\left(1 - re^{j\\theta}z^{-1}\\right)\\left(1 - re^{-j\\theta}z^{-1}\\right) = 1 - 2r\\cos\\theta\\,z^{-1} + r^2z^{-2}`),
+        D(`= 1 - 2(${fixed(r, 2)})(${fixed(Math.cos(th), 4)})z^{-1} + ${fixed(r * r, 3)}z^{-2}`),
+        `<b>${verdict}, with denominator 1 ${a[1] < 0 ? "−" : "+"} ${fixed(Math.abs(a[1]), 3)}z⁻¹ + ${fixed(a[2], 3)}z⁻².</b> The filter rings at ${num(deg, 2)}° per sample, which is ${fixed(deg / 360, 3)} of the sample rate.`,
+      ],
+    };
+  },
+});
+
+defineProblem("z-freq", {
+  topic: "Frequency response from H(z)",
+  lookup: "Electrical → Signal Processing → Digital frequency response",
+  make(rng) {
+    const at = rng.pick(["dc", "nyq", "nyq", "map"]);
+
+    if (at === "map") {
+      const fs = rng.pick([8, 10, 44.1, 48]);
+      const f = rng.pick([0.5, 1, 2, 4]);
+      const om = (2 * Math.PI * f) / fs;
+      return {
+        stem: `A filter runs at f<sub>s</sub> = ${num(fs, 3)} kHz. What angle around the unit circle corresponds to a ${num(f, 2)} kHz signal?`,
+        choices: options(
+          { text: `${fixed(om, 4)} rad/sample`, why: "" },
+          [
+            { text: `${fixed(om / 2, 4)} rad/sample`, why: `Half the right value — this is what you get from πf/f<sub>s</sub>. <b>A full lap is the whole sample rate</b>, so Ω = 2πf/f<sub>s</sub>.` },
+            { text: `${fixed(2 * Math.PI * fs / f, 3)} rad/sample`, why: `The ratio is upside down. Ω must grow with signal frequency and shrink as the sample rate rises.` },
+            { text: `${fixed(f / fs, 4)} rad/sample`, why: `That is the plain ratio f/f<sub>s</sub>, which is the fraction of a lap. <b>Multiply by 2π</b> to turn a fraction of a turn into radians.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\Omega = \\frac{2\\pi f}{f_s} = \\frac{2\\pi(${num(f, 2)})}{${num(fs, 3)}} = ${fixed(om, 4)}\\text{ rad/sample}`),
+          `<b>${fixed(om, 4)} rad/sample</b>, which is ${fixed(om / Math.PI, 3)}π — that is ${fixed((100 * f) / (fs / 2), 1)}% of the way to the Nyquist frequency.`,
+          `<b>Sanity check the two anchors.</b> DC is Ω = 0 at z = +1, and the Nyquist frequency f<sub>s</sub>/2 is Ω = π at z = −1. Any answer above π describes a frequency that has aliased.`,
+        ],
+      };
+    }
+
+    const a1 = rng.pick([0.5, 0.6, 0.8, -0.5, -0.6]);
+    const b0 = +(1 - Math.abs(a1)).toFixed(2);
+    const dc = b0 / (1 - a1);
+    const nq = b0 / (1 + a1);
+    const want = at === "dc" ? dc : nq;
+    const other = at === "dc" ? nq : dc;
+    return {
+      stem: `A filter has <b>H(z) = ${fixed(b0, 2)} / (1 − ${fixed(a1, 2)}z⁻¹)</b>. What is its gain at ${at === "dc" ? "DC" : "the Nyquist frequency"}?`,
+      choices: options(
+        { text: fixed(want, 3), why: "" },
+        [
+          { text: fixed(other, 3), why: `That is the gain at ${at === "dc" ? "the Nyquist frequency, z = −1" : "DC, z = +1"}. <b>DC is z = +1 and Nyquist is z = −1</b>, and the two give different answers whenever the filter does anything at all.` },
+          { text: fixed(b0, 3), why: `The denominator was ignored. Substituting z = ${at === "dc" ? "+1" : "−1"} makes z⁻¹ = ${at === "dc" ? "+1" : "−1"}, so the denominator becomes 1 ${at === "dc" ? "−" : "+"} ${fixed(a1, 2)} = ${fixed(at === "dc" ? 1 - a1 : 1 + a1, 2)}, not 1.` },
+          /* Neither the reciprocal nor b0/(1−|a1|) works here: for positive a1
+             the DC gain is exactly 1, so both collapse onto the answer.
+             Multiplying by the denominator instead of dividing always
+             differs, and is a real slip. */
+          { text: fixed(b0 * (at === "dc" ? 1 - a1 : 1 + a1), 3), why: `Multiplied by the denominator instead of divided by it. H(z) is ${fixed(b0, 2)} <b>over</b> ${fixed(at === "dc" ? 1 - a1 : 1 + a1, 2)}.` },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>${at === "dc" ? "DC is z = +1" : "The Nyquist frequency is z = −1"}</b>, so z⁻¹ = ${at === "dc" ? "+1" : "−1"} and no trigonometry is needed at all.`,
+        D(`H(${at === "dc" ? "1" : "-1"}) = \\frac{${fixed(b0, 2)}}{1 - ${fixed(a1, 2)}(${at === "dc" ? "1" : "-1"})} = \\frac{${fixed(b0, 2)}}{${fixed(at === "dc" ? 1 - a1 : 1 + a1, 3)}} = ${fixed(want, 4)}`),
+        `<b>${fixed(want, 3)}</b>, or ${fixed(dB(want), 1)} dB. ${
+          dc > nq
+            ? "Gain of 1 at DC falling towards Nyquist: this is a <b>low-pass</b> filter."
+            : "Gain rising towards the Nyquist frequency: this is a <b>high-pass</b> filter, which is what a negative feedback coefficient does."
+        }`,
+        `<b>These two points are free on any digital filter question.</b> Substituting ±1 costs one line and often eliminates three of the four choices before you compute anything else.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "z-transform",
+    stem: "What does z⁻¹ mean?",
+    tool: "One sample of delay",
+    because: "Every difference equation converts to algebra with that one substitution.",
+  },
+  {
+    part: "z-transform",
+    stem: "Stability condition for a digital filter?",
+    tool: "Every pole strictly inside the unit circle, |z| < 1",
+    because: "Sampling maps the s-plane's left half onto the unit disc via z = e^(sT), so the test carries over exactly.",
+  },
+  {
+    part: "z-transform",
+    stem: "A pole at radius r and angle θ — what does each part control?",
+    tool: "Radius sets the decay rate, angle sets the ringing frequency",
+    because: "It is σ and ω from the s-plane, wearing polar coordinates.",
+  },
+  {
+    part: "z-transform",
+    stem: "Where are an FIR filter's poles?",
+    tool: "All at the origin, z = 0",
+    because: "Its denominator is 1, which is why an FIR can never be unstable.",
+  },
+  {
+    part: "z-transform",
+    stem: "Which points on the unit circle are DC and Nyquist?",
+    tool: "DC is z = +1, Nyquist is z = −1",
+    because: "Both need only real arithmetic, and they often eliminate three choices in one line.",
+  },
+  {
+    part: "z-transform",
+    stem: "Converting a signal frequency to an angle round the circle?",
+    tool: "Ω = 2πf/fs — a full lap is the whole sample rate",
+    because: "Half a lap is the Nyquist frequency, so any Ω past π describes something that has already aliased.",
+  },
+  {
+    part: "z-transform",
+    stem: "Reading |H| off a pole-zero plot?",
+    tool: "Product of distances to the zeros over product of distances to the poles",
+    because: "Measured from the point on the unit circle — near a pole it peaks, on a zero it vanishes.",
   },
 ]);

@@ -1,0 +1,149 @@
+<p class="eyebrow">
+  <span>Signal Processing · Part 5</span>
+  <span class="spec">NCEES 8.C</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Digital Filters and Difference Equations</h1>
+
+<p class="lede">Part 4 argued that the sharp filtering should happen after the
+converter, where a pole costs a multiply instead of a precision component. This
+part is what that looks like: a filter written as one line of arithmetic, run
+once per sample.</p>
+
+<h2>5.1 The whole idea, in one equation</h2>
+
+<p>Once a signal is a list of numbers, filtering it means computing a new list
+from the old one. Every linear filter you will meet does it the same way:
+<b>each output is a weighted sum of recent inputs and recent outputs</b>.</p>
+
+<f-plate no="8.8" title="The difference equation" stamp="know"
+  caption="<b>The single distinction that organises the rest of this module is
+  whether the second sum is there at all.</b> Present, and the filter has
+  feedback and a potentially infinite memory; absent, and it does not.">
+  <f-row tex="y[n] = \sum_{k=0}^{M} b_k\,x[n-k] \;-\; \sum_{k=1}^{N} a_k\,y[n-k]"
+         name="the general form"
+         gloss="Past <b>inputs</b> weighted by the b's, past <b>outputs</b> weighted by the a's. Everything before n = 0 is zero, which is what 'initially at rest' means."></f-row>
+  <f-row tex="\text{FIR: all } a_k = 0" name="finite impulse response"
+         gloss="No feedback. <b>The output cannot influence itself, so it cannot run away</b> — an FIR filter is unconditionally stable, whatever its coefficients."></f-row>
+  <f-row tex="\text{IIR: some } a_k \neq 0" name="infinite impulse response"
+         gloss="Feedback. Enormously more efficient for a sharp response, and <b>it can be unstable</b>, which is why it needs a test that an FIR does not."></f-row>
+  <f-row tex="H(1) = \frac{\sum b_k}{1 + \sum a_k}" name="DC gain, by inspection"
+         gloss="Put a constant in and the delays stop mattering. <b>Sum the numerator coefficients, divide by the sum of the denominator's</b> — a five-second check that a smoother is not also a gain."></f-row>
+</f-plate>
+
+<div data-figure="differenceEqn"></div>
+
+<p>Two things on that plate are worth naming. First, <b>the trade is not
+avoidable</b>: every setting that reduces the noise also slows the edge, and no
+choice of coefficients separates them — a filter that reacts instantly to a step
+must also react instantly to a noise spike, because it cannot tell them apart.
+Second, <b>the DC gain must be 1</b> for a smoother, and the plate shows the
+check: for the moving average, L coefficients of 1/L sum to one.</p>
+
+<h2>5.2 Finite or infinite: hit it with a single one</h2>
+
+<p>Put in a signal that is 1 at n = 0 and zero everywhere else, and what comes
+out is the <b>impulse response</b>, written h[n]. It is the most informative
+single test there is, because for a linear filter <em>it is the filter</em> —
+everything the filter will ever do to anything is encoded in it.</p>
+
+<div data-figure="impulseView"></div>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th></th><th>FIR</th><th>IIR</th></tr></thead>
+  <tbody>
+    <tr><td>Feedback</td><td>none</td><td>yes</td></tr>
+    <tr><td>Impulse response</td><td><b>is the coefficient list</b>, then stops</td><td>decays for ever, never exactly zero</td></tr>
+    <tr><td>Stability</td><td><b>always stable</b></td><td>must be checked</td></tr>
+    <tr><td>Linear phase</td><td><b>exactly</b>, if coefficients are symmetric</td><td>never exactly</td></tr>
+    <tr><td>Cost for a sharp response</td><td>many taps</td><td><b>very few</b></td></tr>
+    <tr><td>Analogue counterpart</td><td>nothing — no analog circuit does this</td><td>the RC and RLC filters of Part 3</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The last row is worth a moment. An IIR filter is the direct descendant of an
+analog one: feedback, poles, the same stability worry. <b>An FIR filter has no
+analog counterpart at all</b> — you cannot build a circuit whose impulse
+response stops dead after eight samples. It is a structure that only exists
+because the signal became numbers.</p>
+
+<div class="note payoff">
+  <span class="note-tag">Why linear phase is worth having</span>
+  <p style="margin-bottom:0">Part 4 mentioned Bessel filters, which give up
+  steepness to keep phase linear so that a pulse keeps its shape. <b>A symmetric
+  FIR gets exactly linear phase for free</b>, at any steepness, because symmetry
+  forces every frequency to be delayed by the same
+  <span class="math" data-tex="(L-1)/2">(L−1)/2</span> samples. No analog
+  filter can do that — it is one of the genuine advantages of filtering after
+  the converter rather than before it.</p>
+</div>
+
+<h2>5.3 Convolution is just that sum, named</h2>
+
+<p>Because the impulse response is the filter, the output for <em>any</em> input
+can be written using it alone:</p>
+
+<p class="math display" data-tex="y[n] = \sum_{k} h[k]\,x[n-k]">y[n] = Σ h[k] x[n−k]</p>
+
+<p>This is <b>convolution</b>, and for an FIR it is literally the difference
+equation with h in place of b. Read it as a sentence: <b>every input sample sets
+off a copy of the impulse response, scaled by that sample, and the output is all
+those copies added up</b>. Nothing more mysterious than that is going on.</p>
+
+<div class="note honest">
+  <span class="note-tag">Doing one by hand, which the exam may ask</span>
+  <p style="margin-bottom:0">With h = {1, 2, 1} and x = {1, 3, 2}, slide and
+  add: y[0] = 1·1 = 1; y[1] = 1·3 + 2·1 = 5; y[2] = 1·2 + 2·3 + 1·1 = 9;
+  y[3] = 2·2 + 1·3 = 7; y[4] = 1·2 = 2. So y = {1, 5, 9, 7, 2}. <b>Two useful
+  checks:</b> the output length is
+  <span class="math" data-tex="L_x + L_h - 1">Lx + Lh − 1</span> = 3 + 3 − 1 = 5,
+  and the sum of the output equals the product of the two sums,
+  (1+2+1)(1+3+2) = 4 × 6 = 24 = 1+5+9+7+2. <b>If either check fails you have
+  dropped a term.</b></p>
+</div>
+
+<h2>5.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>y[n] = Σ b<sub>k</sub> x[n−k] − Σ a<sub>k</sub> y[n−k].</b> The b's
+        weight past inputs, the a's past outputs.</li>
+    <li><b>FIR = no feedback</b>: impulse response is the coefficient list,
+        stops, and is <b>unconditionally stable</b>.</li>
+    <li><b>IIR = feedback</b>: response decays for ever, far cheaper for a sharp
+        filter, and <b>can be unstable</b>.</li>
+    <li><b>DC gain = Σb / (1 + Σa)</b>, by setting every delay to nothing.</li>
+    <li>A symmetric FIR has <b>exactly linear phase</b> and delays everything by
+        (L−1)/2 samples.</li>
+    <li>Convolution: <span data-tex="y[n] = \sum_k h[k]x[n-k]">y[n] = Σ h[k]x[n−k]</span>.
+        Output length <b>L<sub>x</sub> + L<sub>h</sub> − 1</b>, and the output
+        sums to the product of the input sums.</li>
+    <li>An L-point moving average has <b>nulls</b> at multiples of
+        f<sub>s</sub>/L — it is a filter, not just an average.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A digital filter is a weighted sum, and the only structural question is
+  whether the sum reaches back into its own output. That one question decides
+  stability, efficiency, phase behaviour and whether an analog counterpart even
+  exists.</p>
+  <p>What Part 5 cannot yet do is <b>design</b> one. You can run a difference
+  equation and see what it does, but there is no way yet to look at a set of
+  coefficients and say where the filter's corner is, how sharp it is, or —
+  for an IIR — whether it is stable at all, short of running it and watching.
+  <b>Part 6 supplies the missing tool.</b> It does for difference equations
+  exactly what the Laplace transform did for differential equations in Linear
+  Systems Part 3: turns them into algebra, and turns the stability question
+  into a question about where some points sit on a plane.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"digital-filters","title":"Part 5 · Digital Filters","topics":["run-difference","fir-iir","convolve"],"count":6}'></div>
+
+<div data-reflex='{"only":["digital-filters"],"count":5,"title":"Handbook Reflex · Part 5"}'></div>

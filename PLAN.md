@@ -14,8 +14,9 @@ This file is the durable memory across turns. Read it first.
 | **Digital Systems** | 15 | 8–12 | 7 | 63–75 | complete |
 | **Linear Systems** | 7 | 5–8 | 7 | 76–88 | complete |
 | **Control Systems** | 12 | 6–9 | 7 | 89–101 | complete |
+| **Signal Processing** | 8 | 5–8 | 7 | 102–114 | complete |
 
-Seven of seventeen areas; 56–86 of the 110 questions. A shared orientation part
+Eight of seventeen areas; 61–94 of the 110 questions. A shared orientation part
 sits ahead of all of them. Plate numbers run in the order the modules were
 built, not in module order — Electronics was written after Power Systems,
 Digital Systems after Electronics, and Control Systems after Linear Systems.
@@ -82,6 +83,9 @@ From the NCEES *FE Electrical and Computer CBT Exam Specifications*
 | 12.B | Bode plots | Control 4 |
 | 12.C | Closed-loop response, open-loop response, and stability | Control 2, 3 |
 | 12.D | Controller performance (steady-state errors, settling time, overshoot) | Control 5, 6 |
+| 8.A | Sampling (aliasing, Nyquist theorem) | DSP 1, 2 |
+| 8.B | Analog filters | DSP 3, 4 |
+| 8.C | Digital filters (difference equations, Z-transforms) | DSP 5, 6 |
 
 **Checked against the PDF, not from memory:** area 10 has no per-unit and no
 symmetrical components. Those are PE topics. An earlier draft of this file
@@ -138,6 +142,11 @@ literature uses them for the same reason.
 | Power 5 | The plant is a **4-pole induction motor** at 1764 rpm, 2% slip, 91.3% efficient |
 | Electronics 1 | 5 V and 1 kΩ: **5.00 mA** ideal, **4.30 mA** constant-drop, 4.31 mA exact |
 | Electronics 5 | Ri 1 kΩ, Rf 4 kΩ: **−4** inverting and **+5** non-inverting, from one pair |
+| DSP 1 | Harmonics of 3 V and 4 V RMS make **5 V**, not 7 — quadrature again |
+| DSP 2 | **5 kHz sampled at 8 kHz folds to 3 kHz.** Nyquist frequency 4, tone 5, alias 3 |
+| DSP 4 | ζ = 0.6 gives √(1−ζ²) = **0.8**, so the peak is 1/(2·0.6·0.8) = **+0.355 dB** — just off Butterworth's flat 0.707 |
+| DSP 6 | **z = 0.6 + 0.8j**: \|z\| = 1 and ∠z = 53.13° exactly. The triangle, normalised, sits on the unit circle — the marginal case |
+| DSP 6 | Pulled to r = 0.9 it gives the denominator **1 − 1.08z⁻¹ + 0.81z⁻²** |
 
 **Electronics is where the numeric cast honestly runs out, and the module says
 so rather than forcing a triangle into a transistor.** What carries continuity
@@ -359,8 +368,8 @@ src/
     figure.js       plate scaffolding, rAF loop, reduced-motion
     rng.js          seeded RNG so a problem set is reproducible
     bench.js        problem engine, MCQ UI, stepped solutions
-  figures/          one module per part, 101 plates
-  problems/         one module per part, 167 generators
+  figures/          one module per part, 114 plates
+  problems/         one module per part, 185 generators
 
 content/
   start/            orientation
@@ -478,19 +487,26 @@ Forty-four parts, 88 plates, 146 generators, 157 reflex items.
 | Control | 5 Steady-State Error and System Type | 97–98 | 3 |
 | Control | 6 Controller Performance and PID | 99–100 | 3 |
 | Control | 7 Synthesis and mixed bench | 101 | (reuses 21) |
+| DSP | 1 Signals and Spectra | 102–103 | 3 |
+| DSP | 2 Sampling and Aliasing | 104–105 | 3 |
+| DSP | 3 Analog Filters | 106–107 | 3 |
+| DSP | 4 Order, Roll-Off and Butterworth | 108–109 | 3 |
+| DSP | 5 Digital Filters and Difference Equations | 110–111 | 3 |
+| DSP | 6 The Z-Transform and the Unit Circle | 112–113 | 3 |
+| DSP | 7 Synthesis and mixed bench | 114 | (reuses 18) |
 
 ### Verified
 
 Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
 read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 44 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 58 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 88 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 114 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
-- `genall.mjs` — every one of the 146 generators run over 100 seeds, checking
+- `genall.mjs` — every one of the 185 generators run over 100 seeds, checking
   that no question offers a duplicate option, fewer than three options, a bad
   answer index, an unexpanded template literal or a NaN. **This one earned its
   place immediately**: it found 58 faulty generators on its first run, and the
@@ -500,6 +516,25 @@ read the part list from `outline.js`, so they cannot drift as modules are added:
 - `texscan.mjs` — every TeX command used anywhere is one the renderer knows.
   An unrecognised command renders as *nothing*, silently, so this is the only
   defence against `\lceil` quietly turning a ceiling into a logarithm.
+- `sweepfig.mjs` — **new with Signal Processing.** Drives every control on a
+  figure across its whole range and reports anything that leaves the viewBox
+  at *any* setting, not just the default one. It immediately found two escapes
+  no default-state check could see: plate 108's asymptote reaching −323 dB on
+  a −96 dB axis at eight poles, and plate 102's "cut here" label overrunning
+  the right edge at high harmonic counts. **A figure that is clean when it
+  loads is not a figure that is clean.**
+- `sep.mjs` — **new with Signal Processing.** Measures option-set health per
+  generator: too few choices after dedupe, duplicates, and distractors sitting
+  within 4% of the answer. It found nine defects in this module alone, every
+  one of them a distractor that was *algebraically identical* to something
+  else in its own list — C×2π is exactly 1/(Rf_c); att/n is exactly the
+  one-pole answer; 6 dB/octave converted correctly is 20 dB/decade; b₀ = 1−|a₁|
+  equals |a₁| when a₁ = 0.5; cos 90° = 0 makes a sign distractor the same
+  filter. **None of these is visible by reading the code**, because each looks
+  like a different formula. Three iterations of the checker itself were needed
+  before it stopped producing false positives — it now folds `×10ⁿ` notation,
+  compares the full tuple of numbers in compound answers, and skips pairs that
+  differ in their words rather than their digits.
 - `bundle.mjs` — `dist/the-bench.html` runs from `file://` with no server and
   no network.
 - No horizontal scroll at 360 px or 768 px; both themes checked.
@@ -572,25 +607,54 @@ Each was invisible on the page and wrong in a way a reader would have paid for.
    general one: **a computed readout and hand-written prose about it are two
    sources of truth**, and screenshotting the boundary case is what caught it.
 
+### Four more, from building Signal Processing
+
+1. **A distractor can be the right answer wearing a different formula.** Nine
+   of them were, across this module. The pattern is always the same: two
+   *expressions* that look like different mistakes collapse to the same
+   *number* for the parameters actually drawn. Reading the code cannot catch
+   it; only evaluating every option over many seeds can. `sep.mjs` exists
+   because of this and should be run on every new generator.
+2. **A figure clean at its default can be broken three notches along.** Both
+   escapes `sweepfig.mjs` found were invisible until a slider moved. The rule
+   from the presentation pass — nothing clips an SVG `<line>` — has a corollary
+   that is easy to miss: *the endpoint you computed may be off-frame only for
+   some inputs*, so every drawn extreme needs clamping to the axis, not just
+   the ones you happened to look at.
+3. **Verify the arithmetic before it reaches the prose, every time.** A scratch
+   THD calculation divided an RMS by an amplitude and produced 34% for a square
+   wave; the real figure is 48.3%, and the missing √2 would have been printed
+   as fact. Separately, the three-section RC ladder's denominator is
+   1 + 6a + 5a² + a³, and the commonly transposed 1 + 5a + 6a² + a³ *agrees
+   with it at u = 1* — so a single spot check at the corner frequency would
+   have confirmed the wrong polynomial. **Check at three points, not one.**
+4. **Two sources of truth about one number will disagree.** This is the same
+   lesson Control Systems learned from the Routh readout, and it recurred
+   twice here: plate 104's readout said "4.00 kHz" while the note beside it
+   said the amplitude was lost, and plate 109's note said "one or two poles"
+   while its own readout said three. Both are now computed from the same
+   expression. Also of this family: a knob's initial `value` and a mirrored
+   local variable are two sources of truth, and the slider read 5.0 kHz while
+   the drawing stayed at 3.0.
+
 ## 9. Next turns
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- **Signal Processing** — NCEES **area 8**, 5–8 q. Its three subtopics are
-  sampling, analog filters and digital filters. Reuses Linear 5's Bode
-  machinery and `poly.js`; a z-polynomial is a polynomial, so `roots()` and
-  `evalComplex()` carry over unchanged. *(An earlier draft of this list called
-  it area 5. Area 5 is Properties of Electrical Materials — caught by
-  re-reading the PDF, which is the third time that habit has paid.)*
-- Then: Electromagnetics, Communications, Computer Networks, Computer Systems,
+- Electromagnetics, Communications, Computer Networks, Computer Systems,
   Software Development, Engineering Economics, Ethics, Probability and
   Statistics, Properties of Electrical Materials.
+
+  Communications (13, 5–8 q) is the natural next one: its Fourier series and
+  transform section is already half-built by Signal Processing Part 1, and
+  modulation is a spectrum-shifting argument that Part 2's replica picture
+  makes almost free.
 
 Counts above are from the specification PDF. **Read it again before starting a
 module** rather than trusting this list — the area 10 per-unit mistake was
 caught exactly that way.
 
-### The Signal Processing arc, as planned
+### The Signal Processing arc, as built
 
 Seven parts, plates 102–114. Sampling is the spine: Part 1 exists to make the
 frequency axis real before Part 2 folds it, and Parts 3–4 are the filter that
