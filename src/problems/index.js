@@ -25,5 +25,8 @@ import "./linear.js";
 /* --- Control Systems --- */
 import "./control.js";
 
+/* --- Signal Processing --- */
+import "./dsp.js";
+
 /* --- Power Systems --- */
 import "./power.js";

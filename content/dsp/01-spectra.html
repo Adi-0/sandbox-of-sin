@@ -1,0 +1,228 @@
+<p class="eyebrow">
+  <span>Signal Processing · Part 1</span>
+  <span class="spec">NCEES 8.A · 8.B</span>
+  <span>20 minute read</span>
+</p>
+
+<h1>Signals and Spectra</h1>
+
+<p class="lede">Nothing in this module works until the frequency axis is a real
+place rather than a figure of speech. This part builds it: a signal is a sum of
+sinusoids, the list of their sizes is its spectrum, and the highest one that
+matters is the single number sampling and filtering both depend on.</p>
+
+<h2>1.1 The same signal, written twice</h2>
+
+<p>You already have two descriptions of an AC quantity. A waveform is
+<b>value against time</b>. A phasor is <b>size and angle at one frequency</b>.
+Circuit Analysis Part 6 could use phasors because there was only ever one
+frequency in the room, so a single arrow said everything.</p>
+
+<p>Real signals are not that tidy. A square wave, a voice, a switching
+converter's output — none is a single sinusoid. The fix is not to abandon the
+phasor but to <b>use more than one</b>: keep the same idea and allow a whole
+list of frequencies, each with its own amplitude. That list is the
+<b>spectrum</b>, and the claim that it is always enough is Fourier's.</p>
+
+<div class="note payoff">
+  <span class="note-tag">Why bother, when the waveform is right there</span>
+  <p style="margin-bottom:0">Because most of the questions in this module are
+  invisible in the time domain and obvious in the frequency domain. <em>Will
+  this filter remove the interference?</em> — a filter does one thing to each
+  frequency, so in the spectrum it is a multiplication and in time it is an
+  integral. <em>Is this sample rate fast enough?</em> — the answer depends on
+  one number, the highest frequency present, and the spectrum is where that
+  number is written down. <b>Changing description does not change the signal;
+  it changes which questions are easy.</b></p>
+</div>
+
+<h2>1.2 The recipe</h2>
+
+<p>Any periodic signal with period <span class="math" data-tex="T">T</span> is a
+sum of sinusoids at <b>whole-number multiples</b> of its own repetition rate
+<span class="math" data-tex="f_0 = 1/T">f₀ = 1/T</span>. Multiples, not
+arbitrary frequencies — and that is forced, not chosen: any component at a
+non-multiple would fail to repeat every T, and so would the sum.</p>
+
+<f-plate no="8.1" title="Fourier series" stamp="handbook"
+  caption="<b>The handbook gives you the integrals. What it cannot give you is
+  the habit of asking what the spectrum looks like before computing anything</b>
+  — and for the standard waves you should never compute at all, because the
+  answers are on the next plate.">
+  <f-row tex="x(t) = a_0 + \sum_{k=1}^{\infty}\left[a_k\cos(2\pi k f_0 t) + b_k\sin(2\pi k f_0 t)\right]"
+         name="the series"
+         gloss="<b>k = 1 is the fundamental</b>, at the signal's own repetition rate; k = 2, 3, … are the harmonics. Every term repeats in exactly T seconds, which is why the sum does."></f-row>
+  <f-row tex="a_0 = \frac{1}{T}\int_0^T x(t)\,dt" name="the DC term"
+         gloss="Just the average value. <b>A wave symmetric about zero has a₀ = 0</b>, and all three waves in this part are, so it will not appear again."></f-row>
+  <f-row tex="a_k = \frac{2}{T}\int_0^T x(t)\cos(2\pi k f_0 t)\,dt" name="the coefficients"
+         gloss="This is Mathematics Part 6's integral doing one job: <b>measuring how much of one particular sinusoid is present</b>. Multiply by the sinusoid you are testing for and average — everything at another frequency averages to zero and drops out."></f-row>
+  <f-row tex="A_k = \sqrt{a_k^2 + b_k^2}" name="what gets drawn"
+         gloss="The pair (a_k, b_k) is a phasor in disguise, so the amplitude is its magnitude. <b>A spectrum plot is a plot of A_k</b>, one spike per harmonic."></f-row>
+</f-plate>
+
+<p>The third row deserves a second look, because it is the whole mechanism.
+Multiplying by <span class="math" data-tex="\cos(2\pi k f_0 t)">cos(2πkf₀t)</span>
+and averaging over a period gives zero for <em>every</em> component except the
+one at that exact frequency. Different harmonics are <b>orthogonal</b> — they do
+not interfere with each other's measurement. That is why a spectrum is
+well-defined at all, and in a moment it is also why powers add.</p>
+
+<div data-figure="spectrumBuilder"></div>
+
+<h2>1.3 How fast the harmonics die is the whole story</h2>
+
+<p>You will not be asked to integrate for these on the exam. You will be asked
+to recognise them, and what is worth carrying is not the constant out front but
+the <b>exponent</b>.</p>
+
+<f-plate no="8.2" title="The three waves, and their decay" stamp="know"
+  caption="<b>Learn the pattern, not the constants: a jump costs 1/k, a corner
+  costs 1/k².</b> Everything about bandwidth in this module follows from that
+  one sentence.">
+  <f-row tex="\text{square: } A_k = \frac{4}{\pi k}, \ k \text{ odd}"
+         name="jump, odd only"
+         gloss="Odd harmonics only, because the second half of the wave is the exact negative of the first. <b>Falls as 1/k</b> — slowly."></f-row>
+  <f-row tex="\text{sawtooth: } A_k = \frac{2}{\pi k}, \ \text{all } k"
+         name="jump, all harmonics"
+         gloss="No symmetry removes anything, so every harmonic is present. <b>Also 1/k</b>, because it also has a jump."></f-row>
+  <f-row tex="\text{triangle: } A_k = \frac{8}{\pi^2 k^2}, \ k \text{ odd}"
+         name="corner, odd only"
+         gloss="<b>1/k², and that exponent is the point.</b> The triangle is continuous — it has corners but never jumps — and continuity buys a whole extra power of k."></f-row>
+  <f-row tex="\text{discontinuity} \Rightarrow 1/k, \quad \text{corner} \Rightarrow 1/k^2"
+         name="the rule behind all three"
+         gloss="<b>The smoother the wave, the faster its spectrum dies.</b> A signal you could differentiate for ever would have harmonics falling faster than any power of k."></f-row>
+</f-plate>
+
+<p>The plate above lets you watch what that exponent buys. On the square wave,
+25 harmonics still leaves a visible ripple. On the triangle, five terms are
+already indistinguishable from the real thing at drawing accuracy.</p>
+
+<div class="note honest">
+  <span class="note-tag">The ripple at the jump never leaves</span>
+  <p style="margin-bottom:0">Add terms to the square wave and the overshoot
+  beside each edge gets <em>narrower</em> but not <em>shorter</em>. It settles
+  at about <b>9% of the jump height</b> and stays there for ever. This is
+  <b>Gibbs&rsquo; phenomenon</b>, and it is not a numerical fault — it is what a
+  sum of continuous functions does when asked to be discontinuous. It matters
+  here for one reason: it is the proof that <b>a band-limited copy of a
+  discontinuous signal is never the signal</b>, no matter how much band you
+  give it.</p>
+</div>
+
+<h2>1.4 Power lives in the spectrum too</h2>
+
+<p>Because harmonics are orthogonal, their <b>powers add</b> — the cross terms
+integrate away. So the RMS of a signal can be assembled from its spectrum
+without ever drawing the waveform, and this is the most directly examinable
+thing in this part.</p>
+
+<f-plate no="8.3" title="RMS and distortion from a spectrum" stamp="know"
+  caption="<b>Add powers, never amplitudes.</b> Two harmonics of 3 V and 4 V RMS
+  together make 5 V RMS, not 7 — the 3-4-5 triangle again, and for exactly the
+  same reason it appeared in Part 6 of Circuit Analysis: perpendicular things
+  add in quadrature.">
+  <f-row tex="X_{rms} = \sqrt{X_0^2 + \sum_{k\ge1}\left(\frac{A_k}{\sqrt2}\right)^2}"
+         name="total RMS"
+         gloss="Each sinusoid contributes its own RMS, <b>A_k/√2</b>, and those contributions add as squares. X₀ is the DC term, which is already an RMS."></f-row>
+  <f-row tex="P \propto \sum_k A_k^2" name="Parseval, in words"
+         gloss="<b>Total power is the sum of the powers of the parts.</b> Compute it in time or in frequency and you get the same number — which is a useful check on both."></f-row>
+  <f-row tex="\text{THD} = \frac{\sqrt{\sum_{k\ge2}A_k^2}}{A_1}"
+         name="total harmonic distortion"
+         gloss="Everything that is not the fundamental, over the fundamental. <b>A pure sinusoid has THD = 0</b>; a square wave has 48.3%."></f-row>
+  <f-row tex="\text{square: } 81\%\ \text{of the power is in } k=1"
+         name="the number worth remembering"
+         gloss="And 90% by the third harmonic. <b>A signal is mostly its first few terms</b> — which is why band-limiting is survivable at all."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>the RMS of a square wave, from its spectrum alone</em></h4>
+  <div class="worked-body">
+    <p>A square wave alternates between +1 V and −1 V. Find its RMS value using
+    only the harmonic amplitudes, and check the answer against what you already
+    know.</p>
+    <ol class="steps">
+      <li><b>The amplitudes.</b> Odd harmonics only, at
+        <span data-tex="A_k = 4/\pi k">Ak = 4/πk</span>. So the RMS of the
+        <em>k</em>th is
+        <span data-tex="A_k/\sqrt2 = \frac{4}{\sqrt2\,\pi k}">Ak/√2</span>.</li>
+      <li><b>Add the powers.</b>
+        <span data-tex="X_{rms}^2 = \sum_{k\ \mathrm{odd}} \frac{16}{2\pi^2k^2} = \frac{8}{\pi^2}\sum_{k\ \mathrm{odd}}\frac{1}{k^2}" data-display>Xrms² = (8/π²) Σ 1/k² over odd k</span></li>
+      <li><b>The sum is a known one:</b>
+        <span data-tex="\sum_{k\ \mathrm{odd}} 1/k^2 = \pi^2/8">Σ 1/k² = π²/8</span>
+        over odd k. Substituting,
+        <span data-tex="X_{rms}^2 = \frac{8}{\pi^2}\cdot\frac{\pi^2}{8} = 1" data-display>Xrms² = 1</span></li>
+      <li><b>So the RMS is 1 V</b> — which is obviously right, because a square
+        wave is at |1 V| the entire time. The spectrum reproduces it exactly.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">The point is not the
+    answer, which you could have written down. It is that <b>the two
+    descriptions agree to the last digit</b>, and that the fundamental alone
+    contributes <span data-tex="(0.9003)^2 = 0.81">0.81</span> of it — the 81%
+    on the plate above. <b>Keep the fundamental and the third harmonic and you
+    have 90% of a square wave's power in two sinusoids.</b> That is what makes
+    the next section reasonable rather than reckless.</p>
+  </div>
+</div>
+
+<h2>1.5 Bandwidth, and the number Part 2 needs</h2>
+
+<p><b>Bandwidth is the range of frequencies a signal actually occupies.</b> For a
+periodic wave in principle that range is infinite — the harmonics never stop.
+In practice they become negligible, and past some point removing them changes
+nothing you can measure. The frequency where you draw that line is the signal's
+bandwidth, and drawing it is called <b>band-limiting</b>.</p>
+
+<div data-figure="bandLimit"></div>
+
+<p>Two things on that plate are worth being deliberate about. First, the corners
+round off before anything else does, every time — <b>sharp edges are stored in
+the high harmonics</b>, so they are the first thing any band limit takes.
+Second, and more important for what follows: once you have committed to a
+cutoff, the signal <em>has</em> a highest frequency. It is a definite number.
+And a signal with a definite highest frequency has a definite minimum honest
+sample rate.</p>
+
+<div class="keyidea">
+  <p>A signal has two equivalent descriptions and you get to choose. In time it
+  is a value at each instant; in frequency it is an amplitude at each harmonic.
+  Fourier's integrals convert between them, the handbook holds those integrals,
+  and for the three standard waves you should recognise the answer rather than
+  derive it: <b>a jump gives 1/k, a corner gives 1/k²</b>.</p>
+  <p>What this part exists to establish is one number. <b>f<sub>max</sub></b> —
+  the highest frequency a signal contains. Everything in Part 2 is about what
+  happens when you sample a signal faster or slower than twice that number, and
+  everything in Parts 3 and 4 is about building the filter that guarantees
+  f<sub>max</sub> is what you think it is. <b>A signal that has not been
+  band-limited does not have an f<sub>max</sub>, and cannot be sampled correctly
+  at any rate at all</b> — which is why the filter is not an accessory.</p>
+</div>
+
+<h2>1.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li>A periodic signal contains only <b>integer multiples</b> of
+        <span data-tex="f_0 = 1/T">f₀ = 1/T</span>.</li>
+    <li><b>Jump ⇒ harmonics fall as 1/k. Corner ⇒ 1/k².</b> Smoother signal,
+        narrower spectrum.</li>
+    <li>Square and triangle: <b>odd harmonics only</b>. Sawtooth: all of them.</li>
+    <li>RMS from a spectrum:
+        <span data-tex="X_{rms}^2 = X_0^2 + \sum_k (A_k/\sqrt2)^2">Xrms² = X₀² + Σ(Ak/√2)²</span>
+        — <b>powers add, amplitudes do not</b>.</li>
+    <li><span data-tex="\text{THD} = \sqrt{\sum_{k\ge2}A_k^2}\,/\,A_1">THD = √(Σ Ak²)/A₁</span>,
+        everything but the fundamental over the fundamental.</li>
+    <li>A square wave holds <b>81% of its power in the fundamental</b>, 90% by
+        the third harmonic, and has <b>THD = 48.3%</b>.</li>
+    <li><b>Gibbs:</b> truncating a series overshoots a jump by ~9% of the jump,
+        and adding terms narrows the ripple without lowering it.</li>
+    <li><b>Bandwidth = the highest frequency that matters</b>, and it is the
+        input to every sampling question.</li>
+  </ul>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"spectra","title":"Part 1 · Signals and Spectra","topics":["harmonic-id","spectrum-rms","bandwidth-pick"],"count":6}'></div>
+
+<div data-reflex='{"only":["spectra"],"count":5,"title":"Handbook Reflex · Part 1"}'></div>

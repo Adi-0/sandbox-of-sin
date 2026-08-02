@@ -328,6 +328,18 @@ export const MODULES = [
     ],
   },
   {
+    id: "dsp", dir: "dsp", area: 8,
+    title: "Signal Processing", questions: "5–8",
+    parts: [
+      {
+        id: "spectra", n: 1, spec: "8.A · 8.B",
+        title: "Signals and Spectra",
+        blurb: "The same signal written twice — and why a sharp edge is expensive",
+        minutes: 20, figures: [102, 103],
+      },
+    ],
+  },
+  {
     id: "power", dir: "power", area: 10,
     title: "Power Systems", questions: "8–12",
     parts: [
@@ -436,6 +448,11 @@ export const SPEC = {
     ["12.B", "Bode plots", "margins"],
     ["12.C", "Closed-loop response, open-loop response, and stability", "closed-loop"],
     ["12.D", "Controller performance (steady-state errors, settling time, overshoot)", "steady-error"],
+  ],
+  dsp: [
+    ["8.A", "Sampling (aliasing, Nyquist theorem)", "sampling"],
+    ["8.B", "Analog filters", "analog-filters"],
+    ["8.C", "Digital filters (difference equations, Z-transforms)", "digital-filters"],
   ],
   power: [
     ["10.A", "Power theory (power factor, single and three phase, voltage regulation)", "power-factor"],

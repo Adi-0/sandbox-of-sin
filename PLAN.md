@@ -576,8 +576,12 @@ Each was invisible on the page and wrong in a way a reader would have paid for.
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- **Signal Processing** (5–8 q) — Maths 6's integral as the Fourier transform,
-  and the sampling theorem. Reuses Linear 5's Bode machinery and `poly.js`.
+- **Signal Processing** — NCEES **area 8**, 5–8 q. Its three subtopics are
+  sampling, analog filters and digital filters. Reuses Linear 5's Bode
+  machinery and `poly.js`; a z-polynomial is a polynomial, so `roots()` and
+  `evalComplex()` carry over unchanged. *(An earlier draft of this list called
+  it area 5. Area 5 is Properties of Electrical Materials — caught by
+  re-reading the PDF, which is the third time that habit has paid.)*
 - Then: Electromagnetics, Communications, Computer Networks, Computer Systems,
   Software Development, Engineering Economics, Ethics, Probability and
   Statistics, Properties of Electrical Materials.
@@ -585,6 +589,39 @@ The remaining NCEES areas, in the order that reuses the most:
 Counts above are from the specification PDF. **Read it again before starting a
 module** rather than trusting this list — the area 10 per-unit mistake was
 caught exactly that way.
+
+### The Signal Processing arc, as planned
+
+Seven parts, plates 102–114. Sampling is the spine: Part 1 exists to make the
+frequency axis real before Part 2 folds it, and Parts 3–4 are the filter that
+Part 2 proves you cannot do without.
+
+| Part | Spec | Title |
+|---|---|---|
+| 1 | 8.A · 8.B | Signals and Spectra |
+| 2 | 8.A | Sampling and Aliasing |
+| 3 | 8.B | Analog Filters |
+| 4 | 8.B | Order, Roll-Off and Butterworth |
+| 5 | 8.C | Digital Filters and Difference Equations |
+| 6 | 8.C | The Z-Transform and the Unit Circle |
+| 7 | 8.A–8.C | Synthesis and the Mixed Bench |
+
+**Not this module's job.** Electronics 6 (9.D) already owns LSB, quantisation
+error and SNR = 6.02n + 1.76, and states f_s > 2f_max as a rule. This module
+owes the *mechanism* behind that rule — where the factor of two comes from,
+what the alias frequency actually is, and why no later processing undoes it —
+and cross-links rather than restates. Fourier *series* proper belongs to area
+13.B (Communications); Part 1 takes only the spectrum idea it needs.
+
+**The cast's three appearances here**, all exact rather than decorative:
+
+- A 5 kHz tone at f_s = 8 kHz folds to **3 kHz**. Nyquist 4, tone 5, alias 3.
+- ζ = 0.6 gives √(1−ζ²) = **0.8**, so peak = 1/(2ζ√(1−ζ²)) = 1/0.96 =
+  0.355 dB — just on the peaking side of Butterworth's ζ = 0.707. The cast is
+  the near-miss that motivates the flat filter.
+- **z = 0.6 + 0.8j** has |z| = 1 exactly and ∠z = 53.13° exactly: the triangle,
+  normalised, sits precisely on the unit circle, which is precisely the
+  marginal case. Pulled to r = 0.9 it gives 1 − 1.08z⁻¹ + 0.81z⁻².
 
 Each slots into `outline.js` as another module and continues the plate
 numbering, so the compilation keeps reading as one work.

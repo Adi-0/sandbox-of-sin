@@ -52,6 +52,9 @@ import "./error.js";         // 97 98
 import "./pid.js";           // 99 100
 import "./control-synthesis.js"; // 101
 
+/* --- Signal Processing --- */
+import "./spectra.js";       // 102 103
+
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41
