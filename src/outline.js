@@ -337,6 +337,12 @@ export const MODULES = [
         blurb: "The same signal written twice — and why a sharp edge is expensive",
         minutes: 20, figures: [102, 103],
       },
+      {
+        id: "sampling", n: 2, spec: "8.A",
+        title: "Sampling and Aliasing",
+        blurb: "Too few samples and a slower impostor fits them exactly — permanently",
+        minutes: 24, figures: [104, 105],
+      },
     ],
   },
   {

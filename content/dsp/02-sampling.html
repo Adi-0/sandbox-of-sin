@@ -1,0 +1,232 @@
+<p class="eyebrow">
+  <span>Signal Processing · Part 2</span>
+  <span class="spec">NCEES 8.A</span>
+  <span>24 minute read</span>
+</p>
+
+<h1>Sampling and Aliasing</h1>
+
+<p class="lede">Electronics Part 6 gave you the rule: sample faster than twice
+the highest frequency. This part is where that rule comes from, what exactly
+breaks when you disobey it, and why no amount of processing afterwards can
+repair the damage.</p>
+
+<h2>2.1 What a converter actually keeps</h2>
+
+<p>Sampling is simpler than it sounds. Every <span class="math" data-tex="T_s">Ts</span>
+seconds, measure the signal and write the number down. Between measurements,
+<b>keep nothing</b>. The record is a list of numbers and the instants they were
+taken at, and every later stage — the digital filter, the file, the
+reconstruction — has access to that list and to nothing else.</p>
+
+<p>The rate is <span class="math" data-tex="f_s = 1/T_s">fs = 1/Ts</span>. The
+question this whole part answers is: <b>when is that list enough to rebuild the
+signal, and when is it not?</b></p>
+
+<div data-figure="samplingTime"></div>
+
+<h2>2.2 The failure is total, not gradual</h2>
+
+<p>The plate above is worth more than any sentence here, so slide it before
+reading on. At 3 kHz sampled at 8 kHz, one wave passes through those dots. Push
+the signal past 4 kHz and <b>a second wave appears that passes through every
+single one of them</b> — not approximately, exactly.</p>
+
+<p>That is the whole problem, and notice its shape. This is not a signal
+degraded by noise, where more care recovers more of it. <b>Two different inputs
+have produced identical outputs</b>, and the converter's output is all that
+exists downstream. Recovering which one was there is not difficult; it is
+impossible, in the way that recovering the second addend from a sum is
+impossible.</p>
+
+<div class="note honest">
+  <span class="note-tag">And it is not just one impostor</span>
+  <p style="margin-bottom:0">At 8 kHz sampling, a 3 kHz output could have come
+  from 3 kHz — or from 5, 11, 13, 19, 21 kHz, and so on for ever, since every
+  <span class="math" data-tex="8k \pm 3">8k ± 3</span> kHz lands in the same
+  place. <b>Sampling maps infinitely many input frequencies onto each output
+  frequency.</b> A many-to-one map has no inverse, and that is the formal reason
+  aliasing cannot be undone rather than merely being hard to undo.</p>
+</div>
+
+<h2>2.3 The theorem, and two names that get confused</h2>
+
+<f-plate no="8.4" title="The sampling theorem" stamp="know"
+  caption="<b>Learn the two names apart.</b> One is a property of your
+  converter, the other is a requirement set by your signal, and exam questions
+  are written specifically to see whether you have them the right way round.">
+  <f-row tex="f_s > 2f_{max}" name="the criterion"
+         gloss="Sample at <b>strictly more</b> than twice the highest frequency present. Equality is not enough, and section 2.4 shows why in one line."></f-row>
+  <f-row tex="f_N = f_s/2" name="Nyquist FREQUENCY"
+         gloss="Half the <b>sampling rate</b> — a property of the converter. It is the highest frequency that converter can represent, and everything above it folds. Also called the <b>folding frequency</b>."></f-row>
+  <f-row tex="\text{Nyquist rate} = 2f_{max}" name="Nyquist RATE"
+         gloss="Twice the highest frequency in the <b>signal</b> — a property of what you are measuring. It is the slowest rate you are allowed to sample at."></f-row>
+  <f-row tex="f_{alias} = |f - k f_s|, \ k = \text{nearest integer}"
+         name="where a stray tone lands"
+         gloss="Subtract whichever multiple of f_s is nearest. The result is always between 0 and <b>f_s/2</b>, because that is the only band the converter has."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">Say them out loud once</span>
+  <p style="margin-bottom:0">The Nyquist <em>frequency</em> is <b>f<sub>s</sub>/2</b>
+  and belongs to the <b>sampler</b>. The Nyquist <em>rate</em> is
+  <b>2f<sub>max</sub></b> and belongs to the <b>signal</b>. A question that says
+  &ldquo;sampled at twice the Nyquist frequency&rdquo; is not the same as one
+  that says &ldquo;sampled at twice the Nyquist rate&rdquo;, and the difference
+  is a factor of two in the answer.</p>
+</div>
+
+<h2>2.4 Why the number is two</h2>
+
+<p>The time picture shows that aliasing happens. It does not explain why the
+threshold is exactly twice. For that you need the spectrum, and the reason is
+almost embarrassingly geometric.</p>
+
+<p><b>Sampling places a copy of the entire spectrum at every multiple of
+f<sub>s</sub>.</b> That is the one fact to carry. The original band occupies
+−B to +B. The nearest copy is centred at f<sub>s</sub>, so it reaches down to
+f<sub>s</sub> − B. They stay clear of each other exactly when</p>
+
+<p class="math display" data-tex="f_s - B > B \quad\Longleftrightarrow\quad f_s > 2B">fs − B &gt; B ⟺ fs &gt; 2B</p>
+
+<div data-figure="replicas"></div>
+
+<p>So the two is not a rule of thumb about needing a couple of points per cycle.
+It is <b>the condition for two copies of a band of width B to sit side by side
+without touching</b>. And it explains the strictness: at exactly
+f<sub>s</sub> = 2B the copies meet at B, leaving no gap, and separating them
+would need a filter with infinitely steep sides.</p>
+
+<div class="note payoff">
+  <span class="note-tag">Why 44.1 kHz and not 40</span>
+  <p style="margin-bottom:0">Audio is taken to run to 20 kHz, so the Nyquist
+  rate is 40 kHz. CDs sample at 44.1 kHz. The extra 4.1 kHz is
+  <b>guard band</b> — room for a real anti-alias filter to fall from passband to
+  stopband. <b>Every practical system oversamples</b>, and the amount it
+  oversamples by is set by how sharp a filter you are willing to build. That
+  trade is Part 4.</p>
+</div>
+
+<h2>2.5 Working out where a tone lands</h2>
+
+<p>The arithmetic is small: subtract the nearest multiple of
+f<sub>s</sub> and take the size of what is left. Equivalently — and this is
+easier to picture — <b>fold the frequency axis at every multiple of
+f<sub>s</sub>/2</b> and see where the tone comes to rest.</p>
+
+<div class="worked">
+  <h4>Worked · <em>an interferer that lands inside the band</em></h4>
+  <div class="worked-body">
+    <p>A telephone channel carries speech to 3.4 kHz and is sampled at 8 kHz.
+    A nearby switching supply injects a 5 kHz tone ahead of the converter.
+    Where does it appear, and does it matter?</p>
+    <ol class="steps">
+      <li><b>Nyquist frequency.</b>
+        <span data-tex="f_N = f_s/2 = 4\text{ kHz}">fN = 4 kHz</span>. The
+        speech at 3.4 kHz is below it and is safe.</li>
+      <li><b>The interferer is not.</b> 5 kHz is above 4 kHz, so it will fold.
+        The nearest multiple of f<sub>s</sub> is 8 kHz:
+        <span data-tex="f_{alias} = |5 - 8| = 3\text{ kHz}" data-display>falias = |5 − 8| = 3 kHz</span></li>
+      <li><b>It lands at 3 kHz</b> — not merely inside the sampled band, but
+        inside the <em>speech</em> band, below the 3.4 kHz edge.</li>
+      <li><b>So it matters completely.</b> A 3 kHz tone is an ordinary speech
+        frequency. After sampling there is nothing to distinguish this one from
+        a real one, and no filter — analog or digital — placed after the
+        converter can remove it without also removing real speech at 3 kHz.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Note the numbers, as
+    they will keep coming back: <b>Nyquist frequency 4, tone 5, alias 3</b> — the
+    same triangle this compilation has followed since Mathematics Part 1. Note
+    also what the fix has to be. <b>The interferer must be removed before the
+    sampler</b>, by an analog filter, because afterwards it is no longer
+    separable from the signal. That filter is Parts 3 and 4.</p>
+  </div>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>a rate below everything in the signal</em></h4>
+  <div class="worked-body">
+    <p>A 12 kHz sinusoid is sampled at 5 kHz. What frequency is recorded?</p>
+    <ol class="steps">
+      <li><b>Find the nearest multiple of f<sub>s</sub>.</b> The multiples are
+        5, 10, 15, … and 12 is nearest to 10.</li>
+      <li><span data-tex="f_{alias} = |12 - 10| = 2\text{ kHz}" data-display>falias = |12 − 10| = 2 kHz</span></li>
+      <li><b>Check it is in range.</b> The answer must lie between 0 and
+        <span data-tex="f_s/2 = 2.5">fs/2 = 2.5</span> kHz, and 2 kHz does.
+        <b>If your answer exceeds f<sub>s</sub>/2 you picked the wrong
+        multiple</b> — that check catches almost every arithmetic slip in this
+        topic.</li>
+      <li><b>2 kHz.</b> The record shows a clean 2 kHz sinusoid, with nothing
+        anywhere in it to suggest the input was six times faster.</li>
+    </ol>
+  </div>
+</div>
+
+<h2>2.6 The filter comes first</h2>
+
+<p>Everything above forces one conclusion, and it is the most practically
+important sentence in this module.</p>
+
+<div class="keyidea">
+  <p><b>The anti-alias filter goes before the converter, never after.</b> Its job
+  is to guarantee that f<sub>max</sub> is what you believe it is, by removing
+  everything above f<sub>s</sub>/2 <em>while the signal is still analog and its
+  components are still separable</em>. Once sampling has folded a stray tone into
+  the band, the tone and the signal are the same numbers, and no later stage has
+  anything left to work with.</p>
+  <p>This is why Part 1 insisted that a signal which has not been band-limited
+  has no f<sub>max</sub> at all, and so has no honest sample rate. Real signals
+  always carry something above the band you care about — noise if nothing else —
+  so in practice <b>the filter does not merely protect the sample rate, it
+  creates the f<sub>max</sub> that justifies it</b>.</p>
+</div>
+
+<p>You have seen aliasing outside a laboratory. Wheels that turn backwards in
+films are sampled at the frame rate; a strobe that appears to freeze a spinning
+shaft is doing the same arithmetic deliberately. In each case the observation is
+perfectly consistent with a slower motion, and nothing in the record can
+distinguish the two.</p>
+
+<h2>2.7 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b><span data-tex="f_s > 2f_{max}">fs &gt; 2 fmax</span></b>, strictly.
+        Equality leaves the copies touching and the amplitude unrecoverable.</li>
+    <li><b>Nyquist frequency = f<sub>s</sub>/2</b>, a property of the sampler.
+        <b>Nyquist rate = 2f<sub>max</sub></b>, a property of the signal.
+        Do not swap them.</li>
+    <li><span data-tex="f_{alias} = |f - kf_s|">falias = |f − k·fs|</span> for
+        the nearest k. <b>The answer always lands between 0 and f<sub>s</sub>/2</b>
+        — use that as a check.</li>
+    <li><b>Sampling copies the spectrum to every multiple of f<sub>s</sub>.</b>
+        Overlap of those copies <em>is</em> aliasing.</li>
+    <li>Infinitely many inputs share one alias, so the map is
+        <b>many-to-one and has no inverse</b>. Aliasing is permanent.</li>
+    <li><b>Anti-alias filter goes before the converter.</b> Afterwards there is
+        nothing left to separate.</li>
+    <li>Practical systems oversample for guard band — 44.1 kHz for a 20 kHz
+        band, not 40.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Part 1 said a signal has a highest frequency. Part 2 says that number and
+  the sample rate are in a race, and there is a single line between working
+  perfectly and failing completely. <b>Below f<sub>s</sub>/2, reconstruction is
+  exact</b> — not approximate, exact. <b>Above it, the information is gone</b> —
+  not degraded, gone.</p>
+  <p>The rest of this module follows from that. Parts 3 and 4 build the analog
+  filter that keeps you on the right side of the line and quantify what it costs
+  to build a sharp one. Parts 5 and 6 work on the samples once you are safely
+  across it, where the natural frequency variable is no longer hertz but
+  <b>fraction of the sample rate</b> — because after sampling, f<sub>s</sub>/2 is
+  the only edge the numbers know about.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"sampling","title":"Part 2 · Sampling and Aliasing","topics":["nyquist-rate","alias-where","alias-concept"],"count":6}'></div>
+
+<div data-reflex='{"only":["sampling"],"count":5,"title":"Handbook Reflex · Part 2"}'></div>

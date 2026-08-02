@@ -14,6 +14,7 @@
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
 import { num, fixed, sig, ord } from "../lib/fmt.js";
+import { aliasOf } from "../lib/dsp.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 const D = (s) => `<span class="math display" data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
@@ -327,5 +328,251 @@ defineReflex([
     stem: "Truncating a Fourier series at a jump — what happens at the edge?",
     tool: "Gibbs overshoot, about 9% of the jump, and it never shrinks",
     because: "More terms narrow the ripple without lowering it, so band-limited and exact are permanently different.",
+  },
+]);
+
+/* ==========================================================================
+   Part 2 — sampling and aliasing
+
+   Three generators for three distinct failure modes. `nyquist-rate` tests
+   whether the two Nyquist names are the right way round; `alias-where` is
+   the arithmetic; `alias-concept` is the one the exam actually cares about,
+   which is knowing that the damage is permanent and that the filter goes
+   first.
+   ========================================================================== */
+
+defineProblem("nyquist-rate", {
+  topic: "Nyquist rate and Nyquist frequency",
+  lookup: "Electrical → Signal Processing → Sampling / Nyquist theorem",
+  make(rng) {
+    const ask = rng.pick(["rate", "rate", "freq", "twice"]);
+
+    /* --- the minimum rate for a stated bandwidth ------------------------ */
+    if (ask === "rate") {
+      const parts = rng.pick([
+        { list: [1.2, 3.5, 4.8], u: "kHz" },
+        { list: [50, 180, 400], u: "Hz" },
+        { list: [2, 6, 15], u: "kHz" },
+        { list: [0.3, 3.4], u: "kHz" },
+      ]);
+      const fmax = Math.max(...parts.list);
+      const fmin = Math.min(...parts.list);
+      return {
+        stem: `A signal contains components at ${parts.list.map((v) => `${num(v, 2)} ${parts.u}`).join(", ")}. What is the minimum sampling rate that avoids aliasing?`,
+        choices: options(
+          { text: `just above ${num(2 * fmax, 2)} ${parts.u}`, why: "" },
+          [
+            { text: `just above ${num(fmax, 2)} ${parts.u}`, why: `That is f<sub>max</sub> itself, not twice it. One sample per cycle cannot distinguish a sinusoid from a constant — the criterion is <b>f<sub>s</sub> &gt; 2f<sub>max</sub></b>.` },
+            { text: `just above ${num(2 * fmin, 2)} ${parts.u}`, why: `Twice the <b>lowest</b> component. The rate is set by the <b>highest</b> frequency present — the fastest thing in the signal is what needs resolving.` },
+            { text: `just above ${num(2 * parts.list.reduce((s, v) => s + v, 0), 2)} ${parts.u}`, why: `The components were added together first. <b>Frequencies present in a signal do not sum</b>; only the largest one matters here.` },
+            { text: `just above ${num(fmax / 2, 2)} ${parts.u}`, why: `That is the Nyquist <em>frequency</em> you would get if you sampled at f<sub>max</sub> — the two names have been swapped. The <b>rate</b> is 2f<sub>max</sub>.` },
+          ]),
+        answer: 0,
+        steps: [
+          `The rate is set by the <b>highest</b> frequency present, which is ${num(fmax, 2)} ${parts.u}.`,
+          D(`f_s > 2f_{max} = 2(${num(fmax, 2)}) = ${num(2 * fmax, 2)}\\text{ ${parts.u}}`),
+          `<b>Just above ${num(2 * fmax, 2)} ${parts.u}</b>, which is the <b>Nyquist rate</b> for this signal. Note it is a strict inequality: sampling at exactly ${num(2 * fmax, 2)} ${parts.u} puts two samples per cycle on the ${num(fmax, 2)} ${parts.u} component, and those two can land on the same pair of points every cycle and lose the amplitude entirely.`,
+        ],
+      };
+    }
+
+    /* --- the highest representable frequency for a stated rate ---------- */
+    if (ask === "freq") {
+      const fs = rng.pick([8, 10, 20, 44.1, 48, 100]);
+      return {
+        stem: `A converter samples at ${num(fs, 3)} kHz. What is the highest signal frequency it can represent without aliasing?`,
+        choices: options(
+          { text: `just under ${num(fs / 2, 3)} kHz`, why: "" },
+          [
+            { text: `just under ${num(fs, 3)} kHz`, why: `That is the sampling rate itself. The converter can only represent up to <b>half</b> of it — a signal at f<sub>s</sub> would put every sample on the same point of the wave.` },
+            { text: `just under ${num(2 * fs, 3)} kHz`, why: `Doubled instead of halved. The factor of two runs the other way: the <b>rate</b> must exceed twice the <b>frequency</b>, so the frequency must be under half the rate.` },
+            { text: `just under ${num(fs / 4, 3)} kHz`, why: `Halved twice. There is only one factor of two in the sampling theorem.` },
+          ]),
+        answer: 0,
+        steps: [
+          `The highest representable frequency is the <b>Nyquist frequency</b>, which is half the sampling rate:`,
+          D(`f_N = \\frac{f_s}{2} = \\frac{${num(fs, 3)}}{2} = ${num(fs / 2, 3)}\\text{ kHz}`),
+          `<b>Just under ${num(fs / 2, 3)} kHz.</b> Anything at or above it folds back down into the band. Keep the two names apart: <b>${num(fs / 2, 3)} kHz is the Nyquist frequency and belongs to this converter</b>; a Nyquist <em>rate</em> is 2f<sub>max</sub> and belongs to a signal.`,
+        ],
+      };
+    }
+
+    /* --- the deliberate name trap --------------------------------------- */
+    const fmax = rng.pick([4, 5, 10, 15, 20]);
+    return {
+      stem: `A signal is band-limited to ${num(fmax, 0)} kHz. It is sampled at <b>twice the Nyquist rate</b>. What is the sampling frequency?`,
+      choices: options(
+        { text: `${num(4 * fmax, 0)} kHz`, why: "" },
+        [
+          { text: `${num(2 * fmax, 0)} kHz`, why: `That <em>is</em> the Nyquist rate. The question asks for <b>twice</b> it.` },
+          { text: `${num(fmax, 0)} kHz`, why: `That is f<sub>max</sub>. The Nyquist rate is already 2f<sub>max</sub> before the doubling in the question is applied.` },
+          { text: `${num(fmax / 2, 0)} kHz`, why: `That would be the Nyquist frequency of a converter running at f<sub>max</sub> — the two names have been swapped and the doubling dropped.` },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>Nyquist rate</b> means 2f<sub>max</sub>, a property of the signal:`,
+        D(`\\text{Nyquist rate} = 2(${num(fmax, 0)}) = ${num(2 * fmax, 0)}\\text{ kHz}`),
+        `Twice that is ${D(`f_s = 2(${num(2 * fmax, 0)}) = ${num(4 * fmax, 0)}\\text{ kHz}`)}`,
+        `<b>${num(4 * fmax, 0)} kHz.</b> This phrasing is on the exam precisely because &ldquo;twice the Nyquist rate&rdquo; and &ldquo;twice the Nyquist frequency&rdquo; sound alike and differ by a factor of two. <b>Rate is 2f<sub>max</sub> and belongs to the signal; frequency is f<sub>s</sub>/2 and belongs to the sampler.</b>`,
+      ],
+    };
+  },
+});
+
+defineProblem("alias-where", {
+  topic: "Where an aliased tone lands",
+  lookup: "Electrical → Signal Processing → Aliasing",
+  make(rng) {
+    const fs = rng.pick([8, 10, 12, 20, 48]);
+    /* Keep the tone above Nyquist and off the exact fold points, so the
+       answer is a genuine fold rather than a degenerate zero. */
+    const cand = [];
+    for (let f = fs / 2 + fs / 8; f <= 3 * fs; f += fs / 8) {
+      const a = aliasOf(f, fs);
+      if (a > fs / 16 && Math.abs(a - fs / 2) > 1e-9) cand.push(f);
+    }
+    const f = rng.pick(cand);
+    const fa = aliasOf(f, fs);
+    const k = Math.round(f / fs);
+    const rem = Math.abs(f) % fs;                // before the fold about fs/2
+    return {
+      stem: `A ${num(f, 3)} kHz sinusoid is sampled at ${num(fs, 0)} kHz with no anti-alias filter. What frequency appears in the sampled data?`,
+      /* The remainder before folding is the instructive wrong answer: it is
+         what you get from f mod fs without the reflection about fs/2, and it
+         is the single most common way this arithmetic is botched. Offering
+         |f − fs| instead would, for any tone between fs/2 and fs, be exactly
+         minus the right answer — the same number, which tests nothing. */
+      choices: options(
+        { text: `${num(fa, 3)} kHz`, why: "" },
+        [
+          rem > fs / 2 + 1e-9
+            ? { text: `${num(rem, 3)} kHz`, why: `That is f mod f<sub>s</sub>, but the fold was not finished. A remainder above f<sub>s</sub>/2 = ${num(fs / 2, 2)} kHz reflects back down: ${num(fs, 0)} − ${num(rem, 3)} = ${num(fa, 3)} kHz. <b>The answer can never exceed f<sub>s</sub>/2.</b>` }
+            : { text: `${num(fs - fa, 3)} kHz`, why: `Folded the wrong way. The tone sits ${num(fa, 3)} kHz from the multiple ${num(k * fs, 0)} kHz, and it is that distance — not its complement — that appears. <b>The answer can never exceed f<sub>s</sub>/2 = ${num(fs / 2, 2)} kHz.</b>` },
+          { text: `${num(f, 3)} kHz`, why: `That is the input. It is above the Nyquist frequency of ${num(fs / 2, 2)} kHz, so the converter cannot represent it — it folds down instead.` },
+          { text: `${num(fs / 2, 3)} kHz`, why: `That is the Nyquist frequency — the edge of the band, not where this particular tone lands inside it.` },
+          { text: `${num(Math.abs(f - (k + 1) * fs), 3)} kHz`, why: `A multiple of f<sub>s</sub> that is not the nearest one was subtracted. The nearest is ${num(k, 0)} × ${num(fs, 0)} = ${num(k * fs, 0)} kHz.` },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>Check whether it aliases at all.</b> The Nyquist frequency is ${D(`f_N = f_s/2 = ${num(fs / 2, 2)}\\text{ kHz}`)} and ${num(f, 3)} kHz is above it, so it does.`,
+        `<b>Subtract the nearest multiple of f<sub>s</sub>.</b> Multiples are ${[1, 2, 3].map((i) => num(i * fs, 0)).join(", ")}, … and ${num(f, 3)} is nearest to ${num(k * fs, 0)}:`,
+        D(`f_{alias} = |${num(f, 3)} - ${num(k * fs, 0)}| = ${num(fa, 3)}\\text{ kHz}`),
+        `<b>${num(fa, 3)} kHz</b>, and it is inside 0 to ${num(fs / 2, 2)} kHz as it must be. <b>Nothing in the recorded data marks it as false</b> — it is indistinguishable from a real ${num(fa, 3)} kHz tone, and so is every other input at ${num(fs, 0)}k ± ${num(fa, 3)} kHz.`,
+      ],
+    };
+  },
+});
+
+defineProblem("alias-concept", {
+  topic: "What aliasing costs",
+  lookup: "Electrical → Signal Processing → Anti-aliasing filter",
+  make(rng) {
+    const mode = rng.pick(["fix", "fix", "where", "guard"]);
+
+    if (mode === "fix") {
+      return {
+        stem: `A data acquisition system is aliasing: components above f<sub>s</sub>/2 are appearing as false low-frequency signals. Which change actually fixes it?`,
+        choices: options(
+          { text: "an analog low-pass filter placed before the converter", why: "" },
+          [
+            { text: "a digital low-pass filter applied to the samples", why: `Too late. Once the fold has happened the stray component occupies the <b>same frequency</b> as real signal content, so a digital filter can only remove both together. <b>After sampling they are not two things any more.</b>` },
+            { text: "increasing the converter's resolution from 12 to 16 bits", why: `More bits lower the <b>quantisation</b> floor, which is a different error entirely. Aliasing is not a precision problem — every sample can be exact to the last bit and still describe the wrong wave.` },
+            { text: "averaging many samples to reduce the noise", why: `Averaging attacks random noise. An alias is <b>not random</b> — it is a stable, coherent sinusoid, and averaging preserves it perfectly.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Aliasing is a <b>many-to-one</b> map: infinitely many input frequencies land on each output frequency, so the operation has no inverse.`,
+          `That rules out everything applied <em>after</em> sampling — more bits, averaging, digital filtering. None of them can recover information that no longer exists in the data.`,
+          `<b>An analog low-pass filter before the converter</b> is the only fix, because it is the last point at which the unwanted component and the wanted signal are still <b>separate things at separate frequencies</b>.`,
+        ],
+      };
+    }
+
+    if (mode === "guard") {
+      const B = rng.pick([4, 15, 20, 22]);
+      const fs = rng.pick([2.2, 2.5, 2.75]) * B;
+      return {
+        stem: `A signal band-limited to ${num(B, 0)} kHz is sampled at ${num(fs, 3)} kHz rather than the minimum ${num(2 * B, 0)} kHz. What does the extra rate buy?`,
+        choices: options(
+          { text: `room for the anti-alias filter to roll off, between ${num(B, 0)} and ${num(fs - B, 3)} kHz`, why: "" },
+          [
+            { text: "a higher signal-to-noise ratio from the extra bits", why: `Sampling faster does not add bits. Resolution is set by the converter's word length — that is Electronics Part 6, and it is a separate axis from rate.` },
+            { text: `the ability to represent signals up to ${num(fs, 3)} kHz`, why: `The limit is still half the rate, ${num(fs / 2, 3)} kHz — and in any case the signal was band-limited to ${num(B, 0)} kHz before it arrived.` },
+            { text: "nothing — any rate above the Nyquist rate is equivalent", why: `True of an <b>ideal</b> filter, which does not exist. A real filter needs a finite frequency span to fall from passband to stopband, and that span is exactly what the extra rate provides.` },
+          ]),
+        answer: 0,
+        steps: [
+          `At the minimum rate of ${num(2 * B, 0)} kHz the spectral copies would <b>touch</b> at ${num(B, 0)} kHz, leaving no gap at all.`,
+          `Sampling at ${num(fs, 3)} kHz moves the nearest copy's lower edge up to ${D(`f_s - B = ${num(fs, 3)} - ${num(B, 0)} = ${num(fs - B, 3)}\\text{ kHz}`)}`,
+          `<b>So the filter has from ${num(B, 0)} kHz to ${num(fs - B, 3)} kHz to get from passband to stopband</b> — a span of ${num(fs - 2 * B, 3)} kHz. That is the transition band, and buying it is the entire reason practical systems oversample.`,
+          `It is why CDs use 44.1 kHz for a 20 kHz band instead of 40.0: <b>the guard band is cheaper than the filter would be without it.</b>`,
+        ],
+      };
+    }
+
+    /* --- an out-of-band tone landing inside the band of interest -------- */
+    const fs = 8, band = 3.4, f = 5;
+    return {
+      stem: `A speech channel carrying content to ${num(band, 1)} kHz is sampled at ${num(fs, 0)} kHz. A ${num(f, 0)} kHz interferer reaches the converter. Why is this worse than an interferer at ${num(fs / 2 + 3.5, 1)} kHz would be?`,
+      choices: options(
+        { text: `it folds to ${num(aliasOf(f, fs), 0)} kHz, which is inside the speech band`, why: "" },
+        [
+          { text: "it is closer to the Nyquist frequency, so it folds more strongly", why: `Folding is not a matter of degree — a tone either aliases or it does not, and the alias keeps its full amplitude. <b>Distance past f<sub>s</sub>/2 changes where it lands, not how badly.</b>` },
+          { text: `it is larger than f<sub>s</sub>/2 while the other is not`, why: `Both are above the ${num(fs / 2, 0)} kHz Nyquist frequency, so both alias. The difference is <em>where</em> each one lands.` },
+          { text: "it is not worse; both are removed by the same filter", why: `The same anti-alias filter would indeed stop both. The question is what happens if one gets through, and these two do very different amounts of damage.` },
+        ]),
+      answer: 0,
+      steps: [
+        `Both tones are above the Nyquist frequency of ${num(fs / 2, 0)} kHz, so both fold. Where they land is the whole difference:`,
+        D(`|${num(f, 0)} - ${num(fs, 0)}| = ${num(aliasOf(f, fs), 0)}\\text{ kHz}, \\qquad |${num(fs / 2 + 3.5, 1)} - ${num(fs, 0)}| = ${num(aliasOf(fs / 2 + 3.5, fs), 1)}\\text{ kHz}`),
+        `${num(aliasOf(fs / 2 + 3.5, fs), 1)} kHz lands <b>above</b> the ${num(band, 1)} kHz speech band, where a digital filter can still remove it. <b>${num(aliasOf(f, fs), 0)} kHz lands inside it</b>, on top of real speech.`,
+        `<b>An alias is only harmless if it lands somewhere you were going to discard anyway.</b> That is a matter of luck unless the anti-alias filter removes it first — which is the argument for the filter, stated in terms of consequence rather than principle.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "sampling",
+    stem: "Minimum sampling rate for a signal band-limited to fmax?",
+    tool: "Strictly more than 2·fmax — the Nyquist rate",
+    because: "Equality leaves the spectral copies touching and the amplitude at fmax unrecoverable.",
+  },
+  {
+    part: "sampling",
+    stem: "Nyquist FREQUENCY — what is it, and whose property?",
+    tool: "fs/2, a property of the sampler",
+    because: "The Nyquist rate is 2·fmax and belongs to the signal. Exam questions swap the two on purpose.",
+  },
+  {
+    part: "sampling",
+    stem: "A tone above fs/2 gets through to the converter. Where does it appear?",
+    tool: "At |f − k·fs| for the nearest k — always between 0 and fs/2",
+    because: "If your answer exceeds fs/2 you subtracted the wrong multiple. That check catches nearly every slip.",
+  },
+  {
+    part: "sampling",
+    stem: "Can a digital filter remove an alias after sampling?",
+    tool: "No — it occupies the same frequency as real signal",
+    because: "Sampling maps many input frequencies onto one output frequency, and a many-to-one map has no inverse.",
+  },
+  {
+    part: "sampling",
+    stem: "Where does the anti-alias filter go?",
+    tool: "Before the converter, always",
+    because: "It is the last point at which the stray component and the wanted signal are still separate things.",
+  },
+  {
+    part: "sampling",
+    stem: "Why sample audio at 44.1 kHz rather than the 40 kHz Nyquist rate?",
+    tool: "Guard band — a real filter needs room to roll off",
+    because: "At exactly the Nyquist rate the copies touch and separating them would need infinitely steep sides.",
+  },
+  {
+    part: "sampling",
+    stem: "What does sampling do to a signal's spectrum?",
+    tool: "Copies it to every multiple of fs",
+    because: "Aliasing is those copies overlapping, which is the reason the threshold is exactly twice the bandwidth.",
   },
 ]);
