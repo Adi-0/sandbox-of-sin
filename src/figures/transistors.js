@@ -65,10 +65,14 @@ function bjtCurves() {
     const pts = [];
     for (let i = 0; i <= 300; i++) {
       const vce = (i / 300) * 11;
-      pts.push(`${p.x(vce).toFixed(2)} ${p.y(icOf(uA * 1e-6, vce) * 1000).toFixed(2)}`);
+      // hand-built paths do not get curve()'s clamping, so do it here or a
+      // high-base-current trace escapes the top of the frame
+      pts.push(`${p.x(vce).toFixed(2)} ${p.y(Math.min(IcMax, icOf(uA * 1e-6, vce) * 1000)).toFixed(2)}`);
     }
     p.add("curve", pathOf(pts, "muted", 1.2, 0.55));
-    p.text(11, icOf(uA * 1e-6, 11) * 1000, `${uA} µA`,
+    /* curve() clamps to the frame but text() does not, so a curve that runs
+       off the top would leave its label floating above the plate */
+    p.text(11, Math.min(IcMax * 0.97, icOf(uA * 1e-6, 11) * 1000), `${uA} µA`,
       { color: "muted", size: 9.5, dx: 5, dy: 3, anchor: "start" });
   });
 
@@ -153,7 +157,7 @@ function bjtCurves() {
 
 const FETS = {
   jfet: {
-    name: "n-channel JFET", xr: [-4.6, 0.6],
+    name: "JFET, n-ch", xr: [-4.6, 0.6],
     Idss: 10, Vp: -4,
     id: (vgs) => (vgs <= -4 ? 0 : vgs >= 0 ? 10 : 10 * (1 - vgs / -4) ** 2),
     gm: (vgs) => (vgs <= -4 || vgs > 0 ? 0 : (2 * 10 / 4) * (1 - vgs / -4)),

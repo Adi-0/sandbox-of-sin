@@ -101,8 +101,8 @@ function waveformAnatomy() {
 
     rdPeak.set(`${VM} V`);
     rdPP.set(`${VM * 2} V`);
-    rdRms.set(`${fixed(rmsV, 1)} V  ·  ${sh.rms}`);
-    rdAvg.set(`${fixed(avgV, 1)} V  ·  ${sh.avg}`);
+    rdRms.set(`${fixed(rmsV, 1)} V`, ` · ${sh.rms}`);
+    rdAvg.set(`${fixed(avgV, 1)} V`, ` · ${sh.avg}`);
     rdNote.set(sh.note);
   }
 
@@ -455,7 +455,7 @@ const MAP_LINKS = [
   { a: 2, b: 3, label: "when nothing collapses", at: 0.5, dx: 8, anchor: "start" },
   { a: 3, b: 4, label: "solve once, not once per load", at: 0.5, dy: -8 },
   { a: 4, b: 6, label: "still true with complex numbers", at: 0.5, dy: -8 },
-  { a: 5, b: 6, label: "RMS is what the phasor stores", at: 0.5, dx: 8, anchor: "start" },
+  { a: 5, b: 6, label: "RMS is what the phasor stores", at: 0.5, dy: -9 },
 ];
 
 function circuitsMap() {

@@ -69,7 +69,7 @@ function matrixTransform() {
     for (const n of jLab.childNodes) { n.setAttribute("x", p.x(b) - 10); n.setAttribute("y", p.y(d) - 6); }
 
     const det = a * d - b * c;
-    rdMat.set(`[${fixed(a, 2)} ${fixed(b, 2)} ; ${fixed(c, 2)} ${fixed(d, 2)}]`);
+    rdMat.set(`[${num(a, 2)} ${num(b, 2)} ; ${num(c, 2)} ${num(d, 2)}]`);
     rdDet.set(fixed(det, 2));
     rdArea.set(fixed(Math.abs(det), 2));
     rdNote.set(t < 0.99 ? "part way there — drag the slider to 1.00" : MATS[key].note);
@@ -154,17 +154,30 @@ function systemLines() {
     const { rows, note } = SYSTEMS[id];
     const [[a1, b1, c1], [a2, b2, c2]] = rows;
 
+    /* Clip ax + by = c to the visible rectangle. Solving only at the two x
+       extremes puts a steep line's endpoints far above the frame, and a
+       <line> is not clipped by anything — it just leaves the plate. */
     const seg = (a, b, c, node) => {
-      // draw the line ax + by = c across the visible frame
-      if (Math.abs(b) > 1e-9) {
-        const y = (x) => (c - a * x) / b;
-        node.setAttribute("x1", p.x(p.xr[0])); node.setAttribute("y1", p.y(y(p.xr[0])));
-        node.setAttribute("x2", p.x(p.xr[1])); node.setAttribute("y2", p.y(y(p.xr[1])));
-      } else {
-        const x = c / a;
-        node.setAttribute("x1", p.x(x)); node.setAttribute("y1", p.y(p.yr[0]));
-        node.setAttribute("x2", p.x(x)); node.setAttribute("y2", p.y(p.yr[1]));
+      const [X0, X1] = p.xr, [Y0, Y1] = p.yr, E = 1e-9;
+      const pts = [];
+      const push = (x, y) => {
+        if (x >= X0 - E && x <= X1 + E && y >= Y0 - E && y <= Y1 + E) pts.push([x, y]);
+      };
+      if (Math.abs(b) > E) { push(X0, (c - a * X0) / b); push(X1, (c - a * X1) / b); }
+      if (Math.abs(a) > E) { push((c - b * Y0) / a, Y0); push((c - b * Y1) / a, Y1); }
+      if (pts.length < 2) {
+        for (const k of ["x1", "y1", "x2", "y2"]) node.setAttribute(k, 0);
+        return;
       }
+      let A = pts[0], B = pts[1], far = -1;
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
+          if (d > far) { far = d; A = pts[i]; B = pts[j]; }
+        }
+      }
+      node.setAttribute("x1", p.x(A[0])); node.setAttribute("y1", p.y(A[1]));
+      node.setAttribute("x2", p.x(B[0])); node.setAttribute("y2", p.y(B[1]));
     };
     seg(a1, b1, c1, l1);
     seg(a2, b2, c2, l2);

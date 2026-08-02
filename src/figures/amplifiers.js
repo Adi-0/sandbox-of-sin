@@ -190,7 +190,7 @@ function gainTradeoff() {
     drop.setAttribute("x1", p.x(rE)); drop.setAttribute("y1", p.y(Math.min(145, A)));
     drop.setAttribute("x2", p.x(rE)); drop.setAttribute("y2", p.y(0));
 
-    rdRe.set(rE < 1 ? "fully bypassed" : `${num(rE, 0)} Ω`);
+    rdRe.set(rE < 1 ? "bypassed" : `${num(rE, 0)} Ω`);
     rdAv.set(`−${fixed(A, 1)}`);
     rdApprox.set(rE < 1 ? "—" : `−${fixed(AMP.Rc / rE, 1)}`,
       rE < 1 ? "" : ` ${fixed((Math.abs(AMP.Rc / rE - A) / A) * 100, 0)}% out`);

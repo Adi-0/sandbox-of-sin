@@ -224,7 +224,7 @@ function stateMachine() {
 
     rdKind.set(`${M.kind}`, ` · ${n} states`);
     rdState.set(M.states[here]);
-    rdSeen.set(M.seen[here] === "—" ? "no useful prefix yet" : `has just seen ${M.seen[here]}`);
+    rdSeen.set(M.seen[here] === "—" ? "nothing yet" : M.seen[here], M.seen[here] === "—" ? " — no useful prefix" : " seen so far");
     rdIn.set(`${bit}`, ` (bit ${t + 1} of ${STREAM.length})`);
     rdNext.set(M.states[dest]);
     rdOut.set(`${emitted}`, M.emit
@@ -360,7 +360,7 @@ function synthesise(a, code) {
 
 function assignment() {
   const p = new Plot({
-    w: 620, h: 344, xr: [0, 588], yr: [-218, 96],
+    w: 620, h: 336, xr: [0, 588], yr: [-214.1, 92.0994],
     pad: { l: 16, r: 16, t: 12, b: 10 },
     label:
       "A state assignment table giving each state a bit pattern, the " +

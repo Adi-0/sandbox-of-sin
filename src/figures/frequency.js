@@ -39,13 +39,13 @@ function poleDistance() {
       "its length marked.",
   });
   const bp = new Plot({
-    w: 300, h: 300, xr: [-1.1, 2.0], yr: [-30, 7],
+    w: 300, h: 286, xr: [-1.1, 2.0], yr: [-27.9444, 7],
     pad: { l: 44, r: 16, t: 14, b: 34 },
     label: "The resulting gain in decibels against log frequency.",
   });
 
-  const rdW = readout({ key: "ω", value: "", tone: "y" });
-  const rdDist = readout({ key: "distance to the pole", value: "", tone: "x" });
+  const rdW = readout({ key: "drive frequency", value: "", tone: "y" });
+  const rdDist = readout({ key: "distance to pole", value: "", tone: "x" });
   const rdGain = readout({ key: "gain", value: "", tone: "r" });
   const rdDb = readout({ key: "in decibels", value: "", tone: "r" });
   const rdPhase = readout({ key: "phase", value: "", tone: "y" });
@@ -106,7 +106,7 @@ function poleDistance() {
   }
 
   const k = knob({
-    label: "ω", min: 0, max: 120, step: 1, value: 40,
+    label: "drive frequency", min: 0, max: 120, step: 1, value: 40,
     format: (v) => `${fixed(v / 10, 1)} krad/s`,
     onInput: draw,
   });
@@ -131,28 +131,28 @@ const SHAPES = {
     name: "Low-pass", slope: -20,
     mag: (w, a) => 1 / Math.hypot(1, w / a),
     ph: (w, a) => -Math.atan2(w / a, 1) * 180 / Math.PI,
-    H: "1 / (1 + jω/ωc)",
+    H: "1/(1 + jω/ωc)",
     note: "One pole. <b>Flat, then falling at 20 dB per decade</b>, with the phase sliding from 0° to −90° and passing through −45° exactly at the corner. Almost every real signal path is this, because every real signal path has stray capacitance.",
   },
   hp: {
     name: "High-pass", slope: 20,
     mag: (w, a) => (w / a) / Math.hypot(1, w / a),
     ph: (w, a) => 90 - Math.atan2(w / a, 1) * 180 / Math.PI,
-    H: "(jω/ωc) / (1 + jω/ωc)",
+    H: "(jω/ωc)/(1 + jω/ωc)",
     note: "The same pole, plus a <b>zero at the origin</b>. The zero contributes +20 dB/decade everywhere and +90° of phase, so the two combine to a rising slope below the corner and a flat response above it. <b>Poles bend a Bode plot down; zeros bend it up</b> — that is the entire construction rule.",
   },
   int: {
     name: "Integrator", slope: -20,
     mag: (w, a) => a / w,
     ph: () => -90,
-    H: "ωc / jω",
+    H: "ωc/jω",
     note: "A pole <b>at the origin</b>: no corner at all, just a straight −20 dB/decade line all the way down and a constant −90°. It crosses 0 dB at ω = ωc. This is the shape every control loop is built around, because it is what forces the steady-state error to zero.",
   },
   lead: {
     name: "Pole and zero", slope: 0,
     mag: (w, a) => Math.hypot(1, w / (a / 8)) / Math.hypot(1, w / a) / 8,
     ph: (w, a) => (Math.atan2(w / (a / 8), 1) - Math.atan2(w / a, 1)) * 180 / Math.PI,
-    H: "(1 + jω/ω₁) / (1 + jω/ω₂)",
+    H: "(1 + jω/ω₁)/(1 + jω/ω₂)",
     note: "A zero below a pole. The plot rises at the zero and flattens again at the pole, so the two corners bracket a <b>step</b> in gain rather than a permanent slope. This is the shape of a lead compensator, and it is worth recognising: <b>the slope between two corners is the sum of the slopes each one contributes</b>, which is how any Bode plot is sketched.",
   },
 };
@@ -167,7 +167,7 @@ function bodeSketch() {
            "straight-line asymptotic approximation drawn over the true curve.",
   });
   const pp = new Plot({
-    w: 620, h: 170, xr: [-1.15, 3.15], yr: [-108, 108],
+    w: 620, h: 148, xr: [-1.15, 3.15], yr: [-69.6774, 108],
     pad: { l: 50, r: 20, t: 12, b: 34 },
     label: "The corresponding phase, in degrees.",
   });

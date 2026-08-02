@@ -91,6 +91,7 @@ function ffWaves() {
 
   const rdType = readout({ key: "type", value: "" });
   const rdTex = readout({ key: "characteristic", value: "", tone: "r" });
+  rdTex.root.classList.add("wide");
   const rdEdge = readout({ key: "at edge", value: "", tone: "x" });
   const rdIn = readout({ key: "inputs", value: "", tone: "x" });
   const rdQ = readout({ key: "Q becomes", value: "", tone: "y" });
@@ -223,7 +224,7 @@ function counters() {
   const X0 = 72, W = (568 - X0) / CYCLES, H = 24, ROW = 50;
 
   const p = new Plot({
-    w: 620, h: 306, xr: [0, 588], yr: [-192, 76],
+    w: 620, h: 290, xr: [0, 588], yr: [-176.9, 76],
     pad: { l: 16, r: 16, t: 12, b: 10 },
     label:
       "Four counter output waveforms over sixteen clock cycles, with a dashed " +

@@ -195,7 +195,7 @@ function conics() {
     const kind = e < 0.02 ? "circle" : e < 0.985 ? "ellipse" : e <= 1.015 ? "parabola" : "hyperbola";
     rdE.set(fixed(e, 2));
     rdKind.set(kind);
-    rdClosed.set(e < 0.985 ? "yes — it comes back" : "no — it escapes");
+    rdClosed.set(e < 0.985 ? "yes" : "no", e < 0.985 ? " — it comes back" : " — it escapes");
     rdEq.set(`r = ${LATUS} / (1 + ${fixed(e, 2)}·cos θ)`);
   }
 

@@ -142,7 +142,7 @@ function accumulate() {
 
   const rdB = readout({ key: "upper limit b", value: "3.00" });
   const rdGeo = readout({ key: "area, by geometry", value: "9.00", tone: "r" });
-  const rdCalc = readout({ key: "area, by F(b) − F(0)", value: "9.00", tone: "r" });
+  const rdCalc = readout({ key: "area, by F(b)", value: "9.00", tone: "r" });
   const rdNote = readout({ key: "the two agree because", value: "F′(x) = 2x = f(x)" });
   rdNote.root.classList.add("wide");
 
@@ -165,8 +165,8 @@ function accumulate() {
     for (const c of traceDot.childNodes) { c.setAttribute("cx", q.x(b)); c.setAttribute("cy", q.y(F(b))); }
 
     rdB.set(fixed(b, 2));
-    rdGeo.set(`½ · ${fixed(b, 2)} · ${fixed(2 * b, 2)} = ${fixed(F(b), 2)}`);
-    rdCalc.set(`${fixed(b, 2)}² − 0² = ${fixed(F(b), 2)}`);
+    rdGeo.set(fixed(F(b), 2), ` = ½ · ${fixed(b, 2)} · ${fixed(2 * b, 2)}`);
+    rdCalc.set(fixed(F(b), 2), ` = ${fixed(b, 2)}² − 0²`);
   }
 
   const k = knob({
@@ -319,7 +319,7 @@ function partials() {
   p.dot(X0, Y0, { color: "ink", r: 5 });
   p.text(X0, Y0, "(2, 1)", { color: "ink", size: 11, dx: 10, dy: -8, anchor: "start", bg: true });
   p.text(-3.2, Y0, "y held at 1", { color: "q-x", size: 10.5, dy: -7, anchor: "start", bg: true });
-  p.text(X0, -3.1, "x held at 2", { color: "q-y", size: 10.5, dx: 7, anchor: "start", bg: true });
+  p.text(X0, -3.1, "x held at 2", { color: "q-y", size: 10.5, dx: -7, anchor: "end", bg: true });
 
   /* the two profile curves the slices cut out */
   const sx = new Plot({

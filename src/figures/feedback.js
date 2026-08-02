@@ -22,9 +22,9 @@ const V = (n) => `var(--${n})`;
    in SVG user units, with +y downward — which is how block diagrams are read.
    ------------------------------------------------------------------------- */
 
-function diagram(W, H, label) {
+function diagram(W, H, label, Y0 = 0) {
   const root = svg("svg", {
-    viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": label,
+    viewBox: `${0} ${Y0} ${W} ${H}`, role: "img", "aria-label": label,
     style: { display: "block", width: "100%", height: "auto" },
   });
   const defs = svg("defs");
@@ -42,6 +42,9 @@ function diagram(W, H, label) {
   const api = {
     root,
     clear() { while (g.firstChild) g.removeChild(g.firstChild); },
+    /** Crop the canvas to the drawing. Only the height moves, so the width —
+        which is what sets the rendered text size — is untouched. */
+    box(y0, h) { root.setAttribute("viewBox", `0 ${y0} ${W} ${h}`); },
     /** A named block. Returns its left and right connection points. */
     block(x, y, w, h, name, sub, tone = "ink") {
       g.appendChild(svg("rect", {
@@ -101,13 +104,13 @@ function diagram(W, H, label) {
 
 function loopGain() {
   const W = 620, H = 210;
-  const d = diagram(W, H,
+  const d = diagram(W, 172, 
     "A negative feedback loop: an input into a summing junction, a forward " +
     "gain block G, an output, and a feedback block H returning to the " +
-    "junction's negative input.");
+    "junction's negative input.", 38);
 
   const p = new Plot({
-    w: 620, h: 230, xr: [0, 3.2], yr: [-0.15, 1.35],
+    w: 620, h: 206, xr: [0, 3.2], yr: [0.0545, 1.35],
     pad: { l: 56, r: 22, t: 16, b: 38 },
     label:
       "Closed-loop gain plotted against the forward gain on a logarithmic " +
@@ -246,43 +249,43 @@ function reduction() {
     d.text(20, yB - 42, "AFTER", { size: 9.5, tone: "q-r", weight: 600, anchor: "start" });
 
     if (cur === "series") {
-      d.wire([[40, yA], [136, yA]]);
-      const a = d.block(180, yA, 88, 44, "G₁");
-      d.wire([a.r, [286, yA]]);
-      const b = d.block(330, yA, 88, 44, "G₂");
-      d.wire([b.r, [470, yA]]);
+      d.wire([[40, yA], [158, yA]]);
+      const a = d.block(214, yA, 108, 44, "G₁");
+      d.wire([a.r, [352, yA]]);
+      const b = d.block(408, yA, 108, 44, "G₂");
+      d.wire([b.r, [588, yA]]);
     } else if (cur === "parallel") {
-      d.wire([[40, yA], [120, yA]], { head: false });
-      d.dot(120, yA);
-      d.wire([[120, yA], [120, yA - 30], [196, yA - 30]]);
-      d.block(240, yA - 30, 88, 40, "G₁");
-      d.wire([[120, yA], [120, yA + 30], [196, yA + 30]]);
-      d.block(240, yA + 30, 88, 40, "G₂");
-      const s = d.sum(370, yA, null);
-      d.wire([[284, yA - 30], [370, yA - 30], [370, yA - 13]], { head: true });
-      d.wire([[284, yA + 30], [370, yA + 30], [370, yA + 13]], { head: true });
-      d.text(386, yA - 24, "+", { size: 14, weight: 700, tone: "ink-strong" });
-      d.text(386, yA + 32, "+", { size: 14, weight: 700, tone: "ink-strong" });
-      d.wire([s.r, [470, yA]]);
+      d.wire([[40, yA], [130, yA]], { head: false });
+      d.dot(130, yA);
+      d.wire([[130, yA], [130, yA - 32], [242, yA - 32]]);
+      d.block(300, yA - 32, 110, 40, "G₁");
+      d.wire([[130, yA], [130, yA + 32], [242, yA + 32]]);
+      d.block(300, yA + 32, 110, 40, "G₂");
+      const s = d.sum(470, yA, null);
+      d.wire([[355, yA - 32], [470, yA - 32], [470, yA - 13]], { head: true });
+      d.wire([[355, yA + 32], [470, yA + 32], [470, yA + 13]], { head: true });
+      d.text(487, yA - 26, "+", { size: 14, weight: 700, tone: "ink-strong" });
+      d.text(487, yA + 34, "+", { size: 14, weight: 700, tone: "ink-strong" });
+      d.wire([s.r, [588, yA]]);
     } else if (cur === "loop") {
-      const s = d.sum(130, yA);
+      const s = d.sum(120, yA);
       d.wire([[46, yA], s.l]);
-      const g = d.block(250, yA, 96, 44, "G");
+      const g = d.block(290, yA, 118, 44, "G");
       d.wire([s.r, g.l], { hot: true });
-      d.wire([g.r, [470, yA]]);
-      d.dot(400, yA);
-      d.wire([[400, yA], [400, yA + 52], [294, yA + 52]]);
-      d.block(250, yA + 52, 88, 36, "H");
-      d.wire([[206, yA + 52], [130, yA + 52], [130, yA + 13]]);
+      d.wire([g.r, [588, yA]]);
+      d.dot(480, yA);
+      d.wire([[480, yA], [480, yA + 54], [341, yA + 54]]);
+      d.block(290, yA + 54, 100, 36, "H");
+      d.wire([[240, yA + 54], [120, yA + 54], [120, yA + 13]]);
     } else {
-      d.wire([[40, yA], [142, yA]]);
+      d.wire([[40, yA], [152, yA]]);
       d.text(42, yA - 12, "X", { size: 12, tone: "q-x", weight: 600, anchor: "start" });
-      d.block(190, yA, 96, 44, "G");
-      d.wire([[238, yA], [340, yA]], { head: false });
-      d.dot(340, yA);
-      d.wire([[340, yA], [512, yA]]);
-      d.wire([[340, yA], [340, yA + 46]]);
-      d.text(352, yA + 44, "branch carries G·X",
+      d.block(210, yA, 110, 44, "G");
+      d.wire([[265, yA], [380, yA]], { head: false });
+      d.dot(380, yA);
+      d.wire([[380, yA], [588, yA]]);
+      d.wire([[380, yA], [380, yA + 46]]);
+      d.text(392, yA + 44, "branch carries G·X",
         { size: 11, tone: "muted", anchor: "start" });
     }
 
@@ -291,19 +294,21 @@ function reduction() {
       d.wire([[40, yB], [100, yB]], { head: false });
       d.text(42, yB - 12, "X", { size: 12, tone: "q-x", weight: 600, anchor: "start" });
       d.dot(100, yB);
-      d.wire([[100, yB], [142, yB]]);
-      d.block(190, yB, 96, 44, "G");
-      d.wire([[238, yB], [512, yB]]);
-      d.wire([[100, yB], [100, yB + 52], [142, yB + 52]], { hot: true });
-      d.block(190, yB + 52, 96, 34, "G", null, "q-r");
-      d.wire([[238, yB + 52], [340, yB + 52]], { hot: true });
-      d.text(352, yB + 57, "still G·X — nothing changed",
+      d.wire([[100, yB], [152, yB]]);
+      d.block(210, yB, 110, 44, "G");
+      d.wire([[265, yB], [588, yB]]);
+      d.wire([[100, yB], [100, yB + 52], [152, yB + 52]], { hot: true });
+      d.block(210, yB + 52, 110, 34, "G", null, "q-r");
+      d.wire([[265, yB + 52], [392, yB + 52]], { hot: true });
+      d.text(404, yB + 57, "still G·X — nothing changed",
         { size: 11, tone: "q-r", anchor: "start", weight: 600 });
     } else {
-      d.wire([[40, yB], [186, yB]]);
-      d.block(255, yB, 138, 48, R.result, null, "q-r");
-      d.wire([[324, yB], [470, yB]]);
+      d.wire([[40, yB], [214, yB]]);
+      d.block(310, yB, 192, 48, R.result, null, "q-r");
+      d.wire([[406, yB], [588, yB]]);
     }
+
+    d.box(8, (cur === "move" ? yB + 78 : yB + 34) - 8);
 
     rdRule.set(R.name);
     rdResult.set(cur === "move" ? "the same, with 1/G or G inserted" : R.result);

@@ -52,7 +52,7 @@ function rlcDamping() {
   });
 
   const rdR = readout({ key: "R", value: "", tone: "x" });
-  const rdZeta = readout({ key: "ζ", value: "", tone: "r" });
+  const rdZeta = readout({ key: "damping ratio", value: "", tone: "r" });
   const rdCase = readout({ key: "case", value: "" });
   const rdRoots = readout({ key: "roots", value: "", tone: "y" });
   const rdWd = readout({ key: "rings at", value: "", tone: "y" });
@@ -153,7 +153,7 @@ function overshoot() {
       "the time the response last leaves it.",
   });
 
-  const rdZeta = readout({ key: "ζ", value: "", tone: "r" });
+  const rdZeta = readout({ key: "damping ratio", value: "", tone: "r" });
   const rdWd = readout({ key: "damped frequency", value: "", tone: "y" });
   const rdTp = readout({ key: "peak at", value: "", tone: "x" });
   const rdOS = readout({ key: "overshoot", value: "", tone: "bad" });
@@ -215,7 +215,7 @@ function overshoot() {
   }
 
   const k = knob({
-    label: "ζ", min: 10, max: 95, step: 1, value: 60,
+    label: "damping ratio", min: 10, max: 95, step: 1, value: 60,
     format: (v) => fixed(v / 100, 2),
     onInput: draw,
   });

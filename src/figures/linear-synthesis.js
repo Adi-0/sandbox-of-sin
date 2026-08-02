@@ -39,11 +39,11 @@ function oneObject() {
     label: "The resonance curve of the same circuit.",
   });
 
-  const rdZeta = readout({ key: "ζ", value: "", tone: "r" });
+  const rdZeta = readout({ key: "damping ratio", value: "", tone: "r" });
   const rdRoots = readout({ key: "roots", value: "", tone: "y" });
   const rdOS = readout({ key: "overshoot", value: "", tone: "bad" });
   const rdPeak = readout({ key: "Bode peak", value: "", tone: "x" });
-  const rdQ = readout({ key: "Q = 1/2ζ", value: "", tone: "r" });
+  const rdQ = readout({ key: "quality factor Q", value: "", tone: "r" });
   const rdNote = readout({ key: "", value: "" });
   rdNote.root.classList.add("wide");
 
@@ -121,7 +121,7 @@ function oneObject() {
   }
 
   const k = knob({
-    label: "ζ", min: 8, max: 99, step: 1, value: 60,
+    label: "damping ratio", min: 8, max: 99, step: 1, value: 60,
     format: (v) => fixed(v / 100, 2),
     onInput: draw,
   });

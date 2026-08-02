@@ -43,8 +43,8 @@ function splane() {
   });
 
   const rdPoles = readout({ key: "poles", value: "", tone: "y" });
-  const rdWn = readout({ key: "ωn = distance", value: "", tone: "x" });
-  const rdZeta = readout({ key: "ζ = cos of angle", value: "", tone: "r" });
+  const rdWn = readout({ key: "natural freq.", value: "", tone: "x" });
+  const rdZeta = readout({ key: "damping ratio", value: "", tone: "r" });
   const rdTs = readout({ key: "settles", value: "", tone: "x" });
   const rdOS = readout({ key: "overshoot", value: "", tone: "bad" });
   const rdNote = readout({ key: "", value: "" });
@@ -74,8 +74,8 @@ function splane() {
     sp.param((t) => [wn * Math.cos(t), wn * Math.sin(t)],
       [Math.atan2(om, -sig), Math.PI], { color: "q-x", width: 1.2, dash: "4 3" });
     if (wn < 10.4) {
-      sp.text(-wn, -0.95, `ωn = ${fixed(wn, 1)}`,
-        { color: "q-x", size: 10, weight: 600 });
+      sp.text(-wn, 0.9, `ωn = ${fixed(wn, 1)}`,
+        { color: "q-x", size: 10, weight: 600, bg: true });
     }
     // and the angle is ζ
     sp.line(0, 0, -sig, om, { color: "q-r", width: 1.4 });
@@ -123,12 +123,12 @@ function splane() {
   }
 
   const kS = knob({
-    label: "σ — distance left of the axis", min: 1, max: 90, step: 1, value: 60,
+    label: "distance left of the axis", min: 1, max: 90, step: 1, value: 60,
     format: (v) => `${fixed(v / 10, 1)} krad/s`,
     onInput: (v) => draw(v, kW.value()),
   });
   const kW = knob({
-    label: "ω — height", min: 0, max: 90, step: 1, value: 80,
+    label: "height above the axis", min: 0, max: 90, step: 1, value: 80,
     format: (v) => `${fixed(v / 10, 1)} krad/s`,
     onInput: (v) => draw(kS.value(), v),
   });
@@ -153,7 +153,7 @@ const CIRCUITS = {
   rc: {
     name: "RC low-pass", order: 1,
     z1: "R", z2: "1/sC",
-    H: "H(s) = 1 / (1 + sRC)",
+    H: "1/(1 + sRC)",
     poles: (R, C) => [-1 / (R * C)],
     zeros: () => [],
     note: "The divider is unchanged from Circuit Analysis Part 2 — <b>1/sC over R + 1/sC</b>, multiplied top and bottom by s. One pole, at −1/RC, which is the reciprocal of Part 1's time constant. <b>A first-order circuit's pole location and its time constant are the same fact</b>, written in different units.",
@@ -161,7 +161,7 @@ const CIRCUITS = {
   cr: {
     name: "CR high-pass", order: 1,
     z1: "1/sC", z2: "R",
-    H: "H(s) = sRC / (1 + sRC)",
+    H: "sRC/(1 + sRC)",
     poles: (R, C) => [-1 / (R * C)],
     zeros: () => [0],
     note: "The same two components, swapped. <b>The pole has not moved</b> — it is still at −1/RC, because the pole comes from the loop, not from which element you measure across. What changed is the numerator: a <b>zero at the origin</b>, which is what kills the response at DC and makes this a high-pass.",
@@ -169,7 +169,7 @@ const CIRCUITS = {
   rl: {
     name: "RL low-pass", order: 1,
     z1: "sL", z2: "R",
-    H: "H(s) = 1 / (1 + sL/R)",
+    H: "1/(1 + sL/R)",
     poles: (R, C) => [-1 / (R * C)],      // the knob is τ, whichever τ it is
     zeros: () => [],
     note: "Different components, <b>identical transfer function</b> — only the recipe for τ has changed, from RC to L/R. That is Part 1's observation that the four first-order transients are one curve, arriving as the statement that they are <b>one pole</b>. A first-order system is fully described by where its single pole is, and nothing about the parts survives that description.",
@@ -178,13 +178,13 @@ const CIRCUITS = {
 
 function circuitToH() {
   const sch = new Schematic({
-    w: 12, h: 5, unit: 26,
+    w: 12, h: 5, unit: 48,
     label: "A two-element divider drawn with its impedances labelled in the " +
            "s-domain, from which the transfer function is read directly.",
   });
 
   const p = new Plot({
-    w: 620, h: 170, xr: [-11, 3.2], yr: [-3.0, 3.0],
+    w: 620, h: 170, xr: [-11, 3.2], yr: [-3, 3],
     pad: { l: 16, r: 14, t: 12, b: 12 },
     label: "The pole and zero locations of the selected circuit, on the s-plane.",
   });

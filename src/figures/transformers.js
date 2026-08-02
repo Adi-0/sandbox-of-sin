@@ -34,7 +34,7 @@ function idealTransformer() {
 
   // pixels as data units, +y up — this is a schematic
   const p = new Plot({
-    w: 600, h: 250, xr: [0, 568], yr: [-96, 96],
+    w: 600, h: 206, xr: [0, 568], yr: [-70.0541, 83.8919],
     pad: { l: 16, r: 16, t: 14, b: 14 },
     label:
       "An ideal transformer with a source on the primary side and a resistive " +
@@ -46,7 +46,7 @@ function idealTransformer() {
   const rdV2 = readout({ key: "secondary V", value: "", tone: "x" });
   const rdI2 = readout({ key: "secondary I", value: "", tone: "y" });
   const rdI1 = readout({ key: "primary I", value: "", tone: "y" });
-  const rdZ = readout({ key: "Z seen by source", value: "", tone: "r" });
+  const rdZ = readout({ key: "Z at the source", value: "", tone: "r" });
   const rdS = readout({ key: "apparent power", value: "", tone: "r" });
   const rdNote = readout({ key: "", value: "" });
   rdNote.root.classList.add("wide");
@@ -148,7 +148,7 @@ function threePhaseXfmr() {
   const a = 20, VL1 = XF.V1;
 
   const p = new Plot({
-    w: 560, h: 200, xr: [0, 528], yr: [-76, 90],
+    w: 560, h: 158, xr: [0, 528], yr: [-56.6977, 68.7674],
     pad: { l: 16, r: 16, t: 14, b: 14 },
     label:
       "A one-line diagram of a three-phase transformer bank, with the primary " +

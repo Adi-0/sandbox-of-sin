@@ -45,9 +45,9 @@ function reactances() {
       "magnitude shown reaching its minimum there.",
   });
 
-  const rdW = readout({ key: "ω", value: "", tone: "y" });
-  const rdXl = readout({ key: "XL = ωL", value: "", tone: "x" });
-  const rdXc = readout({ key: "XC = 1/ωC", value: "", tone: "x" });
+  const rdW = readout({ key: "drive frequency", value: "", tone: "y" });
+  const rdXl = readout({ key: "reactance XL", value: "", tone: "x" });
+  const rdXc = readout({ key: "reactance XC", value: "", tone: "x" });
   const rdZ = readout({ key: "|Z|", value: "", tone: "r" });
   const rdPhi = readout({ key: "the circuit looks", value: "" });
   const rdNote = readout({ key: "", value: "" });
@@ -102,7 +102,7 @@ function reactances() {
   }
 
   const k = knob({
-    label: "ω", min: 40, max: 235, step: 1, value: 100,
+    label: "drive frequency", min: 40, max: 235, step: 1, value: 100,
     format: (v) => `${fixed(v / 10, 1)} krad/s`,
     onInput: (v) => draw(v / 10),
   });

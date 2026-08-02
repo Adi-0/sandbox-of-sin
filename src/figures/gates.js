@@ -51,7 +51,7 @@ const GATES = {
 
 function gateExplorer() {
   const p = new Plot({
-    w: 620, h: 280, xr: [0, 588], yr: [-98, 100],
+    w: 620, h: 222, xr: [0, 588], yr: [-74.4286, 78],
     pad: { l: 16, r: 16, t: 14, b: 14 },
     label:
       "A logic gate symbol with its inputs and output labelled, beside the " +
@@ -221,7 +221,7 @@ function cmosNand() {
 
 
     rdIn.set(`A=${a}  B=${b}`);
-    rdPull.set(pullDown ? "the series pair" : "the parallel pair");
+    rdPull.set(pullDown ? "series pair" : "parallel pair");
     rdOut.set(`Y = ${y}`);
     rdCur.set("zero", " at rest, either way");
     rdNote.set(

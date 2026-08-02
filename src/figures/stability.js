@@ -255,12 +255,12 @@ function stepOf(P, K) {
 
 function stabilityRange() {
   const bar = new Plot({
-    w: 620, h: 84, xr: [0, K_MAX], yr: [0, 1],
-    pad: { l: 48, r: 20, t: 10, b: 30 },
+    w: 620, h: 96, xr: [0, K_MAX], yr: [0, 1],
+    pad: { l: 48, r: 20, t: 22, b: 30 },
     label: "A bar of gain values from zero to 300, split into the stable and unstable ranges.",
   });
   const p = new Plot({
-    w: 620, h: 250, xr: [0, 12], yr: [-0.4, 2.3],
+    w: 620, h: 240, xr: [0, 12], yr: [-0.265, 2.3],
     pad: { l: 48, r: 20, t: 14, b: 36 },
     label: "The unit step response of the closed loop at the selected gain.",
   });

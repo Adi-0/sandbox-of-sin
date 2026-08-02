@@ -166,7 +166,7 @@ function threeStep() {
   const V0 = 2;                              // the capacitor starts at 2 V
 
   const p = new Plot({
-    w: 620, h: 296, xr: [-0.08, 2.3], yr: [-1.6, 13.6],
+    w: 620, h: 272, xr: [-0.08, 2.3], yr: [-0.08, 13.6],
     pad: { l: 52, r: 22, t: 18, b: 38 },
     label:
       "A capacitor voltage rising from its initial value to a final value set " +
@@ -175,7 +175,7 @@ function threeStep() {
   });
 
   const sch = new Schematic({
-    w: 13, h: 6, unit: 26,
+    w: 13, h: 6, unit: 44,
     label: "A 12 volt source behind a 4 kilohm resistor, feeding a capacitor " +
            "with a second resistor in parallel with it.",
   });
@@ -209,7 +209,7 @@ function threeStep() {
     sch.node([8, 1]);
     sch.node([8, 5]);
     sch.ground([1, 5]);
-    sch.label([8, 3], "v(t)", { at: "w", color: "q-y", size: 12, weight: 600 });
+    sch.label([8, 3], "v(t)", { at: "e", color: "q-y", size: 12, weight: 600 });
   }
   drawSchematic();
 

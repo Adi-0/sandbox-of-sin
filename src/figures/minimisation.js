@@ -53,11 +53,11 @@ const FUNCS = {
    ========================================================================== */
 
 function kmap() {
-  const CW = 74, CH = 60;                     // one cell
-  const X0 = 150, Y0 = 34;                    // top-left of the grid, in px
+  const CW = 96, CH = 74;                     // one cell
+  const X0 = 120, Y0 = 34;                    // top-left of the grid, in px
 
   const p = new Plot({
-    w: 620, h: 380, xr: [0, 588], yr: [-362, 0],
+    w: 620, h: 402, xr: [0, 588], yr: [-392, -8],
     pad: { l: 16, r: 16, t: 10, b: 8 },
     label:
       "A four-variable Karnaugh map: sixteen cells in a four-by-four grid with " +
@@ -181,14 +181,12 @@ function kmap() {
    ========================================================================== */
 
 function plaArray() {
-  const p = new Plot({
-    w: 620, h: 340, xr: [0, 588], yr: [-318, 0],
-    pad: { l: 16, r: 16, t: 10, b: 8 },
-    label:
-      "A programmable logic array: four inputs and their complements running " +
-      "down as vertical lines, product-term rows crossing them with dots at " +
-      "the programmed connections, and an output column summing the rows.",
-  });
+  /* The array is as tall as the function needs rows, and a canvas sized for
+     the worst case leaves the common ones floating in half a plate of empty
+     grid. Rebuilding the plot per function costs nothing in scale — the
+     viewBox width is what sets the rendered text size, and that is fixed. */
+  const host = el("div");
+  let p = null;
 
   const rdFn = readout({ key: "function", value: "" });
   const rdRows = readout({ key: "product rows", value: "", tone: "r" });
@@ -198,7 +196,6 @@ function plaArray() {
   rdNote.root.classList.add("wide");
 
   function draw(key) {
-    p.clear("curve", "label", "mark", "shade");
     const F = FUNCS[key];
     const groups = cover(F.on, F.dc, 4).slice(0, 6);     // the drawing holds six rows
 
@@ -206,6 +203,16 @@ function plaArray() {
     const nCols = 8;                                   // A, ¬A, B, ¬B, C, ¬C, D, ¬D
     const rows = Math.max(groups.length, 1);
     const yBot = Y0 - (rows - 1) * DY - 26;
+
+    p = new Plot({
+      w: 620, h: (-8) - (yBot - 8) + 18, xr: [0, 588], yr: [yBot - 8, -8],
+      pad: { l: 16, r: 16, t: 10, b: 8 },
+      label:
+        "A programmable logic array: four inputs and their complements running " +
+        "down as vertical lines, product-term rows crossing them with dots at " +
+        "the programmed connections, and an output column summing the rows.",
+    });
+    host.replaceChildren(p.root);
 
     // the input columns
     for (let i = 0; i < nCols; i++) {
@@ -266,7 +273,7 @@ function plaArray() {
   draw("bcd");
 
   return {
-    stage: p.root,
+    stage: host,
     controls: el("div.controls", null, sc.root),
     readouts: readouts(rdFn, rdRows, rdCols, rdDots, rdNote),
   };
@@ -325,7 +332,9 @@ register("plaArray", { no: 68, build: () => {
   const f = plaArray();
   return plate({
     no: 68, title: "A PLA is a sum of products", tag: "interactive",
-    label: f.stage.getAttribute("aria-label"),
+    label: "A programmable logic array: four inputs and their complements as " +
+           "vertical lines, product-term rows crossing them with dots at the " +
+           "programmed connections, and an output column summing the rows.",
     stage: f.stage, controls: f.controls, readouts: f.readouts,
     caption:
       "This is the previous plate's answer, built. Each horizontal line is one " +

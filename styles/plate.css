@@ -46,7 +46,11 @@
    `stack` is always a column. */
 .plate-stage .stack,
 .plate-stage .duo { display: grid; gap: var(--s4); align-items: center; }
-.plate-stage .duo { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+/* 250px was too greedy: two of them plus the gap exceeded the stage's own
+   width, so auto-fit quietly fell back to one column and both panels rendered
+   at full width — which is why their labels came out half as large again as
+   every other plate's. 210 leaves room for the gap. */
+.plate-stage .duo { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
 /* `quad` is the same idea for four panels that share one control. */
 .plate-stage .quad {
   display: grid; gap: var(--s4); align-items: center;
@@ -156,8 +160,12 @@ input[type="range"]::-moz-range-thumb {
   padding: var(--s3) var(--s4);
   border-top: 1px dashed var(--rule);
 }
+/* 8.5rem of basis is what a ten-character monospace value plus its padding
+   actually needs. Below that the flex algorithm hands out boxes too narrow
+   for the numbers in them and values break mid-expression — "0.50 +" over
+   "j0.50 Ω" — which reads as a layout accident rather than a reading. */
 .readout {
-  flex: 1 1 7rem; min-width: 6rem;
+  flex: 1 1 8.5rem; min-width: 7rem;
   background: var(--sunk); padding: var(--s2) var(--s3);
   border-left: 2px solid var(--rule);
 }

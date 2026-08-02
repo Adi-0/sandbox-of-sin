@@ -62,17 +62,17 @@ const PARTS = {
 const mtbfOf = (P, stages) =>
   Math.exp((stages * TCLK - P.tsu) / P.tau) / (P.t0 * FCLK * FDATA);
 
-/** Seconds as the largest unit that leaves a readable number. */
+/** Seconds as [number, unit] in the largest unit that stays readable. */
 function span(sec) {
   const yr = sec / (3600 * 24 * 365);
-  if (yr >= 1e4) return `${sci(yr, 2)} years`;
-  if (yr >= 1) return `${num(yr, 0)} years`;
+  if (yr >= 1e4) return [sci(yr, 2), " years"];
+  if (yr >= 1) return [num(yr, 0), " years"];
   const d = sec / (3600 * 24);
-  if (d >= 1) return `${num(d, 1)} days`;
+  if (d >= 1) return [num(d, 1), " days"];
   const h = sec / 3600;
-  if (h >= 1) return `${num(h, 1)} hours`;
-  if (sec >= 1) return `${num(sec, 1)} s`;
-  return `${sci(sec, 2)} s`;
+  if (h >= 1) return [num(h, 1), " hours"];
+  if (sec >= 1) return [num(sec, 1), " s"];
+  return [sci(sec, 2), " s"];
 }
 
 function aperture() {
@@ -93,7 +93,7 @@ function aperture() {
   const rdWin = readout({ key: "window", value: "", tone: "x" });
   const rdWhen = readout({ key: "data edge", value: "", tone: "y" });
   const rdVerdict = readout({ key: "flip-flop", value: "", tone: "r" });
-  const rdMtbf = readout({ key: "MTBF, straight in", value: "", tone: "bad" });
+  const rdMtbf = readout({ key: "MTBF, direct", value: "", tone: "bad" });
   const rdSync = readout({ key: "+ one flip-flop", value: "", tone: "r" });
   const rdNote = readout({ key: "", value: "" });
   rdNote.root.classList.add("wide");
@@ -170,7 +170,7 @@ function aperture() {
         { color: "q-bad", size: 10.5, weight: 600, anchor: "start" });
       verdict = "metastable";
       tone = "bad";
-      note = `The data edge landed <b>inside the aperture</b>, so the flip-flop was asked to decide while its input was still moving. Its output sits between the logic levels and decays towards one rail or the other — but <b>the time that takes has no upper bound</b>, only a probability. It is not a rare fault to be debugged; it is a <b>certainty to be budgeted for</b> — and the two figures beside this are that budget. Feeding this input straight into the logic fails every <b>${span(mtbfOf(P, 1))}</b>; passing it through <em>one extra flip-flop</em> first, so it has another whole clock period to settle before anything reads it, moves that to <b>${span(mtbfOf(P, 2))}</b>. The exponential is doing all the work, which is why the fix is one flip-flop rather than a faster part.`;
+      note = `The data edge landed <b>inside the aperture</b>, so the flip-flop was asked to decide while its input was still moving. Its output sits between the logic levels and decays towards one rail or the other — but <b>the time that takes has no upper bound</b>, only a probability. It is not a rare fault to be debugged; it is a <b>certainty to be budgeted for</b> — and the two figures beside this are that budget. Feeding this input straight into the logic fails every <b>${span(mtbfOf(P, 1)).join('')}</b>; passing it through <em>one extra flip-flop</em> first, so it has another whole clock period to settle before anything reads it, moves that to <b>${span(mtbfOf(P, 2)).join('')}</b>. The exponential is doing all the work, which is why the fix is one flip-flop rather than a faster part.`;
     }
     p.text(28, yQ + H / 2, "Q", { color: tone === "bad" ? "q-bad" : "q-y", size: 12.5, weight: 600, anchor: "end", dy: 4 });
     p.text(40, yQ - 22, "clock 50 MHz · asynchronous input toggling at 1 MHz",
@@ -186,8 +186,9 @@ function aperture() {
     rdWin.set(`${P.tsu + P.th} ns`, ` = ${P.tsu} + ${P.th}`);
     rdWhen.set(`${when > 0 ? "+" : ""}${when} ns`, when === 0 ? " — on the edge" : "");
     rdVerdict.set(verdict);
-    rdMtbf.set(span(one), verdictOf(one));
-    rdSync.set(span(two), verdictOf(two));
+    const [m1, u1] = span(one), [m2, u2] = span(two);
+    rdMtbf.set(m1, `${u1}${verdictOf(one)}`);
+    rdSync.set(m2, `${u2}${verdictOf(two)}`);
     rdNote.set(note);
   }
 
@@ -225,7 +226,7 @@ function hazard() {
   const X0 = 92, T0 = 20;                  // C falls at t = 20 ns
 
   const p = new Plot({
-    w: 620, h: 316, xr: [0, 588], yr: [-168, 76],
+    w: 620, h: 310, xr: [0, 588], yr: [-163, 76],
     pad: { l: 16, r: 16, t: 12, b: 10 },
     label:
       "Waveforms for a two-term sum of products while one input falls: the " +

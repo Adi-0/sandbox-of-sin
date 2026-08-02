@@ -34,7 +34,7 @@ const TOPO = {
     note: "One diode, and half the input thrown away. The output is zero for a whole half cycle, so the average is only 1/π of the peak and the ripple frequency is the line frequency itself — the hardest case to filter.",
   },
   bridge: {
-    name: "full-wave bridge", diodes: 4, drops: 2, piv: 1, fr: 2,
+    name: "bridge", diodes: 4, drops: 2, piv: 1, fr: 2,
     kAvg: 2 / Math.PI, kRms: 1 / Math.SQRT2,
     avgTex: "2V_m/\\pi", rmsTex: "V_m/\\sqrt{2}",
     shape: (t) => Math.abs(Math.sin(2 * Math.PI * t)),

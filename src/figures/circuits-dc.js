@@ -24,7 +24,7 @@ function castCircuit() {
   const VS = 100, RS = 2, R1 = 12;
 
   const s = new Schematic({
-    w: 10.4, h: 5.4, unit: 30,
+    w: 10.4, h: 4.05, unit: 53, pad: 38,
     label: "A 100 volt source in series with a 2 ohm resistor, feeding a 12 ohm " +
            "and an adjustable resistor in parallel. Branch currents and node " +
            "voltages are shown, with the KCL and KVL sums checked below.",
@@ -236,7 +236,7 @@ function dividers() {
   const R1 = 12;
 
   const s = new Schematic({
-    w: 15, h: 5.4, unit: 28, pad: 46,
+    w: 15, h: 5.4, unit: 33, pad: 60,
     label: "A voltage divider and a current divider drawn side by side from the " +
            "same two resistors, with each branch's share labelled.",
   });
@@ -360,7 +360,7 @@ function nodeMatrix() {
   const RA = 5, RB = 10, IS = 6;          // source into A, load from B to ground
 
   const s = new Schematic({
-    w: 9, h: 5.2, unit: 30, pad: 34,
+    w: 9.6, h: 4.6, unit: 60, pad: 26,
     label: "A two-node circuit: a 6 amp source into node A, a 5 ohm from A to " +
            "ground, an adjustable resistor bridging A to B, and a 10 ohm from B " +
            "to ground. Beside it, the conductance matrix the circuit produces.",
@@ -451,7 +451,7 @@ function theveninBox() {
   const RTH = parallel(R1, R2);           // 4 Ω
 
   const s = new Schematic({
-    w: 16, h: 5.4, unit: 26, pad: 40,
+    w: 16, h: 4.0, unit: 32, pad: 56,
     label: "On the left, a 100 volt source with a 20 ohm and a 5 ohm divider " +
            "feeding a load. On the right, a 20 volt source behind 4 ohms feeding " +
            "the same load. Both meters read identically at every load value.",
@@ -506,8 +506,8 @@ function theveninBox() {
     Schematic.setLabel(readB, `${fixed(vLoadB, 2)} V`);
 
     rdLoad.set(`${num(RL, 1)} Ω`);
-    rdOrig.set(`${fixed(vLoadA, 3)} V · ${fixed(iA, 3)} A`);
-    rdEquiv.set(`${fixed(vLoadB, 3)} V · ${fixed(iB, 3)} A`);
+    rdOrig.set(`${fixed(vLoadA, 3)} V`, ` · ${fixed(iA, 3)} A`);
+    rdEquiv.set(`${fixed(vLoadB, 3)} V`, ` · ${fixed(iB, 3)} A`);
     rdSame.set(Math.abs(vLoadA - vLoadB) < 5e-4
       ? "identical to three decimals, at this load and at every other ✓"
       : `differ by ${fixed(Math.abs(vLoadA - vLoadB), 4)} V — which would mean an arithmetic slip`);

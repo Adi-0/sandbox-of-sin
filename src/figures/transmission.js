@@ -43,7 +43,7 @@ function lineDrop() {
   /* Data units are pixels here, one to one, and +y is up. A one-line diagram
      is drawn, not plotted, so this is the coordinate system to reason in. */
   const p = new Plot({
-    w: 600, h: 190, xr: [0, 568], yr: [-70, 92],
+    w: 600, h: 160, xr: [0, 568], yr: [-52, 80],
     pad: { l: 16, r: 16, t: 14, b: 14 },
     label:
       "A one-line diagram of a feeder: a source at the left, a series line " +
@@ -74,23 +74,25 @@ function lineDrop() {
     const eff = (FEED.P / (FEED.P + loss)) * 100;
 
     /* --- the one-line diagram, +y up, one unit per pixel ----------------- */
-    const NS = 76, NR = 300, XL = 170, XLD = 400;   // node and component centres
+    /* Laid out across the full 568 units of canvas: a one-line diagram that
+       stops two-thirds of the way along reads as an unfinished drawing. */
+    const NS = 96, NR = 356, XL = 200, XLD = 462;   // node and component centres
 
-    p.add("curve", circleAt(p, 30, 0, 15, "ink"));
-    p.text(30, 0, "∼", { color: "ink", size: 18, dy: 6 });
-    p.text(30, -30, "source", { color: "muted", size: 11 });
+    p.add("curve", circleAt(p, 36, 0, 16, "ink"));
+    p.text(36, 0, "∼", { color: "ink", size: 18, dy: 6 });
+    p.text(36, -30, "source", { color: "muted", size: 11 });
 
-    p.line(45, 0, 115, 0, { color: "ink", width: 1.8 });
-    boxAt(p, XL, 0, 110, 20, "ink");
-    p.line(225, 0, 355, 0, { color: "ink", width: 1.8 });
+    p.line(52, 0, 135, 0, { color: "ink", width: 1.8 });
+    boxAt(p, XL, 0, 130, 20, "ink");
+    p.line(265, 0, 400, 0, { color: "ink", width: 1.8 });
     p.text(XL, -26, `${fixed(R, 2)} + j${fixed(X, 2)} Ω`, { color: "ink", size: 11.5, weight: 600 });
     p.text(XL, -41, "per conductor", { color: "muted", size: 10.5 });
 
-    boxAt(p, XLD, 0, 90, 46, "ink");
+    boxAt(p, XLD, 0, 104, 46, "ink");
     p.text(XLD, 6, "plant", { color: "ink", size: 12, weight: 600 });
     p.text(XLD, -10, "5184 W", { color: "ink", size: 10.5 });
     p.text(XLD, -41, `${pf} pf lagging`, { color: "muted", size: 10.5 });
-    p.line(445, 0, 470, 0, { color: "ink", width: 1.8 });
+    p.line(514, 0, 556, 0, { color: "ink", width: 1.8 });
 
     // the two voltages, marked where they are actually measured
     p.dot(NS, 0, { color: "q-x", r: 4 });
@@ -100,14 +102,15 @@ function lineDrop() {
     p.text(NR, 34, `${Vr} V`, { color: "q-x", size: 13, weight: 600 });
     p.text(NR, 18, "receiving", { color: "muted", size: 10.5 });
 
-    // what the line takes, called out over the component that takes it
-    p.line(XL, 44, XL, 58, { color: "q-bad", width: 1.2 });
+    // what the line takes, called out over the component that takes it — the
+    // leader has to touch the box, or it is a line hanging in space
+    p.line(XL, 12, XL, 58, { color: "q-bad", width: 1.2 });
     p.text(XL, 66, `${fixed(Vs - Vr, 1)} V and ${num(loss, 0)} W lost here`,
       { color: "q-bad", size: 11.5, weight: 600 });
 
-    p.text(283, -26, `I = ${I} A`, { color: "q-y", size: 11.5, weight: 600 });
+    p.text(320, -26, `I = ${I} A`, { color: "q-y", size: 11.5, weight: 600 });
 
-    rdR.set(`${fixed(R, 2)} + j${fixed(X, 2)} Ω`);
+    rdR.set(`${num(R, 2)} + j${num(X, 2)}`, " Ω");
     rdVs.set(`${fixed(Vs, 1)} V`, " per phase");
     rdDrop.set(`${fixed(Vs - Vr, 1)} V`);
     rdReg.set(`${fixed(reg, 1)}%`);
@@ -170,6 +173,7 @@ function voltageSquared() {
 
   // decade ruling, drawn by hand because both axes are logarithmic
   for (let e = 2; e <= 5; e++) {
+    if (e < LX[0] || e > LX[1]) continue;          // decade is off the frame
     p.line(e, LY[0], e, LY[1], { color: "grid", width: 1 });
     p.text(e, LY[0], ["100 V", "1 kV", "10 kV", "100 kV"][e - 2],
       { color: "muted", size: 10.5, dy: 18 });
