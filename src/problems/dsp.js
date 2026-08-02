@@ -14,7 +14,7 @@
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
 import { num, fixed, sig, ord } from "../lib/fmt.js";
-import { aliasOf } from "../lib/dsp.js";
+import { aliasOf, orderFor, butterworth, dB, runFilter } from "../lib/dsp.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 const D = (s) => `<span class="math display" data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
@@ -574,5 +574,704 @@ defineReflex([
     stem: "What does sampling do to a signal's spectrum?",
     tool: "Copies it to every multiple of fs",
     because: "Aliasing is those copies overlapping, which is the reason the threshold is exactly twice the bandwidth.",
+  },
+]);
+
+/* ==========================================================================
+   Part 3 — analog filters
+
+   The exam's filter questions are overwhelmingly of three kinds: name the
+   type from a circuit or a response, compute a corner frequency, and reason
+   about what a cascade does. The distractors here are the 2π, the direction
+   of the R/L and R/C dependence, and the assumption that responses multiply.
+   ========================================================================== */
+
+const FILTERS = {
+  low: {
+    label: "low-pass", series: "R", shunt: "C",
+    across: "the capacitor",
+    why: "at DC the capacitor is an open circuit so the full input reaches the output, and at high frequency it is a short to ground",
+  },
+  high: {
+    label: "high-pass", series: "C", shunt: "R",
+    across: "the resistor",
+    why: "the capacitor is in the signal path, so it blocks DC entirely and its reactance falls as frequency rises",
+  },
+  band: {
+    label: "band-pass", series: "L and C in series", shunt: "R",
+    across: "the resistor",
+    why: "series L and C are a short circuit at resonance and a large reactance either side of it",
+  },
+  notch: {
+    label: "band-stop", series: "R", shunt: "L and C in series",
+    across: "the LC branch",
+    why: "the series LC pair shorts the output to ground at resonance and gets out of the way everywhere else",
+  },
+};
+
+defineProblem("filter-type", {
+  topic: "Identifying a filter",
+  lookup: "Electrical → Signal Processing → Analog filters",
+  make(rng) {
+    const id = rng.pick(Object.keys(FILTERS));
+    const F = FILTERS[id];
+    const others = Object.keys(FILTERS).filter((k) => k !== id);
+    const byCircuit = rng.pick([true, true, false]);
+
+    if (byCircuit) {
+      return {
+        stem: `A source drives ${F.series === "R" ? "a resistor" : F.series === "C" ? "a capacitor" : F.series} in series, followed by ${F.shunt === "R" ? "a resistor" : F.shunt === "C" ? "a capacitor" : F.shunt} to ground. The output is taken across ${F.across}. What kind of filter is this?`,
+        choices: options(
+          { text: F.label, why: "" },
+          others.map((k) => ({
+            text: FILTERS[k].label,
+            why: `A ${FILTERS[k].label} needs ${FILTERS[k].series} in series and ${FILTERS[k].shunt} shunting the output. Here the series element is ${F.series} and the shunt is ${F.shunt}.`,
+          }))),
+        answer: 0,
+        steps: [
+          `Work it out at the two extremes rather than recalling a picture.`,
+          `Here ${F.why}.`,
+          `<b>${F.label[0].toUpperCase() + F.label.slice(1)}.</b> The general rule: <b>a capacitor's reactance falls with frequency and an inductor's rises</b>, so whichever component is in the signal path decides what gets through, and whichever shunts to ground decides what gets thrown away.`,
+        ],
+      };
+    }
+
+    const dcGain = id === "low" || id === "notch" ? "unity" : "zero";
+    const hfGain = id === "high" || id === "notch" ? "unity" : "zero";
+    return {
+      stem: `A filter's magnitude response is <b>${dcGain}</b> at DC and <b>${hfGain}</b> at very high frequency${id === "notch" ? ", with a sharp null in between" : id === "band" ? ", peaking at one frequency in between" : ""}. Which type is it?`,
+      choices: options(
+        { text: F.label, why: "" },
+        others.map((k) => ({
+          text: FILTERS[k].label,
+          why: `A ${FILTERS[k].label} is ${k === "low" || k === "notch" ? "unity" : "zero"} at DC and ${k === "high" || k === "notch" ? "unity" : "zero"} at high frequency, which does not match.`,
+        }))),
+      answer: 0,
+      steps: [
+        `<b>Check the two ends first — they separate all four types.</b>`,
+        `Unity at DC and zero at high frequency is low-pass; zero then unity is high-pass; zero at both ends is band-pass; unity at both ends with a null between is band-stop.`,
+        `<b>${F.label[0].toUpperCase() + F.label.slice(1)}.</b>`,
+      ],
+    };
+  },
+});
+
+defineProblem("rc-corner", {
+  topic: "Corner frequency",
+  lookup: "Electrical → Signal Processing → RC and RL corner frequency",
+  make(rng) {
+    const kind = rng.pick(["rc", "rc", "rl", "solve"]);
+
+    if (kind === "rc" || kind === "rl") {
+      const R = rng.pick([1, 2.2, 4.7, 10, 22]) * 1000;
+      const isRC = kind === "rc";
+      const C = rng.pick([1, 2.2, 4.7, 10, 47]) * 1e-9;
+      const L = rng.pick([1, 2.2, 4.7, 10, 47]) * 1e-3;
+      const fc = isRC ? 1 / (2 * Math.PI * R * C) : R / (2 * Math.PI * L);
+      const wc = isRC ? 1 / (R * C) : R / L;
+      const part = isRC ? `${sig(C * 1e9, 3)} nF capacitor` : `${sig(L * 1e3, 3)} mH inductor`;
+      return {
+        stem: `A first-order low-pass filter uses a ${sig(R / 1000, 3)} kΩ resistor and a ${part}. What is its −3 dB frequency in hertz?`,
+        choices: options(
+          { text: `${sig(fc, 3)} Hz`, why: "" },
+          [
+            { text: `${sig(wc, 3)} Hz`, why: `That is ω<sub>c</sub> in <b>radians per second</b>, not hertz. Divide by 2π — the factor is ${sig(2 * Math.PI, 3)}, so this answer is about 6.3 times too large.` },
+            { text: `${sig(fc * 2 * Math.PI * 2 * Math.PI, 3)} Hz`, why: `Multiplied by 2π where you should have divided. Check the units: RC has units of seconds, so 1/RC is <b>radians</b> per second and f = 1/2πRC.` },
+            /* The fully inverted form (L/2πR or RC/2π) lands around 10⁻⁷ Hz
+               and is dismissed on magnitude alone, so it tests nothing. The
+               unit slip is the error people actually make and it stays
+               within arguing distance of the answer. */
+            isRC
+              ? { text: `${sig(fc * 1000, 3)} Hz`, why: `R was used in <b>kilohms</b> rather than ohms, so the answer is a thousand times too high. Both R and C have to be in base units before the formula means anything.` }
+              : { text: `${sig(fc / 1000, 3)} Hz`, why: `L was left in <b>millihenries</b>. Converting to henries divides L by a thousand, which multiplies the corner by a thousand.` },
+          ]),
+        answer: 0,
+        steps: [
+          isRC
+            ? D(`f_c = \\frac{1}{2\\pi RC} = \\frac{1}{2\\pi(${sig(R, 4)})(${sig(C, 3)})}`)
+            : D(`f_c = \\frac{R}{2\\pi L} = \\frac{${sig(R, 4)}}{2\\pi(${sig(L, 3)})}`),
+          `<b>${sig(fc, 3)} Hz</b>, or ${sig(wc, 4)} rad/s if you want ω.`,
+          `The corner is where the reactance equals the resistance — ${isRC ? "|1/jωC| = R" : "|jωL| = R"} — which is the whole derivation and is worth reconstructing rather than memorising. <b>The 2π is the only thing that reliably goes wrong here</b>: it is absent from ω and present in f.`,
+        ],
+      };
+    }
+
+    /* --- pick the component to hit a stated corner ---------------------- */
+    const fc = rng.pick([100, 1000, 3400, 10000, 20000]);
+    const R = rng.pick([1, 2.2, 4.7, 10]) * 1000;
+    const C = 1 / (2 * Math.PI * R * fc);
+    return {
+      stem: `An anti-alias low-pass filter must have its −3 dB point at ${sig(fc, 3)} Hz. Using a ${sig(R / 1000, 3)} kΩ resistor, what capacitor is needed?`,
+      choices: options(
+        { text: `${sig(C * 1e9, 3)} nF`, why: "" },
+        [
+          /* C·2π is exactly 1/(R·fc), so "dropped the 2π" and "no 2π at all"
+             are the same number — only one of them can be offered. */
+          { text: `${sig(C * 1e9 * 2 * Math.PI, 3)} nF`, why: `The 2π was dropped: this is 1/(R f<sub>c</sub>). From f<sub>c</sub> = 1/2πRC the rearrangement is C = 1/(2πR f<sub>c</sub>), and the 2π stays in the <b>denominator</b>.` },
+          { text: `${sig(C * 1e9 / (2 * Math.PI), 4)} nF`, why: `Divided by 2π once too often. Rearranging f<sub>c</sub> = 1/2πRC gives exactly one factor of 2π, not two.` },
+          { text: `${sig(C * 1e12, 3)} nF`, why: `R was used in <b>kilohms</b> without converting, so the answer is a thousand times too large. Substitute back and check: this value would put the corner at ${sig(fc / 1000, 4)} Hz.` },
+        ]),
+      answer: 0,
+      steps: [
+        `Rearrange for C: ${D(`C = \\frac{1}{2\\pi R f_c} = \\frac{1}{2\\pi(${sig(R, 4)})(${sig(fc, 4)})}`)}`,
+        `<b>${sig(C * 1e9, 3)} nF.</b> In practice you would fit the nearest standard value and accept the shift — a 5% capacitor moves the corner by 5%, which for an anti-alias filter is entirely acceptable because the guard band absorbs it.`,
+        `<b>Always substitute back.</b> One multiplication by 2π instead of a division is a factor of 40 in the answer, and it is by far the most common error in this calculation.`,
+      ],
+    };
+  },
+});
+
+defineProblem("filter-loading", {
+  topic: "Cascading filter sections",
+  lookup: "Electrical → Signal Processing → Filter order and cascading",
+  make(rng) {
+    const mode = rng.pick(["why", "slope", "why"]);
+
+    if (mode === "slope") {
+      /* n = 2 is excluded: at two poles the "one pole only" and "used 10 log"
+         distractors collide (20·dec = 10·n·dec), and dedupe would silently
+         leave three choices. */
+      const n = rng.int(3, 4);
+      const fc = rng.pick([1, 2, 10]) * 1000;
+      const dec = rng.pick([1, 2]);
+      const att = 20 * n * dec;
+      return {
+        stem: `A ${n}-pole low-pass filter has its corner at ${sig(fc / 1000, 3)} kHz. Roughly how much attenuation does it give ${dec === 1 ? "one decade" : "two decades"} above the corner, at ${sig(fc * Math.pow(10, dec) / 1000, 4)} kHz?`,
+        choices: options(
+          { text: `about ${num(att, 0)} dB`, why: "" },
+          [
+            { text: `about ${num(20 * dec, 0)} dB`, why: `That is one pole's worth. <b>Each pole contributes 20 dB per decade</b>, and there are ${n} of them, so they add to ${num(20 * n, 0)} dB per decade.` },
+            { text: `about ${num(6 * n * dec, 0)} dB`, why: `6 dB per <b>octave</b> per pole is the same slope quoted differently — an octave is a factor of two, not ten. Per decade it is 20 dB per pole.` },
+            { text: `about ${num(10 * n * dec, 0)} dB`, why: `10 log was used where a <b>voltage</b> ratio needs 20 log. The 10 log form is for power ratios, and mixing them halves every answer.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Far above the corner every pole contributes <b>20 dB per decade</b>, and they add:`,
+          D(`20n \\times \\text{decades} = 20(${n})(${dec}) = ${num(att, 0)}\\text{ dB}`),
+          `<b>About ${num(att, 0)} dB.</b> The word &ldquo;roughly&rdquo; matters — this is the <em>asymptotic</em> slope, and close to the corner the real response is above it. One decade out the straight-line estimate is already good to about a decibel.`,
+          `Equivalently <b>6 dB per octave per pole</b>: same slope, different unit. Mixing the two is the usual error, and the giveaway is a factor of about 3.3.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `Two identical RC low-pass sections, each with corner f<sub>c</sub>, are wired directly one after the other. How does the combination's −3 dB frequency compare with the f<sub>c</sub> of a single section?`,
+      choices: options(
+        { text: "well below fc — about 0.37 fc", why: "" },
+        [
+          { text: "exactly fc, since both sections have the same corner", why: `At f<sub>c</sub> each section is already down 3 dB, so together they are down 6 dB. <b>The pair's −3 dB point must therefore be lower</b> than either section's.` },
+          { text: "about 0.64 fc, the square of one section's response", why: `That is the answer for two sections <b>separated by a buffer</b>. Wired directly, the second section loads the first and the corner falls further still, to about 0.37 f<sub>c</sub>.` },
+          { text: "above fc, because two filters pass more", why: `Cascading can only ever remove more signal. <b>Each stage multiplies the one before by a number no greater than one</b>, so the response falls everywhere.` },
+        ]),
+      answer: 0,
+      steps: [
+        `Two effects push the corner down, and both are easy to miss.`,
+        `<b>First, stacking alone moves it.</b> Even with an ideal buffer between them, at f<sub>c</sub> each section gives −3 dB so the pair gives −6 dB; the pair's own −3 dB point sits at ${T("\\sqrt{\\sqrt2-1}")} = 0.644 f<sub>c</sub>.`,
+        `<b>Second, loading moves it further.</b> Wired directly the second section draws current through the first, so the transfer function is 1/(1 + 3ju − u²) rather than 1/(1 + ju)² — <b>a 3 where you expected a 2</b> — and the corner drops to 0.374 f<sub>c</sub>.`,
+        `<b>About 0.37 f<sub>c</sub>, a factor of 1.72 below the buffered answer.</b> This is why active filters use op-amps between stages: not for gain, but so that the stages actually multiply.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "analog-filters",
+    stem: "Series R, shunt C, output across the capacitor. What is it?",
+    tool: "Low-pass — the capacitor shorts the output at high frequency",
+    because: "Reason from the two extremes rather than recalling a picture; it takes five seconds and never misremembers.",
+  },
+  {
+    part: "analog-filters",
+    stem: "Corner frequency of an RC section, in hertz?",
+    tool: "fc = 1/(2πRC) — and ωc = 1/RC with no 2π",
+    because: "Getting the 2π backwards is a factor of 40, and it is the most common slip in the whole topic.",
+  },
+  {
+    part: "analog-filters",
+    stem: "Corner frequency of an RL section?",
+    tool: "fc = R/(2πL) — R on top this time",
+    because: "A bigger inductor lowers the corner, but a bigger resistor raises it: the dependence inverts relative to RC.",
+  },
+  {
+    part: "analog-filters",
+    stem: "Roll-off of an n-pole filter, well past the corner?",
+    tool: "20n dB/decade, equivalently 6n dB/octave",
+    because: "Mixing decades and octaves gives an answer wrong by about 3.3.",
+  },
+  {
+    part: "analog-filters",
+    stem: "Band-pass centre frequency from its two half-power edges?",
+    tool: "f₀ = √(f₁f₂) — the geometric mean, not the average",
+    because: "The edges are symmetric about f₀ on a logarithmic axis, which is the axis a Bode plot uses.",
+  },
+  {
+    part: "analog-filters",
+    stem: "Do two cascaded passive RC sections give the square of one response?",
+    tool: "No — the second loads the first, giving 1/(1 + 3ju − u²)",
+    because: "The 3 instead of 2 drops the corner to 0.37 fc, a factor of 1.72 below the naive answer.",
+  },
+  {
+    part: "analog-filters",
+    stem: "What is the op-amp in an active filter mainly for?",
+    tool: "Isolation between stages, so their responses really do multiply",
+    because: "Gain is often incidental; the buffering is what makes cascade design predictable.",
+  },
+]);
+
+/* ==========================================================================
+   Part 4 — order, roll-off and Butterworth
+
+   The examinable core is the order formula and the decade/octave distinction.
+   `order-needed` runs the formula forwards, `butter-response` evaluates a
+   given order, and `family-pick` is the recognition question the exam asks
+   about Chebyshev and Bessel — which is never deeper than one property each.
+   ========================================================================== */
+
+defineProblem("order-needed", {
+  topic: "Filter order from a specification",
+  lookup: "Electrical → Signal Processing → Butterworth filter order",
+  make(rng) {
+    const fc = rng.pick([1, 2, 3.4, 5, 10, 20]);
+    const ratio = rng.pick([1.5, 2, 2.5, 3, 4, 5]);
+    const fstop = fc * ratio;
+    const A = rng.pick([20, 30, 40, 50, 60]);
+    const exact = orderFor(A, ratio);
+    const n = Math.max(1, Math.ceil(exact - 1e-9));
+    /* The asymptotic estimate A/(20 log ratio) is NOT a usable distractor:
+       10^(A/10) − 1 ≈ 10^(A/10) for any realistic A, so it rounds to n itself
+       and dedupe would quietly drop it. The wrong answers below are the ones
+       that actually differ. */
+    const cands = [
+      { v: n - 1, why: `One short. The formula gives ${fixed(exact, 2)}, and order is an integer you must <b>round up</b> — ${n - 1} pole${n - 1 === 1 ? "" : "s"} deliver${n - 1 === 1 ? "s" : ""} only ${fixed(-dB(butterworth(Math.max(1, n - 1), ratio)), 1)} dB, which misses the specification.` },
+      { v: Math.round(A / 20), why: `That is the attenuation divided by 20, which would be right only if the stopband were a <b>full decade</b> away. Here it is ${fixed(Math.log10(ratio), 3)} of a decade, so each pole buys only ${fixed(20 * Math.log10(ratio), 1)} dB.` },
+      { v: Math.ceil(exact / 2), why: `Half the required order — this is what you get using <b>10 log</b> where a voltage ratio needs 20 log. The 10 log form is for power ratios.` },
+      { v: n + 2, why: `More than needed. ${n} poles already give ${fixed(-dB(butterworth(n, ratio)), 1)} dB at ${num(fstop, 3)} kHz, and every extra pole is a real component cost.` },
+      { v: n + 1, why: `One more than necessary. ${n} poles already clear the specification, by ${fixed(-dB(butterworth(n, ratio)) - A, 1)} dB.` },
+    ];
+    const seen = new Set([n]);
+    const wrong = [];
+    for (const c of cands) {
+      if (c.v < 1 || seen.has(c.v)) continue;
+      seen.add(c.v);
+      wrong.push({ text: `${c.v}`, why: c.why });
+    }
+    return {
+      stem: `A Butterworth low-pass filter has its passband edge at ${num(fc, 2)} kHz and must be at least ${num(A, 0)} dB down by ${num(fstop, 3)} kHz. What is the minimum order?`,
+      choices: options({ text: `${n}`, why: "" }, wrong),
+      answer: 0,
+      steps: [
+        `<b>Only the ratio matters</b>, so start there: ${D(`\\frac{f_{stop}}{f_c} = \\frac{${num(fstop, 3)}}{${num(fc, 2)}} = ${fixed(ratio, 2)}`)}`,
+        D(`n \\ge \\frac{\\log_{10}\\left(10^{${num(A, 0)}/10} - 1\\right)}{2\\log_{10}(${fixed(ratio, 2)})} = ${fixed(exact, 3)}`),
+        `<b>Round up: ${n} pole${n === 1 ? "" : "s"}.</b> Checking, ${n} poles give ${fixed(-dB(butterworth(n, ratio)), 1)} dB at the stopband edge, clearing the ${num(A, 0)} dB requirement by ${fixed(-dB(butterworth(n, ratio)) - A, 1)} dB.`,
+        `Note how sensitive this is to the ratio. <b>Each pole is worth ${fixed(20 * Math.log10(ratio), 1)} dB here</b>, because a pole gives 20 dB per decade and ${fixed(ratio, 2)}× is only ${fixed(Math.log10(ratio), 3)} of a decade. Widening the transition band is nearly always cheaper than adding poles.`,
+      ],
+    };
+  },
+});
+
+defineProblem("butter-response", {
+  topic: "Butterworth attenuation",
+  lookup: "Electrical → Signal Processing → Butterworth magnitude response",
+  make(rng) {
+    const ask = rng.pick(["atten", "atten", "cutoff"]);
+    const n = rng.int(2, 5);
+
+    if (ask === "cutoff") {
+      const fc = rng.pick([1, 2, 5, 10]);
+      return {
+        stem: `A ${n}-pole Butterworth low-pass filter has f<sub>c</sub> = ${num(fc, 0)} kHz. What is its gain at exactly ${num(fc, 0)} kHz?`,
+        choices: options(
+          { text: "−3.01 dB", why: "" },
+          [
+            { text: `${fixed(-3.01 * n, 2)} dB`, why: `The −3 dB was multiplied by the order. <b>It is not per pole</b> — the Butterworth magnitude at f = f<sub>c</sub> is 1/√(1+1) = 1/√2 for <em>every</em> order, which is the family's defining property.` },
+            { text: "0 dB", why: `That is the passband gain well below the cutoff. The cutoff is <b>defined</b> as the point where the response has fallen to −3 dB.` },
+            { text: `${num(-20 * n, 0)} dB`, why: `That is the asymptotic slope in dB per decade, not a gain at a frequency — and it applies a decade out, not at the corner.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`|H| = \\frac{1}{\\sqrt{1 + (f/f_c)^{2n}}}`),
+          `At f = f<sub>c</sub> the ratio is 1, so ${D(`|H| = \\frac{1}{\\sqrt{1 + 1^{2n}}} = \\frac{1}{\\sqrt2}`)}`,
+          `<b>−3.01 dB, for every order.</b> The 2n exponent applies to a ratio of 1, and 1 to any power is 1 — so the order simply drops out. <b>This is exactly why Butterworth is the default family</b>: f<sub>c</sub> means one thing no matter how many poles you use.`,
+        ],
+      };
+    }
+
+    /* ratio 2 and n = 2 are both excluded: at n = 2 the "used 10 log"
+       distractor equals the "one pole only" one, and at ratio 2 all four
+       values bunch inside a couple of decibels. */
+    const ratio = rng.pick([3, 4, 5, 10]);
+    const fc = rng.pick([1, 2, 10]);
+    const a = -dB(butterworth(n, ratio));
+    const asym = 20 * n * Math.log10(ratio);
+    return {
+      stem: `A ${n}-pole Butterworth low-pass filter has f<sub>c</sub> = ${num(fc, 0)} kHz. How far down is it at ${num(fc * ratio, 0)} kHz?`,
+      choices: options(
+        { text: `${fixed(a, 1)} dB`, why: "" },
+        [
+          { text: `${fixed(20 * Math.log10(ratio), 1)} dB`, why: `That is <b>one</b> pole's worth. All ${n} poles contribute, so multiply by the order.` },
+          /* 6 dB/octave and 20 dB/decade are the SAME slope, so converting
+             octaves correctly reproduces the answer. The real error is
+             carrying the octave constant into a decade count. */
+          { text: `${fixed(6 * n * Math.log10(ratio), 1)} dB`, why: `The <b>6 dB</b> figure was used with <b>decades</b>. 6 dB per octave and 20 dB per decade are the same slope in different units — pair 6 with octaves (${fixed(Math.log2(ratio), 2)} of them here) or 20 with decades (${fixed(Math.log10(ratio), 3)}), never one with the other.` },
+          { text: `${fixed(10 * n * Math.log10(ratio), 1)} dB`, why: `10 log was used where a voltage ratio needs <b>20 log</b>. The 10 log form is for power ratios.` },
+        ],
+        [{ text: `${fixed(asym + 6, 1)} dB`, why: `Somewhat more than the response actually delivers — check against the asymptote of ${fixed(asym, 1)} dB.` }]),
+      answer: 0,
+      steps: [
+        D(`|H| = \\frac{1}{\\sqrt{1 + (${num(ratio, 0)})^{${2 * n}}}}`),
+        `In decibels that is ${D(`-10\\log_{10}\\left(1 + ${num(ratio, 0)}^{${2 * n}}\\right) = ${fixed(-a, 2)}\\text{ dB}`)}`,
+        `<b>${fixed(a, 1)} dB down.</b> The straight-line estimate ${num(20 * n, 0)} dB/decade × ${fixed(Math.log10(ratio), 3)} decades gives ${fixed(asym, 1)} dB, which is ${Math.abs(asym - a) < 0.3 ? "essentially the same — this far out the asymptote is exact enough" : `${fixed(Math.abs(asym - a), 1)} dB optimistic, because the +1 under the root still matters this close to the corner`}.`,
+      ],
+    };
+  },
+});
+
+defineProblem("family-pick", {
+  topic: "Choosing a filter family",
+  lookup: "Electrical → Signal Processing → Filter approximations",
+  make(rng) {
+    const want = rng.pick(["flat", "sharp", "phase"]);
+    const CH = {
+      flat: {
+        right: { text: "Butterworth", why: "" },
+        stem: "the passband must be as flat as possible, with no ripple",
+        steps: [
+          `<b>Butterworth</b> is defined by maximal flatness — it is the family that spends everything it has on a smooth passband.`,
+          `Chebyshev deliberately allows ripple in exchange for a steeper skirt, and Bessel optimises phase rather than magnitude.`,
+        ],
+      },
+      sharp: {
+        right: { text: "Chebyshev", why: "" },
+        stem: "the transition from passband to stopband must be as steep as possible for a given number of poles, and some passband ripple is acceptable",
+        steps: [
+          `<b>Chebyshev</b> reaches a given attenuation with fewer poles than Butterworth. That is not free — the ripple in the passband is exactly what has been traded for the steepness.`,
+          `Butterworth is flatter but gentler; Bessel is gentler still.`,
+        ],
+      },
+      phase: {
+        right: { text: "Bessel", why: "" },
+        stem: "a pulse must pass through with its shape intact",
+        steps: [
+          `Waveform shape is a <b>phase</b> requirement, not a magnitude one. A pulse is a sum of harmonics, and it keeps its shape only if every harmonic is delayed by the <b>same time</b> — which means phase must be linear in frequency.`,
+          `<b>Bessel</b> is the family that optimises for linear phase. It pays for it with the gentlest skirt of the three.`,
+        ],
+      },
+    }[want];
+    const WHY = {
+      Butterworth: "Butterworth is maximally flat, but for a given order it is not the steepest and its phase is not linear.",
+      Chebyshev: "Chebyshev is the steepest for a given order, but it ripples in the passband and its phase is the worst of the three.",
+      Bessel: "Bessel gives linear phase and so preserves pulse shape, but it has the gentlest skirt of the three.",
+      elliptic: "An elliptic (Cauer) filter is steeper still, but it ripples in <b>both</b> the passband and the stopband — more trade, not less.",
+    };
+    const wrong = ["Butterworth", "Chebyshev", "Bessel", "elliptic"]
+      .filter((k) => k !== CH.right.text)
+      .map((k) => ({ text: k, why: WHY[k] }));
+    return {
+      stem: `A filter is being specified where <b>${CH.stem}</b>. Which family fits best?`,
+      choices: options(CH.right, wrong),
+      answer: 0,
+      steps: [
+        ...CH.steps,
+        `<b>${CH.right.text}.</b> The families are one trade seen from three sides: <b>flatness, steepness and phase, pick two</b>. Knowing which one each family sacrifices is the whole of what this topic asks.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "filter-order",
+    stem: "Roll-off of an n-pole filter, in both units?",
+    tool: "20n dB/decade = 6n dB/octave",
+    because: "A decade is ×10 and an octave is ×2; confusing them is a factor of about 3.3.",
+  },
+  {
+    part: "filter-order",
+    stem: "Gain of an n-pole Butterworth at exactly its cutoff?",
+    tool: "−3.01 dB, for every order",
+    because: "At f = fc the ratio is 1 and 1 to any power is 1, so the order drops out. It is the family's defining property.",
+  },
+  {
+    part: "filter-order",
+    stem: "What decides the order a specification needs?",
+    tool: "The ratio of the band edges and the attenuation — never the absolute frequencies",
+    because: "n ≥ log(10^(A/10) − 1) / 2log(fstop/fc), and you always round up.",
+  },
+  {
+    part: "filter-order",
+    stem: "Steepest skirt for a given order — which family?",
+    tool: "Chebyshev, paid for with passband ripple",
+    because: "Butterworth is flat but gentler; the ripple is precisely what buys the steepness.",
+  },
+  {
+    part: "filter-order",
+    stem: "A pulse must keep its shape through a filter. Which family?",
+    tool: "Bessel — linear phase, so every harmonic is delayed equally",
+    because: "Shape is a phase requirement, not a magnitude one, and Bessel pays for it with the gentlest skirt.",
+  },
+  {
+    part: "filter-order",
+    stem: "Anti-alias filter needs 40 dB over a narrow transition band. Cheapest fix?",
+    tool: "Sample faster — widening the transition band collapses the order",
+    because: "Rate costs memory and arithmetic; poles cost precision components that drift.",
+  },
+  {
+    part: "filter-order",
+    stem: "Damping ratio of a second-order Butterworth section?",
+    tool: "ζ = 0.707 — exactly where peaking stops",
+    because: "Below it the response bulges: at ζ = 0.6 the peak is +0.35 dB, which is what flatness gives up steepness to avoid.",
+  },
+]);
+
+/* ==========================================================================
+   Part 5 — digital filters and difference equations
+
+   Three things the exam asks: run a difference equation forward by hand,
+   classify a filter as FIR or IIR and say what follows from that, and
+   convolve two short sequences. The distractors are sign errors on the
+   feedback term, the assumption that feedback means instability, and
+   dropping a term in the convolution sum.
+   ========================================================================== */
+
+defineProblem("run-difference", {
+  topic: "Running a difference equation",
+  lookup: "Electrical → Signal Processing → Difference equations",
+  make(rng) {
+    const ask = rng.pick(["step", "gain", "gain"]);
+
+    /* --- DC gain by inspection ------------------------------------------ */
+    if (ask === "gain") {
+      const iir = rng.chance(0.6);
+      const b = iir ? [rng.pick([0.1, 0.2, 0.25, 0.5])] : [];
+      const a1 = iir ? -(1 - b[0]) : 0;
+      const bs = iir ? b : rng.pick([[0.25, 0.25, 0.25, 0.25], [0.5, 0.5], [0.2, 0.2, 0.2, 0.2, 0.2]]);
+      const sumB = bs.reduce((s, v) => s + v, 0);
+      const dc = iir ? sumB / (1 + a1) : sumB;
+      const eq = iir
+        ? `y[n] = ${fixed(-a1, 2)}·y[n−1] + ${fixed(bs[0], 2)}·x[n]`
+        : `y[n] = ${bs.map((v, i) => `${fixed(v, 2)}·x[n${i ? `−${i}` : ""}]`).join(" + ")}`;
+      return {
+        stem: `A digital filter is defined by <b>${eq}</b>. What is its DC gain — the output for a constant input of 1?`,
+        choices: options(
+          { text: fixed(dc, 3), why: "" },
+          [
+            { text: fixed(sumB, 3), why: iir
+                ? `Only the numerator was summed. <b>The feedback term contributes too</b> — with a constant input the output is also constant, so y = ${fixed(bs[0], 2)} + ${fixed(-a1, 2)}y, which rearranges to y = ${fixed(bs[0], 2)}/(1 − ${fixed(-a1, 2)}).`
+                : `Check the arithmetic — the coefficients sum to ${fixed(sumB, 3)}, and with no feedback that <em>is</em> the DC gain.` },
+            { text: fixed(iir ? sumB / (1 - a1) : sumB / bs.length, 3), why: iir
+                ? `Sign error on the feedback term. In the standard form y[n] = Σb·x − Σa·y, a coefficient written as <b>+0.8·y[n−1]</b> in the equation means a₁ = −0.8, so the denominator is 1 − 0.8, not 1 + 0.8.`
+                : `Divided by the number of taps a second time — the coefficients are <b>already</b> 1/L each, so they sum to 1.` },
+            { text: fixed(dc * 2, 3), why: `Twice the right answer. Substitute a constant back into the equation and solve for y; there is no factor of two anywhere in it.` },
+            { text: "0", why: `A constant input gives a constant output for any stable filter with a non-zero coefficient sum. Zero would mean the filter blocks DC entirely, which needs the coefficients to cancel.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>With a constant input, every delayed sample is the same number</b>, so the delays stop mattering and the equation becomes ordinary algebra.`,
+          iir
+            ? `Put x[n] = 1 and y[n] = y[n−1] = y: ${D(`y = ${fixed(-a1, 2)}y + ${fixed(bs[0], 2)} \\ \\Rightarrow \\ y(1 - ${fixed(-a1, 2)}) = ${fixed(bs[0], 2)}`)}`
+            : `Put x = 1 everywhere: every term contributes its own coefficient.`,
+          D(`H(1) = \\frac{\\sum b_k}{1 + \\sum a_k} = \\frac{${fixed(sumB, 3)}}{${fixed(1 + a1, 3)}} = ${fixed(dc, 3)}`),
+          `<b>${fixed(dc, 3)}.</b> A gain of 1 is what a smoothing filter should have — <b>it must not change the level it is smoothing</b>, and this is the five-second check that it does not.`,
+        ],
+      };
+    }
+
+    /* --- run it forward a few samples ----------------------------------- */
+    const a = rng.pick([0.5, 0.6, 0.8]);
+    const b0 = +(1 - a).toFixed(2);
+    const x = [1, 1, 1, 1, 1];
+    const y = runFilter([b0], [1, -a], x);
+    const nAsk = rng.int(2, 4);
+    /* the classic sign slip: subtracting the feedback instead of adding it */
+    const wrongSign = runFilter([b0], [1, a], x);
+    return {
+      stem: `A filter obeys <b>y[n] = ${fixed(a, 2)}·y[n−1] + ${fixed(b0, 2)}·x[n]</b> and is initially at rest. A unit step is applied at n = 0. What is y[${nAsk}]?`,
+      choices: options(
+        { text: fixed(y[nAsk], 4), why: "" },
+        [
+          { text: fixed(wrongSign[nAsk], 4), why: `The feedback term was <b>subtracted</b> rather than added. The equation as written has +${fixed(a, 2)}·y[n−1]; the minus signs in the general form y = Σb·x − Σa·y are already absorbed when the equation is given this way.` },
+          { text: fixed(y[nAsk - 1], 4), why: `That is y[${nAsk - 1}]. Count carefully: <b>y[0] is the first output</b>, computed from x[0] with y[−1] = 0.` },
+          { text: fixed(b0, 4), why: `That is y[0] — the first output only. The filter has had ${nAsk} more samples to accumulate since then.` },
+          { text: "1.0000", why: `That is the value the output is <em>heading for</em>, but it approaches it geometrically and never quite arrives. After ${nAsk + 1} samples it has reached ${fixed(y[nAsk], 3)}.` },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>Initially at rest means y[−1] = 0.</b> Then step through, one line each:`,
+        ...[0, 1, 2, 3, 4].slice(0, nAsk + 1).map((i) =>
+          `y[${i}] = ${fixed(a, 2)}(${fixed(i === 0 ? 0 : y[i - 1], 4)}) + ${fixed(b0, 2)}(1) = <b>${fixed(y[i], 4)}</b>`),
+        `<b>y[${nAsk}] = ${fixed(y[nAsk], 4)}.</b> Each step closes ${fixed(b0 * 100, 0)}% of the remaining gap to 1, which is exactly what a single feedback term does — <b>geometric approach, never arrival</b>.`,
+      ],
+    };
+  },
+});
+
+defineProblem("fir-iir", {
+  topic: "FIR versus IIR",
+  lookup: "Electrical → Signal Processing → Digital filter structures",
+  make(rng) {
+    const q = rng.pick(["classify", "stable", "property"]);
+
+    if (q === "classify") {
+      const isFir = rng.chance(0.5);
+      const eq = isFir
+        ? "y[n] = 0.25·x[n] + 0.5·x[n−1] + 0.25·x[n−2]"
+        : "y[n] = 0.7·y[n−1] + 0.3·x[n]";
+      return {
+        stem: `Classify the filter <b>${eq}</b>.`,
+        choices: options(
+          { text: isFir ? "FIR — finite impulse response" : "IIR — infinite impulse response", why: "" },
+          [
+            { text: isFir ? "IIR — infinite impulse response" : "FIR — finite impulse response",
+              why: isFir
+                ? `This equation refers only to <b>past inputs</b> (the x terms). With no output fed back there is nothing to sustain a response, so it ends after the last coefficient.`
+                : `The y[n−1] term is a <b>past output</b>. That is feedback, and it makes the response go on for ever.` },
+            { text: "neither — it is not a linear filter", why: `It is a weighted sum of samples with constant coefficients, which is the definition of a linear time-invariant filter.` },
+            { text: "cannot tell without knowing the input", why: `FIR and IIR describe the <b>filter's structure</b>, not the signal. The classification is read straight off the equation.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>Look for past outputs on the right-hand side.</b> That single question settles it.`,
+          isFir
+            ? `Here every term on the right is an <b>x</b> — a past input. No feedback, so the impulse response is just the three coefficients and then zero: <b>FIR</b>.`
+            : `Here y[n−1] appears on the right. That is <b>feedback</b>: each output feeds the next, so the response decays geometrically but never reaches zero: <b>IIR</b>.`,
+          `<b>${isFir ? "FIR" : "IIR"}.</b> ${isFir ? "It is therefore unconditionally stable, and if the coefficients are symmetric — as these are — it also has exactly linear phase." : "It is therefore far cheaper for a sharp response, and it needs a stability check that an FIR does not."}`,
+        ],
+      };
+    }
+
+    if (q === "stable") {
+      return {
+        stem: `Which statement about digital filter stability is correct?`,
+        choices: options(
+          { text: "an FIR filter is stable for any coefficients", why: "" },
+          [
+            { text: "an IIR filter is stable for any coefficients", why: `Not so — feedback is exactly what allows an output to grow itself. y[n] = 1.1·y[n−1] + x[n] diverges from a single impulse.` },
+            { text: "stability depends on the input signal", why: `For a linear time-invariant filter it does not. <b>Stability is a property of the coefficients alone</b>; a bounded input either always gives a bounded output or does not.` },
+            { text: "only filters with more than two taps can be unstable", why: `Tap count is irrelevant. A single feedback term is enough: y[n] = 2·y[n−1] + x[n] doubles every sample for ever.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Instability means an output growing without bound from a bounded input, which requires a path from the output <b>back into</b> the filter.`,
+          `<b>An FIR filter has no such path.</b> Its output is a finite weighted sum of finitely many inputs, so if the input is bounded the output is bounded — necessarily, whatever the coefficients are.`,
+          `<b>An IIR filter does have one</b>, and whether it is stable depends on the feedback coefficients. Part 6 turns that into a geometric test: every pole inside the unit circle.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `A design needs <b>exactly linear phase</b>, so that a pulse passes through undistorted. Which structure guarantees it?`,
+      choices: options(
+        { text: "an FIR filter with symmetric coefficients", why: "" },
+        [
+          { text: "an IIR filter with enough poles", why: `An IIR filter cannot have exactly linear phase — the feedback that makes it efficient is also what makes its phase nonlinear. It can only be approximated.` },
+          { text: "any FIR filter, symmetric or not", why: `Symmetry is what does it. An arbitrary FIR has a perfectly ordinary nonlinear phase; it is the <b>mirror symmetry of the coefficients</b> that forces every frequency to be delayed equally.` },
+          { text: "any filter, provided the sample rate is high enough", why: `Sample rate does not change a filter's phase characteristic — the response is a function of frequency <em>relative to</em> the sample rate.` },
+        ]),
+      answer: 0,
+      steps: [
+        `Linear phase means every frequency is delayed by the <b>same time</b>, which is what leaves a pulse's shape intact.`,
+        `<b>A symmetric FIR delays everything by exactly (L−1)/2 samples</b>, regardless of frequency — the symmetry forces it.`,
+        `<b>No analog filter and no IIR filter can do this exactly</b>, which is one of the real advantages of filtering after the converter. Bessel filters, from Part 4, are the analog world straining to approximate it.`,
+      ],
+    };
+  },
+});
+
+defineProblem("convolve", {
+  topic: "Convolution",
+  lookup: "Electrical → Signal Processing → Convolution",
+  make(rng) {
+    const h = rng.pick([[1, 2, 1], [1, 1, 1], [1, -1], [2, 1], [1, 0, -1]]);
+    const x = rng.pick([[1, 3, 2], [2, 1, 4], [1, 2, 3], [3, 1]]);
+    const L = x.length + h.length - 1;
+    const y = new Array(L).fill(0);
+    for (let i = 0; i < x.length; i++) for (let j = 0; j < h.length; j++) y[i + j] += x[i] * h[j];
+    const ask = rng.pick(["seq", "len", "seq"]);
+    const fmt = (v) => `{${v.join(", ")}}`;
+
+    if (ask === "len") {
+      return {
+        stem: `A sequence of ${x.length} samples is convolved with a filter whose impulse response is ${h.length} samples long. How many samples long is the result?`,
+        choices: options(
+          { text: `${L}`, why: "" },
+          [
+            { text: `${x.length + h.length}`, why: `One too many. The two sequences <b>overlap by one sample</b> at each end, so the length is Lx + Lh − 1, not Lx + Lh.` },
+            { text: `${Math.max(x.length, h.length)}`, why: `That is the longer of the two. Convolution <b>spreads</b> a signal — the output is longer than either input, which is why a filter smears an edge.` },
+            { text: `${x.length * h.length}`, why: `Multiplied instead of added. There are that many products, but they <b>collect</b> into overlapping output positions.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`L_y = L_x + L_h - 1 = ${x.length} + ${h.length} - 1 = ${L}`),
+          `<b>${L} samples.</b> Read it as: the first output needs only the first sample of each, the last needs only the last of each, and everything between overlaps.`,
+          `This is why a filter <b>spreads</b> a transient. An impulse one sample wide comes out ${h.length} samples wide, and that spreading is the time-domain face of band-limiting.`,
+        ],
+      };
+    }
+
+    const dropped = y.slice(0, L - 1);
+    const noCarry = x.map((v) => v * h[0]);
+    return {
+      stem: `Convolve x = ${fmt(x)} with h = ${fmt(h)}.`,
+      choices: options(
+        { text: fmt(y), why: "" },
+        [
+          { text: fmt(dropped), why: `The last term was dropped. Check the length: it must be ${x.length} + ${h.length} − 1 = <b>${L}</b> samples, and this has only ${dropped.length}.` },
+          { text: fmt(noCarry), why: `Each input was multiplied by the first coefficient only. <b>Every input sample sets off a whole copy of h</b>, scaled by that sample, and the copies overlap and add.` },
+          { text: fmt(x.map((v, i) => v * (h[i] ?? 0))), why: `The two sequences were multiplied term by term. Convolution is not multiplication — it <b>slides</b> one past the other, summing products at each shift.` },
+        ]),
+      answer: 0,
+      steps: [
+        `<b>Every input sample launches a scaled copy of h</b>, delayed to that sample's position, and the output is all the copies added up:`,
+        ...x.map((v, i) => `x[${i}] = ${v} contributes ${fmt(h.map((c) => c * v))} starting at n = ${i}`),
+        `Adding them column by column gives ${D(`y = ${fmt(y)}`)}`,
+        `<b>Two checks before you move on.</b> The length is ${x.length} + ${h.length} − 1 = ${L} ✓, and the output sums to ${y.reduce((s, v) => s + v, 0)}, which must equal the product of the input sums, ${x.reduce((s, v) => s + v, 0)} × ${h.reduce((s, v) => s + v, 0)} = ${x.reduce((s, v) => s + v, 0) * h.reduce((s, v) => s + v, 0)} ✓. <b>If either fails you have dropped a term.</b>`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "digital-filters",
+    stem: "How do you tell an FIR filter from an IIR one?",
+    tool: "Look for past OUTPUTS on the right-hand side — y[n−k] means IIR",
+    because: "That single question decides stability, cost, and whether exactly linear phase is available.",
+  },
+  {
+    part: "digital-filters",
+    stem: "Can an FIR filter be unstable?",
+    tool: "No — never, for any coefficients",
+    because: "With no feedback the output is a finite sum of bounded inputs, so it cannot grow itself.",
+  },
+  {
+    part: "digital-filters",
+    stem: "DC gain of a difference equation?",
+    tool: "Σb / (1 + Σa) — set every delayed sample equal",
+    because: "With a constant input the delays stop mattering and the equation becomes ordinary algebra.",
+  },
+  {
+    part: "digital-filters",
+    stem: "What is a filter's impulse response, for an FIR?",
+    tool: "Literally its coefficient list, then zero",
+    because: "One input of 1 walks each coefficient out in turn, which is why the response is finite.",
+  },
+  {
+    part: "digital-filters",
+    stem: "Length of the convolution of an Lx-sample signal with an Lh-tap filter?",
+    tool: "Lx + Lh − 1",
+    because: "It is the fastest check that you have not dropped a term in a hand convolution.",
+  },
+  {
+    part: "digital-filters",
+    stem: "Which structure gives exactly linear phase?",
+    tool: "A symmetric FIR — delay is (L−1)/2 samples at every frequency",
+    because: "No IIR and no analog filter can do it exactly; Bessel filters only approximate it.",
+  },
+  {
+    part: "digital-filters",
+    stem: "Where does an L-point moving average put its nulls?",
+    tool: "At every multiple of fs/L",
+    because: "It is a filter with real zeros, not merely an average — worth knowing before you pick L.",
   },
 ]);

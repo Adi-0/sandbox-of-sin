@@ -1,0 +1,201 @@
+<p class="eyebrow">
+  <span>Signal Processing · Part 3</span>
+  <span class="spec">NCEES 8.B</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Analog Filters</h1>
+
+<p class="lede">Part 2 ended with an obligation: something has to remove
+everything above f<sub>s</sub>/2 before the converter sees it. This part builds
+that something — and finds that the obvious first attempt falls about thirty-five
+decibels short.</p>
+
+<h2>3.1 What a filter is</h2>
+
+<p>A filter does <b>one thing to each frequency</b>: multiplies it by a gain and
+shifts its phase. Nothing more. That is the entire content of
+<span class="math" data-tex="H(j\omega)">H(jω)</span>, which Linear Systems
+Part 4 introduced as a transfer function and Part 5 taught you to sketch.</p>
+
+<p>What makes filtering powerful is exactly what Part 1 set up: since a signal
+<em>is</em> a collection of frequencies, multiplying each one by a chosen number
+lets you keep some and discard others. <b>In the frequency domain a filter is a
+multiplication.</b> In the time domain the same operation is an integral, which
+is why the frequency description is the one everybody uses.</p>
+
+<div class="note payoff">
+  <span class="note-tag">The whole vocabulary, once</span>
+  <p style="margin-bottom:0"><b>Passband</b> — the frequencies you keep.
+  <b>Stopband</b> — the frequencies you reject. <b>Transition band</b> — the gap
+  between them, which is never zero. <b>Cutoff</b> — the frequency marking the
+  passband edge, and by universal convention it is the <b>−3 dB</b> point, which
+  Linear Systems Part 5 established as the half-power point. Every filter
+  question is about those four words and the trade between them.</p>
+</div>
+
+<h2>3.2 There are only four shapes</h2>
+
+<p>Reactance is all you need. <b>A capacitor's reactance falls as frequency
+rises; an inductor's rises.</b> Combine that with whether the component sits in
+the signal path or shunts it to ground, and every filter falls out.</p>
+
+<div data-figure="filterShapes"></div>
+
+<f-plate no="8.5" title="The four filters" stamp="know"
+  caption="<b>Read each one as a sentence about where the reactance goes.</b>
+  Memorising four pictures is unnecessary if you can reconstruct them, and
+  reconstructing them takes about five seconds each.">
+  <f-row tex="\text{low-pass: series } R, \text{ shunt } C" name="keeps the slow"
+         gloss="At DC the capacitor is open and everything gets through; at high frequency it shorts the output to ground. <b>This is the anti-alias filter</b>, and the only one of the four that Part 2 actually demands."></f-row>
+  <f-row tex="\text{high-pass: series } C, \text{ shunt } R" name="keeps the fast"
+         gloss="Swap their jobs. The capacitor now blocks DC completely. <b>Every AC-coupled input is one of these</b> — it is why an oscilloscope's AC setting loses the DC level."></f-row>
+  <f-row tex="\text{band-pass: series } LC, \text{ shunt } R" name="keeps a band"
+         gloss="Series L and C are a short at resonance and a large reactance either side, so only frequencies near f₀ reach the resistor. <b>Bandwidth is f₀/Q.</b>"></f-row>
+  <f-row tex="\text{band-stop: series } R, \text{ shunt } LC" name="kills a band"
+         gloss="The same pair, now shunting the output. At f₀ they short it to ground. <b>The standard use is removing mains hum</b> at 50 or 60 Hz without touching the rest."></f-row>
+</f-plate>
+
+<h2>3.3 Where the corner is</h2>
+
+<f-plate no="8.6" title="Corner and centre frequencies" stamp="handbook"
+  caption="<b>The 2π is where marks are lost.</b> ω is in radians per second and
+  f is in hertz, and a filter specification is almost always written in hertz
+  while the algebra is almost always done in radians.">
+  <f-row tex="\omega_c = \frac{1}{RC}, \qquad f_c = \frac{1}{2\pi RC}"
+         name="RC section"
+         gloss="The corner is where the resistance and the reactance are <b>equal in size</b> — that is the whole derivation, since |1/jωC| = R gives ω = 1/RC."></f-row>
+  <f-row tex="\omega_c = \frac{R}{L}, \qquad f_c = \frac{R}{2\pi L}"
+         name="RL section"
+         gloss="Same argument with the other reactance: |jωL| = R. <b>Note it inverts</b> — more inductance means a lower corner, more capacitance also means a lower corner, but R moves them in opposite directions."></f-row>
+  <f-row tex="f_0 = \frac{1}{2\pi\sqrt{LC}}" name="resonant centre"
+         gloss="Where the two reactances cancel. Linear Systems Part 6 derived it; nothing about calling the circuit a filter changes it."></f-row>
+  <f-row tex="\text{BW} = \frac{f_0}{Q}, \qquad f_0 = \sqrt{f_1 f_2}"
+         name="the two band edges"
+         gloss="The half-power edges are spaced by f₀/Q, and f₀ is their <b>geometric</b> mean, not their average. On a log axis — the axis a Bode plot uses — they sit symmetrically about f₀."></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>the anti-alias filter Part 2 demanded</em></h4>
+  <div class="worked-body">
+    <p>The telephone channel again: speech to 3.4 kHz, sampled at 8 kHz, with a
+    5 kHz interferer that folds to 3 kHz. Design a simple RC low-pass at
+    f<sub>c</sub> = 3.4 kHz and check whether it solves the problem.</p>
+    <ol class="steps">
+      <li><b>Pick components.</b> With R = 4.7 kΩ,
+        <span data-tex="C = \frac{1}{2\pi R f_c} = \frac{1}{2\pi(4700)(3400)} = 9.96\text{ nF}" data-display>C = 9.96 nF</span>
+        so a standard 10 nF part gives
+        <span data-tex="f_c = 3.39\text{ kHz}">fc = 3.39 kHz</span> — close
+        enough.</li>
+      <li><b>How much does it reject at 5 kHz?</b> For a single RC section,
+        <span data-tex="|H| = \frac{1}{\sqrt{1 + (f/f_c)^2}} = \frac{1}{\sqrt{1 + (5/3.4)^2}} = \frac{1}{1.778} = 0.562" data-display>|H| = 0.562</span></li>
+      <li><b>In decibels:</b>
+        <span data-tex="20\log_{10}(0.562) = -5.0\text{ dB}">−5.0 dB</span>.</li>
+      <li><b>So it does not solve the problem.</b> The interferer arrives at
+        56% of its original size and still folds to 3 kHz, straight into the
+        speech band. Five decibels is not a filter, it is a gesture.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">The reason is
+    visible on plate 106: <b>5 kHz is only 1.47 times the cutoff</b>, and a
+    first-order section has barely begun to roll off by then. It needs a decade
+    to deliver 20 dB, and it has been given less than a fifth of one.
+    <b>Getting real rejection over such a short frequency span is the entire
+    problem of Part 4</b>, and the answer for this arrangement is
+    uncomfortable: about <b>twelve poles</b>. Part 4 also shows the cheaper way
+    out, which is to sample faster and buy the filter some room.</p>
+  </div>
+</div>
+
+<h2>3.4 Two sections are not one section squared</h2>
+
+<p>The obvious response to &ldquo;one section is not steep enough&rdquo; is to
+use two. It is the right instinct and it does not work the obvious way.</p>
+
+<div data-figure="cascading"></div>
+
+<p>Wire two identical RC sections directly together and the second one
+<b>loads</b> the first: it draws current through the first resistor, so the
+first section no longer sees the open circuit its formula assumed. The result
+is</p>
+
+<p class="math display" data-tex="H(j u) = \frac{1}{1 + 3ju - u^2} \quad\text{and not}\quad \frac{1}{(1 + ju)^2} = \frac{1}{1 + 2ju - u^2}">H = 1/(1 + 3ju − u²), not 1/(1 + ju)²</p>
+
+<p><b>The whole difference is the 3 where you expected a 2</b>, and it is enough
+to drag the overall corner down to 0.374 f<sub>c</sub> instead of the predicted
+0.644 — a factor of 1.72. The passband droops noticeably earlier than any
+calculation that multiplied the two responses would suggest.</p>
+
+<div class="note payoff">
+  <span class="note-tag">What the op-amp in an active filter is really for</span>
+  <p style="margin-bottom:0">Put a buffer between the sections and the loading
+  disappears, because a voltage follower presents a near-infinite input
+  impedance to the stage before it and a near-zero output impedance to the
+  stage after. Now the responses genuinely multiply. <b>This is the main reason
+  active filters exist</b> — not gain, which you often do not need, but
+  <b>isolation</b>. It is also why they need inductors far less often: an
+  op-amp can synthesise the resonant behaviour of an LC pair from resistors and
+  capacitors alone, which matters because inductors are bulky, lossy and
+  expensive, and capacitors are none of those things.</p>
+</div>
+
+<div class="note honest">
+  <span class="note-tag">Cascading moves the corner even when it works</span>
+  <p style="margin-bottom:0">Even <em>buffered</em>, two sections do not keep
+  the corner at f<sub>c</sub>. At f<sub>c</sub> each contributes −3 dB, so the
+  pair delivers −6 dB, and the −3 dB point of the whole thing has moved down to
+  <span class="math" data-tex="\sqrt{\sqrt2 - 1} = 0.644">0.644</span>
+  f<sub>c</sub>. <b>Stacking identical sections always pulls the overall cutoff
+  inward</b>, and the more you stack the further it moves. Designing a
+  higher-order filter is therefore not a matter of repeating one design — it is
+  a matter of choosing all the poles together, which is what Butterworth does
+  in Part 4.</p>
+</div>
+
+<h2>3.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>Four shapes</b>, each a sentence about reactance: series R shunt C is
+        low-pass; series C shunt R is high-pass; series LC is band-pass; shunt
+        LC is band-stop.</li>
+    <li><span data-tex="f_c = \frac{1}{2\pi RC}">fc = 1/(2πRC)</span> and
+        <span data-tex="f_c = \frac{R}{2\pi L}">fc = R/(2πL)</span>. <b>Watch
+        the 2π</b> — ω = 1/RC has none.</li>
+    <li><span data-tex="f_0 = \frac{1}{2\pi\sqrt{LC}}">f₀ = 1/(2π√(LC))</span>,
+        <span data-tex="\text{BW} = f_0/Q">BW = f₀/Q</span>, and
+        <span data-tex="f_0 = \sqrt{f_1f_2}">f₀ = √(f₁f₂)</span> — a
+        <b>geometric</b> mean.</li>
+    <li><b>Cutoff means −3 dB</b>: half power, 0.707 of the amplitude, 45° of
+        phase for a first-order section.</li>
+    <li>A first-order section gives <b>20 dB per decade</b> and nothing steeper.</li>
+    <li><b>Cascading passive sections does not multiply their responses</b> —
+        loading changes the answer. Two direct RC sections give
+        1/(1 + 3ju − u²).</li>
+    <li><b>An active filter's op-amp is there for isolation</b>, so that stages
+        do multiply.</li>
+    <li>Even buffered, stacking sections pulls the overall corner <b>inward</b>
+        (0.644 f<sub>c</sub> for two).</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Filtering is multiplication in the frequency domain, and there are only
+  four useful shapes to multiply by. The corner of a first-order section is
+  where the resistance and the reactance are equal in magnitude, which is all
+  that 1/(2πRC) says.</p>
+  <p>What this part establishes for the rest of the module is a <b>limit</b>.
+  One section buys 20 dB per decade, and the anti-alias filter that Part 2
+  demanded needed roughly 35 dB more than that over less than a fifth of a
+  decade. <b>You cannot get there by repeating a section</b>, both because
+  loading spoils the arithmetic and because even ideal stacking moves the
+  corner. Part 4 is about getting a genuinely steep filter, what it costs, and
+  the trade every designer actually makes instead — <b>sampling faster so the
+  filter has more room to work in</b>.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"analog-filters","title":"Part 3 · Analog Filters","topics":["filter-type","rc-corner","filter-loading"],"count":6}'></div>
+
+<div data-reflex='{"only":["analog-filters"],"count":5,"title":"Handbook Reflex · Part 3"}'></div>

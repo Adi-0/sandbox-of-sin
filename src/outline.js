@@ -343,6 +343,18 @@ export const MODULES = [
         blurb: "Too few samples and a slower impostor fits them exactly — permanently",
         minutes: 24, figures: [104, 105],
       },
+      {
+        id: "analog-filters", n: 3, spec: "8.B",
+        title: "Analog Filters",
+        blurb: "Four shapes, four circuits — and why two sections are not one squared",
+        minutes: 22, figures: [106, 107],
+      },
+      {
+        id: "filter-order", n: 4, spec: "8.B",
+        title: "Order, Roll-Off and Butterworth",
+        blurb: "What a steeper skirt costs, and the trade every real design makes instead",
+        minutes: 22, figures: [108, 109],
+      },
     ],
   },
   {

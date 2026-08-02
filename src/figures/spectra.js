@@ -119,9 +119,13 @@ function spectrumBuilder() {
     sp.axes({ xLabel: "harmonic number k", yLabel: "Ak", xStep: 5, yStep: 0.5, origin: false });
     stems(sp, amps, { cut: n });
     if (n < NMAX) {
+      /* Near the right-hand end the label has to sit on the other side of its
+         own line, or it runs off the plate. */
+      const near = n + 0.5 > sp.xr[1] - 6;
       sp.line(n + 0.5, 0, n + 0.5, 1.45, { color: "q-bad", width: 1.3, dash: "4 3" });
       sp.text(n + 0.5, 1.45, "cut here", {
-        color: "q-bad", size: 10, anchor: "start", dx: 5, dy: 9,
+        color: "q-bad", size: 10,
+        anchor: near ? "end" : "start", dx: near ? -5 : 5, dy: 9,
       });
     }
 

@@ -1,0 +1,180 @@
+<p class="eyebrow">
+  <span>Signal Processing · Part 4</span>
+  <span class="spec">NCEES 8.B</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Order, Roll-Off and Butterworth</h1>
+
+<p class="lede">Part 3 built a filter that fell thirty-five decibels short. This
+part is about closing that gap — what a steeper filter costs, which family to
+reach for, and the trade that almost every real design makes instead of paying
+the full price.</p>
+
+<h2>4.1 Order is the only lever on steepness</h2>
+
+<p>Each pole in a transfer function contributes <b>20 dB per decade</b> of
+roll-off once you are well past the corner, and they add. A filter with
+<em>n</em> poles — an <b>n<sup>th</sup>-order</b> filter — falls at
+<b>20n dB per decade</b>, equivalently <b>6n dB per octave</b>.</p>
+
+<div class="note honest">
+  <span class="note-tag">Decades and octaves, once, so they stop colliding</span>
+  <p style="margin-bottom:0">A <b>decade</b> is a factor of ten in frequency; an
+  <b>octave</b> is a factor of two. Since
+  <span class="math" data-tex="20\log_{10}2 = 6.02">20 log 2 = 6.02</span>, one
+  pole gives 20 dB per decade <em>and</em> 6 dB per octave — the same slope in
+  two units. Quoting the wrong one gives an answer off by a factor of about
+  3.3, and it is the most common arithmetic error in filter questions.</p>
+</div>
+
+<h2>4.2 Butterworth: flat where it matters</h2>
+
+<p>Knowing you want <em>n</em> poles does not say where to put them. Different
+placements trade passband flatness against skirt steepness against phase
+behaviour, and each named family is one choice of that trade. The default —
+and the one the FE means unless it says otherwise — is <b>Butterworth</b>.</p>
+
+<f-plate no="8.7" title="The Butterworth response" stamp="handbook"
+  caption="<b>The one property worth carrying: every order passes through
+  −3.01 dB at exactly the cutoff.</b> That is what makes f<sub>c</sub> a single
+  meaningful number instead of something that drifts as you add poles.">
+  <f-row tex="|H(f)| = \frac{1}{\sqrt{1 + (f/f_c)^{2n}}}" name="the magnitude"
+         gloss="One formula, all orders. <b>At f = f_c the bracket is 1 + 1 = 2 for every n</b>, so the response is 1/√2 — the −3 dB point — regardless of order."></f-row>
+  <f-row tex="\text{slope} \rightarrow 20n \text{ dB/decade}" name="far from the corner"
+         gloss="The asymptote. The true curve sits above it near the corner and merges with it about a decade out, so using the straight line close in <b>overestimates</b> the attenuation."></f-row>
+  <f-row tex="n \ge \frac{\log_{10}\left(10^{A/10} - 1\right)}{2\log_{10}(f_s/f_c)}"
+         name="the order a specification needs"
+         gloss="A is the required stopband attenuation in dB and f_s its edge. <b>Only the ratio of the two frequencies appears</b> — a filter design does not care what band you are in."></f-row>
+  <f-row tex="n = 2:\ \ s^2 + \sqrt2\,s + 1, \quad \zeta = 0.707"
+         name="the second-order section"
+         gloss="Worth recognising. <b>ζ = 1/√2 is exactly the damping at which the peak disappears</b>, which is what 'maximally flat' means in the time-domain language of Linear Systems Part 2."></f-row>
+</f-plate>
+
+<div data-figure="filterOrder"></div>
+
+<div class="note payoff">
+  <span class="note-tag">The cast arrives as a near-miss</span>
+  <p style="margin-bottom:0">This compilation's damping ratio has been
+  <b>ζ = 0.6</b> since Mathematics Part 1 — the 3-4-5 triangle, −3 ± 4j, 9.5%
+  overshoot, 53.13°. Butterworth's second-order section wants
+  <b>ζ = 0.707</b>. So the cast sits <em>just</em> on the peaking side of flat,
+  and you can compute exactly how far: with
+  <span class="math" data-tex="\sqrt{1-\zeta^2} = \sqrt{1 - 0.36} = 0.8">√(1−ζ²) = 0.8</span>
+  — the triangle again — the peak is</p>
+  <p class="math display" data-tex="\frac{1}{2\zeta\sqrt{1-\zeta^2}} = \frac{1}{2(0.6)(0.8)} = \frac{1}{0.96} = 1.042 \ \Rightarrow \ +0.35\text{ dB}">peak = 1/0.96 = 1.042 → +0.35 dB</p>
+  <p style="margin-bottom:0">A third of a decibel of bulge, at 0.53 f<sub>n</sub>.
+  <b>That tiny hump is precisely what Butterworth gives up steepness to
+  avoid</b>, and pushing ζ from 0.6 to 0.707 is the whole of the difference.
+  It is the same trade as Control Systems Part 6: damp it more and it stops
+  peaking, at the cost of speed.</p>
+</div>
+
+<h2>4.3 Designing to a specification</h2>
+
+<p>Real questions do not say &ldquo;use six poles&rdquo;. They give a passband
+edge, a stopband edge and a required attenuation, and ask what it takes. The
+formula on the plate above answers it directly, and the picture is a pair of
+forbidden regions the response must not enter.</p>
+
+<div data-figure="filterDesign"></div>
+
+<div class="worked">
+  <h4>Worked · <em>the telephone anti-alias filter, finished</em></h4>
+  <div class="worked-body">
+    <p>Speech to 3.4 kHz, sampled at 8 kHz, and the 5 kHz interferer must be
+    down 40 dB before the converter. How many poles? Then: what happens if the
+    sample rate is doubled to 16 kHz instead?</p>
+    <ol class="steps">
+      <li><b>Set up the ratio.</b> Passband edge 3.4 kHz, stopband edge 5 kHz:
+        <span data-tex="\frac{f_s}{f_c} = \frac{5}{3.4} = 1.47" data-display>fs/fc = 1.47</span>
+        That is only <span data-tex="\log_{10}1.47 = 0.168">0.168</span> of a
+        decade — the transition band is desperately narrow.</li>
+      <li><b>Apply the order formula.</b>
+        <span data-tex="n \ge \frac{\log_{10}(10^{4} - 1)}{2\log_{10}(1.47)} = \frac{4.00}{0.335} = 11.9" data-display>n ≥ 11.9</span></li>
+      <li><b>Twelve poles.</b> That is six cascaded second-order active
+        sections — a serious, expensive, drift-prone piece of hardware, for a
+        telephone channel.</li>
+      <li><b>Now double the sample rate to 16 kHz.</b> The fold point moves to
+        8 kHz, so the interferer no longer has to be killed at 5 kHz — anything
+        landing above 8 kHz is what matters, and the stopband edge moves out:
+        <span data-tex="\frac{8}{3.4} = 2.35, \qquad n \ge \frac{4.00}{2\log_{10}2.35} = 5.4" data-display>n ≥ 5.4 → 6 poles</span></li>
+      <li><b>Six poles instead of twelve, for twice the sample rate.</b></li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">That last step is the
+    single most useful thing in this part. <b>Sample rate and filter order buy
+    the same thing, and sample rate is almost always cheaper</b> — it costs
+    memory and arithmetic, both of which have been getting cheaper for fifty
+    years, while poles cost precision components that drift with temperature
+    and age. It is why converters oversample heavily and then do the sharp
+    filtering digitally, where a pole costs nothing but a multiply. <b>Parts 5
+    and 6 are about those digital filters.</b></p>
+  </div>
+</div>
+
+<h2>4.4 The other families, briefly</h2>
+
+<p>Butterworth is the default, not the only option. Two others are worth
+recognising by name and by their one distinguishing trait, because that is the
+depth the exam asks at.</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Family</th><th>Passband</th><th>Skirt</th><th>Use it when</th></tr></thead>
+  <tbody>
+    <tr><td><b>Butterworth</b></td><td>maximally flat, no ripple</td><td>moderate</td><td>the default — nothing about the problem argues otherwise</td></tr>
+    <tr><td><b>Chebyshev</b></td><td>ripples by a chosen amount</td><td><b>steepest</b> for a given order</td><td>you need sharpness and can tolerate ripple</td></tr>
+    <tr><td><b>Bessel</b></td><td>flat, and <b>linear phase</b></td><td>gentlest</td><td>pulse shape matters — linear phase means constant delay, so the wave is not distorted</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The pattern is one trade seen three ways: <b>you can buy a steeper skirt
+with passband ripple, or buy waveform fidelity with a gentler skirt, but you
+cannot have everything at a fixed order.</b> Chebyshev reaching a given
+attenuation with fewer poles than Butterworth is not magic — it is the ripple
+being spent on steepness.</p>
+
+<h2>4.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>20n dB/decade = 6n dB/octave</b> for an n-pole filter. A decade is
+        ×10, an octave is ×2.</li>
+    <li>Butterworth:
+        <span data-tex="|H| = 1/\sqrt{1 + (f/f_c)^{2n}}">|H| = 1/√(1 + (f/fc)²ⁿ)</span>,
+        and <b>−3 dB at f<sub>c</sub> for every order</b>.</li>
+    <li>Order needed:
+        <span data-tex="n \ge \frac{\log_{10}(10^{A/10}-1)}{2\log_{10}(f_s/f_c)}">n ≥ log(10^(A/10)−1) / 2log(fs/fc)</span>
+        — and <b>always round up</b>.</li>
+    <li><b>Only the ratio of the band edges matters</b>, never the absolute
+        frequencies.</li>
+    <li>Second-order Butterworth is <span data-tex="\zeta = 0.707">ζ = 0.707</span>
+        — exactly the damping at which peaking stops.</li>
+    <li><b>Butterworth</b> flat, <b>Chebyshev</b> steeper with ripple,
+        <b>Bessel</b> linear phase and gentle.</li>
+    <li><b>Widening the transition band is cheaper than adding poles.</b> For
+        an anti-alias filter that means sampling faster.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A filter design is two numbers: how far apart the band edges are, and how
+  far down the stopband must be. Their ratio sets the order, and the order sets
+  the cost. Butterworth is the default family because it makes the cutoff mean
+  one thing at every order and leaves the passband flat.</p>
+  <p>The lesson that outlives the arithmetic is the one the worked example
+  showed: <b>a narrow transition band is ruinously expensive, and the usual fix
+  is not a better filter but a faster sampler.</b> That is why the analog part
+  of a modern signal chain is often a gentle two- or three-pole filter and
+  nothing more, with everything sharp happening after the converter. Which
+  raises the obvious question — <b>what does a filter even look like once the
+  signal is a list of numbers?</b> That is Part 5.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"filter-order","title":"Part 4 · Order and Butterworth","topics":["order-needed","butter-response","family-pick"],"count":6}'></div>
+
+<div data-reflex='{"only":["filter-order"],"count":5,"title":"Handbook Reflex · Part 4"}'></div>

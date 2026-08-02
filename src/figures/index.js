@@ -55,6 +55,8 @@ import "./control-synthesis.js"; // 101
 /* --- Signal Processing --- */
 import "./spectra.js";       // 102 103
 import "./sampling.js";      // 104 105
+import "./filters.js";       // 106 107
+import "./butterworth.js";   // 108 109
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
