@@ -13,6 +13,7 @@
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
 import { num, fixed, sig } from "../lib/fmt.js";
+import { amPower } from "../lib/comms.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 const D = (s) => `<span class="math display" data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
@@ -301,5 +302,289 @@ defineReflex([
     stem: "Which pulse shape is its own Fourier transform?",
     tool: "The Gaussian",
     because: "It also achieves the smallest possible time-bandwidth product, which is why it is used where spectrum is scarce.",
+  },
+]);
+
+/* ==========================================================================
+   Part 2 — amplitude modulation
+
+   Three shapes, all of which the exam sets: read the index off an envelope,
+   split the power, and choose between the schemes. The distractors are the
+   missing square root in the current relation, halving the bandwidth when it
+   should be doubled, and treating the carrier as though it carried something.
+   ========================================================================== */
+
+defineProblem("am-index", {
+  topic: "AM modulation index",
+  lookup: "Electrical → Communications → Amplitude modulation",
+  make(rng) {
+    const ask = rng.pick(["scope", "scope", "amps", "bw"]);
+
+    /* --- index from the envelope, the way it is measured ---------------- */
+    if (ask === "scope") {
+      const Ac = rng.pick([4, 5, 8, 10, 20]);
+      const m = rng.pick([0.25, 0.4, 0.5, 0.6, 0.75, 0.8]);
+      const hi = Ac * (1 + m), lo = Ac * (1 - m);
+      return {
+        stem: `An AM envelope on an oscilloscope swings between <b>${sig(lo, 3)} V</b> and <b>${sig(hi, 3)} V</b>. What is the modulation index?`,
+        choices: options(
+          { text: fixed(m, 2), why: "" },
+          [
+            { text: fixed(lo / hi, 3), why: `That is the ratio of the two readings. The index is the <b>difference over the sum</b>, which is what makes it 0 for an unmodulated carrier and 1 when the envelope just touches zero.` },
+            { text: fixed((hi - lo) / hi, 3), why: `Divided by the maximum instead of by the sum. Check the limits: with this formula a fully modulated signal (min = 0) would give 1 — correct — but an unmodulated one gives 0 only by coincidence, and every value between is wrong.` },
+            { text: fixed(hi - lo, 3), why: `That is a voltage, not an index. <b>m is dimensionless</b> — it has to be, since it multiplies a cosine inside a bracket that is added to 1.` },
+            { text: fixed((hi - lo) / (2 * Ac), 3), why: `Correct in form but the denominator has to come from the <em>measurement</em>. Amax + Amin = ${sig(hi + lo, 3)} V, and that is what to divide by.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`m = \\frac{A_{max} - A_{min}}{A_{max} + A_{min}} = \\frac{${sig(hi, 3)} - ${sig(lo, 3)}}{${sig(hi, 3)} + ${sig(lo, 3)}}`),
+          D(`= \\frac{${sig(hi - lo, 3)}}{${sig(hi + lo, 3)}} = ${fixed(m, 3)}`),
+          `<b>m = ${fixed(m, 2)}.</b> Note what the sum gives you for free: A<sub>max</sub> + A<sub>min</sub> = 2A<sub>c</sub>, so the carrier amplitude is <b>${sig(Ac, 3)} V</b> without needing the transmitter's specification.`,
+          `<b>The formula only works for m ≤ 1.</b> Above that the envelope reaches zero, the measured minimum is 0 whatever the real index is, and the ratio returns exactly 1 every time.`,
+        ],
+      };
+    }
+
+    /* --- antenna current, where the square root gets dropped ------------ */
+    if (ask === "amps") {
+      const Ic = rng.pick([8, 10, 12, 20]);
+      /* m = 0.4 is excluded: sqrt(1 + m^2/2) and sqrt(1 + m^2) are then only
+         3.6% apart, so the "dropped the /2" distractor is indistinguishable. */
+      const m = rng.pick([0.5, 0.6, 0.8, 1.0]);
+      const It = Ic * Math.sqrt(1 + (m * m) / 2);
+      return {
+        stem: `An AM transmitter draws <b>${num(Ic, 0)} A</b> of antenna current unmodulated. What is the current at a modulation index of ${fixed(m, 2)}?`,
+        choices: options(
+          { text: `${sig(It, 4)} A`, why: "" },
+          [
+            { text: `${sig(Ic * (1 + (m * m) / 2), 4)} A`, why: `The square root was dropped. That expression is the <b>power</b> ratio; current goes as the square root of power, so I<sub>t</sub> = I<sub>c</sub>√(1 + m²/2).` },
+            { text: `${sig(Ic * (1 + m), 4)} A`, why: `That is the peak of the <em>envelope</em>, not the RMS antenna current. The current is set by total power, which depends on m².` },
+            { text: `${sig(Ic * Math.sqrt(1 + m * m), 4)} A`, why: `The factor of two under the m² is missing. Both sidebands together carry m²/2 of the carrier power, not m².` },
+          ]),
+        answer: 0,
+        steps: [
+          `Power first, because that is what the relation is built on:`,
+          D(`\\frac{P_t}{P_c} = 1 + \\frac{m^2}{2} = 1 + \\frac{${fixed(m * m, 3)}}{2} = ${fixed(1 + (m * m) / 2, 4)}`),
+          `<b>Current is the square root of power</b> into a fixed antenna resistance:`,
+          D(`I_t = I_c\\sqrt{1 + \\frac{m^2}{2}} = ${num(Ic, 0)}\\sqrt{${fixed(1 + (m * m) / 2, 4)}} = ${sig(It, 4)}\\text{ A}`),
+          `<b>${sig(It, 4)} A</b> — only ${fixed(100 * (It / Ic - 1), 1)}% above the unmodulated value even at m = ${fixed(m, 2)}. <b>The square root is the whole question</b>, and leaving it out is the standard error.`,
+        ],
+      };
+    }
+
+    /* --- bandwidth ------------------------------------------------------ */
+    const fm = rng.pick([3.4, 5, 10, 15]);
+    const fc = rng.pick([540, 1000, 1600]);
+    return {
+      stem: `A ${num(fc, 0)} kHz carrier is amplitude-modulated by a message occupying up to ${num(fm, 1)} kHz. What bandwidth does the transmission occupy, and where?`,
+      choices: options(
+        { text: `${num(2 * fm, 1)} kHz, from ${num(fc - fm, 1)} to ${num(fc + fm, 1)} kHz`, why: "" },
+        [
+          { text: `${num(fm, 1)} kHz, from ${num(fc, 0)} to ${num(fc + fm, 1)} kHz`, why: `That is <b>single</b>-sideband. Ordinary AM produces <b>both</b> sidebands, one either side of the carrier, so the occupied band is twice the message width.` },
+          { text: `${num(fc + fm, 1)} kHz`, why: `That is the highest frequency present, not the bandwidth. <b>Bandwidth is a width</b> — the span between the edges, not the distance from zero.` },
+          { text: `${num(4 * fm, 1)} kHz`, why: `Doubled twice. Each sideband is f<sub>m</sub> wide, and there are two of them: 2f<sub>m</sub> total.` },
+        ]),
+      answer: 0,
+      steps: [
+        `Multiplying by the carrier puts a copy of the message spectrum <b>either side</b> of f<sub>c</sub>:`,
+        D(`\\text{BW} = 2f_m = 2(${num(fm, 1)}) = ${num(2 * fm, 1)}\\text{ kHz}`),
+        `Occupying <b>${num(fc - fm, 1)} to ${num(fc + fm, 1)} kHz</b>.`,
+        `<b>This holds however small m is.</b> The index sets how tall the sidebands are, never where they sit — so a lightly modulated station takes exactly as much dial as a heavily modulated one.`,
+      ],
+    };
+  },
+});
+
+defineProblem("am-power", {
+  topic: "AM power distribution",
+  lookup: "Electrical → Communications → AM power and efficiency",
+  make(rng) {
+    const Pc = rng.pick([1, 2, 5, 10, 50]);              // kW
+    const m = rng.pick([0.4, 0.5, 0.6, 0.8]);
+    /* m = 1 is excluded here: m squared then equals m, which collapses the
+       "no /2" distractor onto the "not squared" one in the total branch, the
+       two sideband distractors onto each other, and the efficiency branch's
+       "100 m" onto the literal 100%. The 1/3 ceiling is made in the prose. */
+    const P = amPower(m);
+    const Pt = Pc * P.total;
+    const ask = rng.pick(["total", "total", "side", "eff"]);
+
+    if (ask === "side") {
+      const each = Pc * P.perSideband;
+      return {
+        stem: `An AM transmitter has a carrier power of ${num(Pc, 0)} kW and is modulated to m = ${fixed(m, 2)}. What power is in <b>each</b> sideband?`,
+        choices: options(
+          { text: `${sig(each, 3)} kW`, why: "" },
+          [
+            { text: `${sig(2 * each, 3)} kW`, why: `That is <b>both</b> sidebands together, m²P<sub>c</sub>/2. The question asks for one of them, so halve it.` },
+            { text: `${sig(Pt, 3)} kW`, why: `That is the total transmitted power, carrier included. The sidebands are the part <em>above</em> the carrier.` },
+            { text: `${sig(Pc * m / 2, 3)} kW`, why: `The index was not squared. <b>Power goes as amplitude squared</b>, and each sideband has amplitude mA<sub>c</sub>/2 — so its power carries m².` },
+          ]),
+        answer: 0,
+        steps: [
+          `Each sideband has amplitude mA<sub>c</sub>/2, and power goes as amplitude squared:`,
+          D(`P_{SB} = \\frac{m^2}{4}P_c = \\frac{${fixed(m * m, 3)}}{4}(${num(Pc, 0)}) = ${sig(each, 4)}\\text{ kW}`),
+          `<b>${sig(each, 3)} kW each</b>, so ${sig(2 * each, 3)} kW in the pair — and the carrier is still the full ${num(Pc, 0)} kW on top of that.`,
+          `<b>Only these two carry the message.</b> Everything else is the carrier, which is unchanged whatever the programme does.`,
+        ],
+      };
+    }
+
+    if (ask === "eff") {
+      return {
+        stem: `An AM signal is modulated to m = ${fixed(m, 2)}. What fraction of the transmitted power carries information?`,
+        choices: options(
+          { text: `${fixed(100 * P.efficiency, 1)}%`, why: "" },
+          [
+            { text: `${fixed(100 * m, 0)}%`, why: `The index is not a percentage of power. <b>Power goes as m²</b>, and the carrier is in the denominator too.` },
+            { text: `${fixed(100 * (m * m) / 2, 1)}%`, why: `That is the sideband power as a fraction of the <b>carrier</b>, not of the total. Divide by 1 + m²/2, not by 1.` },
+            { text: "100%", why: `That would be DSB-SC or SSB, where the carrier is suppressed. Full-carrier AM always spends most of its power on the carrier — <b>at best a third goes to the sidebands</b>.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\eta = \\frac{P_{SB}}{P_t} = \\frac{m^2/2}{1 + m^2/2} = \\frac{m^2}{2 + m^2}`),
+          D(`= \\frac{${fixed(m * m, 3)}}{2 + ${fixed(m * m, 3)}} = ${fixed(P.efficiency, 4)}`),
+          `<b>${fixed(100 * P.efficiency, 1)}%.</b> ${m >= 0.999 ? "This is the ceiling — <b>exactly 1/3 at m = 1</b>, and m cannot legally go higher." : `And m = 1 would only reach 33.3%, so <b>the ceiling is 1/3 no matter what</b>.`}`,
+          `<b>The carrier is the reason.</b> It is a constant sinusoid, identical whether the programme is speech or silence, and it takes ${fixed(100 * (1 - P.efficiency), 1)}% of the transmitter here.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `An AM transmitter with a ${num(Pc, 0)} kW carrier is modulated to m = ${fixed(m, 2)}. What is the total transmitted power?`,
+      /* At m = 1 the "no /2" and "not squared" distractors are both 2Pc, so
+         build the list and keep only the distinct values. */
+      choices: options(
+        { text: `${sig(Pt, 4)} kW`, why: "" },
+        [
+          { v: Pc * (1 + m * m), why: `The factor of two under the m² is missing. Both sidebands together are m²/2 of the carrier, not m².` },
+          { v: Pc * (1 + m), why: `The index was not squared. <b>Power goes as amplitude squared</b>, so m enters as m².` },
+          { v: Pc, why: `That is the carrier alone. Modulating adds the sidebands on top — the carrier does not shrink to make room for them.` },
+          { v: Pc * (m * m) / 2, why: `That is the sideband power only. The question asks for the <b>total</b>, which includes the carrier.` },
+        ].reduce((acc, c) => {
+          const t = `${sig(c.v, 4)} kW`;
+          if (t !== `${sig(Pt, 4)} kW` && !acc.some((x) => x.text === t)) acc.push({ text: t, why: c.why });
+          return acc;
+        }, [])),
+      answer: 0,
+      steps: [
+        D(`P_t = P_c\\left(1 + \\frac{m^2}{2}\\right) = ${num(Pc, 0)}\\left(1 + \\frac{${fixed(m * m, 3)}}{2}\\right)`),
+        D(`= ${num(Pc, 0)}(${fixed(P.total, 4)}) = ${sig(Pt, 4)}\\text{ kW}`),
+        `<b>${sig(Pt, 4)} kW</b>, of which ${sig(Pt - Pc, 3)} kW is the sidebands and ${num(Pc, 0)} kW is the carrier.`,
+        `<b>Modulation only ever adds power.</b> The carrier stays exactly where it was — which is why the efficiency here is just ${fixed(100 * P.efficiency, 1)}%.`,
+      ],
+    };
+  },
+});
+
+defineProblem("am-scheme", {
+  topic: "Choosing a modulation scheme",
+  lookup: "Electrical → Communications → DSB-SC and SSB",
+  make(rng) {
+    const q = rng.pick(["ssb", "why", "dsb"]);
+
+    if (q === "ssb") {
+      const fm = rng.pick([3, 3.4, 5, 15]);
+      return {
+        stem: `A message occupying up to ${num(fm, 1)} kHz is sent by <b>single-sideband</b>. What bandwidth does it occupy, and what is its transmission efficiency?`,
+        choices: options(
+          { text: `${num(fm, 1)} kHz, 100% efficient`, why: "" },
+          [
+            { text: `${num(2 * fm, 1)} kHz, 100% efficient`, why: `That is the bandwidth of <b>DSB-SC</b>, which also suppresses the carrier but keeps both sidebands. SSB throws one away, halving the bandwidth.` },
+            { text: `${num(fm, 1)} kHz, 33% efficient`, why: `The 33% ceiling belongs to <b>full-carrier</b> AM. With the carrier suppressed there is nothing left to waste power on.` },
+            { text: `${num(2 * fm, 1)} kHz, 33% efficient`, why: `Those are full-carrier AM's figures. SSB improves on both — half the bandwidth <em>and</em> all the power in the sideband.` },
+          ]),
+        answer: 0,
+        steps: [
+          `The two sidebands of a real signal are <b>mirror images</b>, so one of them carries no information the other does not.`,
+          `Transmit one and the occupied band is just the message width: <b>${num(fm, 1)} kHz</b>, half what AM or DSB-SC would need.`,
+          `With no carrier, <b>every watt is in the sideband: 100% efficient</b>.`,
+          `<b>The cost is the receiver.</b> Without a carrier to ride on, the envelope no longer resembles the message, so the receiver must regenerate a carrier at the right frequency <em>and phase</em>. That is why SSB is used point-to-point and never for broadcasting.`,
+        ],
+      };
+    }
+
+    if (q === "dsb") {
+      return {
+        stem: `DSB-SC and full-carrier AM carry the same message over the same bandwidth. What does suppressing the carrier actually change?`,
+        choices: options(
+          { text: "all the power goes into the sidebands, but the receiver must regenerate the carrier", why: "" },
+          [
+            { text: "the bandwidth halves", why: `That is <b>SSB</b>, which removes a sideband. DSB-SC removes the <em>carrier</em> and keeps both sidebands, so the occupied band is unchanged at 2f<sub>m</sub>.` },
+            { text: "nothing measurable — the carrier held no power", why: `Backwards. The carrier holds <b>most</b> of the power in full-carrier AM — at least two thirds — and none of the information.` },
+            { text: "the message can be sent at a lower frequency", why: `The carrier frequency sets where the transmission sits, and suppressing the carrier does not move the sidebands. They stay at f<sub>c</sub> ± f<sub>m</sub>.` },
+          ]),
+        answer: 0,
+        steps: [
+          `The carrier is a constant sinusoid: it is identical whether the message is loud, quiet or absent, so it <b>carries no information</b>.`,
+          `Removing it means the transmitter spends everything on the sidebands — <b>efficiency goes from at most 33% to 100%</b>.`,
+          `<b>The bandwidth does not change</b>, because both sidebands are still there: still 2f<sub>m</sub>.`,
+          `<b>What is lost is the envelope.</b> With no carrier the envelope stops resembling the message, so a diode detector no longer works and the receiver must generate its own carrier, correct in both frequency and phase.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `Broadcast AM wastes at least two thirds of its transmitted power on the carrier. Why is it still used for broadcasting?`,
+      choices: options(
+        { text: "the carrier lets the receiver be an envelope detector — a diode and a capacitor", why: "" },
+        [
+          { text: "it needs less bandwidth than the alternatives", why: `It needs <b>more</b>: 2f<sub>m</sub>, against SSB's f<sub>m</sub>. Bandwidth is not the argument.` },
+          { text: "the carrier improves the signal-to-noise ratio at the receiver", why: `The carrier adds no information, so it adds no signal in the sense that matters. Spending the same power on the sidebands would do strictly better.` },
+          { text: "suppressed-carrier schemes cannot carry audio", why: `They carry it perfectly well — SSB has carried voice for a century. The difficulty is entirely in the receiver.` },
+        ]),
+      answer: 0,
+      steps: [
+        `With the carrier present and m ≤ 1, the <b>envelope is the message plus a constant</b> — so recovering it needs a diode, a capacitor and a resistor.`,
+        `Suppress the carrier and that stops being true: the receiver must regenerate a carrier locked in frequency <em>and phase</em>, which is far more circuitry.`,
+        `<b>The economics decide it.</b> There is one transmitter and there are millions of receivers, so paying in transmitter power to make every receiver cheap is a good trade.`,
+        `<b>Reverse the economics and the answer reverses.</b> Point-to-point links — one transmitter, one receiver, spectrum at a premium — use SSB, and always have.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "am",
+    stem: "Reading the modulation index off a scope?",
+    tool: "m = (Amax − Amin)/(Amax + Amin)",
+    because: "It needs no knowledge of the transmitter — and it silently returns exactly 1 for any overmodulated signal.",
+  },
+  {
+    part: "am",
+    stem: "Bandwidth of an AM transmission?",
+    tool: "2fm — both sidebands, whatever the index",
+    because: "The index sets how tall the sidebands are, never where they sit, so a quiet station takes the same dial as a loud one.",
+  },
+  {
+    part: "am",
+    stem: "Total power of an AM transmitter?",
+    tool: "Pt = Pc(1 + m²/2)",
+    because: "Modulation only adds; the carrier never shrinks to make room for the sidebands.",
+  },
+  {
+    part: "am",
+    stem: "Antenna current under modulation?",
+    tool: "It = Ic√(1 + m²/2) — note the square root",
+    because: "Current goes as the root of power, and dropping the root is the standard error on this one.",
+  },
+  {
+    part: "am",
+    stem: "Best possible efficiency of full-carrier AM?",
+    tool: "One third, at m = 1",
+    because: "η = m²/(2 + m²), and m cannot legally exceed 1.",
+  },
+  {
+    part: "am",
+    stem: "What does SSB change relative to DSB-SC?",
+    tool: "Halves the bandwidth — both are already 100% efficient",
+    because: "The two sidebands are mirror images, so one is redundant. Suppressing the CARRIER is the efficiency; dropping a SIDEBAND is the bandwidth.",
+  },
+  {
+    part: "am",
+    stem: "Why keep a carrier that carries no information?",
+    tool: "So the receiver can be a diode and a capacitor",
+    because: "One transmitter pays so millions of receivers can be cheap. Reverse that and SSB wins.",
   },
 ]);

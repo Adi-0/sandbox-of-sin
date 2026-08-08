@@ -1,0 +1,189 @@
+<p class="eyebrow">
+  <span>Communications · Part 2</span>
+  <span class="spec">NCEES 13.A</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Amplitude Modulation</h1>
+
+<p class="lede">Part 1 ended on one line: multiplying by a carrier copies a
+spectrum to ±f<sub>c</sub> at half amplitude. Amplitude modulation is that line
+and almost nothing else — so this part is mostly about what the copies cost.</p>
+
+<h2>2.1 Why modulate at all</h2>
+
+<p>A microphone produces something in the range 300 Hz to 3.4 kHz. Radiating it
+directly is hopeless for two reasons, and they are both about the frequency
+being low.</p>
+
+<ul>
+  <li><b>An antenna must be a useful fraction of a wavelength.</b> At 3 kHz the
+    wavelength is 100 km, so a quarter-wave antenna would be 25 km tall.</li>
+  <li><b>Everyone would be on top of everyone else.</b> Two stations radiating
+    the same band at the same time are simply added together, and nothing at the
+    receiver can separate them.</li>
+</ul>
+
+<p>Both are fixed by moving the message somewhere else on the dial, and Part 1
+already supplied the tool for that. <b>Multiply by a carrier.</b></p>
+
+<div data-figure="amIndex"></div>
+
+<h2>2.2 One number describes the whole thing</h2>
+
+<f-plate no="13.3" title="Amplitude modulation" stamp="know"
+  caption="<b>The index is measured off a scope, not calculated from the
+  transmitter.</b> That is what makes it the number everyone quotes — you can
+  read it from the waveform without knowing anything about how it was made.">
+  <f-row tex="s(t) = A_c\left[1 + m\cos(2\pi f_m t)\right]\cos(2\pi f_c t)"
+         name="the signal"
+         gloss="A carrier whose <b>amplitude</b> carries the message. The bracket is the envelope, and everything about AM is whether that envelope still resembles the message."></f-row>
+  <f-row tex="m = \frac{A_{max} - A_{min}}{A_{max} + A_{min}}"
+         name="the index, as measured"
+         gloss="Read the envelope's extremes off a scope and divide. <b>A 5 V carrier with a 3 V message swings 2 to 8 V</b>, giving 6/10 = 0.6 — the compilation's number, again."></f-row>
+  <f-row tex="\text{BW} = 2f_m" name="bandwidth"
+         gloss="<b>Twice the highest message frequency, always</b> — both sidebands are present no matter how small m is. A 5 kHz message needs 10 kHz of dial, which is why broadcast AM channels are spaced 10 kHz apart."></f-row>
+  <f-row tex="m \le 1" name="the ceiling"
+         gloss="Above 1 the bracket goes negative, the carrier flips phase, and <b>the envelope stops tracking the message</b>. An envelope detector then recovers something distorted, and no amount of receiver cleverness undoes it."></f-row>
+</f-plate>
+
+<div class="note honest">
+  <span class="note-tag">Why overmodulation is insidious</span>
+  <p style="margin-bottom:0">Past m = 1 the envelope passes through <b>zero</b>,
+  so the measured minimum is 0 whatever the index actually is — and
+  (max − 0)/(max + 0) is exactly 1. <b>The scope formula therefore reports
+  m = 1 for every overmodulated signal</b>, and cannot distinguish 1.1 from 3.
+  Set the plate above to any index over 1 and watch the readout do it. This is
+  why transmitters limit modulation at the source rather than measuring it and
+  hoping.</p>
+</div>
+
+<h2>2.3 Where the power actually goes</h2>
+
+<p>Now the uncomfortable part. The carrier is the same sinusoid whatever the
+message does, so <b>it carries no information at all</b> — and in full-carrier
+AM it takes most of the power.</p>
+
+<f-plate no="13.4" title="AM power" stamp="handbook"
+  caption="<b>Every one of these is the same statement.</b> Learn the total and
+  the efficiency; the rest is algebra you can do at the desk.">
+  <f-row tex="P_t = P_c\left(1 + \frac{m^2}{2}\right)" name="total transmitted"
+         gloss="Carrier plus both sidebands. At m = 1 that is 1.5 P_c, and at the more typical m = 0.6 it is only <b>1.18 P_c</b> — most of what you are transmitting was already there before the message arrived."></f-row>
+  <f-row tex="P_{SB} = \frac{m^2}{4}P_c \ \text{ each}" name="one sideband"
+         gloss="Both together are m²/2 times the carrier. <b>These are the only parts that change with the message</b>, so these are the only parts that matter."></f-row>
+  <f-row tex="\eta = \frac{m^2}{2 + m^2}" name="efficiency"
+         gloss="Sideband power over total. <b>At m = 1 this is exactly 1/3</b>, and it only gets worse from there — at m = 0.6 it is 15%."></f-row>
+  <f-row tex="I_t = I_c\sqrt{1 + \frac{m^2}{2}}" name="antenna current"
+         gloss="Power goes as current squared, so the current form carries a square root. <b>A favourite exam question</b>, because the temptation is to leave the root out."></f-row>
+</f-plate>
+
+<div data-figure="amSchemes"></div>
+
+<div class="worked">
+  <h4>Worked · <em>a broadcast transmitter</em></h4>
+  <div class="worked-body">
+    <p>A 5 kW AM transmitter is modulated to m = 0.6 by a message that runs to
+    5 kHz. Find the total transmitted power, the power in each sideband, the
+    efficiency, and the bandwidth.</p>
+    <ol class="steps">
+      <li><b>Total power.</b>
+        <span data-tex="P_t = P_c\left(1 + \tfrac{m^2}{2}\right) = 5\left(1 + \tfrac{0.36}{2}\right) = 5(1.18) = 5.90\text{ kW}" data-display>Pt = 5.90 kW</span></li>
+      <li><b>Sidebands.</b> Together they are the extra 0.90 kW, so each is
+        <span data-tex="\tfrac{m^2}{4}P_c = 0.09(5) = 0.45\text{ kW}">0.45 kW</span>.</li>
+      <li><b>Efficiency.</b>
+        <span data-tex="\eta = \frac{0.36}{2.36} = 0.153">η = 15.3%</span> — so
+        <b>5.0 kW of the 5.9 kW is the carrier, doing nothing</b>.</li>
+      <li><b>Bandwidth.</b>
+        <span data-tex="2f_m = 10\text{ kHz}">2fm = 10 kHz</span>, which is
+        exactly the channel spacing used for broadcast AM.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Step 3 is the one to
+    sit with. <b>Under a sixth of the transmitted power is carrying the
+    programme</b>, and that is a deliberate design choice rather than an
+    oversight — the carrier is what allows a receiver to be a diode, a
+    capacitor and a resistor. <b>One transmitter pays so that millions of
+    receivers can be cheap.</b> Where that trade does not apply, the carrier
+    goes.</p>
+  </div>
+</div>
+
+<h2>2.4 Taking the carrier away</h2>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Scheme</th><th>Bandwidth</th><th>Efficiency</th><th>Receiver</th></tr></thead>
+  <tbody>
+    <tr><td><b>Full-carrier AM</b></td><td>2f<sub>m</sub></td><td>≤ 33%</td><td>envelope detector — a diode</td></tr>
+    <tr><td><b>DSB-SC</b></td><td>2f<sub>m</sub></td><td><b>100%</b></td><td>coherent: must regenerate the carrier in phase</td></tr>
+    <tr><td><b>SSB</b></td><td><b>f<sub>m</sub></b></td><td><b>100%</b></td><td>coherent, plus a sharp filter at the transmitter</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The two sidebands of a real signal are mirror images of each other, so one is
+redundant — that is what makes SSB possible, and it halves the occupied dial as
+well as recovering all the power. <b>What both suppressed-carrier schemes give
+up is the simple receiver.</b> With no carrier riding along, the envelope no
+longer resembles the message, so the receiver has to manufacture a carrier of
+its own at the right frequency <em>and the right phase</em>.</p>
+
+<h2>2.5 Getting the message back</h2>
+
+<p>Demodulation is the same multiplication run again. Multiply the received
+signal by a carrier a second time and Part 1's frequency-shift property moves
+each copy by ±f<sub>c</sub> once more: one copy lands back at baseband, and the
+others land at ±2f<sub>c</sub> where a low-pass filter discards them. <b>The
+mixer that put the message up is the mixer that brings it back down.</b></p>
+
+<div class="note payoff">
+  <span class="note-tag">And the shortcut, for full-carrier AM only</span>
+  <p style="margin-bottom:0">If the carrier is present and m ≤ 1, the envelope
+  <em>is</em> the message plus a constant — so a diode and a capacitor recover
+  it with no carrier regeneration at all. <b>That is the entire reason
+  full-carrier AM tolerates a 15% efficiency</b>, and the entire reason it
+  cannot tolerate m > 1: overmodulation is exactly the condition under which
+  the envelope stops being the message.</p>
+</div>
+
+<h2>2.6 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>Modulation is Part 1's frequency shift.</b> Sidebands at
+        f<sub>c</sub> ± f<sub>m</sub>, each at mA<sub>c</sub>/2.</li>
+    <li><span data-tex="m = \frac{A_{max}-A_{min}}{A_{max}+A_{min}}">m = (Amax−Amin)/(Amax+Amin)</span>,
+        read off the envelope.</li>
+    <li><b>BW = 2f<sub>m</sub></b> for AM and DSB-SC; <b>f<sub>m</sub></b> for SSB.</li>
+    <li><span data-tex="P_t = P_c(1 + m^2/2)">Pt = Pc(1 + m²/2)</span>, each
+        sideband <span data-tex="m^2P_c/4">m²Pc/4</span>.</li>
+    <li><b>Efficiency = m²/(2 + m²)</b>, which is <b>1/3 at best</b>, at m = 1.</li>
+    <li><span data-tex="I_t = I_c\sqrt{1 + m^2/2}">It = Ic√(1 + m²/2)</span> —
+        <b>do not forget the square root</b>.</li>
+    <li><b>m > 1 is overmodulation</b>: envelope reaches zero, carrier flips
+        phase, and the scope formula uselessly reports exactly 1.</li>
+    <li><b>The carrier carries no information</b> — it buys a cheap receiver.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Amplitude modulation is one multiplication, and every number in this part
+  falls out of it. The message rides on the carrier's amplitude; the spectrum
+  lands in two copies at f<sub>c</sub> ± f<sub>m</sub>; the index says how
+  deeply the envelope swings and cannot exceed 1; and the power split is fixed
+  by the index alone.</p>
+  <p>What is worth carrying beyond the formulas is the shape of the trade.
+  <b>Full-carrier AM spends most of its power on something that carries no
+  information, in exchange for a receiver made of three components.</b> That is
+  a rational bargain when transmitters are few and receivers are many, and an
+  absurd one otherwise — which is why point-to-point links use SSB and
+  broadcasting does not. <b>Part 3 changes what the message modulates</b>: not
+  the amplitude but the frequency, and it buys something amplitude modulation
+  cannot offer at any efficiency.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"am","title":"Part 2 · Amplitude Modulation","topics":["am-index","am-power","am-scheme"],"count":6}'></div>
+
+<div data-reflex='{"only":["am"],"count":5,"title":"Handbook Reflex · Part 2"}'></div>

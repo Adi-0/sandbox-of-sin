@@ -385,6 +385,12 @@ export const MODULES = [
         blurb: "Narrow in time is wide in frequency, and the product never moves",
         minutes: 20, figures: [115, 116],
       },
+      {
+        id: "am", n: 2, spec: "13.A",
+        title: "Amplitude Modulation",
+        blurb: "Multiplying by a carrier moves a spectrum — and the carrier itself carries nothing",
+        minutes: 22, figures: [117, 118],
+      },
     ],
   },
   {

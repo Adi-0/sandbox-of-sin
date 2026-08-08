@@ -53,7 +53,12 @@ function amIndex() {
     const m = v / 100;
     const env = (t) => AC * (1 + m * Math.cos(2 * Math.PI * FM * t));
     const s = (t) => env(t) * Math.cos(2 * Math.PI * FC * t);
-    const aMax = AC * (1 + m), aMin = AC * Math.abs(1 - m);
+    /* For m > 1 the factor (1 + m cos) passes through zero, so the envelope a
+       detector sees touches 0 — it is not Ac|1 − m|, which is only where the
+       factor bottoms out. That is exactly why the scope formula saturates at
+       m = 1 and cannot report overmodulation. */
+    const aMax = AC * (1 + m);
+    const aMin = m <= 1 ? AC * (1 - m) : 0;
     const P = amPower(m);
 
     tp.clear("curve", "label", "mark", "shade");
@@ -93,7 +98,7 @@ function amIndex() {
                 ? `<b>This is the cast's number.</b> A 5 V carrier with a 3 V message gives m = 0.6 — the same 0.6 that has been ζ and cos 53.13° since Mathematics Part 1 — and the envelope runs 2 to 8 V. `
                 : ""
             }In the spectrum, <b>the sidebands sit at exactly ±f<sub>m</sub> from the carrier</b> at mA<sub>c</sub>/2 = ${fixed((m * AC) / 2, 2)} V each. The occupied bandwidth is <b>2f<sub>m</sub></b> however small m gets, because both copies are always there. Only ${fixed(100 * P.efficiency, 1)}% of the transmitted power is in them.`
-          : `<b>Overmodulated.</b> Past m = 1 the term (1 + m cos) goes negative, the carrier flips phase, and <b>the envelope stops following the message</b> — it folds back on itself instead. An envelope detector, which is the cheap receiver AM exists to allow, now recovers a distorted mess. <b>This is why m = 1 is a hard ceiling</b>, and why broadcast transmitters limit it rather than trusting the programme material.`
+          : `<b>Overmodulated.</b> Past m = 1 the term (1 + m cos) goes negative, the carrier flips phase, and <b>the envelope stops following the message</b> — it folds back on itself instead. An envelope detector, which is the cheap receiver AM exists to allow, now recovers a distorted mess. <b>Note what the envelope readout does here</b>: the minimum is 0, not A<sub>c</sub>|1 − m|, because the envelope passes clean through zero on its way. So the scope formula (max − min)/(max + min) returns exactly 1 for <em>every</em> index above 1 — <b>overmodulation cannot be measured that way at all</b>, which is why broadcast transmitters limit it at the source rather than trusting the programme material.`
     );
   }
 
