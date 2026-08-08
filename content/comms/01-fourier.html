@@ -1,0 +1,156 @@
+<p class="eyebrow">
+  <span>Communications · Part 1</span>
+  <span class="spec">NCEES 13.B</span>
+  <span>20 minute read</span>
+</p>
+
+<h1>Fourier Transforms and Duality</h1>
+
+<p class="lede">Signal Processing Part 1 gave a repeating signal a spectrum made
+of spikes. A message does not repeat — that is what makes it a message — so it
+needs a continuous spectrum instead. This part supplies it, together with the
+one property that turns the rest of this module into bookkeeping.</p>
+
+<h2>1.1 Series to transform, in one step</h2>
+
+<p>A Fourier <b>series</b> works because a periodic signal only contains whole
+multiples of its own repetition rate, so the spectrum is a set of discrete
+lines spaced <span class="math" data-tex="f_0 = 1/T">f₀ = 1/T</span> apart.</p>
+
+<p>Now stretch T. The lines move closer together. Let T go to infinity — which
+is what &ldquo;this signal happens once&rdquo; means — and the spacing goes to
+zero: <b>the lines merge into a continuous curve</b>. That curve is the Fourier
+transform, and nothing else about the idea has changed.</p>
+
+<f-plate no="13.1" title="The transform pair" stamp="handbook"
+  caption="<b>Two integrals that undo each other</b>, and the four properties
+  underneath them, which is where nearly all the marks are. You will rarely be
+  asked to evaluate the integral; you will constantly be asked what a property
+  does to a spectrum.">
+  <f-row tex="X(f) = \int_{-\infty}^{\infty} x(t)\,e^{-j2\pi ft}\,dt"
+         name="forward"
+         gloss="Same machinery as the series coefficient: <b>multiply by the sinusoid you are testing for and average</b>. The exponential is a cosine and a sine at once, so one integral finds both parts."></f-row>
+  <f-row tex="x(t) = \int_{-\infty}^{\infty} X(f)\,e^{+j2\pi ft}\,df"
+         name="inverse"
+         gloss="Add all the sinusoids back up. <b>Only the sign in the exponent differs</b>, which is why almost every property comes in a symmetric pair."></f-row>
+  <f-row tex="x(at) \ \longleftrightarrow \ \tfrac{1}{|a|}X(f/a)"
+         name="scaling — the important one"
+         gloss="<b>Compress in time and you stretch in frequency, by exactly the same factor.</b> This is duality, and section 1.3 is about why it is a budget rather than a curiosity."></f-row>
+  <f-row tex="x(t)\cos(2\pi f_c t) \ \longleftrightarrow \ \tfrac{1}{2}X(f \pm f_c)"
+         name="frequency shift — the whole of Part 2"
+         gloss="The ± means <b>two copies</b>, one centred at +f_c and one at −f_c, each at half amplitude. <b>Multiplying by a carrier moves a spectrum bodily up the dial.</b> Amplitude modulation is this line. So is mixing, and so is every superheterodyne receiver ever built."></f-row>
+</f-plate>
+
+<div class="note payoff">
+  <span class="note-tag">The fourth row is the module</span>
+  <p style="margin-bottom:0">Read it once more. <b>Multiplication by a cosine in
+  time is a shift in frequency.</b> Everything Part 2 says about AM, everything
+  Part 6 says about frequency-division multiplexing, and the entire reason a
+  radio has a tuning knob, is that one line. It is worth knowing before you
+  know anything else in this module.</p>
+</div>
+
+<h2>1.2 The pairs worth recognising</h2>
+
+<div data-figure="transformPair"></div>
+
+<f-plate no="13.2" title="Standard transform pairs" stamp="know"
+  caption="<b>Four pairs and two degenerate cases.</b> The exam asks you to
+  recognise these, not to derive them — and the rectangle-to-sinc pair does most
+  of the work, because a rectangle is what a single bit looks like.">
+  <f-row tex="\text{rect}(t/\tau) \ \longleftrightarrow \ \tau\,\text{sinc}(f\tau)"
+         name="rectangle ↔ sinc"
+         gloss="<b>Nulls at every multiple of 1/τ</b>, and tails that never quite stop. A perfectly square pulse needs infinite bandwidth, which is why no real system sends one."></f-row>
+  <f-row tex="\text{tri}(t/\tau) \ \longleftrightarrow \ \tau\,\text{sinc}^2(f\tau)"
+         name="triangle ↔ sinc²"
+         gloss="Two rectangles convolved, so the transform is squared. Same first null, but the tails die as 1/f² — <b>the corner-versus-jump rule from Signal Processing Part 1</b>, for a single pulse."></f-row>
+  <f-row tex="e^{-|t|/\tau} \ \longleftrightarrow \ \frac{2\tau}{1 + (2\pi f\tau)^2}"
+         name="exponential ↔ Lorentzian"
+         gloss="This is exactly the RC low-pass magnitude. <b>Not a coincidence</b>: an RC circuit's impulse response is a decaying exponential, and a transfer function is the transform of an impulse response."></f-row>
+  <f-row tex="\delta(t) \ \longleftrightarrow \ 1, \qquad 1 \ \longleftrightarrow \ \delta(f)"
+         name="the two extremes"
+         gloss="<b>An instant contains every frequency equally; a constant contains only DC.</b> These are the endpoints of the duality, and they are the fastest sanity check there is."></f-row>
+</f-plate>
+
+<h2>1.3 Duality is a budget, not a curiosity</h2>
+
+<p>Slide the width on the plate above and watch the two panels trade. Narrowing
+the pulse by a factor of two doubles the width of its spectrum, every time, for
+every shape. The product does not move:</p>
+
+<p class="math display" data-tex="\tau \cdot B \approx \text{constant}">τ · B ≈ constant</p>
+
+<p>This is the most consequential sentence in the module, because <b>time is
+what you are trying to save and bandwidth is what you have to buy</b>. A shorter
+pulse means more bits per second and more hertz of spectrum, in strict
+proportion, and no cleverness in pulse shaping escapes it — different shapes
+only reach the limit more or less efficiently. The Gaussian reaches it exactly,
+which is why it turns up wherever spectrum is expensive.</p>
+
+<h2>1.4 What this costs a real link</h2>
+
+<div data-figure="bandLimitedBits"></div>
+
+<p>The plate is worth working through with both patterns, because they say
+different things.</p>
+
+<ul>
+  <li><b>Mixed data survives surprisingly little bandwidth.</b> The waveform
+    stops looking like the data long before any bit is lost — and it does not
+    need to look like the data, because a receiver samples once per bit and
+    asks which side of a threshold it landed on.</li>
+  <li><b>Alternating 1010 is the honest test.</b> It is the fastest thing a bit
+    stream can do, and as a waveform it is a square wave at exactly
+    <b>half the bit rate</b>. Below B = R<sub>b</sub>/2 its fundamental does not
+    get through at all, every sample sits precisely on the threshold, and the
+    receiver has nothing to work with. At exactly R<sub>b</sub>/2 the eye snaps
+    open.</li>
+</ul>
+
+<p>That boundary is <b>Nyquist's signalling limit</b>, and Part 5 writes it as a
+formula. Here it is simply what the arithmetic does. Note also what closed the
+eye: <b>bandwidth, with no noise anywhere in the picture</b>. Intersymbol
+interference is a separate failure from noise and it is not fixed by
+transmitting harder.</p>
+
+<h2>1.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>Periodic ⇒ discrete spectrum. Aperiodic ⇒ continuous spectrum.</b>
+        Series and transform are the same idea at T → ∞.</li>
+    <li><b>rect ↔ sinc</b>, with nulls at multiples of 1/τ. <b>tri ↔ sinc²</b>.
+        <b>Gaussian ↔ Gaussian.</b></li>
+    <li><span data-tex="\delta(t) \leftrightarrow 1">δ(t) ↔ 1</span> and
+        <span data-tex="1 \leftrightarrow \delta(f)">1 ↔ δ(f)</span> — an
+        instant holds every frequency, a constant holds one.</li>
+    <li><b>Scaling:</b> compress in time by <em>a</em>, stretch in frequency by
+        <em>a</em>. <b>τ · B is constant.</b></li>
+    <li><b>Frequency shift:</b> multiplying by cos(2πf<sub>c</sub>t) copies the
+        spectrum to <b>±f<sub>c</sub></b> at half amplitude. This is modulation.</li>
+    <li><b>Time shift changes phase only</b>, never magnitude — delaying a
+        signal cannot change which frequencies are in it.</li>
+    <li>A bit stream at R<sub>b</sub> needs at least <b>R<sub>b</sub>/2</b> of
+        bandwidth. Less, and the eye closes with no noise present.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>The transform is the series with the repetition removed, and it buys a
+  continuous spectrum in exchange. Two of its properties do nearly all the work
+  in this module: <b>scaling</b>, which says time and bandwidth trade at a fixed
+  exchange rate, and <b>frequency shift</b>, which says multiplying by a carrier
+  moves a spectrum bodily to a new place on the dial.</p>
+  <p>Those two properties are the two halves of the rest of Communications.
+  <b>Parts 2 and 3 are the frequency shift</b> — how to move a message onto a
+  carrier and what it costs in spectrum. <b>Parts 4 and 5 are the scaling</b> —
+  how fast you can push bits through a given bandwidth. And <b>Part 6 puts many
+  messages on one medium</b> using whichever of the two is cheaper.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"fourier","title":"Part 1 · Fourier Transforms","topics":["ft-pair","time-bandwidth","ft-property"],"count":6}'></div>
+
+<div data-reflex='{"only":["fourier"],"count":5,"title":"Handbook Reflex · Part 1"}'></div>

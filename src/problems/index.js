@@ -28,5 +28,8 @@ import "./control.js";
 /* --- Signal Processing --- */
 import "./dsp.js";
 
+/* --- Communications --- */
+import "./comms.js";
+
 /* --- Power Systems --- */
 import "./power.js";

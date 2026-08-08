@@ -376,6 +376,18 @@ export const MODULES = [
     ],
   },
   {
+    id: "comms", dir: "comms", area: 13,
+    title: "Communications", questions: "5–8",
+    parts: [
+      {
+        id: "fourier", n: 1, spec: "13.B",
+        title: "Fourier Transforms and Duality",
+        blurb: "Narrow in time is wide in frequency, and the product never moves",
+        minutes: 20, figures: [115, 116],
+      },
+    ],
+  },
+  {
     id: "power", dir: "power", area: 10,
     title: "Power Systems", questions: "8–12",
     parts: [
@@ -489,6 +501,12 @@ export const SPEC = {
     ["8.A", "Sampling (aliasing, Nyquist theorem)", "sampling"],
     ["8.B", "Analog filters", "analog-filters"],
     ["8.C", "Digital filters (difference equations, Z-transforms)", "digital-filters"],
+  ],
+  comms: [
+    ["13.A", "Basic modulation/demodulation concepts (AM, FM, PCM)", "am"],
+    ["13.B", "Fourier transforms/Fourier series", "fourier"],
+    ["13.C", "Multiplexing (time division, frequency division, code division)", "multiplexing"],
+    ["13.D", "Digital communications", "digital-comms"],
   ],
   power: [
     ["10.A", "Power theory (power factor, single and three phase, voltage regulation)", "power-factor"],

@@ -61,6 +61,9 @@ import "./digital-filters.js"; // 110 111
 import "./ztransform.js";    // 112 113
 import "./dsp-synthesis.js"; // 114
 
+/* --- Communications --- */
+import "./fourier.js";       // 115 116
+
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
 import "./three-phase.js";   // 39 40 41
