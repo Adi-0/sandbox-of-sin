@@ -15,7 +15,7 @@ This file is the durable memory across turns. Read it first.
 | **Linear Systems** | 7 | 5–8 | 7 | 76–88 | complete |
 | **Control Systems** | 12 | 6–9 | 7 | 89–101 | complete |
 | **Signal Processing** | 8 | 5–8 | 7 | 102–114 | complete |
-| **Communications** | 13 | 5–8 | 6 of 7 | 115–126 | in progress |
+| **Communications** | 13 | 5–8 | 7 | 115–127 | complete |
 
 Nine of seventeen areas; 66–102 of the 110 questions. A shared orientation part
 sits ahead of all of them. Plate numbers run in the order the modules were
@@ -369,7 +369,7 @@ src/
     figure.js       plate scaffolding, rAF loop, reduced-motion
     rng.js          seeded RNG so a problem set is reproducible
     bench.js        problem engine, MCQ UI, stepped solutions
-  figures/          one module per part, 126 plates
+  figures/          one module per part, 127 plates
   problems/         one module per part, 203 generators
 
 content/
@@ -433,7 +433,7 @@ them reading as drafting ink rather than highlighter. Do not nudge them by eye.
 
 ## 8. Status
 
-Sixty-four parts, 126 plates, 203 generators, 278 reflex items.
+Sixty-five parts, 127 plates, 203 generators, 278 reflex items.
 
 | Module | Part | Plates | Generators |
 |---|---|---|---|
@@ -501,17 +501,18 @@ Sixty-four parts, 126 plates, 203 generators, 278 reflex items.
 | Comms | 4 PCM and the Digital Link | 121–122 | 3 |
 | Comms | 5 Digital Communications | 123–124 | 3 |
 | Comms | 6 Multiplexing | 125–126 | 3 |
+| Comms | 7 Synthesis and mixed bench | 127 | (reuses 18) |
 
 ### Verified
 
 Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
 read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 64 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 65 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 126 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 127 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
 - `genall.mjs` — every one of the 203 generators run over 100 seeds, checking
   that no question offers a duplicate option, fewer than three options, a bad
@@ -648,11 +649,14 @@ Each was invisible on the page and wrong in a way a reader would have paid for.
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- Finish **Communications** (13) — Part 7 remains: the synthesis part
-  (13.A–13.D) and its mixed bench.
-- Then Electromagnetics, Computer Networks, Computer Systems, Software
+- Electromagnetics, Computer Networks, Computer Systems, Software
   Development, Engineering Economics, Ethics, Probability and Statistics,
   Properties of Electrical Materials.
+
+  Computer Networks is the natural next one: Part 6's multiplexing and Part
+  5's error rates are most of its physical layer already, and the
+  statistical-TDM argument at the end of Part 6 is where packet switching
+  begins.
 
 Counts above are from the specification PDF. **Read it again before starting a
 module** rather than trusting this list — the area 10 per-unit mistake was
@@ -691,9 +695,9 @@ and cross-links rather than restates. Fourier *series* proper belongs to area
   normalised, sits precisely on the unit circle, which is precisely the
   marginal case. Pulled to r = 0.9 it gives 1 − 1.08z⁻¹ + 0.81z⁻².
 
-### The Communications arc, as built so far
+### The Communications arc, as built
 
-Six of seven parts, plates 115–126. The spine is a single question asked four
+Seven parts, plates 115–127. The spine is a single question asked four
 times: *what does it cost to move a message, and what does the money buy?*
 Part 1 supplies the transform machinery, Parts 2–3 spend power and bandwidth
 on an analog message, and Part 4 stops sending the message at all and sends
@@ -707,7 +711,7 @@ numbers instead.
 | 4 | 13.A | PCM and the Digital Link |
 | 5 | 13.D | Digital Communications |
 | 6 | 13.C | Multiplexing |
-| 7 | 13.A–13.D | Synthesis and the Mixed Bench — *not built* |
+| 7 | 13.A–13.D | Synthesis and the Mixed Bench |
 
 **Not this module's job.** Signal Processing Part 1 owns the Fourier *series*
 and Part 2 owns sampling and aliasing; Electronics Part 6 owns the LSB,
@@ -745,6 +749,19 @@ needs 9.59 dB for a 1e-5 BER; the dial-up ceiling 3400 log2(1001) =
 33.9 kbit/s against V.34's actual 33.6; the Shannon–Nyquist collision
 1 + S/N = M² (binary 4.77 dB, 4-ary 11.76, 16-ary 24.08, 64-ary 36.12); and
 the Eb/N0 floor tending to ln 2 = -1.59 dB.
+
+**Plate 127 keeps no numbers of its own.** Every coordinate is computed from
+the functions the earlier plates used — AM's 4.77 dB from amPower(1), FM's 12x
+from carson(5B, B), PCM's 49.92 dB from pcmSnrUniform(8), the 16-ary threshold
+from snrForNyquist(16) — so the synthesis cannot drift out of step with the
+parts it summarises. The binary threshold is solved at load time rather than
+quoted: the Eb/N0 giving a 1e-5 BPSK error rate, plus 3.01 dB because Rb = 2B
+makes S/N twice Eb/N0.
+
+**The result the module was built toward:** at a 30 dB channel, 16-ary PCM is
+5.1x narrower than broadcast-quality FM and 5.9 dB better at the same time — a
+win on both axes rather than a trade. The proviso is Shannon's: it needs 24.1
+dB before it is possible at all, which is why FM lasted a century.
 
 **A renderer bug found while building Part 6, and fixed.** `tex.js` silently
 discarded the escaped literals `\%`, `\#`, `\$`, `\_` and `\&` — they fell

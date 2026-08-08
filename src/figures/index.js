@@ -68,6 +68,7 @@ import "./fm.js";            // 119 120
 import "./pcm.js";           // 121 122
 import "./digital-comms.js"; // 123 124
 import "./multiplexing.js";  // 125 126
+import "./comms-synthesis.js"; // 127
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38

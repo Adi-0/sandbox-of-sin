@@ -415,6 +415,12 @@ export const MODULES = [
         blurb: "Sharing one channel three ways — and why they are all the same trick",
         minutes: 20, figures: [125, 126],
       },
+      {
+        id: "comms-synthesis", n: 7, spec: "13.A–13.D",
+        title: "Synthesis and the Mixed Bench",
+        blurb: "One conversation sent five ways, and a set under exam conditions",
+        minutes: 12, figures: [127],
+      },
     ],
   },
   {
