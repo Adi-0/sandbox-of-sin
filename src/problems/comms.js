@@ -13,7 +13,7 @@
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
 import { num, fixed, sig } from "../lib/fmt.js";
-import { amPower } from "../lib/comms.js";
+import { amPower, carson } from "../lib/comms.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 const D = (s) => `<span class="math display" data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
@@ -586,5 +586,248 @@ defineReflex([
     stem: "Why keep a carrier that carries no information?",
     tool: "So the receiver can be a diode and a capacitor",
     because: "One transmitter pays so millions of receivers can be cheap. Reverse that and SSB wins.",
+  },
+]);
+
+/* ==========================================================================
+   Part 3 — angle modulation
+
+   The examinable core is Carson's rule and the FM/PM distinction. The
+   distractors are dropping the message frequency from Carson (giving 2 Δf),
+   inverting the index, and assuming PM behaves like FM when the message
+   frequency changes — which is the one thing that separates them.
+   ========================================================================== */
+
+defineProblem("fm-index", {
+  topic: "FM modulation index",
+  lookup: "Electrical → Communications → Frequency modulation",
+  make(rng) {
+    const ask = rng.pick(["beta", "beta", "dev", "null"]);
+
+    if (ask === "null") {
+      return {
+        stem: `As the modulation index of an FM signal is increased from zero, the carrier line on a spectrum analyser <b>disappears completely</b> at one point. What index is that, and what does it mean?`,
+        choices: options(
+          { text: "β = 2.405 — all the power has moved into the sidebands", why: "" },
+          [
+            { text: "β = 1 — the carrier and first sideband are equal", why: `At β = 1 the carrier is J₀(1) = 0.765 and the first sideband J₁(1) = 0.440, so they are neither equal nor zero. <b>The null is where J₀ crosses zero</b>, which is at 2.405.` },
+            { text: "β = 2.405 — the transmitter has run out of power", why: `The index is right, the reason is not. <b>Total power never changes in FM</b> — it is constant at Ac²/2 for every β. The carrier's power has moved into the sidebands, not vanished.` },
+            { text: "it never disappears; it only gets smaller", why: `It genuinely reaches zero. J₀ is an oscillating function with real zeros, the first at 2.405, and the effect was used to calibrate deviation meters.` },
+          ]),
+        answer: 0,
+        steps: [
+          `The carrier amplitude in an FM spectrum is <b>J₀(β)</b>, the zeroth Bessel function of the index.`,
+          `J₀ oscillates and crosses zero — first at <b>β = 2.405</b>, then 5.520, then 8.654.`,
+          `<b>At those indices there is no power at the carrier frequency at all.</b> Since the total is fixed at Ac²/2, every watt is in the sidebands.`,
+          `<b>This has a practical use.</b> Turn the modulation up until the carrier vanishes on an analyser, and you know β is exactly 2.405 — so Δf = 2.405 f<sub>m</sub>, which calibrates a deviation meter with no other reference.`,
+        ],
+      };
+    }
+
+    if (ask === "dev") {
+      /* fm = 1 is excluded: beta*fm and beta/fm are then the same number, so
+         the "divided instead of multiplied" distractor becomes the answer. */
+      const beta = rng.pick([2, 3, 4, 5, 6]);
+      const fm = rng.pick([3, 5, 15]);
+      const dev = beta * fm;
+      return {
+        stem: `An FM signal has a modulation index of ${num(beta, 0)} with a ${num(fm, 0)} kHz message. What is the peak frequency deviation?`,
+        choices: options(
+          { text: `${num(dev, 0)} kHz`, why: "" },
+          [
+            { text: `${sig(beta / fm, 3)} kHz`, why: `Divided instead of multiplied. β = Δf/f<sub>m</sub>, so <b>Δf = β f<sub>m</sub></b> — the deviation is larger than the message frequency whenever β exceeds 1.` },
+            { text: `${num(fm, 0)} kHz`, why: `That is the message frequency, which is given. The deviation is β times it.` },
+            { text: `${num(2 * dev, 0)} kHz`, why: `That is the <b>peak-to-peak</b> swing, or Carson's rule with f<sub>m</sub> dropped. Δf is the deviation <em>either side</em> of the carrier.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\beta = \\frac{\\Delta f}{f_m} \\ \\Longrightarrow \\ \\Delta f = \\beta f_m = ${num(beta, 0)}(${num(fm, 0)}) = ${num(dev, 0)}\\text{ kHz}`),
+          `<b>${num(dev, 0)} kHz.</b> The carrier swings that far <em>either side</em> of its rest frequency, so it sweeps a total of ${num(2 * dev, 0)} kHz.`,
+          `<b>Deviation is set by the message's amplitude, not its pitch.</b> Turn the volume up and Δf grows; play a higher note at the same volume and Δf stays put while β falls.`,
+        ],
+      };
+    }
+
+    /* Drawn so that Δf never equals fm: at beta = 1 the index and its
+       reciprocal are the same number and the "upside down" distractor
+       collapses onto the answer. */
+    const fm = rng.pick([3, 5, 10, 15]);
+    const dev = fm * rng.pick([0.25, 2, 3, 5]);
+    const beta = dev / fm;
+    return {
+      stem: `An FM transmitter deviates ±${num(dev, 0)} kHz on a ${num(fm, 0)} kHz message. What is the modulation index?`,
+      choices: options(
+        { text: fixed(beta, 3), why: "" },
+        [
+          { text: fixed(fm / dev, 3), why: `Upside down. <b>β = Δf/f<sub>m</sub></b> — deviation on top. A large deviation on a low message frequency gives a <em>large</em> index.` },
+          { text: fixed(dev, 0), why: `That is the deviation in kHz. The index is <b>dimensionless</b>, being a ratio of two frequencies.` },
+          { text: fixed(2 * (dev + fm), 0), why: `That is Carson's bandwidth in kHz, not the index.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`\\beta = \\frac{\\Delta f}{f_m} = \\frac{${num(dev, 0)}}{${num(fm, 0)}} = ${fixed(beta, 3)}`),
+        `<b>β = ${fixed(beta, 3)}</b>, which is ${beta < 0.3 ? "<b>narrowband</b> — the spectrum is essentially AM's, and none of FM's noise advantage is available." : beta > 3 ? "comfortably <b>wideband</b>, so the bandwidth is close to 2Δf and the noise advantage is substantial." : "in the middle: several significant sideband pairs, and Carson's rule earns its keep."}`,
+        `<b>β is dimensionless and it is the only number the spectrum depends on.</b> Two transmitters with the same β have the same sideband pattern, whatever their actual frequencies.`,
+      ],
+    };
+  },
+});
+
+defineProblem("fm-bandwidth", {
+  topic: "Carson's rule",
+  lookup: "Electrical → Communications → Carson's rule / FM bandwidth",
+  make(rng) {
+    /* Parameterised by beta rather than by an independent deviation: with
+       Δf and fm drawn separately, Δf = fm collapses "Δf + fm" onto "2Δf"
+       and onto "2fm", and Δf = 25 fm puts 2Δf within 4% of the answer.
+       Fixing beta >= 2 rules out every one of those. */
+    const fm = rng.pick([3, 5, 10, 15]);
+    const beta = rng.pick([2, 3, 4, 5]);
+    const dev = beta * fm;
+    const bw = carson(dev, fm);
+    const ask = rng.pick(["bw", "bw", "vsam"]);
+
+    if (ask === "vsam") {
+      const amBw = 2 * fm;
+      return {
+        stem: `A ${num(fm, 0)} kHz message is sent by FM with ±${num(dev, 0)} kHz deviation. How much more spectrum does it use than plain AM would?`,
+        choices: options(
+          { text: `${fixed(bw / amBw, 2)} times as much`, why: "" },
+          [
+            { text: `${fixed(dev / fm, 2)} times as much`, why: `That is the index β, not the bandwidth ratio. Carson's rule adds f<sub>m</sub> to the deviation before doubling, so the ratio is (Δf + f<sub>m</sub>)/f<sub>m</sub> = β + 1.` },
+            { text: "the same — both are 2fm", why: `Only if β were far below 1. Here β = ${fixed(beta, 2)}, so the deviation dominates and the bandwidth is much wider.` },
+            { text: `${fixed(bw / fm, 2)} times as much`, why: `Divided by f<sub>m</sub> rather than by AM's bandwidth. <b>AM needs 2f<sub>m</sub></b>, not f<sub>m</sub>.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\text{FM: } 2(\\Delta f + f_m) = 2(${num(dev, 0)} + ${num(fm, 0)}) = ${num(bw, 0)}\\text{ kHz}`),
+          D(`\\text{AM: } 2f_m = ${num(amBw, 0)}\\text{ kHz}`),
+          `<b>${fixed(bw / amBw, 2)} times as much</b>, which is just β + 1 = ${fixed(beta, 2)} + 1.`,
+          `<b>And that is the trade.</b> The extra spectrum buys a signal-to-noise improvement going roughly as β², so ${fixed(bw / amBw, 2)}× the bandwidth returns about ${fixed(beta * beta, 0)}× the output SNR — at no extra transmitter power.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `An FM signal deviates ±${num(dev, 0)} kHz on a message reaching ${num(fm, 0)} kHz. What bandwidth does Carson's rule give?`,
+      choices: options(
+        { text: `${num(bw, 0)} kHz`, why: "" },
+        [
+          { text: `${num(2 * dev, 0)} kHz`, why: `The message frequency was dropped. <b>Carson's rule is 2(Δf + f<sub>m</sub>)</b>, not 2Δf — the second term matters whenever β is not large.` },
+          { text: `${num(dev + fm, 0)} kHz`, why: `The factor of two is missing. The signal occupies that span <em>either side</em> of the carrier.` },
+          { text: `${num(2 * fm, 0)} kHz`, why: `That is AM's bandwidth. FM's is much wider unless β is well below 1, and here β = ${fixed(beta, 2)}.` },
+          { text: `${num(2 * dev * fm, 0)} kHz`, why: `Multiplied rather than added. Check the units — you cannot add a product of two frequencies to a bandwidth.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`\\text{BW} = 2(\\Delta f + f_m) = 2(${num(dev, 0)} + ${num(fm, 0)}) = ${num(bw, 0)}\\text{ kHz}`),
+        `<b>${num(bw, 0)} kHz</b>, which holds about 98% of the transmitted power — the spectrum genuinely extends further, but not usefully so.`,
+        `Equivalently 2f<sub>m</sub>(β + 1) with β = ${fixed(beta, 2)}: ${D(`2(${num(fm, 0)})(${fixed(beta, 2)} + 1) = ${num(bw, 0)}\\text{ kHz}`)}`,
+        `<b>Both forms are the same equation</b>, and the exam uses whichever matches the data it gives you.`,
+      ],
+    };
+  },
+});
+
+defineProblem("fm-vs-pm", {
+  topic: "FM against PM",
+  lookup: "Electrical → Communications → Phase modulation",
+  make(rng) {
+    const q = rng.pick(["pitch", "pitch", "which"]);
+
+    if (q === "pitch") {
+      const fm1 = rng.pick([1, 2, 3]);
+      const f = rng.pick([2, 3, 4]);
+      const fm2 = fm1 * f;
+      const isFm = rng.chance(0.5);
+      return {
+        stem: `A message tone at ${num(fm1, 0)} kHz is replaced by one at ${num(fm2, 0)} kHz <b>at the same amplitude</b>. In a <b>${isFm ? "frequency" : "phase"}</b>-modulated transmitter, what happens to the modulation index?`,
+        choices: options(
+          { text: isFm ? `it falls by a factor of ${num(f, 0)}` : "it does not change", why: "" },
+          [
+            { text: isFm ? "it does not change" : `it falls by a factor of ${num(f, 0)}`,
+              why: isFm
+                ? `That is what <b>phase</b> modulation does. In FM the index is Δf/f<sub>m</sub>, and the deviation is fixed by the message's <em>amplitude</em> — so raising f<sub>m</sub> with the amplitude unchanged divides β by ${num(f, 0)}.`
+                : `That is what <b>frequency</b> modulation does. In PM the index is k<sub>p</sub>A<sub>m</sub>, which contains no f<sub>m</sub> at all.` },
+            { text: `it rises by a factor of ${num(f, 0)}`, why: `Nothing here rises. In FM β falls with pitch; in PM it is unchanged. <b>What rises with pitch in PM is the deviation</b>, Δf = βf<sub>m</sub>, and hence the bandwidth.` },
+            { text: "it depends on the carrier frequency", why: `The carrier frequency never enters the index in either scheme — it only says where on the dial the spectrum sits.` },
+          ]),
+        answer: 0,
+        steps: [
+          isFm
+            ? `<b>FM: β = Δf/f<sub>m</sub>.</b> The deviation is set by how <em>loud</em> the message is, not how high, so it is unchanged when only the pitch rises.`
+            : `<b>PM: β = k<sub>p</sub>A<sub>m</sub>.</b> There is no f<sub>m</sub> in that expression at all — the index depends only on how loud the message is.`,
+          isFm
+            ? D(`\\beta_2 = \\frac{\\Delta f}{${num(fm2, 0)}} = \\frac{1}{${num(f, 0)}}\\cdot\\frac{\\Delta f}{${num(fm1, 0)}} = \\frac{\\beta_1}{${num(f, 0)}}`)
+            : D(`\\beta_2 = k_p A_m = \\beta_1`),
+          isFm
+            ? `<b>β falls by a factor of ${num(f, 0)}.</b> Note what that does to bandwidth: Carson gives 2(Δf + f<sub>m</sub>), and only the small f<sub>m</sub> term grew — so an FM signal's bandwidth is <b>almost independent of the message pitch</b>.`
+            : `<b>The index does not change.</b> But the deviation does: Δf = βf<sub>m</sub> is now ${num(f, 0)} times larger, so Carson's bandwidth grows roughly ${num(f, 0)}-fold. <b>A PM signal's bandwidth rises with message pitch; an FM signal's barely moves.</b>`,
+          `<b>This is the distinction the exam tests</b>, and it is the only one that separates two schemes which otherwise produce identical-looking waveforms.`,
+        ],
+      };
+    }
+
+    return {
+      stem: `Why can an FM receiver discard amplitude variations entirely, when an AM receiver cannot?`,
+      choices: options(
+        { text: "because an FM signal's amplitude is constant, so any variation in it is not signal", why: "" },
+        [
+          { text: "because FM uses a higher carrier frequency", why: `Carrier frequency has nothing to do with it — FM and AM are used across the same bands. It is the <b>constant envelope</b> that matters.` },
+          { text: "because FM transmits more power", why: `It does not. FM's total power is Ac²/2 whatever the modulation, exactly as an unmodulated carrier would be.` },
+          { text: "because FM sidebands are narrower", why: `They are wider, not narrower — that is the cost of FM, not its mechanism.` },
+        ]),
+      answer: 0,
+      steps: [
+        `In FM the message is in the <b>angle</b>, and the amplitude A<sub>c</sub> never changes. So <b>any amplitude variation arriving at the receiver is, by definition, not part of the signal.</b>`,
+        `A <b>limiter</b> — a stage that clips the waveform flat — therefore removes noise without removing information. In AM the same stage would remove the message itself.`,
+        `<b>Two consequences follow.</b> The capture effect: of two FM signals on one frequency the stronger is demodulated and the weaker almost vanishes, where two AM signals would simply add. And a <b>threshold</b>: below about 10 dB carrier-to-noise the advantage collapses abruptly, which is why weak FM goes silent while weak AM merely gets scratchy.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "fm",
+    stem: "Modulation index of an FM signal?",
+    tool: "β = Δf/fm — deviation over message frequency",
+    because: "It is dimensionless and it is the only thing the sideband pattern depends on.",
+  },
+  {
+    part: "fm",
+    stem: "Carson's rule?",
+    tool: "BW = 2(Δf + fm) = 2fm(β + 1)",
+    because: "Dropping the fm term is the standard error, and it matters whenever β is not large.",
+  },
+  {
+    part: "fm",
+    stem: "Message pitch doubles at the same volume. What happens to β?",
+    tool: "FM: β halves. PM: β is unchanged",
+    because: "This is the only question that distinguishes the two, and it is the one the exam asks.",
+  },
+  {
+    part: "fm",
+    stem: "At what index does an FM carrier disappear?",
+    tool: "β = 2.405 — the first zero of J₀",
+    because: "Total power is unchanged; it has all moved into the sidebands. Used to calibrate deviation meters.",
+  },
+  {
+    part: "fm",
+    stem: "How does total transmitted power vary with FM modulation?",
+    tool: "It does not — always Ac²/2",
+    because: "The amplitude is constant. FM redistributes power among sidebands; AM adds power on top of the carrier.",
+  },
+  {
+    part: "fm",
+    stem: "Broadcast FM's deviation, message bandwidth, index and channel width?",
+    tool: "75 kHz, 15 kHz, β = 5, BW = 180 kHz in a 200 kHz channel",
+    because: "One worked set of numbers to anchor every other FM bandwidth question.",
+  },
+  {
+    part: "fm",
+    stem: "Where does FM's noise immunity come from?",
+    tool: "Constant envelope — a limiter can throw amplitude away",
+    because: "It also gives the capture effect and a hard threshold near 10 dB carrier-to-noise.",
   },
 ]);

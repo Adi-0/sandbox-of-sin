@@ -391,6 +391,12 @@ export const MODULES = [
         blurb: "Multiplying by a carrier moves a spectrum — and the carrier itself carries nothing",
         minutes: 22, figures: [117, 118],
       },
+      {
+        id: "fm", n: 3, spec: "13.A",
+        title: "Angle Modulation",
+        blurb: "A spectrum you cannot guess, and noise immunity bought with bandwidth",
+        minutes: 22, figures: [119, 120],
+      },
     ],
   },
   {

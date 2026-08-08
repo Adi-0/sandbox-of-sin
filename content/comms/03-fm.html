@@ -1,0 +1,182 @@
+<p class="eyebrow">
+  <span>Communications · Part 3</span>
+  <span class="spec">NCEES 13.A</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Angle Modulation</h1>
+
+<p class="lede">Amplitude modulation put the message in the carrier's height and
+paid for it with efficiency. Angle modulation puts it in the carrier's
+<em>timing</em> instead — and buys something amplitude modulation cannot offer
+at any price, in exchange for spectrum.</p>
+
+<h2>3.1 The other two things a sinusoid has</h2>
+
+<p>A sinusoid has an amplitude, a frequency and a phase. AM used the first. The
+other two are not really separate — <b>phase is the integral of frequency</b>,
+so nudging one necessarily nudges the other — which is why they are treated
+together as <b>angle modulation</b>.</p>
+
+<f-plate no="13.5" title="FM and PM" stamp="know"
+  caption="<b>The index is the only number that matters, and the difference
+  between FM and PM is entirely in what the index depends on.</b> That is the
+  distinction the exam tests, far more often than it tests either definition.">
+  <f-row tex="s(t) = A_c\cos\left(2\pi f_c t + \beta\sin 2\pi f_m t\right)"
+         name="the signal"
+         gloss="Constant amplitude, wobbling angle. <b>A_c never changes</b>, which is the property everything else in this part follows from."></f-row>
+  <f-row tex="\beta = \frac{\Delta f}{f_m} \quad \text{(FM)}"
+         name="index, frequency modulation"
+         gloss="Peak deviation over message frequency. <b>Raise the message frequency and β falls</b>, because the deviation is set by the message's amplitude, not its pitch."></f-row>
+  <f-row tex="\beta = k_p A_m \quad \text{(PM)}"
+         name="index, phase modulation"
+         gloss="<b>Independent of f_m entirely.</b> So in PM the deviation Δf = βf_m <em>rises</em> with message frequency, and the bandwidth grows with pitch. This is the whole difference."></f-row>
+  <f-row tex="A_c \ \text{constant} \Rightarrow \text{amplitude carries nothing}"
+         name="the consequence"
+         gloss="A receiver can therefore <b>clip the signal flat</b> and throw away every amplitude variation — which is exactly what noise is. That is where the noise immunity comes from."></f-row>
+</f-plate>
+
+<h2>3.2 A spectrum you cannot guess</h2>
+
+<div data-figure="fmSpectrum"></div>
+
+<p>AM's spectrum was a carrier and two sidebands, and you could draw it from
+memory. FM's cannot be drawn from memory at all. The sideband amplitudes are
+<b>Bessel functions J<sub>n</sub>(β)</b>, there are infinitely many of them, and
+they do not fall off monotonically — a distant sideband can be larger than a
+near one.</p>
+
+<div class="note payoff">
+  <span class="note-tag">Set the index to 2.405 and the carrier disappears</span>
+  <p style="margin-bottom:0">J₀(2.405) = 0 exactly, so at that index there is
+  <b>no power whatsoever at the carrier frequency</b> — all of it has moved into
+  the sidebands. This is not a rounding effect or an artefact of the drawing;
+  it is the first zero of a Bessel function, and engineers used it to calibrate
+  deviation meters by turning the modulation up until the carrier vanished from
+  a spectrum analyser. <b>There is nothing in AM even loosely like this</b>, and
+  it is the quickest way to see that FM is a different animal rather than the
+  same one with a different knob.</p>
+</div>
+
+<p>One more thing the plate shows that is easy to miss. <b>The total power never
+changes.</b> Whatever β does, the sum of all the sideband powers plus the
+carrier's stays at A<sub>c</sub>²/2 — because the amplitude is constant, and
+power is amplitude squared. <b>FM carves its sidebands out of the carrier; AM
+added them on top.</b></p>
+
+<h2>3.3 Carson's rule</h2>
+
+<p>A spectrum with infinitely many sidebands needs a convention before anyone
+can be assigned a channel. Carson's rule is that convention.</p>
+
+<f-plate no="13.6" title="Bandwidth of an FM signal" stamp="handbook"
+  caption="<b>Both forms of Carson's rule are the same equation.</b> Which one
+  is convenient depends on whether the question gives you the deviation or the
+  index, and the exam uses both.">
+  <f-row tex="\text{BW} = 2\left(\Delta f + f_m\right) = 2f_m(\beta + 1)"
+         name="Carson's rule"
+         gloss="Captures about <b>98%</b> of the power. Not exact, and it does not pretend to be — the spectrum genuinely never ends."></f-row>
+  <f-row tex="\beta \ll 1: \ \text{BW} \approx 2f_m" name="narrowband FM"
+         gloss="<b>The same bandwidth as AM</b>, and none of FM's noise advantage. Used where a constant envelope is wanted for its own sake — feeding a saturating amplifier, for instance."></f-row>
+  <f-row tex="\beta \gg 1: \ \text{BW} \approx 2\Delta f" name="wideband FM"
+         gloss="The message frequency stops mattering and the deviation is everything. <b>Broadcast FM lives here</b>: β = 5."></f-row>
+  <f-row tex="\text{SNR gain} \propto \beta^2" name="what it buys"
+         gloss="<b>The reason to pay.</b> Output signal-to-noise improves as the square of the index, so the bandwidth-for-quiet exchange rate is steeply in your favour once β is comfortably above 1."></f-row>
+</f-plate>
+
+<div data-figure="carsonTrade"></div>
+
+<div class="worked">
+  <h4>Worked · <em>a broadcast FM channel</em></h4>
+  <div class="worked-body">
+    <p>Broadcast FM allows 75 kHz of peak deviation and carries audio to
+    15 kHz. Find the modulation index and the bandwidth, and compare with the
+    200 kHz channel spacing actually used.</p>
+    <ol class="steps">
+      <li><b>Index.</b>
+        <span data-tex="\beta = \frac{\Delta f}{f_m} = \frac{75}{15} = 5" data-display>β = 5</span></li>
+      <li><b>Carson's rule.</b>
+        <span data-tex="\text{BW} = 2(\Delta f + f_m) = 2(75 + 15) = 180\text{ kHz}" data-display>BW = 180 kHz</span></li>
+      <li><b>Against the allocation.</b> Channels are spaced 200 kHz apart, so
+        there is <b>20 kHz of guard band</b> between one station's Carson
+        bandwidth and the next channel's.</li>
+      <li><b>Against AM.</b> The same 15 kHz of audio by AM would need
+        <span data-tex="2f_m = 30">30 kHz</span> — so FM is spending
+        <b>six times the spectrum</b>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Step 4 is the trade
+    stated plainly, and it is worth asking whether it is a good one. <b>Six
+    times the bandwidth buys roughly β² = 25 times the output
+    signal-to-noise</b>, which is about 14 dB — and it is why FM broadcast
+    sounds the way it does and AM broadcast does not. <b>Notice that no extra
+    transmitter power was involved anywhere.</b> The quality was bought with
+    spectrum alone.</p>
+  </div>
+</div>
+
+<h2>3.4 Where the immunity actually comes from</h2>
+
+<p>The mechanism is worth understanding rather than accepting, because it
+explains the limits as well as the benefit.</p>
+
+<ul>
+  <li><b>The envelope is constant, so amplitude variation is by definition
+    not signal.</b> A receiver can pass the incoming signal through a limiter
+    that clips it into a square wave, discarding every amplitude change —
+    and most noise arrives as amplitude change.</li>
+  <li><b>The capture effect.</b> Two AM stations on one frequency both come
+    through, mixed. Two FM stations do not: the stronger one is demodulated
+    and the weaker is almost entirely suppressed, because the demodulator
+    tracks whichever signal dominates the angle.</li>
+  <li><b>It has a threshold.</b> Below roughly 10 dB of carrier-to-noise the
+    advantage collapses abruptly rather than degrading gracefully — FM goes
+    from clean to unusable over a couple of decibels, where AM fades slowly.
+    <b>This is why weak FM is silent and weak AM is scratchy.</b></li>
+</ul>
+
+<h2>3.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>FM: β = Δf/f<sub>m</sub></b>, so β falls as the message frequency
+        rises. <b>PM: β = k<sub>p</sub>A<sub>m</sub></b>, independent of
+        f<sub>m</sub>. <b>That is the distinguishing question.</b></li>
+    <li><b>Carson: BW = 2(Δf + f<sub>m</sub>) = 2f<sub>m</sub>(β + 1)</b>,
+        holding ~98% of the power.</li>
+    <li><b>β ≪ 1 ⇒ BW ≈ 2f<sub>m</sub></b> (narrowband, same as AM).
+        <b>β ≫ 1 ⇒ BW ≈ 2Δf</b> (wideband).</li>
+    <li>Sideband amplitudes are <b>J<sub>n</sub>(β)</b>, infinitely many, not
+        monotonic. <b>Carrier null at β = 2.405.</b></li>
+    <li><b>Total power is constant</b> at A<sub>c</sub>²/2, whatever β is.
+        FM redistributes power; it never adds any.</li>
+    <li><b>SNR gain ∝ β².</b> Bandwidth buys quiet.</li>
+    <li>Broadcast FM: <b>Δf = 75 kHz, f<sub>m</sub> = 15 kHz, β = 5,
+        BW = 180 kHz</b>, in a 200 kHz channel.</li>
+    <li><b>Constant envelope ⇒ a limiter can discard noise</b>, and gives the
+        capture effect. It also gives a hard threshold.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Angle modulation keeps the amplitude constant and puts the message in the
+  timing. Everything follows from that one choice. The spectrum becomes
+  Bessel-valued and unbounded, so bandwidth needs a convention — Carson's. The
+  power stops depending on the message, so modulation redistributes rather than
+  adds. And because amplitude no longer carries anything, a receiver is free to
+  throw amplitude away, which is where the noise immunity comes from.</p>
+  <p>Set against Part 2, the contrast is clean. <b>AM is cheap in spectrum and
+  expensive in power and quality; FM is the reverse.</b> Neither is better —
+  they sit at opposite ends of one trade, and which end you want depends on
+  whether spectrum or transmitter power is the thing you are short of.</p>
+  <p>Both, though, are still analog: a continuous message on a continuous
+  carrier. <b>Part 4 takes the same telephone channel this compilation has been
+  carrying since Signal Processing and turns it into numbers</b>, which changes
+  what the whole question is about.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"fm","title":"Part 3 · Angle Modulation","topics":["fm-index","fm-bandwidth","fm-vs-pm"],"count":6}'></div>
+
+<div data-reflex='{"only":["fm"],"count":5,"title":"Handbook Reflex · Part 3"}'></div>

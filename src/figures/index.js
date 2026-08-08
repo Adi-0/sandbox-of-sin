@@ -64,6 +64,7 @@ import "./dsp-synthesis.js"; // 114
 /* --- Communications --- */
 import "./fourier.js";       // 115 116
 import "./am.js";            // 117 118
+import "./fm.js";            // 119 120
 
 /* --- Power Systems --- */
 import "./power-factor.js";  // 37 38
