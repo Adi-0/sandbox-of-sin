@@ -267,7 +267,14 @@ function parse(tokens) {
     if (v in GREEK) return { k: "sym", v: GREEK[v], italic: /^[a-z]/.test(v) };
     if (v in RELOPS) return { k: "op", v: RELOPS[v], tight: v === "cdot" || v === "times" };
     if (v in SYMS) return { k: "sym", v: SYMS[v] };
-    if (v === "{" || v === "}") return { k: "sym", v };
+    /* Escaped literals. Without this line they fall through to the
+       render-nothing case below, so `50\%` prints as "50" on a page that
+       otherwise looks entirely correct. `unknownCommands` cannot catch it
+       either, because all of these are listed in STRUCTURAL and are
+       therefore "known" — which makes it exactly the silent failure the
+       note at the top of this file warns about. */
+    if (v === "{" || v === "}" || v === "%" || v === "#" ||
+        v === "$" || v === "_" || v === "&") return { k: "sym", v };
     return { k: "sym", v: "" };                    // unknown: render nothing
   }
 

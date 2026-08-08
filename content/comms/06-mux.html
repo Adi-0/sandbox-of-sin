@@ -1,0 +1,178 @@
+<p class="eyebrow">
+  <span>Communications · Part 6</span>
+  <span class="spec">NCEES 13.C</span>
+  <span>20 minute read</span>
+</p>
+
+<h1>Multiplexing</h1>
+
+<p class="lede">Part 4 built a T1 out of twenty-four telephone channels and never
+said how the twenty-four are kept apart. This part answers that — and the answer
+turns out to be one idea wearing three costumes.</p>
+
+<h2>6.1 A channel is a rectangle</h2>
+
+<p>Think of what a link actually offers as a rectangle: <b>a range of
+frequencies, for a stretch of time</b>. Multiplexing is the question of how to
+hand pieces of that rectangle to several users at once, and there are only
+three answers.</p>
+
+<div data-figure="muxShares"></div>
+
+<f-plate no="13.10" title="The three multiplexes" stamp="know"
+  caption="<b>The overhead column is the one worth carrying.</b> FDM's waste is
+  per channel and never amortises; TDM's is per frame and gets cheaper with
+  every user added. That single asymmetry is most of why the network is
+  digital.">
+  <f-row tex="\text{FDM: } B_{\text{total}} = N \cdot B_{\text{slot}}"
+         name="frequency division"
+         gloss="Each user keeps a slice of the band permanently. <b>3.4 kHz of speech in a 4 kHz slot = 15% guard</b>, whatever N is. Twelve channels = a 48 kHz <b>group</b>; sixty = a 240 kHz <b>supergroup</b>."></f-row>
+  <f-row tex="\text{TDM: } R_{\text{total}} = f_s\left(N b + \text{overhead}\right)"
+         name="time division"
+         gloss="Each user gets the whole band in rotation. <b>T1: 8000(24 × 8 + 1) = 1.544 Mbit/s</b>, framing overhead 1/193 = 0.52%. <b>The fraction falls as N rises.</b>"></f-row>
+  <f-row tex="\text{CDMA: } G_p = \frac{R_{\text{chip}}}{R_{\text{bit}}} = N"
+         name="code division"
+         gloss="Everyone transmits over everything at once, separated by orthogonal codes. The <b>processing gain</b> is the spreading factor — 10 log₁₀N in dB — and it is what buys back the interference."></f-row>
+  <f-row tex="\int_0^T s_i(t)\,s_j(t)\,dt = 0, \quad i \neq j"
+         name="what all three have in common"
+         gloss="<b>Orthogonality.</b> Disjoint time slots satisfy it, disjoint frequency bands satisfy it, and Walsh codes satisfy it while overlapping completely. <b>The three schemes are one idea.</b>"></f-row>
+</f-plate>
+
+<div class="worked">
+  <h4>Worked · <em>a 48 kHz group against a 1.544 Mbit/s T1</em></h4>
+  <div class="worked-body">
+    <p>Both carry telephone conversations over one link. Compare what each
+    wastes.</p>
+    <ol class="steps">
+      <li><b>FDM, twelve channels.</b> Each 3.4 kHz voice channel is assigned
+        a 4 kHz slot:
+        <span data-tex="12 \times 4 = 48\text{ kHz total}, \quad 12 \times 3.4 = 40.8\text{ kHz used}" data-display></span>
+        so <span data-tex="\frac{4 - 3.4}{4} = 15\%">15%</span> is guard band.</li>
+      <li><b>TDM, twenty-four channels.</b> A frame is 24 × 8 + 1 = 193 bits,
+        of which one is framing:
+        <span data-tex="\frac{1}{193} = 0.52\%" data-display></span></li>
+      <li><b>The ratio.</b> 15% against 0.52% — <b>a factor of 29</b>.</li>
+      <li><b>And they scale differently.</b> Double the FDM channel count and
+        the waste is still 15%, because it is charged per channel. Double the
+        TDM count and the framing bit is spread over twice as much payload, so
+        the waste <em>halves</em>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Step 4 is the
+    important one and it is easy to read past. <b>FDM's overhead is a
+    percentage; TDM's is a constant divided by the traffic.</b> One of those
+    improves with scale and the other cannot, so as trunk capacity grew the
+    comparison only got more lopsided. This is a rare case of one engineering
+    choice simply dominating another rather than trading against it —
+    <b>which is why the analog hierarchy of groups and supergroups was
+    replaced wholesale by the digital hierarchy of DS0s and T-carriers</b>,
+    and not merely supplemented by it.</p>
+  </div>
+</div>
+
+<h2>6.2 The idea underneath all three</h2>
+
+<p>It is tempting to file FDM, TDM and CDMA as three unrelated tricks. They are
+one trick. <b>Two signals can share a channel without interfering if they are
+orthogonal</b> — if the integral of their product over a symbol is zero — and
+each scheme is just a different way of arranging that.</p>
+
+<ul>
+  <li><b>TDM</b> makes the product zero by making one signal <em>zero whenever
+    the other is not</em>. Disjoint in time.</li>
+  <li><b>FDM</b> makes it zero because <em>distinct sinusoids integrate to
+    zero</em> over a whole number of cycles — the same fact Signal Processing
+    Part 1 used to extract Fourier coefficients.</li>
+  <li><b>CDMA</b> makes it zero with signals that <em>overlap completely in
+    both time and frequency</em>, and cancel anyway.</li>
+</ul>
+
+<p>The third is the surprising one, so it is worth measuring rather than
+believing.</p>
+
+<div data-figure="cdma"></div>
+
+<p>The cancellation is exact — <b>in integers, not approximately</b>. Walsh
+codes have inner product exactly N with themselves and exactly zero with each
+other, so a receiver multiplying the summed wire by one user's code and adding
+up the chips gets that user's bit while every other user vanishes term by term.
+The bars at the unused indices are dots on the axis, not small bars.</p>
+
+<div class="note payoff">
+  <span class="note-tag">And then take the codes one chip out of step</span>
+  <p style="margin-bottom:0">The whole thing collapses. A receiver's window
+  that is misaligned catches the tail of an interferer's <em>previous</em>
+  symbol and the head of its current one — two symbols with unrelated bits,
+  which is no longer anybody's code and is orthogonal to nothing. At eight
+  chips, <b>a single misaligned interferer can correlate 8 against a wanted
+  signal of 8</b>: interference exactly as strong as the signal. Worse, where
+  the damage lands is unpredictable — sometimes the wanted user survives
+  untouched and the energy appears on a code <b>nobody is transmitting at
+  all</b>. <b>Orthogonality is a property of aligned codes only</b>, and that
+  one caveat is most of what makes CDMA hard to build. It is why real networks
+  synchronise chips tightly within a cell, and use merely <em>near</em>
+  orthogonal PN codes between cells, where no common clock exists.</p>
+</div>
+
+<h2>6.3 Two refinements worth recognising</h2>
+
+<ul>
+  <li><b>Statistical TDM.</b> Plain TDM gives every user a slot whether they
+    are talking or not, and a silent user wastes it. Statistical TDM assigns
+    slots on demand, which needs an address in each slot — more overhead per
+    slot, far less waste overall. <b>This is packet switching in embryo</b>,
+    and it is the argument that eventually replaced the T-carrier itself.</li>
+  <li><b>WDM and OFDM.</b> Wavelength division multiplexing is FDM on a fibre,
+    with colours for channels. <b>OFDM</b> is FDM with the guard bands removed:
+    the subcarriers are spaced so that each one's nulls fall on its neighbours'
+    peaks, so they overlap and remain orthogonal anyway. <b>It recovers FDM's
+    15% and is the reason it appears in Wi-Fi, LTE and DVB.</b></li>
+</ul>
+
+<h2>6.4 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>FDM shares frequency, TDM shares time, CDMA shares neither — it
+        overlaps and separates by code.</b></li>
+    <li><b>All three work by orthogonality</b>: ∫s<sub>i</sub>s<sub>j</sub> = 0
+        for i ≠ j. Disjoint slots, disjoint bands, or orthogonal codes.</li>
+    <li><b>FDM total = N × slot.</b> 3.4 kHz voice in a 4 kHz slot is
+        <b>15% guard, independent of N</b>. Group = 12 × 4 = 48 kHz;
+        supergroup = 60 × 4 = 240 kHz.</li>
+    <li><b>TDM rate = f<sub>s</sub>(Nb + overhead).</b> T1 = 8000(24 × 8 + 1) =
+        1.544 Mbit/s, framing <b>1/193 = 0.52%</b> — <b>and it falls as N
+        rises</b>.</li>
+    <li><b>CDMA processing gain G<sub>p</sub> = chip rate / bit rate = N</b>,
+        or 10 log₁₀N in dB.</li>
+    <li><b>CDMA needs chip synchronisation.</b> Misaligned codes are not
+        orthogonal, and one badly timed interferer can be as loud as the
+        signal.</li>
+    <li><b>Statistical TDM</b> allocates slots on demand and needs addressing.
+        <b>OFDM</b> is FDM with overlapping but still-orthogonal subcarriers, so
+        no guard bands.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>Three schemes, one idea. Orthogonality is what lets signals share a
+  channel, and time slots, frequency bands and spreading codes are three ways
+  of arranging it. Seeing them as one thing is worth more than memorising three
+  definitions, because the exam asks which is which and the answer is always in
+  what is being kept disjoint.</p>
+  <p>The overheads are where the engineering lives. <b>FDM pays a fixed
+  percentage that never improves; TDM pays a constant that gets cheaper with
+  scale; CDMA pays neither and is charged in synchronisation instead.</b> None
+  of the three is free, and each bill is presented in a different currency.</p>
+  <p>That completes the module's arc. It began with a transform, spent power
+  and bandwidth on an analog message, replaced the message with numbers, found
+  the wall that numbers run into, and has now shared one channel among many.
+  <b>Part 7 puts the whole chain back together</b> and runs a set under exam
+  conditions.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"mux","title":"Part 6 · Multiplexing","topics":["mux-scheme","mux-bandwidth","mux-cdma"],"count":6}'></div>
+
+<div data-reflex='{"only":["mux"],"count":5,"title":"Handbook Reflex · Part 6"}'></div>

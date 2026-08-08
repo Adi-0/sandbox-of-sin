@@ -351,3 +351,69 @@ export function minDistance(pts) {
   }
   return d;
 }
+
+/* --- multiplexing ----------------------------------------------------------
+
+   All three ways of sharing a channel are the same trick — put the users on
+   mutually orthogonal signals — applied to a different variable. TDM uses
+   disjoint time slots, FDM disjoint frequency bands, CDMA overlapping codes
+   whose inner products vanish. Only the third needs any arithmetic here.   */
+
+/**
+ * Walsh–Hadamard codes of length n, n a power of two.
+ *
+ * H(1) = [1], H(2n) = [[H, H], [H, −H]]. Every pair of distinct rows has
+ * inner product exactly zero and every row with itself exactly n, in integer
+ * arithmetic — which is what lets a CDMA receiver recover one user's bit from
+ * a sum of all of them with the others cancelling exactly rather than nearly.
+ */
+export function walsh(n) {
+  let H = [[1]];
+  while (H.length < n) {
+    const m = H.length;
+    const N = [];
+    for (let i = 0; i < m; i++) N.push([...H[i], ...H[i]]);
+    for (let i = 0; i < m; i++) N.push([...H[i], ...H[i].map((v) => -v)]);
+    H = N;
+  }
+  return H;
+}
+
+/** Inner product. Integer in, integer out, for codes of ±1. */
+export const correlate = (a, b) => a.reduce((s, v, i) => s + v * b[i], 0);
+
+/**
+ * The chip sequence on the wire when several users transmit at once: the
+ * plain sum of their modulated waveforms. No user is attenuated and nothing
+ * is coordinated beyond the codes themselves.
+ *
+ * Takes waveforms rather than (codes, bits) so that a misaligned user — one
+ * whose window straddles two symbols, see lateWindow — sums the same way an
+ * aligned one does. The channel does not know which is which.
+ */
+export const cdmaChannel = (waveforms) =>
+  waveforms.reduce(
+    (acc, w) => acc.map((v, i) => v + w[i]),
+    new Array(waveforms[0].length).fill(0)
+  );
+
+/**
+ * What a receiver's correlation window sees from a user whose chips arrive
+ * `late` chips behind it: the tail of that user's PREVIOUS symbol followed
+ * by the head of the current one.
+ *
+ * This, and not a cyclic rotation, is what losing chip synchronisation
+ * actually does. A cyclic shift of a Walsh row is often still orthogonal to
+ * the other rows, so it understates the damage; the window straddling two
+ * symbols with independent bits is what destroys orthogonality. At n = 8 a
+ * single interferer one chip out of step can correlate 8 against a wanted
+ * signal of 8 — interference exactly as strong as the signal.
+ */
+export function lateWindow(code, late, prevBit, curBit) {
+  const n = code.length;
+  const s = ((late % n) + n) % n;
+  return [
+    ...code.slice(n - s).map((v) => v * prevBit),
+    ...code.slice(0, n - s).map((v) => v * curBit),
+  ];
+}

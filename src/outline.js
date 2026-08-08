@@ -409,6 +409,12 @@ export const MODULES = [
         blurb: "The decision, when it fails, and the one bound no cleverness gets around",
         minutes: 22, figures: [123, 124],
       },
+      {
+        id: "mux", n: 6, spec: "13.C",
+        title: "Multiplexing",
+        blurb: "Sharing one channel three ways — and why they are all the same trick",
+        minutes: 20, figures: [125, 126],
+      },
     ],
   },
   {

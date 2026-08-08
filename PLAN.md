@@ -15,7 +15,7 @@ This file is the durable memory across turns. Read it first.
 | **Linear Systems** | 7 | 5–8 | 7 | 76–88 | complete |
 | **Control Systems** | 12 | 6–9 | 7 | 89–101 | complete |
 | **Signal Processing** | 8 | 5–8 | 7 | 102–114 | complete |
-| **Communications** | 13 | 5–8 | 5 of 7 | 115–124 | in progress |
+| **Communications** | 13 | 5–8 | 6 of 7 | 115–126 | in progress |
 
 Nine of seventeen areas; 66–102 of the 110 questions. A shared orientation part
 sits ahead of all of them. Plate numbers run in the order the modules were
@@ -369,8 +369,8 @@ src/
     figure.js       plate scaffolding, rAF loop, reduced-motion
     rng.js          seeded RNG so a problem set is reproducible
     bench.js        problem engine, MCQ UI, stepped solutions
-  figures/          one module per part, 124 plates
-  problems/         one module per part, 200 generators
+  figures/          one module per part, 126 plates
+  problems/         one module per part, 203 generators
 
 content/
   start/            orientation
@@ -433,7 +433,7 @@ them reading as drafting ink rather than highlighter. Do not nudge them by eye.
 
 ## 8. Status
 
-Sixty-three parts, 124 plates, 200 generators, 271 reflex items.
+Sixty-four parts, 126 plates, 203 generators, 278 reflex items.
 
 | Module | Part | Plates | Generators |
 |---|---|---|---|
@@ -500,19 +500,20 @@ Sixty-three parts, 124 plates, 200 generators, 271 reflex items.
 | Comms | 3 Angle Modulation | 119–120 | 3 |
 | Comms | 4 PCM and the Digital Link | 121–122 | 3 |
 | Comms | 5 Digital Communications | 123–124 | 3 |
+| Comms | 6 Multiplexing | 125–126 | 3 |
 
 ### Verified
 
 Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
 read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 63 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 64 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 124 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 126 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
-- `genall.mjs` — every one of the 200 generators run over 100 seeds, checking
+- `genall.mjs` — every one of the 203 generators run over 100 seeds, checking
   that no question offers a duplicate option, fewer than three options, a bad
   answer index, an unexpanded template literal or a NaN. **This one earned its
   place immediately**: it found 58 faulty generators on its first run, and the
@@ -647,8 +648,8 @@ Each was invisible on the page and wrong in a way a reader would have paid for.
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- Finish **Communications** (13) — Parts 6–7 remain: Multiplexing (13.C)
-  and the synthesis part.
+- Finish **Communications** (13) — Part 7 remains: the synthesis part
+  (13.A–13.D) and its mixed bench.
 - Then Electromagnetics, Computer Networks, Computer Systems, Software
   Development, Engineering Economics, Ethics, Probability and Statistics,
   Properties of Electrical Materials.
@@ -692,7 +693,7 @@ and cross-links rather than restates. Fourier *series* proper belongs to area
 
 ### The Communications arc, as built so far
 
-Five of seven parts, plates 115–124. The spine is a single question asked four
+Six of seven parts, plates 115–126. The spine is a single question asked four
 times: *what does it cost to move a message, and what does the money buy?*
 Part 1 supplies the transform machinery, Parts 2–3 spend power and bandwidth
 on an analog message, and Part 4 stops sending the message at all and sends
@@ -705,7 +706,7 @@ numbers instead.
 | 3 | 13.A | Angle Modulation |
 | 4 | 13.A | PCM and the Digital Link |
 | 5 | 13.D | Digital Communications |
-| 6 | 13.C | Multiplexing — *not built* |
+| 6 | 13.C | Multiplexing |
 | 7 | 13.A–13.D | Synthesis and the Mixed Bench — *not built* |
 
 **Not this module's job.** Signal Processing Part 1 owns the Fourier *series*
@@ -714,7 +715,8 @@ quantisation error and SNR = 6.02n + 1.76. Part 4 uses all three by name and
 re-derives none of them. What Part 4 genuinely adds is the *rate* chain
 (R_b = n f_s), the *channel* it demands (Nyquist signalling, not Nyquist
 sampling), and companding — which nothing else in the compilation touches.
-Part 5 owns the decision, the constellation, and Shannon.
+Part 5 owns the decision, the constellation, and Shannon; Part 6 owns
+multiplexing and the orthogonality argument that unifies all three schemes.
 
 **Three results that came out better than the design intended:**
 
@@ -743,6 +745,24 @@ needs 9.59 dB for a 1e-5 BER; the dial-up ceiling 3400 log2(1001) =
 33.9 kbit/s against V.34's actual 33.6; the Shannon–Nyquist collision
 1 + S/N = M² (binary 4.77 dB, 4-ary 11.76, 16-ary 24.08, 64-ary 36.12); and
 the Eb/N0 floor tending to ln 2 = -1.59 dB.
+
+**A renderer bug found while building Part 6, and fixed.** `tex.js` silently
+discarded the escaped literals `\%`, `\#`, `\$`, `\_` and `\&` — they fell
+through to the render-nothing branch — and `unknownCommands` could not catch
+it because all five are listed in STRUCTURAL and are therefore "known". This is
+precisely the silent failure the note at the top of that file warns about. Every
+percent sign in the compilation had been vanishing: `%OS` in Linear Systems,
+slip and efficiency in Machines, voltage regulation in Transmission, tolerance
+in Control. One line in `parseAtom` fixes all of them.
+
+**Part 6's exact results:** Walsh orthogonality verified exhaustively — all
+1024 row pairs at N = 32, inner product exactly 0 off-diagonal and exactly N
+on it; all 2048 recoveries of eight simultaneous users at N = 8, every one
+exact. Misalignment is modelled as the correlation window straddling two of the
+interferer's symbols, not as a cyclic shift — a rotated Walsh row is often
+still orthogonal, which understates the damage. Worst single-interferer
+crosstalk at one chip of offset: 8 against a wanted 8. FDM guard 15% fixed
+against TDM framing 1/193 = 0.52% at 24 channels, a factor of 29.
 
 **Numbers verified exactly, not approximately:** DS0 = 64 kbit/s;
 T1 = 193 × 8000 = 1.544 Mbit/s; E1 = 2.048 Mbit/s; µ-law at 8 bits = 38.05 dB

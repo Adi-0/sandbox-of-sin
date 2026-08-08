@@ -1479,3 +1479,333 @@ defineReflex([
     because: "Binary 4.8 dB, 4-ary 11.8, 16-ary 24.1. Below it the scheme is impossible, not merely hard.",
   },
 ]);
+
+/* ==========================================================================
+   Part 6 — multiplexing
+
+   The exam asks which scheme is which, and then asks for one of two pieces
+   of arithmetic: an FDM band or a TDM frame. The distractors are dropping
+   the guard band, dropping the framing bit, confusing the spreading factor
+   with a bandwidth, and quoting a processing gain as a ratio where decibels
+   were asked for.
+   ========================================================================== */
+
+defineProblem("mux-scheme", {
+  topic: "Choosing a multiplexing scheme",
+  lookup: "Electrical → Communications → Multiplexing (FDM, TDM, CDMA)",
+  make(rng) {
+    const q = rng.pick(["identify", "common", "overhead", "sync"]);
+
+    if (q === "common") {
+      return {
+        stem: `FDM, TDM and CDMA all let several users share one channel without interfering. What property do all three rely on?`,
+        choices: options(
+          { text: "orthogonality — the signals' inner product over a symbol is zero", why: "" },
+          [
+            { text: "each user transmits at a different power", why: `Power differences do not separate users; they make the problem worse. <b>The near–far effect is a hazard in CDMA</b>, not a mechanism, and FDM and TDM do not use power at all.` },
+            { text: "the receiver filters out everything but its own user", why: `A filter is <em>how</em> FDM achieves separation, but it cannot explain TDM or CDMA, where the users share the same band completely. The common property is more general than any one mechanism.` },
+            { text: "each user is allocated a different bandwidth", why: `True only of FDM. In TDM every user has the whole bandwidth, and in CDMA every user has all of it all of the time.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Two signals share a channel harmlessly when ${T(`\\int_0^T s_i(t)s_j(t)\\,dt = 0`)} for i ≠ j — <b>the receiver's correlator then sees nothing from anyone else</b>.`,
+          `<b>TDM</b> makes the product zero by making one signal zero whenever the other is not: disjoint in time.`,
+          `<b>FDM</b> makes it zero because distinct sinusoids integrate to zero over a whole number of cycles — the same fact that extracts a Fourier coefficient.`,
+          `<b>CDMA</b> makes it zero with signals that overlap completely in both time and frequency and cancel anyway, using codes with zero cross-correlation.`,
+          `<b>They are one idea in three costumes</b>, and recognising that is worth more than three separate definitions.`,
+        ],
+      };
+    }
+
+    if (q === "overhead") {
+      return {
+        stem: `As the number of channels grows, what happens to the fractional overhead of an FDM link and of a TDM link?`,
+        choices: options(
+          { text: "FDM's stays constant; TDM's falls", why: "" },
+          [
+            { text: "both stay constant", why: `FDM's does — the guard band is charged per channel, so the percentage never moves. <b>TDM's does not</b>: the framing bit is charged per frame, and a frame holds more payload as channels are added.` },
+            { text: "both fall", why: `Only TDM's falls. <b>FDM's guard band is per channel</b>, so adding channels adds guard bands in exact proportion and the fraction is unchanged.` },
+            { text: "FDM's falls; TDM's stays constant", why: `Exactly backwards. The framing bit is the thing that amortises; the guard band is the thing that cannot.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>FDM:</b> N channels each need their own guard band, so the total is N × slot and the wasted fraction is (slot − signal)/slot — <b>the same 15% at any N</b>.`,
+          `<b>TDM:</b> a frame is Nb + 1 bits, of which one is framing, so the wasted fraction is ${T(`1/(Nb + 1)`)}.`,
+          `At 2 channels of 8 bits that is 1/17 = 5.9%; at 24 it is <b>1/193 = 0.52%</b>.`,
+          `<b>One improves with scale and the other cannot.</b> That asymmetry, more than any single number, is why the trunk network went digital and time-division rather than adding more FDM groups.`,
+        ],
+      };
+    }
+
+    if (q === "sync") {
+      return {
+        stem: `Two CDMA users' chip sequences drift <b>one chip out of alignment</b>. What happens?`,
+        choices: options(
+          { text: "the codes stop being orthogonal and the users interfere", why: "" },
+          [
+            { text: "nothing — the codes are orthogonal at any alignment", why: `Orthogonality is a property of <b>aligned</b> codes. A misaligned receiver's window catches the tail of the interferer's previous symbol and the head of the current one — two symbols with unrelated bits, which is not anybody's code.` },
+            { text: "the data rate falls but the users stay separated", why: `The rate is unaffected; separation is what fails. A one-chip offset can let an interferer correlate as strongly as the wanted signal.` },
+            { text: "the receiver automatically resynchronises", why: `Real receivers do track chip timing, and they have to — but that is a mechanism built to prevent this failure, not a reason the failure does not exist.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Aligned Walsh codes have inner product exactly zero, so interfering users cancel term by term in integer arithmetic.`,
+          `<b>Misaligned, the receiver's window straddles two of the interferer's symbols</b>, carrying independent bits. That composite sequence is not a code word and is orthogonal to nothing.`,
+          `At 8 chips a single misaligned interferer can reach a correlation of <b>8 against a wanted signal of 8</b> — as loud as the signal itself.`,
+          `<b>Hence tight chip synchronisation within a cell</b>, and merely <em>near</em>-orthogonal PN codes between cells, where no common clock exists.`,
+        ],
+      };
+    }
+
+    const CASES = [
+      {
+        stem: "Users share the whole bandwidth but are each given a repeating slot of time",
+        right: "TDM", others: ["FDM", "CDMA", "SSB"],
+        why: { FDM: "FDM divides the frequency axis, not the time axis — each user keeps a band permanently.", CDMA: "CDMA divides neither; all users occupy the whole band all of the time.", SSB: "SSB is a modulation scheme, not a multiplexing one. It halves one signal's bandwidth; it does not share a channel." },
+      },
+      {
+        stem: "Each user is permanently assigned its own slice of the spectrum, separated by guard bands",
+        right: "FDM", others: ["TDM", "CDMA", "PCM"],
+        why: { TDM: "TDM gives each user the whole band briefly rather than a slice permanently, and needs framing rather than guard bands.", CDMA: "CDMA assigns no slice at all — the users overlap completely and are separated by code.", PCM: "PCM is a way of digitising one signal, not of sharing a channel between several." },
+      },
+      {
+        stem: "Every user transmits over the whole band at the same time, separated by orthogonal codes",
+        right: "CDMA", others: ["TDM", "FDM", "OFDM"],
+        why: { TDM: "TDM users are disjoint in time. Here they overlap completely in both time and frequency.", FDM: "FDM users are disjoint in frequency. Here there is no division of the band at all.", OFDM: "OFDM is still frequency division — its subcarriers overlap but each user has its own set. The separation is by frequency, not by code." },
+      },
+      {
+        stem: "Subcarriers overlap in frequency but are spaced so each one's nulls fall on its neighbours' peaks, so no guard bands are needed",
+        right: "OFDM", others: ["CDMA", "TDM", "plain FDM"],
+        why: { CDMA: "CDMA separates by code, not by frequency. OFDM's users still have distinct subcarriers — they just abut without waste.", TDM: "Nothing here is divided in time; the description is entirely about frequency spacing.", "plain FDM": "Plain FDM needs guard bands precisely because its channels are not arranged to be orthogonal. Removing them is what makes this OFDM." },
+      },
+    ];
+    const c = rng.pick(CASES);
+    return {
+      stem: `${c.stem}. Which multiplexing scheme is this?`,
+      choices: options(
+        { text: c.right, why: "" },
+        c.others.map((o) => ({ text: o, why: c.why[o] }))),
+      answer: 0,
+      steps: [
+        `<b>Ask what is being kept disjoint</b> — that single question separates all three schemes.`,
+        `<b>Disjoint in time → TDM. Disjoint in frequency → FDM. Disjoint in neither, separated by code → CDMA.</b>`,
+        `Here the answer is <b>${c.right}</b>.`,
+        `<b>All of them work by orthogonality</b>; they differ only in which variable is used to arrange it.`,
+      ],
+    };
+  },
+});
+
+defineProblem("mux-bandwidth", {
+  topic: "FDM bandwidth and TDM frame arithmetic",
+  lookup: "Electrical → Communications → Multiplexing",
+  make(rng) {
+    const ask = rng.pick(["fdm", "count", "tdm", "guard"]);
+
+    if (ask === "guard") {
+      return {
+        stem: `An FDM system gives each <b>3.4 kHz</b> voice channel a <b>4 kHz</b> slot. What fraction of the spectrum is guard band, and how does it change as channels are added?`,
+        choices: options(
+          { text: "15%, and it does not change", why: "" },
+          [
+            { text: "15%, falling as channels are added", why: `The fraction is right and the trend is not. <b>Every channel brings its own guard band</b>, so the waste grows in exact proportion to the traffic and the percentage is fixed. <b>Falling overhead is TDM's property</b>, where one framing bit is shared by the whole frame.` },
+            { text: "8.5%, and it does not change", why: `That is 0.6/7.06 or some other pairing. The guard is <b>0.6 kHz out of the 4 kHz slot</b>: 0.6/4 = 15%.` },
+            { text: "17.6%, and it does not change", why: `That is 0.6/3.4 — the guard measured against the <em>signal</em> rather than against the slot. The question asks what fraction of the spectrum is wasted, and the spectrum consumed per channel is the 4 kHz slot.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\frac{4 - 3.4}{4} = \\frac{0.6}{4} = 0.15`),
+          `<b>15%, and it is the same at any number of channels</b> — N channels need N slots, so both the total and the waste scale together.`,
+          `<b>Set that against TDM</b>, where the overhead is one framing bit per frame: 1/(8N + 1), which is 5.9% at two channels and 0.52% at twenty-four.`,
+          `<b>One is a percentage and the other is a constant divided by the traffic.</b> That is why the comparison gets more lopsided as links grow, and why the analog hierarchy was replaced rather than extended.`,
+        ],
+      };
+    }
+
+    if (ask === "count") {
+      const B = rng.pick([48, 120, 240, 480]);
+      const n = B / 4;
+      return {
+        stem: `An FDM link of <b>${num(B, 0)} kHz</b> carries voice channels in <b>4 kHz</b> slots. How many channels does it hold?`,
+        choices: options(
+          { text: `${num(n, 0)}`, why: "" },
+          [
+            { text: `${num(Math.floor(B / 3.4), 0)}`, why: `Divided by the 3.4 kHz signal rather than the 4 kHz slot. <b>The guard band is part of what each channel consumes</b>, so the slot is the divisor.` },
+            { text: `${num(B / 8, 0)}`, why: `An 8 kHz divisor — that is the telephone <em>sample rate</em>, which belongs to the digital chain and has nothing to do with an analog FDM slot.` },
+            { text: `${num(B, 0)}`, why: `That is the bandwidth in kHz, not a channel count. Each channel takes 4 kHz of it.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`N = \\frac{${num(B, 0)}}{4} = ${num(n, 0)}\\text{ channels}`),
+          `<b>${num(n, 0)} channels.</b> ${n === 12 ? "Twelve in 48 kHz is the ITU <b>group</b>." : n === 60 ? "Sixty in 240 kHz is the ITU <b>supergroup</b>." : "The ITU hierarchy is built from groups of 12 (48 kHz) and supergroups of 60 (240 kHz)."}`,
+          `<b>Divide by the slot, not by the signal.</b> Each channel consumes its guard band whether it uses it or not — that is what a guard band is for.`,
+        ],
+      };
+    }
+
+    if (ask === "tdm") {
+      /* N is drawn away from 24 as often as onto it, so the T1 answer cannot
+         be produced by recognition alone. */
+      const N = rng.pick([6, 12, 24, 30]);
+      const f = 8000, b = 8;
+      const perFrame = N * b + 1;
+      const rate = perFrame * f;
+      return {
+        stem: `A TDM system carries <b>${num(N, 0)}</b> voice channels. Each contributes <b>8 bits</b> per frame, one framing bit is added, and frames are sent <b>8000</b> times a second. What is the line rate?`,
+        choices: options(
+          { text: `${fixed(rate / 1e6, 3)} Mbit/s`, why: "" },
+          [
+            { text: `${fixed((N * b * f) / 1e6, 3)} Mbit/s`, why: `The framing bit was left out. That is the <b>payload</b> rate; the line has to carry the framing bit too, so the frame is ${num(N, 0)} × 8 + 1 = ${num(perFrame, 0)} bits.` },
+            { text: `${fixed((perFrame * f * N) / 1e6, 3)} Mbit/s`, why: `Multiplied by the channel count twice. <b>The ${num(N, 0)} channels are already inside the ${num(perFrame, 0)}-bit frame</b>, and the frame rate is 8000, not ${num(N, 0)} × 8000.` },
+            { text: `${num(perFrame, 0)} kbit/s`, why: `That is the frame length in bits, quoted as a rate. Multiply by the 8000 frames per second.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\text{bits per frame} = ${num(N, 0)}(8) + 1 = ${num(perFrame, 0)}`),
+          `<b>The frame rate is the sample rate.</b> Each channel contributes one sample per frame and is sampled 8000 times a second, so there are 8000 frames per second — not ${num(N, 0)} × 8000.`,
+          D(`R = ${num(perFrame, 0)} \\times 8000 = ${sig(rate, 4)}\\text{ bit/s}`),
+          N === 24
+            ? `<b>1.544 Mbit/s — this is the T1 exactly</b>, and worth recognising on sight. Framing costs 1/193 = 0.52%.`
+            : `<b>${fixed(rate / 1e6, 3)} Mbit/s</b>, with the framing bit costing 1/${num(perFrame, 0)} = ${fixed(100 / perFrame, 2)}%. At 24 channels the same arithmetic gives the T1's 1.544 Mbit/s.`,
+        ],
+      };
+    }
+
+    const N = rng.pick([12, 24, 60]);
+    const total = 4 * N;
+    return {
+      stem: `<b>${num(N, 0)}</b> voice channels of 3.4 kHz each are frequency-division multiplexed, each into a <b>4 kHz</b> slot. What total bandwidth is needed?`,
+      choices: options(
+        { text: `${num(total, 0)} kHz`, why: "" },
+        [
+          { text: `${num(3.4 * N, 1)} kHz`, why: `The guard bands were left out. Each channel consumes its whole <b>4 kHz slot</b>, not just the 3.4 kHz its speech occupies — that is the price of keeping neighbours apart.` },
+          { text: `${num(8 * N, 0)} kHz`, why: `An 8 kHz slot — that is the telephone <em>sample rate</em>, which belongs to the digital chain in Part 4. An analog FDM slot is <b>4 kHz</b>, and no sampling happens here at all.` },
+          { text: `${num(4, 0)} kHz`, why: `That is one channel's slot. Multiply by the ${num(N, 0)} channels.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`B = N \\times B_{\\text{slot}} = ${num(N, 0)} \\times 4 = ${num(total, 0)}\\text{ kHz}`),
+        `<b>${num(total, 0)} kHz</b>, of which ${num(3.4 * N, 1)} kHz is speech and ${num(0.6 * N, 1)} kHz is guard band — <b>15%, as it is at every channel count</b>.`,
+        N === 12 ? `<b>Twelve channels in 48 kHz is the ITU group</b>, the unit the analog long-distance network was assembled from.` : N === 60 ? `<b>Sixty channels in 240 kHz is the ITU supergroup</b> — five groups of twelve.` : `The ITU hierarchy stacks these: 12 channels make a 48 kHz group, and 5 groups make a 240 kHz supergroup.`,
+      ],
+    };
+  },
+});
+
+defineProblem("mux-cdma", {
+  topic: "Spread spectrum and processing gain",
+  lookup: "Electrical → Communications → Spread spectrum / CDMA",
+  make(rng) {
+    const ask = rng.pick(["gain", "gain", "chiprate", "why"]);
+
+    if (ask === "why") {
+      return {
+        stem: `In CDMA every user transmits over the whole band at the same time. How does a receiver recover one user's bits?`,
+        choices: options(
+          { text: "it multiplies the received sum by that user's code and adds up the chips", why: "" },
+          [
+            { text: "it filters out the frequencies the other users are using", why: `There are none to filter — every user occupies the entire band. <b>That is what makes CDMA different from FDM</b>, and it is why a filter cannot be the answer.` },
+            { text: "it listens only during that user's time slot", why: `There are no time slots. Every user transmits continuously, which is what makes CDMA different from TDM.` },
+            { text: "it subtracts the other users' signals, which it decodes first", why: `Successive interference cancellation is a real technique, but it is not what makes basic CDMA work — and it would need the other users' data, which the receiver does not have. <b>Orthogonal codes make the others cancel without being known.</b>` },
+          ]),
+        answer: 0,
+        steps: [
+          `The wire carries the plain sum of every user's code times their bit — a waveform that is nobody's code in particular.`,
+          `The receiver <b>correlates</b>: multiply that sum by its own code, chip by chip, and add.`,
+          `Its own code correlates with itself to give <b>N</b>, the code length. Every other user's code correlates with it to give <b>exactly zero</b>, so they cancel term by term without ever being decoded.`,
+          `<b>The result is the wanted bit, times N.</b> Divide by N and the interference from every other user has simply gone.`,
+        ],
+      };
+    }
+
+    if (ask === "chiprate") {
+      /* The two sets are kept disjoint: with rb equal to n the "that is the
+         bit rate" and "that is the spreading factor" distractors print the
+         same number and the option set collapses to three. */
+      const rb = rng.pick([9.6, 19.2, 64]);
+      const n = rng.pick([32, 128, 256]);
+      const rc = rb * n;
+      return {
+        stem: `A <b>${num(rb, 1)} kbit/s</b> stream is spread with a <b>${num(n, 0)}-chip</b> code. What is the chip rate?`,
+        choices: options(
+          { text: `${sig(rc / 1e3, 4)} Mchip/s`, why: "" },
+          [
+            { text: `${sig(rb / n, 3)} kchip/s`, why: `Divided instead of multiplied. <b>Each bit is replaced by ${num(n, 0)} chips</b>, so the chip rate is ${num(n, 0)} times the bit rate — spreading always makes the signalling faster and the spectrum wider.` },
+            { text: `${num(rb, 1)} kchip/s`, why: `That is the bit rate. Spreading does not change the information rate, but it does change the rate at which the channel is driven.` },
+            { text: `${num(n, 0)} kchip/s`, why: `That is the spreading factor, which is a dimensionless count of chips per bit, not a rate.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`R_{\\text{chip}} = N R_b = ${num(n, 0)} \\times ${num(rb, 1)} = ${sig(rc, 4)}\\text{ kchip/s}`),
+          `<b>${sig(rc / 1e3, 4)} Mchip/s.</b> The bandwidth follows the chip rate, so the signal now occupies about ${num(n, 0)} times the spectrum it needed unspread.`,
+          `<b>That is the trade, and it is not a loss</b>: ${num(n, 0)} users can share the same widened band using ${num(n, 0)} orthogonal codes, so the spectrum per user is unchanged.`,
+        ],
+      };
+    }
+
+    const n = rng.pick([16, 32, 64, 128, 256]);
+    const db = 10 * Math.log10(n);
+    return {
+      stem: `A spread-spectrum link uses a <b>${num(n, 0)}-chip</b> code per bit. What is its processing gain in decibels?`,
+      choices: options(
+        { text: `${fixed(db, 1)} dB`, why: "" },
+        [
+          { text: `${num(n, 0)} dB`, why: `That is the spreading factor as a plain ratio. <b>Processing gain in decibels is 10 log₁₀N</b> — the ratio itself is ${num(n, 0)}, which is ${fixed(db, 1)} dB.` },
+          { text: `${fixed(20 * Math.log10(n), 1)} dB`, why: `Twenty log, which is for amplitude ratios. <b>Processing gain is a power ratio</b> — chip rate over bit rate, or equivalently spread bandwidth over unspread — so 10 log₁₀.` },
+          { text: `${fixed(10 * Math.log10(Math.log2(n)), 1)} dB`, why: `log₂N is the number of <em>bits</em> needed to index the code, which is a different quantity entirely. The gain is the chip count itself.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`G_p = \\frac{R_{\\text{chip}}}{R_b} = N = ${num(n, 0)}`),
+        D(`10\\log_{10}(${num(n, 0)}) = ${fixed(db, 2)}\\text{ dB}`),
+        `<b>${fixed(db, 1)} dB.</b> This is how much a narrowband interferer is suppressed when the receiver despreads: the wanted signal collapses back to its original bandwidth while the interferer is spread out and mostly filtered away.`,
+        `<b>It is also the number of users the code set can hold</b> — ${num(n, 0)} orthogonal codes of length ${num(n, 0)} — which is why processing gain and capacity are the same parameter looked at twice.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "mux",
+    stem: "What do FDM, TDM and CDMA all rely on?",
+    tool: "Orthogonality — ∫sᵢsⱼ = 0 for i ≠ j",
+    because: "Disjoint in time, disjoint in frequency, or overlapping with zero-correlation codes. One idea, three costumes.",
+  },
+  {
+    part: "mux",
+    stem: "FDM bandwidth for N voice channels?",
+    tool: "N × 4 kHz — 3.4 kHz of speech plus a 15% guard",
+    because: "Group = 12 × 4 = 48 kHz; supergroup = 60 × 4 = 240 kHz. The 15% never amortises.",
+  },
+  {
+    part: "mux",
+    stem: "TDM line rate and framing overhead?",
+    tool: "fs(Nb + 1); overhead 1/(Nb + 1)",
+    because: "T1 is 8000(24×8+1) = 1.544 Mbit/s, framing 0.52% — and the fraction FALLS as channels are added.",
+  },
+  {
+    part: "mux",
+    stem: "Which overhead improves with scale?",
+    tool: "TDM's. FDM's is fixed at 15%",
+    because: "Guard bands are charged per channel; the framing bit is shared by the whole frame. A factor of 29 at 24 channels.",
+  },
+  {
+    part: "mux",
+    stem: "CDMA processing gain?",
+    tool: "Gp = chip rate / bit rate = N, or 10 log₁₀N dB",
+    because: "It is also the number of orthogonal codes available — capacity and interference rejection are the same parameter.",
+  },
+  {
+    part: "mux",
+    stem: "What breaks CDMA?",
+    tool: "Chip misalignment — shifted codes are not orthogonal",
+    because: "At 8 chips a single misaligned interferer can correlate 8 against a wanted 8. Hence tight sync within a cell.",
+  },
+  {
+    part: "mux",
+    stem: "What is OFDM, in one line?",
+    tool: "FDM with subcarriers spaced so their nulls fall on neighbours' peaks",
+    because: "They overlap and stay orthogonal, so the guard bands vanish. Recovers FDM's 15%; used in Wi-Fi and LTE.",
+  },
+]);

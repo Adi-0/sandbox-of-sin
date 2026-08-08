@@ -15,9 +15,9 @@ and Computer)* exam, built one knowledge area at a time.
 | 7 | **Linear Systems** | area 7 | 5–8 | 7 | 76–88 |
 | 12 | **Control Systems** | area 12 | 6–9 | 7 | 89–101 |
 | 8 | **Signal Processing** | area 8 | 5–8 | 7 | 102–114 |
-| 13 | **Communications** | area 13 | 5–8 | 5 | 115–124 |
+| 13 | **Communications** | area 13 | 5–8 | 6 | 115–126 |
 
-A hundred and twenty-four live plates, two hundred problem
+A hundred and twenty-six live plates, two hundred and three problem
 generators, and one right triangle followed from the first plate to the last.
 
 ## Run it
@@ -45,7 +45,7 @@ tablet and read it on a train.
 
 The FE exam is **closed book with an electronic reference** — the NCEES FE
 Reference Handbook, searchable, open in a second window. Almost every formula
-in these sixty-two parts is in it.
+in these sixty-three parts is in it.
 
 So the usual approach — flashcard the formulas until they stick — spends your
 most expensive resource on the one thing the exam gives away. What the handbook
@@ -202,6 +202,7 @@ work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 3 | **Angle Modulation** — a spectrum you cannot guess, and noise immunity bought with bandwidth | 13.A | 22 min | 119–120 |
 | 4 | **PCM and the Digital Link** — turning a message into numbers costs a factor of n, and buys exact repeaters | 13.A | 20 min | 121–122 |
 | 5 | **Digital Communications** — the decision, when it fails, and the one bound no cleverness gets around | 13.D | 22 min | 123–124 |
+| 6 | **Multiplexing** — sharing one channel three ways, and why they are all the same trick | 13.C | 20 min | 125–126 |
 
 ### Module 9 — Electronics (NCEES area 9)
 
@@ -221,7 +222,7 @@ prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 200 types is a seeded
+- **Problems are generated, not stored.** Each of the 203 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
@@ -267,8 +268,8 @@ src/
     circuit.js      schematic drawing on a grid, plus a network solver
     boolean.js      exact minimal-SOP solver, shared by the plates and the bench
     poly.js         polynomials, roots, Routh arrays and RK4 time responses
-  figures/          one file per part, 124 plates
-  problems/         one file per part, 200 generators
+  figures/          one file per part, 126 plates
+  problems/         one file per part, 203 generators
 
 content/
   start/            the orientation part
@@ -280,7 +281,7 @@ content/
   linear/           Linear Systems, 7 parts
   control/          Control Systems, 7 parts
   dsp/              Signal Processing, 7 parts
-  comms/            Communications, 5 parts
+  comms/            Communications, 6 parts
 ```
 
 Vanilla ES modules. No framework, no external JavaScript, no maths library.
