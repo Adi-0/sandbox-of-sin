@@ -3,7 +3,7 @@
 An interactive educator for the NCEES *Fundamentals of Engineering (Electrical
 and Computer)* exam, built one knowledge area at a time.
 
-**Covered so far — 61 to 94 of the 110 questions:**
+**Covered so far — 66 to 102 of the 110 questions:**
 
 | | Module | NCEES | Questions | Parts | Plates |
 |---|---|---|---|---|---|
@@ -15,8 +15,9 @@ and Computer)* exam, built one knowledge area at a time.
 | 7 | **Linear Systems** | area 7 | 5–8 | 7 | 76–88 |
 | 12 | **Control Systems** | area 12 | 6–9 | 7 | 89–101 |
 | 8 | **Signal Processing** | area 8 | 5–8 | 7 | 102–114 |
+| 13 | **Communications** | area 13 | 5–8 | 4 | 115–122 |
 
-A hundred and fourteen live plates, a hundred and eighty-five problem
+A hundred and twenty-two live plates, a hundred and ninety-seven problem
 generators, and one right triangle followed from the first plate to the last.
 
 ## Run it
@@ -44,7 +45,7 @@ tablet and read it on a train.
 
 The FE exam is **closed book with an electronic reference** — the NCEES FE
 Reference Handbook, searchable, open in a second window. Almost every formula
-in these fifty-one parts is in it.
+in these sixty-one parts is in it.
 
 So the usual approach — flashcard the formulas until they stick — spends your
 most expensive resource on the one thing the exam gives away. What the handbook
@@ -192,6 +193,15 @@ work, and a 0.6 power factor simply *is* a 53.13° triangle.
 | 6 | **The Z-Transform and the Unit Circle** — stability becomes a distance | 8.C | 24 min | 112–113 |
 | 7 | **Synthesis and the Mixed Bench** | 8.A–8.C | 12 min | 114 |
 
+### Module 13 — Communications (NCEES area 13)
+
+| Part | | NCEES | Read | Plates |
+|---|---|---|---|---|
+| 1 | **Fourier Transforms and Duality** — narrow in time is wide in frequency, and the product never moves | 13.B | 20 min | 115–116 |
+| 2 | **Amplitude Modulation** — multiplying by a carrier moves a spectrum, and the carrier itself carries nothing | 13.A | 22 min | 117–118 |
+| 3 | **Angle Modulation** — a spectrum you cannot guess, and noise immunity bought with bandwidth | 13.A | 22 min | 119–120 |
+| 4 | **PCM and the Digital Link** — turning a message into numbers costs a factor of n, and buys exact repeaters | 13.A | 20 min | 121–122 |
+
 ### Module 9 — Electronics (NCEES area 9)
 
 | Part | | NCEES | Read | Plates |
@@ -210,7 +220,7 @@ prints.
 
 ### Beyond a static guide
 
-- **Problems are generated, not stored.** Each of the 185 types is a seeded
+- **Problems are generated, not stored.** Each of the 197 types is a seeded
   generator producing fresh numbers with a fully worked solution. "New numbers"
   gives a genuinely new set at the same difficulty.
 - **Distractors are the actual mistakes.** A wrong option is built by dropping
@@ -256,8 +266,8 @@ src/
     circuit.js      schematic drawing on a grid, plus a network solver
     boolean.js      exact minimal-SOP solver, shared by the plates and the bench
     poly.js         polynomials, roots, Routh arrays and RK4 time responses
-  figures/          one file per part, 114 plates
-  problems/         one file per part, 185 generators
+  figures/          one file per part, 122 plates
+  problems/         one file per part, 197 generators
 
 content/
   start/            the orientation part
@@ -268,6 +278,8 @@ content/
   digital/          Digital Systems, 7 parts
   linear/           Linear Systems, 7 parts
   control/          Control Systems, 7 parts
+  dsp/              Signal Processing, 7 parts
+  comms/            Communications, 4 parts
 ```
 
 Vanilla ES modules. No framework, no external JavaScript, no maths library.
@@ -333,7 +345,7 @@ Verified with no horizontal scroll down to a 360 px viewport, in both themes.
 
 ---
 
-Eight of the seventeen NCEES knowledge areas are done. The next ones —
-Electromagnetics, Communications, Computer Systems, Software Development —
+Nine of the seventeen NCEES knowledge areas are done. The next ones —
+Electromagnetics, Computer Systems, Software Development —
 reuse `styles/` and `src/lib/` unchanged and slot into `outline.js` as further
 modules, so the compilation keeps reading as one work.

@@ -1,0 +1,223 @@
+<p class="eyebrow">
+  <span>Communications · Part 4</span>
+  <span class="spec">NCEES 13.A</span>
+  <span>20 minute read</span>
+</p>
+
+<h1>PCM and the Digital Link</h1>
+
+<p class="lede">Parts 2 and 3 sent a continuous message on a continuous
+carrier, and traded power against bandwidth to do it. This part throws the
+continuous message away first — replaces it with a stream of integers — and
+the trade changes shape entirely.</p>
+
+<h2>4.1 Three operations, two of them already yours</h2>
+
+<p>Pulse code modulation is <b>sample, quantise, encode</b>, and this
+compilation has already built two of the three. Signal Processing Part 2 owns
+sampling: what f<sub>s</sub> ≥ 2B means and what happens when it is violated.
+Electronics Part 6 owns quantisation: the step size, the error it leaves, and
+the 6.02n + 1.76 dB that follows. <b>Neither is re-derived here.</b> What is
+new is what happens when you put them in series and then have to transmit the
+result.</p>
+
+<f-plate no="13.7" title="The PCM chain" stamp="know"
+  caption="<b>Two of these three lines are the whole of PCM's arithmetic, and
+  the exam asks for them constantly.</b> The bit rate is a multiplication and
+  the bandwidth is a division; almost every PCM question is one of those two
+  with the numbers dressed differently.">
+  <f-row tex="f_s \geq 2B" name="sample"
+         gloss="Nyquist, from Signal Processing Part 2. Real systems take a margin: <b>speech to 3.4 kHz is sampled at 8 kHz</b>, not 6.8, to leave the anti-alias filter room to roll off."></f-row>
+  <f-row tex="L = 2^n \quad\Rightarrow\quad \text{SNR} = 6.02n + 1.76 \ \text{dB}"
+         name="quantise"
+         gloss="From Electronics Part 6. <b>Six decibels a bit</b>, and the figure is for a full-scale sinusoid — which matters enormously in §4.3."></f-row>
+  <f-row tex="R_b = n f_s" name="encode"
+         gloss="Bits per second: bits per sample times samples per second. <b>8 × 8000 = 64 kbit/s</b> is one DS0, the unit the telephone network is built from."></f-row>
+  <f-row tex="B_{\min} = \frac{R_b}{2\log_2 M}" name="transmit"
+         gloss="Nyquist's <em>signalling</em> limit, not the sampling one — a different theorem with the same name attached. For binary, <b>B = R_b/2</b>."></f-row>
+</f-plate>
+
+<div class="note">
+  <span class="note-tag">Two theorems, one name</span>
+  <p style="margin-bottom:0">Nyquist has a sampling theorem
+  (f<sub>s</sub> ≥ 2B, about not losing a waveform) and a signalling theorem
+  (a bandwidth B carries at most 2B symbols per second, about not smearing
+  pulses into each other). <b>They are different results and they appear at
+  different ends of this chain</b> — the first at the source, the second at
+  the channel. Confusing them is the commonest way to get a PCM bandwidth
+  question wrong by a factor of two or four.</p>
+</div>
+
+<h2>4.2 The bill</h2>
+
+<div data-figure="pcmBudget"></div>
+
+<p>Chain the four lines together and the cost is stark. A message occupying
+B hertz as analog, sampled at 2B and coded to n bits, needs</p>
+
+<p><span data-tex="B_{\min} = \frac{R_b}{2} = \frac{n f_s}{2} = \frac{n(2B)}{2} = nB" data-display></span></p>
+
+<p>— <b>exactly n times the bandwidth it started with</b>. Eight bits, eight
+times the spectrum. Sixteen bits, sixteen times. The telephone case is worse
+than the ideal because of the sampling margin: 3.4 kHz of speech becomes
+64 kbit/s, which wants 32 kHz of channel, a <b>9.4× expansion</b>.</p>
+
+<p>Set against Part 3 this looks terrible. FM spent six times the bandwidth to
+buy 14 dB. PCM spends eight or nine times to buy 50 dB — but the comparison is
+not the point, because <b>the two are not buying the same thing</b>.</p>
+
+<h2>4.3 What the expansion actually buys</h2>
+
+<p>Not signal-to-noise. Something analog modulation cannot offer at any
+bandwidth, at any power, by any technique.</p>
+
+<div class="note payoff">
+  <span class="note-tag">A repeater that removes noise instead of amplifying it</span>
+  <p>Every analog link accumulates. An amplifier boosts the noise picked up
+  since the last one along with the signal, so a thousand-mile route arrives
+  with the sum of everything every span collected. Nothing fixes this; it is
+  what amplifying a continuous quantity means.</p>
+  <p style="margin-bottom:0">A digital repeater does not amplify. It
+  <b>decides</b>: the received voltage is nearer a one than a zero, so it
+  transmits a clean, full-amplitude one. <b>The noise from the previous span
+  is not reduced — it is discarded entirely</b>, and the signal leaving the
+  repeater is bit-for-bit what left the transmitter. A thousand miles of
+  regenerated line is as clean as one mile, until the noise gets large enough
+  to flip a decision, at which point it fails abruptly rather than gradually.
+  <b>That cliff is what the bandwidth bought</b>, and it is why the world's
+  trunk networks went digital while the telephones on the ends were still
+  analog.</p>
+</div>
+
+<div class="worked">
+  <h4>Worked · <em>a T1 carrier</em></h4>
+  <div class="worked-body">
+    <p>A T1 line multiplexes 24 telephone channels. Each is sampled at 8 kHz
+    and coded to 8 bits; each frame carries one channel's sample from all 24,
+    plus a single framing bit. Find the frame length, the line rate, and the
+    fraction of it that is overhead.</p>
+    <ol class="steps">
+      <li><b>Bits in a frame.</b>
+        <span data-tex="24 \times 8 + 1 = 193\ \text{bits}" data-display>193 bits</span></li>
+      <li><b>Frames per second.</b> One sample from each channel per frame, and
+        each channel is sampled 8000 times a second, so there are
+        <b>8000 frames per second</b> — the frame rate is the sample rate.</li>
+      <li><b>Line rate.</b>
+        <span data-tex="R_b = 193 \times 8000 = 1{,}544{,}000\ \text{bit/s}" data-display>1.544 Mbit/s</span></li>
+      <li><b>Overhead.</b> The payload is 24 × 64 kbit/s = 1.536 Mbit/s, so
+        the framing costs 8 kbit/s —
+        <span data-tex="\frac{8}{1544} = 0.52\%">0.52%</span>.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Every number in
+    that chain is exact, which is why <b>1.544 Mbit/s is worth recognising on
+    sight</b> — it identifies the whole system. Step 2 is where the mistakes
+    happen: the frame rate <em>is</em> the sample rate, because a frame is one
+    round of samples. Multiplying by 24 somewhere in there is the standard
+    error. And note that <b>the framing bit is not free but is very nearly
+    so</b>: half a percent buys the receiver the ability to find the frame
+    boundary at all, without which the 24 channels cannot be told apart.
+    Europe's E1 makes the other choice — 32 slots of 8 bits with no odd bit,
+    <b>2.048 Mbit/s</b>, spending two entire slots on framing and signalling
+    rather than one bit.</p>
+  </div>
+</div>
+
+<h2>4.4 The trouble with even steps</h2>
+
+<p>The 6.02n + 1.76 figure has a condition attached that is easy to read past:
+<b>it is the SNR for a signal at full scale</b>. A uniform quantiser's error is
+the same size whatever the signal does, so as the signal gets quieter the
+ratio falls with it, decibel for decibel.</p>
+
+<p>At eight bits, full scale gets 49.9 dB. A talker 30 dB down gets
+<b>19.9 dB</b>, which is audibly gritty. And a telephone carries mostly quiet
+talkers — loud and soft speakers differ by around 30 dB, and almost none of
+them are at full scale, because a system that clipped the loud ones would be
+worse than one that hissed at the quiet ones.</p>
+
+<div data-figure="companding"></div>
+
+<p>The fix is to <b>compress before quantising and expand after</b> —
+<em>com</em>press + ex<em>pand</em> = companding. Squash the loud parts of the
+range so the quantiser's evenly spaced levels land unevenly on the signal,
+crowded where quiet signals live and spread out where loud ones do. The
+receiver applies the inverse and gets the amplitudes back.</p>
+
+<f-plate no="13.8" title="Companding" stamp="handbook"
+  caption="<b>The two standards disagree about the formula and agree about the
+  result</b> — 38.05 dB against 38.17 dB at eight bits. Recognising which
+  belongs to which continent is worth more marks than either equation.">
+  <f-row tex="y = \frac{\ln(1 + \mu|x|)}{\ln(1 + \mu)}, \quad \mu = 255"
+         name="µ-law"
+         gloss="North America and Japan. One smooth curve. Implemented as <b>eight straight chords, each twice as wide as the one below</b>, which is what the left-hand plate draws."></f-row>
+  <f-row tex="\text{SNR} \approx 6.02n + 4.77 - 20\log_{10}\left[\ln(1+\mu)\right]"
+         name="what it gives"
+         gloss="<b>38 dB at eight bits, and it stays there</b> as the signal drops — the level dependence is gone, which is the entire object of the exercise."></f-row>
+  <f-row tex="\text{slope ratio} = 1 + \mu = 256"
+         name="the mechanism in one number"
+         gloss="The curve's slope at the origin over its slope at full scale. <b>The smallest signals get 256 times the resolution of the largest</b>, which is where the flat SNR comes from."></f-row>
+  <f-row tex="A = 87.6 \ \Rightarrow \ \text{SNR} \approx 6.02n + 4.77 - 20\log_{10}(1 + \ln A)"
+         name="A-law"
+         gloss="Europe. A straight segment below 1/A joined to a logarithm above it. <b>Within 0.11 dB of µ-law</b> at the same bit count."></f-row>
+</f-plate>
+
+<p>The plate makes the trade explicit. Companding <b>gives up about 12 dB at
+full scale</b> — a place the signal essentially never is — <b>to gain about
+18 dB thirty decibels down</b>, where it lives. The crossover sits at
+−11.9 dBFS, and it does not move when the bit count changes: adding a bit
+lifts both curves by 6.02 dB together. <b>The choice of law and the choice of
+resolution are independent decisions</b>, which is a convenient thing to
+notice in a question that changes only one of them.</p>
+
+<h2>4.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>R<sub>b</sub> = n f<sub>s</sub></b> — bits per sample times samples
+        per second. This is the most-asked line in the part.</li>
+    <li><b>B<sub>min</sub> = R<sub>b</sub>/2</b> for binary, and
+        <b>R<sub>b</sub>/(2 log₂M)</b> for M levels. This is Nyquist's
+        <em>signalling</em> limit, not his sampling one.</li>
+    <li><b>Binary PCM costs a factor of n in bandwidth</b>: a Nyquist-sampled
+        B-hertz message needs nB hertz of channel.</li>
+    <li><b>DS0 = 64 kbit/s</b> (8 kHz × 8 bits).
+        <b>T1 = 24 × 8 + 1 = 193 bits × 8000 = 1.544 Mbit/s.</b>
+        <b>E1 = 32 × 8 × 8000 = 2.048 Mbit/s.</b> The frame rate is the sample
+        rate.</li>
+    <li><b>SNR = 6.02n + 1.76 dB at full scale</b>, and it falls a decibel per
+        decibel as the signal drops.</li>
+    <li><b>Companding holds it flat instead</b>: about 38 dB at eight bits, for
+        both µ = 255 and A = 87.6.</li>
+    <li><b>µ = 255 ⇒ small signals get 1 + µ = 256× the resolution</b> of large
+        ones. µ-law is North America; A-law is Europe.</li>
+    <li><b>The point of digitising is the regenerative repeater</b> — noise is
+        discarded at every span rather than accumulated. Nothing analog can do
+        this at any bandwidth.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>PCM replaces a waveform with numbers, and pays for it in spectrum: a
+  factor of n, straightforwardly, with no clever coding available to avoid it.
+  What it buys is not a better signal-to-noise ratio for the money — FM is a
+  better deal by that measure — but a different kind of link altogether, one
+  where noise stops accumulating because every repeater makes a decision
+  instead of an amplification.</p>
+  <p>Companding is the second idea, and it is a design decision rather than a
+  law of nature. <b>A uniform quantiser optimises the case that never
+  occurs.</b> Bending the scale so that the levels sit where the signal
+  actually is costs 12 dB at a full scale nothing reaches and returns 18 dB
+  where every conversation lives. That reasoning — <em>optimise the typical
+  case, not the extreme</em> — recurs well beyond communications.</p>
+  <p>One thing has been quietly assumed throughout: that the repeater's
+  decision is correct. It is not always. <b>Part 5 asks what happens when
+  noise flips a bit</b>, which is where Shannon finally sets a limit that no
+  amount of bandwidth or power can talk its way around.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"pcm","title":"Part 4 · PCM and the Digital Link","topics":["pcm-rate","pcm-snr","pcm-bandwidth"],"count":6}'></div>
+
+<div data-reflex='{"only":["pcm"],"count":5,"title":"Handbook Reflex · Part 4"}'></div>

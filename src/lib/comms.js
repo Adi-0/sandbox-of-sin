@@ -175,3 +175,57 @@ export const shapeOf = {
   exp: (tau) => (t) => Math.exp(-Math.abs(t) / tau),
   gauss: (tau) => (t) => Math.exp(-(t * t) / (2 * tau * tau)),
 };
+
+/**
+ * Quantisation SNR for a sinusoid, in dB, at a level `levelDb` below full
+ * scale. Electronics Part 6 gives the full-scale figure; what PCM needs is
+ * what happens as the signal gets quieter, because that is the entire
+ * argument for companding.
+ */
+export const pcmSnrUniform = (bits, levelDb = 0) => 6.02 * bits + 1.76 + levelDb;
+
+/**
+ * Quantisation SNR with mu-law companding, which is very nearly independent
+ * of level — that is the point of it.
+ *
+ *   SNR ≈ 6.02n + 4.77 − 20 log10[ln(1 + mu)]
+ *
+ * At mu = 255 and 8 bits this is about 38 dB, held across the whole range,
+ * against uniform's 50 dB at full scale falling a decibel per decibel.
+ */
+export const pcmSnrCompanded = (bits, mu = 255) =>
+  6.02 * bits + 4.77 - 20 * Math.log10(Math.log(1 + mu));
+
+/** Level below full scale at which companding starts to win. */
+export function compandingCrossover(bits, mu = 255) {
+  return pcmSnrCompanded(bits, mu) - pcmSnrUniform(bits, 0);
+}
+
+/**
+ * The same for A-law, Europe's companding standard, which is a different
+ * curve reached by a different argument and lands within 0.11 dB of mu-law
+ * at 8 bits. Worth knowing they agree; not worth memorising both.
+ */
+export const pcmSnrALaw = (bits, A = 87.6) =>
+  6.02 * bits + 4.77 - 20 * Math.log10(1 + Math.log(A));
+
+/** The mu-law compression curve itself, for drawing. x in [-1, 1]. */
+export const muLaw = (x, mu = 255) =>
+  Math.sign(x) * (Math.log(1 + mu * Math.abs(x)) / Math.log(1 + mu));
+
+/** A-law's curve: linear below 1/A, logarithmic above, continuous at the join. */
+export function aLaw(x, A = 87.6) {
+  const a = Math.abs(x), d = 1 + Math.log(A);
+  return Math.sign(x) * (a < 1 / A ? (A * a) / d : (1 + Math.log(A * a)) / d);
+}
+
+/**
+ * How much finer the quantiser steps are at the bottom of the range than at
+ * the top.
+ *
+ * For mu-law the slope is mu/[(1 + mu|x|) ln(1 + mu)], so the ratio between
+ * x = 0 and x = 1 is exactly 1 + mu — 256 at mu = 255. The compressor buys
+ * small signals 256 times the resolution it gives large ones, which is the
+ * whole mechanism in one number.
+ */
+export const companderSlopeRatio = (mu = 255) => 1 + mu;

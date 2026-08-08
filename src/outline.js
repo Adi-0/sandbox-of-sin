@@ -397,6 +397,12 @@ export const MODULES = [
         blurb: "A spectrum you cannot guess, and noise immunity bought with bandwidth",
         minutes: 22, figures: [119, 120],
       },
+      {
+        id: "pcm", n: 4, spec: "13.A",
+        title: "PCM and the Digital Link",
+        blurb: "Turning a message into numbers costs a factor of n in bandwidth — and buys exact repeaters",
+        minutes: 20, figures: [121, 122],
+      },
     ],
   },
   {

@@ -15,8 +15,9 @@ This file is the durable memory across turns. Read it first.
 | **Linear Systems** | 7 | 5–8 | 7 | 76–88 | complete |
 | **Control Systems** | 12 | 6–9 | 7 | 89–101 | complete |
 | **Signal Processing** | 8 | 5–8 | 7 | 102–114 | complete |
+| **Communications** | 13 | 5–8 | 4 of 7 | 115–122 | in progress |
 
-Eight of seventeen areas; 61–94 of the 110 questions. A shared orientation part
+Nine of seventeen areas; 66–102 of the 110 questions. A shared orientation part
 sits ahead of all of them. Plate numbers run in the order the modules were
 built, not in module order — Electronics was written after Power Systems,
 Digital Systems after Electronics, and Control Systems after Linear Systems.
@@ -368,8 +369,8 @@ src/
     figure.js       plate scaffolding, rAF loop, reduced-motion
     rng.js          seeded RNG so a problem set is reproducible
     bench.js        problem engine, MCQ UI, stepped solutions
-  figures/          one module per part, 114 plates
-  problems/         one module per part, 185 generators
+  figures/          one module per part, 122 plates
+  problems/         one module per part, 197 generators
 
 content/
   start/            orientation
@@ -432,7 +433,7 @@ them reading as drafting ink rather than highlighter. Do not nudge them by eye.
 
 ## 8. Status
 
-Forty-four parts, 88 plates, 146 generators, 157 reflex items.
+Sixty-two parts, 122 plates, 197 generators, 264 reflex items.
 
 | Module | Part | Plates | Generators |
 |---|---|---|---|
@@ -494,19 +495,23 @@ Forty-four parts, 88 plates, 146 generators, 157 reflex items.
 | DSP | 5 Digital Filters and Difference Equations | 110–111 | 3 |
 | DSP | 6 The Z-Transform and the Unit Circle | 112–113 | 3 |
 | DSP | 7 Synthesis and mixed bench | 114 | (reuses 18) |
+| Comms | 1 Fourier Transforms and Duality | 115–116 | 3 |
+| Comms | 2 Amplitude Modulation | 117–118 | 3 |
+| Comms | 3 Angle Modulation | 119–120 | 3 |
+| Comms | 4 PCM and the Digital Link | 121–122 | 3 |
 
 ### Verified
 
 Run from `scratchpad/` against `python3 serve.py -p 8123`. All of them now
 read the part list from `outline.js`, so they cannot drift as modules are added:
 
-- `check.mjs` — all 58 parts load, every figure and formula plate mounts, no
+- `check.mjs` — all 62 parts load, every figure and formula plate mounts, no
   unrendered `data-tex` survives, no console errors.
 - `interact.mjs` — every slider driven to min/mid/max, every scenario button
   clicked, a full bench answered and a reflex drill run, on every part.
-- `xref.mjs` — every "Plate N" named in prose resolves, all 114 plate numbers
+- `xref.mjs` — every "Plate N" named in prose resolves, all 122 plate numbers
   are used exactly once with no gaps, every bench topic has a generator.
-- `genall.mjs` — every one of the 185 generators run over 100 seeds, checking
+- `genall.mjs` — every one of the 197 generators run over 100 seeds, checking
   that no question offers a duplicate option, fewer than three options, a bad
   answer index, an unexpanded template literal or a NaN. **This one earned its
   place immediately**: it found 58 faulty generators on its first run, and the
@@ -641,14 +646,11 @@ Each was invisible on the page and wrong in a way a reader would have paid for.
 
 The remaining NCEES areas, in the order that reuses the most:
 
-- Electromagnetics, Communications, Computer Networks, Computer Systems,
-  Software Development, Engineering Economics, Ethics, Probability and
-  Statistics, Properties of Electrical Materials.
-
-  Communications (13, 5–8 q) is the natural next one: its Fourier series and
-  transform section is already half-built by Signal Processing Part 1, and
-  modulation is a spectrum-shifting argument that Part 2's replica picture
-  makes almost free.
+- Finish **Communications** (13) — Parts 5–7 remain: Digital
+  Communications (13.D), Multiplexing (13.C), and the synthesis part.
+- Then Electromagnetics, Computer Networks, Computer Systems, Software
+  Development, Engineering Economics, Ethics, Probability and Statistics,
+  Properties of Electrical Materials.
 
 Counts above are from the specification PDF. **Read it again before starting a
 module** rather than trusting this list — the area 10 per-unit mistake was
@@ -686,6 +688,49 @@ and cross-links rather than restates. Fourier *series* proper belongs to area
 - **z = 0.6 + 0.8j** has |z| = 1 exactly and ∠z = 53.13° exactly: the triangle,
   normalised, sits precisely on the unit circle, which is precisely the
   marginal case. Pulled to r = 0.9 it gives 1 − 1.08z⁻¹ + 0.81z⁻².
+
+### The Communications arc, as built so far
+
+Four of seven parts, plates 115–122. The spine is a single question asked four
+times: *what does it cost to move a message, and what does the money buy?*
+Part 1 supplies the transform machinery, Parts 2–3 spend power and bandwidth
+on an analog message, and Part 4 stops sending the message at all and sends
+numbers instead.
+
+| Part | Spec | Title |
+|---|---|---|
+| 1 | 13.B | Fourier Transforms and Duality |
+| 2 | 13.A | Amplitude Modulation |
+| 3 | 13.A | Angle Modulation |
+| 4 | 13.A | PCM and the Digital Link |
+| 5 | 13.D | Digital Communications — *not built* |
+| 6 | 13.C | Multiplexing — *not built* |
+| 7 | 13.A–13.D | Synthesis and the Mixed Bench — *not built* |
+
+**Not this module's job.** Signal Processing Part 1 owns the Fourier *series*
+and Part 2 owns sampling and aliasing; Electronics Part 6 owns the LSB,
+quantisation error and SNR = 6.02n + 1.76. Part 4 uses all three by name and
+re-derives none of them. What Part 4 genuinely adds is the *rate* chain
+(R_b = n f_s), the *channel* it demands (Nyquist signalling, not Nyquist
+sampling), and companding — which nothing else in the compilation touches.
+
+**Three results that came out better than the design intended:**
+
+- **Plate 116 demonstrates Nyquist's signalling limit by measurement.** The eye
+  of alternating 1010 data is exactly closed below B = R_b/2 and snaps open at
+  precisely R_b/2 — the bound is observed, not asserted.
+- **Plate 119's carrier vanishes at β = 2.405**, the first zero of J₀,
+  computed to 1e-18. Nothing in AM behaves remotely like it.
+- **Plate 122's step pattern is the real standard.** With µ = 255 and eight
+  equal output divisions, the input boundaries land on (2^k − 1)/255 — each
+  interval exactly twice the last, which is precisely the eight-chord
+  approximation real µ-law codecs implement. The slope ratio is exactly
+  1 + µ = 256, and A-law's is exactly A.
+
+**Numbers verified exactly, not approximately:** DS0 = 64 kbit/s;
+T1 = 193 × 8000 = 1.544 Mbit/s; E1 = 2.048 Mbit/s; µ-law at 8 bits = 38.05 dB
+against A-law's 38.17 dB, 0.11 dB apart; the companding crossover at
+−11.87 dBFS, independent of bit count.
 
 Each slots into `outline.js` as another module and continues the plate
 numbering, so the compilation keeps reading as one work.

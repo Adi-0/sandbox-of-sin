@@ -13,7 +13,7 @@
 
 import { defineProblem, defineReflex } from "../lib/bench.js";
 import { num, fixed, sig } from "../lib/fmt.js";
-import { amPower, carson } from "../lib/comms.js";
+import { amPower, carson, pcmSnrUniform, pcmSnrCompanded } from "../lib/comms.js";
 
 const T = (s) => `<span data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
 const D = (s) => `<span class="math display" data-tex="${s.replace(/"/g, "&quot;")}"></span>`;
@@ -829,5 +829,311 @@ defineReflex([
     stem: "Where does FM's noise immunity come from?",
     tool: "Constant envelope — a limiter can throw amplitude away",
     because: "It also gives the capture effect and a hard threshold near 10 dB carrier-to-noise.",
+  },
+]);
+
+/* ==========================================================================
+   Part 4 — PCM and the digital link
+
+   Three questions carry almost all of this part: the bit rate (a
+   multiplication), the channel it needs (a division), and the SNR (one
+   formula with a condition attached). The distractors are the errors that
+   actually happen — confusing the two Nyquist theorems, dropping the 1.76,
+   using the number of levels where the number of bits belongs, and treating
+   M itself as log2 M.
+   ========================================================================== */
+
+defineProblem("pcm-rate", {
+  topic: "PCM bit rate and framing",
+  lookup: "Electrical → Communications → Pulse code modulation",
+  make(rng) {
+    const ask = rng.pick(["rate", "rate", "nyq", "t1"]);
+
+    if (ask === "t1") {
+      const line = 193 * 8000;
+      return {
+        stem: `A T1 carrier multiplexes <b>24</b> voice channels. Each is sampled at 8 kHz and coded to 8 bits, and every frame carries one sample from each channel plus a <b>single framing bit</b>. What is the line rate?`,
+        choices: options(
+          { text: "1.544 Mbit/s", why: "" },
+          [
+            { text: "1.536 Mbit/s", why: `That is the <b>payload</b>, 24 × 64 kbit/s. It leaves out the framing bit — 8000 more bits a second, which is only 0.52% but is the difference between the two numbers the exam quotes.` },
+            { text: "2.048 Mbit/s", why: `That is <b>E1</b>, Europe's carrier: 32 slots of 8 bits at 8000 frames per second, with two whole slots for framing and signalling rather than one bit. Recognising which is which is worth a mark on its own.` },
+            { text: "37.056 Mbit/s", why: `Multiplied by 24 twice. The 24 channels are already inside the 193-bit frame; the frame rate is <b>8000</b>, not 24 × 8000.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\text{bits per frame} = 24(8) + 1 = 193`),
+          `<b>The frame rate is the sample rate.</b> Each channel contributes one sample per frame and is sampled 8000 times a second, so there are 8000 frames per second — not 24 × 8000.`,
+          D(`R_b = 193 \\times 8000 = 1{,}544{,}000\\text{ bit/s}`),
+          `<b>1.544 Mbit/s exactly</b>, and worth recognising on sight. The framing costs 8 kbit/s, or ${fixed(100 * 8000 / line, 2)}% — cheap for the ability to find the frame boundary at all.`,
+        ],
+      };
+    }
+
+    if (ask === "nyq") {
+      /* B is given, not fs: the point is that the sample rate has to be
+         derived before the multiplication can happen. */
+      const B = rng.pick([4, 5, 10, 20]);
+      const n = rng.pick([6, 8, 10, 12]);
+      const fs = 2 * B;
+      const Rb = fs * n;
+      return {
+        stem: `A message band-limited to <b>${num(B, 0)} kHz</b> is sampled at the Nyquist rate and each sample is coded to <b>${num(n, 0)} bits</b>. What is the resulting bit rate?`,
+        choices: options(
+          { text: `${num(Rb, 0)} kbit/s`, why: "" },
+          [
+            { text: `${num(B * n, 0)} kbit/s`, why: `The message bandwidth was used as the sample rate. <b>Nyquist requires f<sub>s</sub> ≥ 2B</b>, so the sample rate is ${num(fs, 0)} kHz, twice what was used here.` },
+            { text: `${num(4 * B * n, 0)} kbit/s`, why: `Doubled twice. f<sub>s</sub> = 2B = ${num(fs, 0)} kHz, and R<sub>b</sub> = n f<sub>s</sub> — there is no second factor of two.` },
+            { text: `${num(fs, 0)} kbit/s`, why: `That is the sample rate in <em>samples</em> per second. Each sample carries ${num(n, 0)} bits, so the bit rate is ${num(n, 0)} times larger.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`f_s = 2B = 2(${num(B, 0)}) = ${num(fs, 0)}\\text{ kHz}`),
+          D(`R_b = n f_s = ${num(n, 0)}(${num(fs, 0)}) = ${num(Rb, 0)}\\text{ kbit/s}`),
+          `<b>${num(Rb, 0)} kbit/s.</b> Note what this does to the spectrum: sent in binary it needs R<sub>b</sub>/2 = ${num(Rb / 2, 0)} kHz of channel, against ${num(B, 0)} kHz as analog — <b>exactly n times wider</b>, which is what binary PCM always costs.`,
+        ],
+      };
+    }
+
+    /* n >= 4 keeps 2^n away from 2n, which would make two distractors the
+       same number. */
+    const fs = rng.pick([8, 20, 44.1, 48]);
+    const n = rng.pick([4, 8, 10, 12, 16]);
+    const Rb = fs * n;
+    return {
+      stem: `An analog-to-digital converter samples at <b>${num(fs, 1)} kHz</b> and produces <b>${num(n, 0)}-bit</b> words. What bit rate must the link carry?`,
+      choices: options(
+        { text: `${num(Rb, 1)} kbit/s`, why: "" },
+        [
+          { text: `${num(fs, 1)} kbit/s`, why: `That is the sample rate — the number of <em>samples</em> per second. Each one carries ${num(n, 0)} bits, so the bit rate is ${num(n, 0)} times larger.` },
+          { text: `${num(Rb / 2, 1)} kbit/s`, why: `That is the minimum <em>channel bandwidth</em> in kHz for binary signalling, R<sub>b</sub>/2 — a different quantity, and the next step after this one.` },
+          { text: `${num(2 * Rb, 1)} kbit/s`, why: `A factor of two too many. The Nyquist factor is already inside f<sub>s</sub>; it does not get applied again to the bit rate.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`R_b = n f_s = ${num(n, 0)} \\times ${num(fs, 1)} = ${num(Rb, 1)}\\text{ kbit/s}`),
+        `<b>${num(Rb, 1)} kbit/s.</b> Bits per sample times samples per second, and nothing else enters it.`,
+        `<b>The number of levels is a trap here.</b> ${num(n, 0)} bits means ${num(2 ** n, 0)} levels, and the level count is what sets the quantisation error — but what goes down the wire is ${num(n, 0)} bits.`,
+      ],
+    };
+  },
+});
+
+defineProblem("pcm-snr", {
+  topic: "Quantisation SNR and bit count",
+  lookup: "Electrical → Communications → Quantisation noise / companding",
+  make(rng) {
+    const ask = rng.pick(["direct", "bits", "level", "compand"]);
+
+    if (ask === "level") {
+      const n = rng.pick([8, 10, 12]);
+      const down = rng.pick([20, 30, 40]);
+      const full = pcmSnrUniform(n);
+      return {
+        stem: `A ${num(n, 0)}-bit uniform quantiser gives ${fixed(full, 1)} dB of signal-to-noise ratio for a full-scale sinusoid. What does it give for a signal <b>${num(down, 0)} dB below full scale</b>?`,
+        choices: options(
+          { text: `${fixed(full - down, 1)} dB`, why: "" },
+          [
+            { text: `${fixed(full, 1)} dB — unchanged`, why: `Only if the quantiser were companded. <b>A uniform quantiser's step size is fixed</b>, so the noise stays put while the signal shrinks, and the ratio falls with the signal.` },
+            { text: `${fixed(full - down / 6.02, 1)} dB`, why: `The level drop was converted to bits first. It should not be — <b>the SNR falls one decibel per decibel</b>, directly, because the noise power does not move at all.` },
+            { text: `${fixed(full + down, 1)} dB`, why: `The wrong way. A quieter signal against the same noise floor is a <em>worse</em> ratio, not a better one.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>The quantiser's noise does not depend on the signal.</b> The step size Δ is fixed by the full-scale range and the bit count, so the error power Δ²/12 is the same for a whisper as for a shout.`,
+          D(`\\text{SNR} = 6.02n + 1.76 + L = ${fixed(full, 2)} - ${num(down, 0)} = ${fixed(full - down, 2)}\\text{ dB}`),
+          `<b>${fixed(full - down, 1)} dB</b> — the 6.02n + 1.76 figure is a full-scale number, and that condition is the whole reason companding exists.`,
+          `<b>Speech spends almost all its time here</b>, ${num(down, 0)} dB or more below full scale. Optimising the full-scale case optimises a case that never occurs.`,
+        ],
+      };
+    }
+
+    if (ask === "compand") {
+      return {
+        stem: `Why does telephone PCM compand — µ-law in North America, A-law in Europe — rather than quantise uniformly?`,
+        choices: options(
+          { text: "to hold the SNR roughly constant as the signal level varies", why: "" },
+          [
+            { text: "to reduce the bit rate needed for the same quality", why: `The bit rate is unchanged — 8 bits a sample either way. <b>Companding redistributes the same 256 levels</b>; it does not remove any.` },
+            { text: "to reduce the channel bandwidth", why: `The bandwidth follows the bit rate, and the bit rate has not moved. Companding is a quantiser decision, not a channel one.` },
+            { text: "to prevent aliasing of the high-frequency components", why: `Aliasing is prevented by the anti-alias filter and the sample rate, both settled before the quantiser sees anything. Companding acts on <em>amplitude</em>, not frequency.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>A uniform quantiser's SNR is a full-scale figure</b>: 6.02n + 1.76, falling a decibel for every decibel the signal drops. At 8 bits that is 49.9 dB at full scale and 19.9 dB thirty decibels down.`,
+          `Compressing before the quantiser makes the effective step size small for small signals and large for large ones. <b>At µ = 255 the smallest signals get 1 + µ = 256 times the resolution of the largest.</b>`,
+          D(`\\text{SNR} \\approx 6.02n + 4.77 - 20\\log_{10}\\left[\\ln(1+\\mu)\\right] \\approx ${fixed(pcmSnrCompanded(8, 255), 1)}\\text{ dB at } n = 8`),
+          `<b>Flat, at about 38 dB, across the whole range.</b> Roughly 12 dB was given up at a full scale nothing reaches, to gain about 18 dB where every conversation actually sits.`,
+        ],
+      };
+    }
+
+    if (ask === "bits") {
+      /* Targets chosen so that dropping the 1.76 dB term changes the answer —
+         otherwise the commonest error and the correct method agree and the
+         distractor is not wrong. */
+      const target = rng.pick([31, 43, 49, 61, 73, 85]);
+      const right = Math.ceil((target - 1.76) / 6.02);
+      const dropped = Math.ceil(target / 6.02);
+      const threeDb = Math.ceil((target - 1.76) / 3.01);
+      return {
+        stem: `A design calls for at least <b>${num(target, 0)} dB</b> of signal-to-noise ratio from a uniform quantiser at full scale. What is the smallest number of bits that will do?`,
+        choices: options(
+          { text: `${num(right, 0)} bits`, why: "" },
+          [
+            { text: `${num(dropped, 0)} bits`, why: `The 1.76 dB term was dropped. It is worth almost a third of a bit, and here it is <b>exactly the difference between ${num(right, 0)} bits and ${num(dropped, 0)}</b> — the formula is 6.02n + 1.76, not 6n.` },
+            { text: `${num(threeDb, 0)} bits`, why: `Three decibels a bit rather than six. <b>Each bit doubles the number of levels</b>, which halves the step and quarters the noise <em>power</em> — a factor of four, which is 6 dB, not 3.` },
+            { text: `${num(right - 1, 0)} bits`, why: `One short: ${num(right - 1, 0)} bits gives ${fixed(pcmSnrUniform(right - 1), 1)} dB, below the ${num(target, 0)} dB required. <b>Round up</b> — you cannot buy a fraction of a bit.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`6.02n + 1.76 \\geq ${num(target, 0)} \\ \\Longrightarrow \\ n \\geq \\frac{${num(target, 0)} - 1.76}{6.02} = ${fixed((target - 1.76) / 6.02, 2)}`),
+          `<b>Round up to ${num(right, 0)} bits</b>, giving ${fixed(pcmSnrUniform(right), 1)} dB. ${num(right - 1, 0)} bits would give only ${fixed(pcmSnrUniform(right - 1), 1)} dB.`,
+          `<b>Always round up.</b> The formula gives what n bits deliver; a requirement is a floor, so any fractional bit becomes a whole one.`,
+        ],
+      };
+    }
+
+    const n = rng.pick([6, 8, 10, 12, 14]);
+    const snr = pcmSnrUniform(n);
+    return {
+      stem: `What signal-to-noise ratio does a <b>${num(n, 0)}-bit</b> uniform quantiser give a full-scale sinusoid?`,
+      choices: options(
+        { text: `${fixed(snr, 1)} dB`, why: "" },
+        [
+          { text: `${fixed(6.02 * n, 1)} dB`, why: `The <b>1.76 dB</b> was dropped. It comes from the ratio between a sinusoid's RMS and the quantiser's full-scale peak, and it is on the handbook page with the rest of the formula.` },
+          { text: `${fixed(3.01 * n + 1.76, 1)} dB`, why: `Three decibels a bit. A bit halves the step size, which <b>quarters the error power</b> — a factor of four in power is 6.02 dB.` },
+          { text: `${fixed(1.76 * n, 1)} dB`, why: `The two coefficients have been swapped. <b>6.02 multiplies n; 1.76 is a constant offset</b> and does not scale with the bit count.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`\\text{SNR} = 6.02n + 1.76 = 6.02(${num(n, 0)}) + 1.76 = ${fixed(snr, 2)}\\text{ dB}`),
+        `<b>${fixed(snr, 1)} dB</b>, and the useful way to hold it is <b>six decibels a bit</b> — ${num(n, 0)} bits, about ${num(6 * n, 0)} dB, plus a couple.`,
+        `<b>Read the condition.</b> This is the figure for a sinusoid at <em>full scale</em>. Drop the signal 20 dB and the ratio drops 20 dB with it, because the quantiser's noise never moves.`,
+      ],
+    };
+  },
+});
+
+defineProblem("pcm-bandwidth", {
+  topic: "Channel bandwidth for a PCM link",
+  lookup: "Electrical → Communications → Nyquist signalling rate",
+  make(rng) {
+    const ask = rng.pick(["binary", "binary", "mary", "expand"]);
+
+    if (ask === "mary") {
+      /* M = 2 is excluded: log2 M = 1 = M/2 there, which collapses the
+         "used M instead of log2 M" distractor onto the answer. */
+      const M = rng.pick([4, 8, 16]);
+      const Rb = rng.pick([64, 128, 256]);
+      const k = Math.log2(M);
+      const B = Rb / (2 * k);
+      return {
+        stem: `A <b>${num(Rb, 0)} kbit/s</b> stream is sent using <b>${num(M, 0)}-level</b> symbols. What is the minimum channel bandwidth?`,
+        choices: options(
+          { text: `${num(B, 1)} kHz`, why: "" },
+          [
+            { text: `${num(Rb / 2, 1)} kHz`, why: `That is the <b>binary</b> answer. With ${num(M, 0)} levels each symbol carries log₂${num(M, 0)} = ${num(k, 0)} bits, so the symbol rate — and the bandwidth — is ${num(k, 0)} times lower.` },
+            { text: `${num(Rb / (2 * M), 1)} kHz`, why: `M was used where log₂M belongs. <b>${num(M, 0)} levels carry ${num(k, 0)} bits per symbol, not ${num(M, 0)}</b> — the alphabet size and the information per symbol are not the same number.` },
+            { text: `${num((Rb * k) / 2, 1)} kHz`, why: `Multiplied instead of divided. More levels per symbol means <em>fewer</em> symbols for the same bits, so the bandwidth goes down.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Each ${num(M, 0)}-level symbol carries ${D(`\\log_2 ${num(M, 0)} = ${num(k, 0)}`)} bits, so the symbol rate is ${num(Rb, 0)}/${num(k, 0)} = ${num(Rb / k, 0)} kbaud.`,
+          D(`B_{\\min} = \\frac{R_s}{2} = \\frac{R_b}{2\\log_2 M} = \\frac{${num(Rb, 0)}}{2(${num(k, 0)})} = ${num(B, 1)}\\text{ kHz}`),
+          `<b>${num(B, 1)} kHz</b>, which is ${num(k, 0)} times narrower than binary would need.`,
+          `<b>This looks like a free lunch and it is not.</b> Packing ${num(M, 0)} levels into the same voltage range puts them ${num(M - 1, 0)} gaps apart instead of one, so each is far easier for noise to cross. Bandwidth was traded for signal-to-noise, and Shannon prices that trade.`,
+        ],
+      };
+    }
+
+    if (ask === "expand") {
+      const Bm = 3.4, fs = 8, n = 8;
+      const Rb = fs * n;
+      const Bc = Rb / 2;
+      return {
+        stem: `Telephone speech occupies <b>3.4 kHz</b> as an analog signal. Digitised at 8 kHz and 8 bits and sent in binary, how much channel bandwidth does the same conversation need?`,
+        choices: options(
+          { text: `${num(Bc, 0)} kHz — about ${fixed(Bc / Bm, 1)} times as much`, why: "" },
+          [
+            { text: `${num(Rb, 0)} kHz — about ${fixed(Rb / Bm, 1)} times as much`, why: `The bit rate was used directly as a bandwidth. <b>Nyquist's signalling limit gives 2 bits per second per hertz in binary</b>, so the channel needs only R<sub>b</sub>/2.` },
+            { text: `${num(fs, 0)} kHz — the sample rate`, why: `That is the sampling frequency, not a channel bandwidth. Sampling happens at the source; the channel has to carry all ${num(n, 0)} bits of every one of those samples.` },
+            { text: `${num(Bm, 1)} kHz — digitising does not change it`, why: `It changes it a great deal. <b>Binary PCM costs a factor of about n</b>, and that expansion is the price paid for regenerative repeaters.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`R_b = n f_s = 8 \\times 8 = 64\\text{ kbit/s}`),
+          D(`B_{\\min} = \\frac{R_b}{2} = 32\\text{ kHz}`),
+          `<b>${fixed(Bc / Bm, 2)} times the analog channel.</b> A conversation that fitted in 3.4 kHz now wants 32.`,
+          `<b>That is the bargain PCM offers.</b> It buys a repeater that regenerates the bits exactly rather than amplifying accumulated noise — so a thousand-mile digital route is as clean as one mile, which no analog link achieves at any bandwidth.`,
+        ],
+      };
+    }
+
+    const fs = rng.pick([8, 20, 44.1]);
+    const n = rng.pick([8, 10, 12, 16]);
+    const Rb = fs * n;
+    const B = Rb / 2;
+    return {
+      stem: `A PCM link samples at <b>${num(fs, 1)} kHz</b> with <b>${num(n, 0)} bits</b> per sample and signals in binary. What is the minimum channel bandwidth?`,
+      choices: options(
+        { text: `${num(B, 1)} kHz`, why: "" },
+        [
+          { text: `${num(Rb, 1)} kHz`, why: `The bit rate quoted as a bandwidth. <b>Nyquist's signalling theorem gives 2B symbols per second in a bandwidth B</b>, so a binary link needs only half its bit rate in hertz.` },
+          { text: `${num(2 * Rb, 1)} kHz`, why: `Multiplied by two instead of divided. Doubling appears in the <em>sampling</em> theorem, at the other end of the chain.` },
+          { text: `${num(fs / 2, 1)} kHz`, why: `That is half the sample rate — the message bandwidth the sampler was designed for, not the channel the coded bits need. Those differ by a factor of n.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`R_b = n f_s = ${num(n, 0)}(${num(fs, 1)}) = ${num(Rb, 1)}\\text{ kbit/s}`),
+        D(`B_{\\min} = \\frac{R_b}{2} = ${num(B, 1)}\\text{ kHz}`),
+        `<b>${num(B, 1)} kHz.</b> The two halves of this are two different Nyquist theorems: <b>f<sub>s</sub> ≥ 2B</b> governs the sampler, and <b>R<sub>s</sub> ≤ 2B</b> governs the channel. Mixing them up is the standard way to be out by a factor of two or four.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "pcm",
+    stem: "Bit rate of a PCM link?",
+    tool: "Rb = n·fs — bits per sample times samples per second",
+    because: "Everything else in the part is downstream of this one multiplication.",
+  },
+  {
+    part: "pcm",
+    stem: "Minimum channel bandwidth for a bit rate Rb?",
+    tool: "Rb/2 binary; Rb/(2 log₂M) with M levels",
+    because: "Nyquist's SIGNALLING limit, not his sampling one. Using M instead of log₂M is the standard slip.",
+  },
+  {
+    part: "pcm",
+    stem: "How much wider is binary PCM than the analog message?",
+    tool: "About n times — n bits each need room",
+    because: "A Nyquist-sampled B-hertz message needs nB hertz. Telephony: 3.4 kHz becomes 32 kHz.",
+  },
+  {
+    part: "pcm",
+    stem: "DS0, T1 and E1 rates?",
+    tool: "64 kbit/s; 193 × 8000 = 1.544 Mbit/s; 2.048 Mbit/s",
+    because: "The frame rate is the sample rate, 8000/s. T1 is 24×8+1 bits; E1 is 32 slots of 8.",
+  },
+  {
+    part: "pcm",
+    stem: "Quantisation SNR, and its condition?",
+    tool: "6.02n + 1.76 dB — at FULL SCALE",
+    because: "It falls a decibel per decibel as the signal drops, which is the entire argument for companding.",
+  },
+  {
+    part: "pcm",
+    stem: "What does companding do, and what does it cost?",
+    tool: "Holds SNR flat at ~38 dB (8 bits); costs ~12 dB at full scale",
+    because: "µ = 255 in North America, A = 87.6 in Europe, within 0.11 dB of each other.",
+  },
+  {
+    part: "pcm",
+    stem: "Why digitise at all, given the bandwidth cost?",
+    tool: "Regenerative repeaters — noise is discarded, not accumulated",
+    because: "No analog link can do this at any bandwidth or power. It is the only reason the expansion is worth paying.",
   },
 ]);
