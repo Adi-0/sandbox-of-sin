@@ -1137,3 +1137,345 @@ defineReflex([
     because: "No analog link can do this at any bandwidth or power. It is the only reason the expansion is worth paying.",
   },
 ]);
+
+/* ==========================================================================
+   Part 5 — digital communications
+
+   Three things carry the part: what a constellation costs, what Shannon
+   permits, and which of the two bounds is the binding one. The distractors
+   are the errors that actually happen — using S/N in decibels inside
+   Shannon's logarithm, dropping the k = log2 M factor between Es/N0 and
+   Eb/N0, losing the 2 in Nyquist's 2B log2 M, and taking M where log2 M
+   belongs.
+   ========================================================================== */
+
+defineProblem("dig-modulation", {
+  topic: "Digital modulation and symbol rate",
+  lookup: "Electrical → Communications → Digital modulation (ASK, FSK, PSK, QAM)",
+  make(rng) {
+    const ask = rng.pick(["esn0", "rate", "qpsk", "pick"]);
+
+    if (ask === "qpsk") {
+      return {
+        stem: `Compared with BPSK at the <b>same E<sub>b</sub>/N<sub>0</sub></b>, what does QPSK achieve?`,
+        choices: options(
+          { text: "twice the bit rate in the same bandwidth, at the same bit error rate", why: "" },
+          [
+            { text: "twice the bit rate, at a worse bit error rate", why: `The rate is right and the penalty is not. QPSK's two bits ride on <b>cos and sin of the same carrier</b>, which are orthogonal, so the receiver separates them perfectly. The bit error rate is <em>identical</em> to BPSK's — not close to it.` },
+            { text: "the same bit rate at half the error rate", why: `The rate is what changes, not the reliability. Two bits per symbol at the same symbol rate is twice the bits per second.` },
+            { text: "twice the bit rate, needing 3 dB more power", why: `That is the cost of going to 8-PSK, where the points genuinely crowd. <b>QPSK is the one step up that is free</b>, because the two carriers do not interfere at all.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>QPSK is two independent BPSK links sharing one channel.</b> One bit modulates cos(2πf<sub>c</sub>t) and the other sin(2πf<sub>c</sub>t), and those two are orthogonal over a symbol period.`,
+          `Because they do not interfere, each is demodulated exactly as if the other were not there — so each sees the BPSK error rate: ${T(`P_b = Q\\!\\left(\\sqrt{2E_b/N_0}\\right)`)}.`,
+          `<b>Two bits per symbol at the same symbol rate is twice the bit rate in the same bandwidth, for nothing.</b>`,
+          `<b>This is why QPSK is the default.</b> Every step beyond it — 8-PSK, 16-QAM — does cost power, because the constellation points genuinely have to crowd together.`,
+        ],
+      };
+    }
+
+    if (ask === "pick") {
+      const q = rng.pick(["envelope", "power"]);
+      if (q === "envelope") {
+        return {
+          stem: `A transmitter uses a <b>saturating (non-linear) power amplifier</b> for efficiency. Which modulation is unsuitable?`,
+          choices: options(
+            { text: "16-QAM, because its symbols differ in amplitude", why: "" },
+            [
+              { text: "FSK, because its frequency changes", why: `FSK is fine — its envelope is constant, which is exactly what a saturating amplifier needs. Changing frequency costs bandwidth, not linearity.` },
+              { text: "QPSK, because it carries two bits per symbol", why: `QPSK is fine. All four of its symbols have the <b>same amplitude</b>, so clipping does not destroy any information. Bits per symbol has nothing to do with it.` },
+              { text: "BPSK, because the phase reverses", why: `A phase reversal is not an amplitude change. BPSK has a constant envelope and is the most robust choice of all.` },
+            ]),
+          answer: 0,
+          steps: [
+            `<b>A saturating amplifier flattens amplitude variation.</b> That is harmless if the amplitude carries nothing, and fatal if it does.`,
+            `BPSK, QPSK and FSK all have <b>constant envelopes</b> — the information is entirely in phase or frequency, so clipping loses nothing.`,
+            `<b>QAM puts information back into the amplitude.</b> Its sixteen points sit at three different radii, so an amplifier that squashes them together destroys the distinction.`,
+            `<b>This is the same argument as Part 3's.</b> FM tolerated a limiter because its envelope was constant; AM could not. The digital versions inherit it unchanged.`,
+          ],
+        };
+      }
+      return {
+        stem: `For a given transmitted power and bit rate, which of ASK, FSK and PSK gives the lowest error rate — and why?`,
+        choices: options(
+          { text: "PSK — for the same average energy its symbols sit furthest apart", why: "" },
+          [
+            { text: "ASK — its symbols differ the most, being on and off", why: `Off carries no energy at all, so the average energy is wasted on only half the symbols. <b>For the same average power, PSK's antipodal symbols are further apart</b> than ASK's.` },
+            { text: "FSK — different frequencies cannot be confused", why: `Orthogonal FSK is better than ASK but still worse than PSK: orthogonal symbols are √2 apart where antipodal ones are 2 apart, which is a 3 dB difference.` },
+            { text: "all three are equal at the same energy per bit", why: `They are not. The error rate depends on the distance between symbols at a given energy, and the three schemes place their symbols differently.` },
+          ]),
+        answer: 0,
+        steps: [
+          `<b>Error rate is set by the distance between symbols at a given average energy</b>, so the question is a geometry question.`,
+          `Binary PSK's two symbols are <b>antipodal</b> — at +1 and −1 — a distance of 2 apart with unit energy each.`,
+          `Binary FSK's two symbols are <b>orthogonal</b>, at right angles, so they are only √2 apart. ASK's are 1 apart at the same average power, because one of them is off.`,
+          `<b>PSK, then FSK 3 dB behind, then ASK.</b> This is why nearly every modern system is PSK or a QAM descendant of it.`,
+        ],
+      };
+    }
+
+    if (ask === "rate") {
+      /* M = 2 excluded: bits/symbol is then 1 and the "forgot to multiply"
+         distractor is the answer. */
+      const M = rng.pick([4, 8, 16, 64]);
+      const baud = rng.pick([1200, 2400, 4800]);
+      const k = Math.log2(M);
+      return {
+        stem: `A modem signals at <b>${num(baud, 0)} baud</b> using <b>${num(M, 0)}-point QAM</b>. What is its bit rate?`,
+        choices: options(
+          { text: `${num(baud * k, 0)} bit/s`, why: "" },
+          [
+            { text: `${num(baud, 0)} bit/s`, why: `That is the <b>symbol</b> rate. Baud counts symbols per second; each ${num(M, 0)}-point symbol carries log₂${num(M, 0)} = ${num(k, 0)} bits.` },
+            { text: `${num(baud * M, 0)} bit/s`, why: `M was used where log₂M belongs. <b>${num(M, 0)} points means ${num(k, 0)} bits per symbol</b>, not ${num(M, 0)} — the alphabet size and the information per symbol are different numbers.` },
+            { text: `${num(baud / k, 0)} bit/s`, why: `Divided instead of multiplied. More points per symbol means <em>more</em> bits per second at the same symbol rate, not fewer.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`k = \\log_2 M = \\log_2 ${num(M, 0)} = ${num(k, 0)} \\text{ bits per symbol}`),
+          D(`R_b = k R_s = ${num(k, 0)} \\times ${num(baud, 0)} = ${num(baud * k, 0)}\\text{ bit/s}`),
+          `<b>Baud is not bit/s</b> unless the signalling is binary, and the whole point of QAM is that it is not.`,
+          `<b>And the bandwidth did not change.</b> The symbol rate sets the bandwidth, so all ${num(baud * k, 0)} bit/s fit where ${num(baud, 0)} bit/s of binary would — which is exactly the trade Shannon prices.`,
+        ],
+      };
+    }
+
+    const M = rng.pick([4, 8, 16, 64]);
+    const k = Math.log2(M);
+    const ebDb = rng.pick([6, 8, 10, 12]);
+    const esDb = ebDb + 10 * Math.log10(k);
+    return {
+      stem: `A <b>${num(M, 0)}-point</b> constellation is used on a link with <b>E<sub>b</sub>/N<sub>0</sub> = ${num(ebDb, 0)} dB</b>. What is E<sub>s</sub>/N<sub>0</sub>?`,
+      choices: options(
+        { text: `${fixed(esDb, 2)} dB`, why: "" },
+        [
+          { text: `${num(ebDb, 0)} dB — they are the same`, why: `Only for binary signalling. <b>A symbol carrying ${num(k, 0)} bits carries ${num(k, 0)} times the energy</b>, so E<sub>s</sub>/N₀ = k · E<sub>b</sub>/N₀ — and in decibels that is an addition of 10 log₁₀${num(k, 0)} = ${fixed(10 * Math.log10(k), 2)} dB.` },
+          { text: `${fixed(ebDb * k, 2)} dB`, why: `The decibel value was multiplied by k. <b>Multiplying a ratio means adding decibels</b>: ×${num(k, 0)} is +${fixed(10 * Math.log10(k), 2)} dB, not ×${num(k, 0)} dB.` },
+          { text: `${fixed(ebDb - 10 * Math.log10(k), 2)} dB`, why: `Divided rather than multiplied. The symbol is the <em>larger</em> package — it holds ${num(k, 0)} bits — so its energy is larger.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`k = \\log_2 ${num(M, 0)} = ${num(k, 0)} \\text{ bits per symbol}`),
+        D(`\\frac{E_s}{N_0} = k\\,\\frac{E_b}{N_0} \\ \\Longrightarrow \\ ${num(ebDb, 0)} + 10\\log_{10}${num(k, 0)} = ${num(ebDb, 0)} + ${fixed(10 * Math.log10(k), 2)} = ${fixed(esDb, 2)}\\text{ dB}`),
+        `<b>${fixed(esDb, 2)} dB.</b> Error-rate formulas are written in E<sub>s</sub>/N₀ and links are specified in E<sub>b</sub>/N₀, so this conversion sits between almost every question and its answer.`,
+        `<b>Comparing schemes at equal E<sub>b</sub>/N₀ is the fair comparison</b>, because it charges each one for the energy spent per bit actually delivered rather than per symbol sent.`,
+      ],
+    };
+  },
+});
+
+defineProblem("shannon-capacity", {
+  topic: "Shannon capacity",
+  lookup: "Electrical → Communications → Channel capacity",
+  make(rng) {
+    const ask = rng.pick(["cap", "cap", "snr", "infinite"]);
+
+    if (ask === "infinite") {
+      return {
+        stem: `A channel's bandwidth is increased without limit while the transmitted power is held fixed. What happens to its Shannon capacity?`,
+        choices: options(
+          { text: "it approaches a finite ceiling, because the noise power grows with the bandwidth", why: "" },
+          [
+            { text: "it grows without limit, since C is proportional to B", why: `C is proportional to B only at fixed S/N. <b>Noise power is N = N₀B</b>, so widening the channel lets in more noise and S/N falls in exact proportion — the logarithm shrinks as fast as the factor in front grows.` },
+            { text: "it stops changing once B exceeds the signal bandwidth", why: `Capacity keeps rising as B grows, just with diminishing returns. It converges rather than stopping.` },
+            { text: "it falls, because the signal-to-noise ratio drops", why: `S/N does drop, but not fast enough to reduce the capacity. The product B log₂(1 + S/N) increases towards its ceiling; it never turns over.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Write the noise as ${T(`N = N_0 B`)}, which is what it physically is — a noise density times the bandwidth admitted.`,
+          D(`C = B\\log_2\\!\\left(1 + \\frac{S}{N_0 B}\\right)`),
+          `As B grows, the fraction inside shrinks, and ${T(`\\log_2(1+x) \\to x/\\ln 2`)} for small x. The B cancels and <b>C → S/(N₀ ln 2)</b>, a finite ceiling set by power alone.`,
+          `<b>Rearranged, that ceiling is E<sub>b</sub>/N₀ = ln 2 = −1.59 dB</b> — the absolute floor below which no communication is possible at any rate, with any bandwidth, using any code.`,
+        ],
+      };
+    }
+
+    if (ask === "snr") {
+      /* Efficiency is drawn, not derived from an awkward pair, so 2^eff − 1
+         never lands close to a distractor. */
+      const eff = rng.pick([4, 6, 8, 10]);
+      const B = rng.pick([2, 4, 8]);
+      const C = eff * B;
+      const snr = 2 ** eff - 1;
+      const db = 10 * Math.log10(snr);
+      return {
+        stem: `A link must carry <b>${num(C, 0)} kbit/s</b> in <b>${num(B, 0)} kHz</b> of bandwidth. What is the minimum signal-to-noise ratio, in decibels, that Shannon permits?`,
+        choices: options(
+          { text: `${fixed(db, 1)} dB`, why: "" },
+          [
+            { text: `${fixed(10 * Math.log10(eff), 1)} dB`, why: `The spectral efficiency was quoted as though it were the ratio. <b>C/B = ${num(eff, 0)} bit/s/Hz is the exponent</b>, not the S/N — you have to undo the logarithm: S/N = 2^${num(eff, 0)} − 1.` },
+            { text: `${fixed(20 * Math.log10(snr), 1)} dB`, why: `Twenty log, which is for amplitude ratios. <b>Signal-to-noise is a power ratio</b>, so it is 10 log₁₀.` },
+            { text: `${fixed(10 * Math.log10(2 ** (eff / 2) - 1), 1)} dB`, why: `Nyquist's factor of two has crept in. Shannon's exponent is C/B, with no 2 — the 2 belongs to <b>C = 2B log₂M</b>, which is the other bound.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\frac{C}{B} = \\frac{${num(C, 0)}}{${num(B, 0)}} = ${num(eff, 0)}\\text{ bit/s/Hz}`),
+          D(`${num(eff, 0)} = \\log_2\\!\\left(1 + \\frac{S}{N}\\right) \\ \\Longrightarrow \\ \\frac{S}{N} = 2^{${num(eff, 0)}} - 1 = ${num(snr, 0)}`),
+          D(`10\\log_{10}(${num(snr, 0)}) = ${fixed(db, 2)}\\text{ dB}`),
+          `<b>${fixed(db, 1)} dB, and that is the floor.</b> Shannon says a code achieving it exists; it does not say the code is simple, and finding practical ones took until the 1990s.`,
+        ],
+      };
+    }
+
+    const B = rng.pick([3000, 3400, 4000]);
+    const db = rng.pick([20, 25, 30, 35]);
+    const snr = 10 ** (db / 10);
+    const C = B * Math.log2(1 + snr);
+    return {
+      stem: `A channel of <b>${num(B, 0)} Hz</b> has a signal-to-noise ratio of <b>${num(db, 0)} dB</b>. What is its capacity?`,
+      choices: options(
+        { text: `${fixed(C / 1e3, 1)} kbit/s`, why: "" },
+        [
+          { text: `${fixed((B * Math.log2(1 + db)) / 1e3, 1)} kbit/s`, why: `The decibel value was put straight into the formula. <b>Convert first</b>: ${num(db, 0)} dB is a ratio of 10<sup>${num(db, 0)}/10</sup> = ${sig(snr, 3)}, not ${num(db, 0)}.` },
+          { text: `${fixed((2 * C) / 1e3, 1)} kbit/s`, why: `Nyquist's factor of two applied to Shannon's formula. <b>C = B log₂(1 + S/N)</b> has no 2 in it; the 2 belongs to C = 2B log₂M.` },
+          { text: `${fixed((B * Math.log10(1 + snr)) / 1e3, 1)} kbit/s`, why: `A base-ten logarithm. The answer is in <b>bits</b>, so the logarithm is base two — divide the log₁₀ by log₁₀2 = 0.301.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`\\frac{S}{N} = 10^{${num(db, 0)}/10} = ${sig(snr, 4)}`),
+        D(`C = B\\log_2\\!\\left(1 + \\frac{S}{N}\\right) = ${num(B, 0)}\\log_2(${sig(snr + 1, 4)}) = ${sig(C, 4)}\\text{ bit/s}`),
+        `<b>About ${fixed(C / 1e3, 1)} kbit/s.</b> Converting out of decibels first is the step that decides the question — at ${num(db, 0)} dB the difference is a factor of ${sig(snr / db, 2)}.`,
+        B === 3400 && db === 30
+          ? `<b>These are the telephone line's numbers.</b> 3.4 kHz at 30 dB gives about 34 kbit/s — and V.34, the last analog modem standard, reached 33.6 kbit/s. A commercial product within one percent of an information-theory bound is close to unheard of, and it is why modem speeds stopped climbing.`
+          : `<b>Note what this does not depend on.</b> Shannon says nothing about the modulation, the coding, or the receiver — only what the channel permits. A scheme below the bound is allowed, not achieved.`,
+      ],
+    };
+  },
+});
+
+defineProblem("nyquist-shannon", {
+  topic: "Nyquist against Shannon",
+  lookup: "Electrical → Communications → Channel capacity / Nyquist rate",
+  make(rng) {
+    const ask = rng.pick(["nyq", "both", "mary"]);
+
+    if (ask === "mary") {
+      /* M >= 8 keeps 10log10(M²−1) clear of 20log10(M) and of the 6 dB-per-bit
+         estimate; at M = 4 all three land within a quarter of a decibel. */
+      const M = rng.pick([8, 16, 32, 64]);
+      const need = M * M - 1;
+      const db = 10 * Math.log10(need);
+      return {
+        stem: `What signal-to-noise ratio does Shannon require before a channel can carry <b>${num(M, 0)}-ary</b> signalling at Nyquist's ideal rate?`,
+        choices: options(
+          { text: `${fixed(db, 1)} dB`, why: "" },
+          [
+            { text: `${fixed(10 * Math.log10(M - 1), 1)} dB`, why: `That is the answer to <b>C = B log₂M</b>, which drops Nyquist's factor of two. With the 2 in place the condition squares: 2log₂M = log₂(1 + S/N) gives <b>1 + S/N = M²</b>.` },
+            { text: `${fixed(10 * Math.log10(2 * Math.log2(M)), 1)} dB`, why: `The spectral efficiency, ${num(2 * Math.log2(M), 0)} bit/s/Hz, quoted as if it were a power ratio. It is the <em>exponent</em> — the ratio is 2 raised to it, less one.` },
+            { text: `${fixed(20 * Math.log10(need), 1)} dB`, why: `Twenty log, which is for amplitudes. <b>Signal-to-noise is a power ratio</b>, so 10 log₁₀.` },
+          ]),
+        answer: 0,
+        steps: [
+          `Nyquist's ideal baseband rate is ${T(`C = 2B\\log_2 M`)}, so the efficiency is ${T(`C/B = 2\\log_2 M = ${num(2 * Math.log2(M), 0)}`)} bit/s/Hz.`,
+          `Shannon permits ${T(`C/B = \\log_2(1 + S/N)`)}. Setting them equal:`,
+          D(`2\\log_2 M = \\log_2\\!\\left(1 + \\frac{S}{N}\\right) \\ \\Longrightarrow \\ 1 + \\frac{S}{N} = M^2`),
+          D(`\\frac{S}{N} = ${num(M, 0)}^2 - 1 = ${num(need, 0)} \\ \\Longrightarrow \\ ${fixed(db, 2)}\\text{ dB}`),
+          `<b>1 + S/N = M² is the whole result</b>, and it is worth carrying: every four-fold rise in M costs about 12 dB. Below that ratio the scheme is not difficult — it is impossible, for any code.`,
+        ],
+      };
+    }
+
+    if (ask === "both") {
+      /* M and the SNR are drawn as a validated pair, for two reasons. The
+         list covers both regimes — the first two make NYQUIST the binding
+         bound, the rest Shannon — so the question cannot be answered by
+         always picking the same one. And it excludes M = 32 at 15 dB, where
+         Shannon's efficiency is 5.03 bit/s/Hz and the "dropped the factor of
+         two" distractor B log2 32 = 5B lands within 1% of the answer. */
+      const B = rng.pick([3000, 4000]);
+      const [M, db] = rng.pick([[4, 20], [4, 25], [16, 15], [16, 20], [32, 20], [32, 25]]);
+      const snr = 10 ** (db / 10);
+      const nyq = 2 * B * Math.log2(M);
+      const sha = B * Math.log2(1 + snr);
+      const bind = Math.min(nyq, sha);
+      return {
+        stem: `A <b>${num(B, 0)} Hz</b> channel with a <b>${num(db, 0)} dB</b> signal-to-noise ratio is used with <b>${num(M, 0)}-level</b> signalling. What is the maximum usable bit rate?`,
+        choices: options(
+          { text: `${fixed(bind / 1e3, 1)} kbit/s`, why: "" },
+          [
+            { text: `${fixed(Math.max(nyq, sha) / 1e3, 1)} kbit/s`, why: `That is the <em>other</em> bound, the one that is not binding. Both apply at once, so <b>the answer is always the smaller</b> — Nyquist gives ${fixed(nyq / 1e3, 1)} kbit/s and Shannon ${fixed(sha / 1e3, 1)}.` },
+            { text: `${fixed((nyq + sha) / 1e3, 1)} kbit/s`, why: `The two bounds are not additive. They are two separate ceilings on the same quantity; a rate has to clear both.` },
+            { text: `${fixed((B * Math.log2(M)) / 1e3, 1)} kbit/s`, why: `Nyquist's factor of two is missing, and Shannon has not been checked at all. <b>C = 2B log₂M</b>.` },
+          ]),
+        answer: 0,
+        steps: [
+          D(`\\text{Nyquist: } C = 2B\\log_2 M = 2(${num(B, 0)})(${num(Math.log2(M), 0)}) = ${sig(nyq, 4)}\\text{ bit/s}`),
+          D(`\\text{Shannon: } C = B\\log_2\\!\\left(1 + 10^{${num(db, 0)}/10}\\right) = ${sig(sha, 4)}\\text{ bit/s}`),
+          `<b>Both apply, so the smaller wins: ${fixed(bind / 1e3, 1)} kbit/s.</b> ${
+            nyq < sha
+              ? `Here <b>Nyquist binds</b> — the channel is quiet enough to support more levels than are being used, so the alphabet is the thing to raise.`
+              : `Here <b>Shannon binds</b> — the alphabet is already asking for more than the noise permits, so raising M further buys nothing at all. More power, or fewer levels.`
+          }`,
+          `<b>The two bounds answer different questions.</b> Nyquist asks how fast pulses can be sent through a bandwidth without smearing into each other; Shannon asks how much information the noise leaves intact. Neither implies the other.`,
+        ],
+      };
+    }
+
+    /* M = 4 excluded: log2 M = 2 makes B·log2M and 2B the same number. */
+    const B = rng.pick([2000, 3000, 4000]);
+    const M = rng.pick([8, 16, 32]);
+    const k = Math.log2(M);
+    const C = 2 * B * k;
+    return {
+      stem: `Ignoring noise, what is the maximum bit rate a <b>${num(B, 0)} Hz</b> baseband channel can carry using <b>${num(M, 0)}-level</b> signalling?`,
+      choices: options(
+        { text: `${num(C / 1e3, 1)} kbit/s`, why: "" },
+        [
+          { text: `${num((B * k) / 1e3, 1)} kbit/s`, why: `The factor of two is missing. <b>Nyquist's signalling theorem allows 2B symbols per second</b> in a bandwidth B, so C = 2B log₂M.` },
+          { text: `${num((2 * B * M) / 1e3, 1)} kbit/s`, why: `M was used where log₂M belongs. <b>${num(M, 0)} levels carry ${num(k, 0)} bits per symbol</b>, not ${num(M, 0)}.` },
+          { text: `${num((2 * B) / 1e3, 1)} kbit/s`, why: `That is the binary answer — the symbol rate. Each ${num(M, 0)}-level symbol carries ${num(k, 0)} bits, so the bit rate is ${num(k, 0)} times higher.` },
+        ]),
+      answer: 0,
+      steps: [
+        D(`C = 2B\\log_2 M = 2(${num(B, 0)})\\log_2 ${num(M, 0)} = 2(${num(B, 0)})(${num(k, 0)}) = ${num(C, 0)}\\text{ bit/s}`),
+        `<b>${num(C / 1e3, 1)} kbit/s</b>, and note the word <em>ignoring</em>: this bound knows nothing about noise, which is why it lets you raise M for ever.`,
+        `<b>Shannon is the bound that stops that.</b> ${num(M, 0)}-level signalling at this rate needs S/N = ${num(M, 0)}² − 1 = ${num(M * M - 1, 0)}, or ${fixed(10 * Math.log10(M * M - 1), 1)} dB, before it is permitted at all.`,
+      ],
+    };
+  },
+});
+
+defineReflex([
+  {
+    part: "digicomm",
+    stem: "What does a digital receiver actually do?",
+    tool: "Picks the nearest legal symbol to the received point",
+    because: "Error rate is minimum distance against noise, and nothing else. Every formula in the part is that comparison.",
+  },
+  {
+    part: "digicomm",
+    stem: "Converting Eb/N0 to Es/N0?",
+    tool: "Es/N0 = k · Eb/N0, k = log₂M — add 10log₁₀k in dB",
+    because: "Formulas are written in Es/N0 and links are specified in Eb/N0. Dropping k is the commonest error here.",
+  },
+  {
+    part: "digicomm",
+    stem: "BPSK against QPSK at the same Eb/N0?",
+    tool: "Identical bit error rate; QPSK needs half the bandwidth",
+    because: "QPSK is two orthogonal BPSK links in one channel. 9.6 dB gives 10⁻⁵ for both.",
+  },
+  {
+    part: "digicomm",
+    stem: "Best of ASK, FSK and PSK for a given power?",
+    tool: "PSK — antipodal symbols are 2 apart, orthogonal ones only √2",
+    because: "A 3 dB advantage over FSK, more over ASK. QAM beats PSK for large M but needs a linear amplifier.",
+  },
+  {
+    part: "digicomm",
+    stem: "The two capacity bounds?",
+    tool: "Nyquist C = 2B log₂M; Shannon C = B log₂(1 + S/N)",
+    because: "Nyquist ignores noise, Shannon ignores modulation. Both apply — the answer is the smaller.",
+  },
+  {
+    part: "digicomm",
+    stem: "Using Shannon with an SNR given in decibels?",
+    tool: "Convert first — 30 dB is 1000, not 30",
+    because: "The single most expensive slip in the part. 3.4 kHz at 30 dB is 34 kbit/s, not 17.",
+  },
+  {
+    part: "digicomm",
+    stem: "SNR needed before M-ary signalling is possible at all?",
+    tool: "1 + S/N = M² — about 12 dB per four-fold rise in M",
+    because: "Binary 4.8 dB, 4-ary 11.8, 16-ary 24.1. Below it the scheme is impossible, not merely hard.",
+  },
+]);

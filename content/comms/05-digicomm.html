@@ -1,0 +1,197 @@
+<p class="eyebrow">
+  <span>Communications · Part 5</span>
+  <span class="spec">NCEES 13.D</span>
+  <span>22 minute read</span>
+</p>
+
+<h1>Digital Communications</h1>
+
+<p class="lede">Part 4 justified the whole bandwidth expansion on one claim: that
+a repeater can decide what was sent and send it again exactly. This part looks
+at the decision — how it is made, what makes it fail, and the single bound that
+no amount of power, bandwidth or cleverness gets around.</p>
+
+<h2>5.1 A receiver only ever does one thing</h2>
+
+<p>Strip away the hardware and every digital receiver reduces to the same
+operation: it measures where the received signal landed, and it picks the
+<b>nearest legal symbol</b>. That is the decision. Nothing else in the receiver
+matters if this step is wrong.</p>
+
+<p>So the reliability of a link comes down to a comparison of two distances:
+<b>how far apart the legal symbols are</b>, and <b>how far the noise moves
+things</b>. Everything in this part is a way of writing that comparison down.</p>
+
+<div data-figure="constellation"></div>
+
+<f-plate no="13.9" title="Constellations and error rates" stamp="handbook"
+  caption="<b>The middle line is the one people get wrong under time
+  pressure.</b> Error rates are quoted against E<sub>b</sub>/N<sub>0</sub> and
+  formulas are written in E<sub>s</sub>/N<sub>0</sub>, and the factor between
+  them is the number of bits a symbol carries.">
+  <f-row tex="k = \log_2 M" name="bits per symbol"
+         gloss="M points in the constellation, k bits each. <b>BPSK 1, QPSK 2, 8-PSK 3, 16-QAM 4.</b>"></f-row>
+  <f-row tex="\frac{E_s}{N_0} = k \cdot \frac{E_b}{N_0}"
+         name="the conversion that gets dropped"
+         gloss="A symbol carrying four bits has four times the energy of one bit. <b>Comparing schemes at equal E_b/N_0 is the only fair comparison</b>, because it charges each one for the energy it spends per bit actually delivered."></f-row>
+  <f-row tex="P_b = Q\!\left(\sqrt{2E_b/N_0}\right) \quad \text{(BPSK and QPSK)}"
+         name="the reference curve"
+         gloss="<b>Both, identically.</b> QPSK is two orthogonal BPSK links sharing a channel — so it carries twice the bits in the same bandwidth at the same error rate. <b>9.6 dB gives 10⁻⁵</b>, which is the one number to carry."></f-row>
+  <f-row tex="C = B\log_2\!\left(1 + \tfrac{S}{N}\right)" name="Shannon"
+         gloss="The capacity in bit/s. <b>S/N is a ratio, not decibels</b> — converting first is the standard slip, and it is worth 20 dB of error."></f-row>
+</f-plate>
+
+<h2>5.2 Three ways to carry bits, and what each costs</h2>
+
+<p>A sinusoid still has only the three properties Part 3 listed, so there are
+only three things to modulate — and the digital versions are named for
+which.</p>
+
+<ul>
+  <li><b>ASK</b> — amplitude shift keying. Simple, and vulnerable to exactly
+    the noise that AM was.</li>
+  <li><b>FSK</b> — frequency shift keying. Constant envelope, so a limiter
+    works and a saturating amplifier is fine. Costs bandwidth, as FM did.</li>
+  <li><b>PSK</b> — phase shift keying. <b>The best of the three for a given
+    power</b>, because for the same average energy the symbols can be put
+    further apart. This is why nearly everything modern is PSK or a
+    descendant.</li>
+</ul>
+
+<p><b>QAM is the descendant.</b> Vary amplitude <em>and</em> phase and the
+constellation is free to be a grid rather than a circle, which packs points more
+efficiently — 16-QAM beats 16-PSK by about 4 dB at the same rate. The price is
+that the amplifier must stay linear, because the amplitude carries information
+again.</p>
+
+<div class="note">
+  <span class="note-tag">Why QPSK is the default choice almost everywhere</span>
+  <p style="margin-bottom:0">QPSK sends two bits per symbol and yet has
+  <b>exactly the same bit error rate as BPSK at the same E<sub>b</sub>/N<sub>0</sub></b>
+  — not nearly the same, the same. Its two bits ride on <b>cos</b> and
+  <b>sin</b> of the same carrier, which are orthogonal, so they do not interfere
+  and the receiver separates them perfectly. It is genuinely two independent
+  BPSK links in one channel. <b>Half the bandwidth for nothing</b> is not a
+  trade-off, and that is why the burden of proof falls on anyone proposing
+  something else.</p>
+</div>
+
+<h2>5.3 The bound Part 4 deferred</h2>
+
+<p>Part 4 finished with M-ary signalling looking like a free lunch: raise the
+number of levels, divide the bandwidth by log₂M, and nothing appeared to be
+given up. Something is.</p>
+
+<div data-figure="shannonBound"></div>
+
+<p>Nyquist's limit constrains the <b>symbol rate</b> and says nothing about
+noise, which is why it permits an unbounded bit rate as M rises. Shannon's
+constrains the <b>information rate</b> and does nothing but talk about noise.
+Put them side by side in the same units and the collision is exact:</p>
+
+<p><span data-tex="2\log_2 M = \log_2\!\left(1 + \tfrac{S}{N}\right) \quad\Longrightarrow\quad 1 + \tfrac{S}{N} = M^2" data-display></span></p>
+
+<p>Binary needs S/N = 3 (4.8 dB), 4-ary needs 15 (11.8 dB), 16-ary needs 255
+(24.1 dB), 64-ary needs 4095 (36.1 dB). <b>Every four-fold rise in M costs
+about 12 dB</b>, and below that the scheme is not difficult — it is impossible,
+for any code, any receiver, any budget, for ever.</p>
+
+<div class="worked">
+  <h4>Worked · <em>why the dial-up modem stopped at 33.6 kbit/s</em></h4>
+  <div class="worked-body">
+    <p>A telephone line passes 3.4 kHz with a signal-to-noise ratio of about
+    30 dB. Find its capacity, and compare it with the 64 kbit/s the same line
+    carries once digitised.</p>
+    <ol class="steps">
+      <li><b>Convert the SNR out of decibels first.</b>
+        <span data-tex="\tfrac{S}{N} = 10^{30/10} = 1000" data-display>S/N = 1000</span></li>
+      <li><b>Shannon.</b>
+        <span data-tex="C = 3400\log_2(1001) = 3400 \times 9.967 = 33\,900\text{ bit/s}" data-display>C ≈ 33.9 kbit/s</span></li>
+      <li><b>Against the standards.</b> V.34, the last purely analog modem
+        standard, reached <b>33.6 kbit/s</b> — within one percent of the
+        theoretical ceiling of the channel it ran on.</li>
+      <li><b>Against PCM.</b> The same line digitised carries
+        <b>64 kbit/s</b>, nearly twice as much.</li>
+    </ol>
+    <p class="gloss" style="max-width:none;text-align:left">Step 3 is worth
+    sitting with: <b>a commercial product got within 1% of an information-theory
+    bound</b>, which is close to unheard of, and it is why modem speeds stopped
+    climbing rather than continuing to double. Step 4 looks like a
+    contradiction and is not. The 64 kbit/s figure is the rate of a
+    <em>digital</em> link that has replaced the analog channel entirely; the
+    33.9 kbit/s is what remains possible if you insist on sending sound down a
+    line designed for sound. <b>56k modems worked by refusing the analog leg
+    altogether</b> — the downstream path was digital end to end, so it never
+    paid the quantisation penalty, and the upstream direction stayed near 33.6.
+    <b>The way past Shannon's bound is always to change the channel, never to
+    beat the bound.</b></p>
+  </div>
+</div>
+
+<h2>5.4 What the bound does not say</h2>
+
+<p>Two misreadings are common enough to be worth naming.</p>
+
+<ul>
+  <li><b>Shannon is not a bandwidth limit in disguise.</b> Letting B → ∞ does
+    not give infinite capacity, because the noise power N = N₀B grows with it.
+    The capacity converges, and the floor it converges to is
+    <b>E<sub>b</sub>/N₀ = ln 2 = −1.59 dB</b> — below that ratio no
+    communication is possible at any rate, with any bandwidth.</li>
+  <li><b>Shannon says nothing about how.</b> It is an existence result: codes
+    achieving capacity exist, and it took fifty years to find practical ones
+    (turbo codes in 1993, LDPC's rediscovery soon after). <b>A scheme below the
+    bound is permitted, not achieved.</b></li>
+</ul>
+
+<h2>5.5 What to memorise from this part</h2>
+
+<div class="coldlist">
+  <h4>Know cold</h4>
+  <ul>
+    <li><b>The receiver picks the nearest legal symbol.</b> Error rate is set
+        by minimum distance against noise, and nothing else.</li>
+    <li><b>k = log₂M</b> bits per symbol, and
+        <b>E<sub>s</sub>/N₀ = k · E<sub>b</sub>/N₀</b>. Dropping this factor is
+        the most common error in the part.</li>
+    <li><b>BPSK and QPSK have the same bit error rate</b> at the same
+        E<sub>b</sub>/N₀, and QPSK needs half the bandwidth.
+        <b>9.6 dB gives 10⁻⁵.</b></li>
+    <li><b>PSK beats ASK and FSK for a given power</b>; QAM beats PSK once M is
+        large, at the cost of needing a linear amplifier.</li>
+    <li><b>Nyquist: C = 2B log₂M</b> — bandwidth only, noise ignored.
+        <b>Shannon: C = B log₂(1 + S/N)</b> — noise only, bandwidth priced.</li>
+    <li><b>Convert S/N out of decibels before using Shannon.</b> 30 dB is 1000,
+        not 30.</li>
+    <li><b>Setting them equal gives 1 + S/N = M².</b> Binary 4.8 dB, 4-ary
+        11.8 dB, 16-ary 24.1 dB — <b>about 12 dB per four-fold rise in M</b>.</li>
+    <li><b>3.4 kHz at 30 dB is about 34 kbit/s</b>, which is why dial-up
+        stopped at 33.6.</li>
+    <li><b>The absolute floor is E<sub>b</sub>/N₀ = −1.59 dB.</b> Infinite
+        bandwidth does not give infinite capacity.</li>
+  </ul>
+</div>
+
+<div class="keyidea">
+  <p>A digital link is a distance problem. Symbols sit at points; noise moves
+  the received point; the receiver picks the nearest. Everything else —
+  constellations, error rates, the choice between PSK and QAM — is a way of
+  asking how far apart the points can be kept for a given power, and how often
+  the noise gets across.</p>
+  <p>Above that sits the one hard wall in this compilation. Every other trade
+  it has shown has an escape: more power, more bandwidth, a better filter, a
+  cleverer code. <b>Shannon's bound has none.</b> It is the reason M-ary
+  signalling is not free, the reason the dial-up modem stopped where it did,
+  and the reason the answer to a channel that cannot carry what you need is
+  always to get a different channel.</p>
+  <p>What is still missing is how many conversations share one link at once.
+  Part 4 built a T1 out of twenty-four of them without saying how the
+  twenty-four are kept apart. <b>Part 6 is that question</b>, and its answer is
+  the last idea the module needs.</p>
+</div>
+
+<h2>Bench</h2>
+
+<div data-bench='{"id":"digicomm","title":"Part 5 · Digital Communications","topics":["dig-modulation","shannon-capacity","nyquist-shannon"],"count":6}'></div>
+
+<div data-reflex='{"only":["digicomm"],"count":5,"title":"Handbook Reflex · Part 5"}'></div>

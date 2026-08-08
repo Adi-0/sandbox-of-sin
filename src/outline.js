@@ -403,6 +403,12 @@ export const MODULES = [
         blurb: "Turning a message into numbers costs a factor of n in bandwidth — and buys exact repeaters",
         minutes: 20, figures: [121, 122],
       },
+      {
+        id: "digicomm", n: 5, spec: "13.D",
+        title: "Digital Communications",
+        blurb: "The decision, when it fails, and the one bound no cleverness gets around",
+        minutes: 22, figures: [123, 124],
+      },
     ],
   },
   {

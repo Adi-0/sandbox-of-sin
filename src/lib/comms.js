@@ -229,3 +229,125 @@ export function aLaw(x, A = 87.6) {
  * whole mechanism in one number.
  */
 export const companderSlopeRatio = (mu = 255) => 1 + mu;
+
+/* --- the decision, and when it fails --------------------------------------
+
+   Everything about a digital link's error rate comes through the Q function:
+   the probability a zero-mean unit-variance Gaussian exceeds x. The exam
+   quotes error rates rather than deriving them, but a figure that draws a
+   noise cloud has to compute the real number or the picture lies.
+
+   erfc is the Chebyshev form from Numerical Recipes — full double precision
+   across the whole range, which matters because BER curves are read over ten
+   decades and a 1e-7 approximation goes flat at the bottom of the plot.     */
+
+const ERFC_COF = [
+  -1.3026537197817094, 6.4196979235649026e-1, 1.9476473204185836e-2,
+  -9.561514786808631e-3, -9.46595344482036e-4, 3.66839497852761e-4,
+  4.2523324806907e-5, -2.0278578112534e-5, -1.624290004647e-6,
+  1.30365583558e-6, 1.5626441722e-8, -8.5238095915e-8,
+  6.529054439e-9, 5.059343495e-9, -9.91364156e-10,
+  -2.27365122e-10, 9.6467911e-11, 2.394038e-12,
+  -6.886027e-12, 8.94487e-13, 3.13092e-13,
+  -1.12708e-13, 3.81e-16, 7.106e-15,
+];
+
+export function erfc(x) {
+  const z = Math.abs(x);
+  const t = 2 / (2 + z);
+  const ty = 4 * t - 2;
+  let d = 0, dd = 0;
+  for (let j = ERFC_COF.length - 1; j > 0; j--) {
+    const tmp = d;
+    d = ty * d - dd + ERFC_COF[j];
+    dd = tmp;
+  }
+  const ans = t * Math.exp(-z * z + 0.5 * (ERFC_COF[0] + ty * d) - dd);
+  return x >= 0 ? ans : 2 - ans;
+}
+
+/** P(N(0,1) > x). The whole of digital communications is this one integral. */
+export const qfunc = (x) => 0.5 * erfc(x / Math.SQRT2);
+
+/**
+ * BPSK — and, with Gray coding, QPSK too, which is the surprising part:
+ * QPSK carries twice the bits in the same bandwidth for the same energy per
+ * bit and the same error rate. Its two carriers are orthogonal, so it is
+ * really two independent BPSK links sharing one channel.
+ */
+export const berBpsk = (ebn0) => qfunc(Math.sqrt(2 * ebn0));
+
+/** Symbol error rate for M-PSK, the standard nearest-neighbour bound. */
+export const serPsk = (M, esn0) =>
+  M === 2 ? qfunc(Math.sqrt(2 * esn0)) : 2 * qfunc(Math.sqrt(2 * esn0) * Math.sin(Math.PI / M));
+
+/** Symbol error rate for square M-QAM. */
+export function serQam(M, esn0) {
+  const r = Math.sqrt(M);
+  const p = 2 * (1 - 1 / r) * qfunc(Math.sqrt((3 * esn0) / (M - 1)));
+  return 1 - (1 - p) ** 2;              // two independent PAM axes
+}
+
+/* --- the two bounds, side by side -----------------------------------------
+
+   Shannon and Nyquist are quoted here in the same units — bits per second
+   per hertz — because the only useful thing to do with them is compare them.
+   Nyquist's is the BASEBAND figure, R_b/B = 2 log2 M, matching the channel
+   bandwidth used for PCM in Part 4.                                        */
+
+/** Shannon's bound on spectral efficiency. snrDb is a power ratio in dB. */
+export const shannonEff = (snrDb) => Math.log2(1 + Math.pow(10, snrDb / 10));
+
+/** Nyquist's ideal baseband efficiency for an M-level alphabet. */
+export const nyquistEff = (M) => 2 * Math.log2(M);
+
+/**
+ * The SNR at which Shannon first permits an M-ary scheme's ideal rate.
+ *
+ * Setting 2 log2 M = log2(1 + SNR) gives 1 + SNR = M² exactly — so binary
+ * needs 3 (4.8 dB), QPSK 15 (11.8 dB) and 16-ary 255 (24.1 dB). Below that
+ * the scheme is not merely difficult, it is impossible at any coding.
+ */
+export const snrForNyquist = (M) => M * M - 1;
+
+/**
+ * Energy per bit over noise density required to reach a spectral efficiency,
+ * on the Shannon bound: (2^eff − 1)/eff.
+ *
+ * As eff -> 0 this tends to ln 2 = -1.59 dB, the absolute floor below which
+ * no communication is possible however much bandwidth is spent.
+ */
+export const ebn0Limit = (eff) => (eff <= 0 ? Math.LN2 : (2 ** eff - 1) / eff);
+
+/* --- constellations --------------------------------------------------------
+   Unit average symbol energy, so schemes are compared at equal power and the
+   minimum distance is the thing that actually differs. */
+
+export function constellation(kind, M) {
+  let pts = [];
+  if (kind === "qam") {
+    const r = Math.sqrt(M);
+    for (let i = 0; i < r; i++) {
+      for (let j = 0; j < r; j++) pts.push({ x: 2 * i - (r - 1), y: 2 * j - (r - 1) });
+    }
+  } else {
+    for (let i = 0; i < M; i++) {
+      const a = (2 * Math.PI * i) / M;
+      pts.push({ x: Math.cos(a), y: Math.sin(a) });
+    }
+  }
+  const e = pts.reduce((s, p) => s + p.x * p.x + p.y * p.y, 0) / pts.length;
+  const g = 1 / Math.sqrt(e);
+  return pts.map((p) => ({ x: p.x * g, y: p.y * g }));
+}
+
+/** Smallest distance between any two symbols — what noise has to cross. */
+export function minDistance(pts) {
+  let d = Infinity;
+  for (let i = 0; i < pts.length; i++) {
+    for (let j = i + 1; j < pts.length; j++) {
+      d = Math.min(d, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y));
+    }
+  }
+  return d;
+}
