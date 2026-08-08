@@ -122,19 +122,19 @@ function amIndex() {
 
 const SCHEMES = {
   am: {
-    label: "full-carrier AM",
+    label: "full-carrier AM", short: "AM",
     bw: 2, carrier: true, sidebands: 2,
     story:
       "The carrier is transmitted along with both sidebands. <b>It carries no information</b> — it is the same sinusoid whatever the message does — but it is what lets a receiver be a diode and a capacitor. <b>You are paying for the receiver's simplicity in transmitter power</b>, and broadcast AM decided that was worth it because there is one transmitter and millions of receivers.",
   },
   dsb: {
-    label: "DSB-SC",
+    label: "DSB-SC", short: "DSB-SC",
     bw: 2, carrier: false, sidebands: 2,
     story:
       "Suppress the carrier and every watt goes into the sidebands: <b>100% efficient</b>. The bandwidth has not changed, because both sidebands are still there. What has changed is the receiver — with no carrier to ride on, the envelope no longer resembles the message and the receiver must <b>regenerate the carrier itself</b>, in phase, which is a great deal more than a diode.",
   },
   ssb: {
-    label: "SSB",
+    label: "SSB", short: "SSB",
     bw: 1, carrier: false, sidebands: 1,
     story:
       "The two sidebands are mirror images, so one of them is redundant. Throw it away and you <b>halve the bandwidth</b> as well as keeping full efficiency. This is why SSB is the choice wherever spectrum is scarce and receivers can be complex — amateur and marine HF, and historically the long-distance telephone trunks this compilation has been following.",
@@ -180,7 +180,7 @@ function amSchemes() {
     p.line(0, 33.33, 1, 33.33, { color: "muted", width: 1.1, dash: "5 4" });
     p.text(0.02, 33.33, "1/3 — the best AM can do", { color: "muted", size: 10, anchor: "start", dy: -5 });
 
-    rdScheme.set(S.label);
+    rdScheme.set(S.short);
     rdBw.set(`${num(S.bw, 0)} × fm`, S.bw === 1 ? " — halved" : "");
     rdEff.set(fixed(e, 1), " %");
     rdRx.set(S.carrier ? "a diode" : "coherent");
